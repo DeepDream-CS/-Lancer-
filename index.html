@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lancer 简易车卡器</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+	<div class="brand">LANCER<span>简易车卡器</span></div>
+	<div class="top-ctl">
+		<select id="charSelect" title="切换角色"></select>
+		<button data-act="newChar">新建</button>
+		<button data-act="toWizard" title="用引导式流程检查/修改当前角色">引导模式</button>
+		<button data-act="dupChar">复制</button>
+		<button data-act="delChar" class="danger">删除</button>
+		<label class="chk" title="GM 规划或特殊规则时使用：所有牌照、核心加成都可选"><input type="checkbox" id="ignoreLimits"> 无视牌照限制</label>
+	</div>
+</header>
+<nav class="tabs">
+	<button data-tab="pilot" class="on">① 驾驶员</button>
+	<button data-tab="progress">② 等级成长</button>
+	<button data-tab="mech">③ 机甲</button>
+	<button data-tab="sheet">④ 角色卡 / 导出</button>
+	<div id="checkBadge" class="badge"></div>
+</nav>
+<main id="app"></main>
+<div id="modal"></div>
+<footer class="foot">
+	规则文本：<a href="https://reno-lam.github.io/Lancer-Free-Version/" target="_blank">Lancer 免费版繁中规则站</a>；数值数据：<a href="https://github.com/massif-press/lancer-data" target="_blank">massif-press/lancer-data</a>（COMP/CON 开源数据）。角色存在浏览器本地（localStorage），换电脑请用导出 JSON。
+</footer>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+<script src="data.js"></script>
+<script src="wizard.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
