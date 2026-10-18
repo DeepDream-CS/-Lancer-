@@ -74,9 +74,11 @@ function tagText(t) {
 	if (z.name.includes("X")) return z.name.replace(/X/g, val);
 	return val ? `${z.name} ${val}` : z.name;
 }
-const tagsHtml = tags => (tags || []).filter(t => !["tg_pilot_weapon", "tg_gear", "tg_personal_armor"].includes(t.id)).map(t => `<span class="tag" title="${esc(TAGS[t.id] ? TAGS[t.id].description.replace(/\{VAL\}/g, t.val ?? "X") : "")}">${esc(tagText(t))}</span>`).join("");
-const tagsPlain = tags => (tags || []).filter(t => !["tg_pilot_weapon", "tg_gear", "tg_personal_armor"].includes(t.id)).map(tagText).join("、");
-const dmgText = d => (d || []).map(x => `${x.val}${T.dmg[x.type] || x.type}`).join("+");
+// 这些标签只是给 COMP/CON 用的内部标记，不显示
+const HIDDEN_TAGS = ["tg_pilot_weapon", "tg_gear", "tg_personal_armor", "tg_set_damage_type", "tg_set_max_uses", "tg_set_damage_value", "tg_no_cascade"];
+const tagsHtml = tags => (tags || []).filter(t => !HIDDEN_TAGS.includes(t.id)).map(t => `<span class="tag" title="${esc(TAGS[t.id] ? TAGS[t.id].description.replace(/\{VAL\}/g, t.val ?? "X") : "")}">${esc(tagText(t))}</span>`).join("");
+const tagsPlain = tags => (tags || []).filter(t => !HIDDEN_TAGS.includes(t.id)).map(tagText).join("、");
+const dmgText = d => (d || []).map(x => { const k = x.type ? x.type[0].toUpperCase() + x.type.slice(1) : ""; return `${x.val}${T.dmg[k] || x.type || ""}`; }).join("+");
 const rngText = r => (r || []).map(x => `${T.range[x.type] || x.type}${x.val}`).join(" ");
 
 // ---------- 状态与存储 ----------
@@ -291,6 +293,7 @@ function pilotParts(p) {
 		<div class="row"><label>名字</label><input type="text" data-k="name" value="${esc(p.name)}"></div>
 		<div class="row"><label>呼号</label><input type="text" data-k="callsign" value="${esc(p.callsign)}"></div>
 		<div class="row"><label>玩家</label><input type="text" data-k="player" value="${esc(p.player)}"></div>
+		<div class="row"><label>头像</label><input type="file" accept="image/*" data-act="portrait" style="max-width:220px">${p.portrait ? `<img src="${p.portrait}" class="portrait-thumb" alt="头像"><button data-act="delPortrait" class="danger">移除</button>` : `<span class="muted">导出角色卡图片时放在右上角</span>`}</div>
 		<div class="row"><label>牌照等级</label>${stepper("ll", "", p.ll, 0, 12, v => "LL" + v)} <span class="muted">毅力 Grit +${L.grit}</span></div>
 		<h4>驾驶员数值</h4>
 		<div class="stats">
@@ -587,9 +590,16 @@ function renderSheet(p) {
 			<button data-act="copySheet" class="primary">复制文字角色卡</button>
 			<button data-act="print">列印</button>
 			<button data-act="exportJson">汇出 JSON</button>
+		</div>
+		<div class="row" style="margin-top:6px">
+			<b>角色卡图片：</b>
+			<button data-card="all" class="primary">导出全部图片</button>
+			<button data-card="pilot">只导出驾驶员卡</button>
+			<button data-card="mech">只导出当前机甲卡</button>
 			<button data-act="importJson">汇入 JSON</button>
 		</div>
 	</div>
+	<div class="card wide noprint"><h3>图片预览 <span class="muted">点击图片也可单独下载 PNG</span></h3><div id="cardPreview" class="card-preview">生成中…</div></div>
 	<div class="card wide"><pre class="sheet" id="sheetText">${esc(sheetText(p))}</pre></div>
 	</div>`;
 }
@@ -612,6 +622,7 @@ function render() {
 	document.getElementById("app").innerHTML = inWiz ? renderWizard(p) :
 		tab === "pilot" ? renderPilot(p) : tab === "progress" ? renderProgress(p) : tab === "mech" ? renderMech(p) : renderSheet(p);
 	window.scrollTo(0, y);
+	if (!inWiz && tab === "sheet") renderCardPreviews(p);
 	save();
 }
 
@@ -660,6 +671,7 @@ document.addEventListener("change", e => {
 		if (el.value) m.loadout[el.value] = { slots: [], link: "" };
 	} else if (act === "retro") { m.retrofit = +el.value; m.loadout = {}; }
 	else if (act === "stab") m.stabilized = arg;
+	else if (act === "portrait") return loadPortrait(el, p);
 	else return;
 	render();
 });
@@ -702,6 +714,7 @@ document.addEventListener("click", e => {
 		case "delMech": if (!confirm(`删除机甲「${m.name}」？`)) return; p.mechs.splice(p.activeMech, 1); p.activeMech = 0; break;
 		case "addSys": { const v = document.getElementById("sysAdd").value; if (v) m.systems.push(v); break; }
 		case "delSys": m.systems.splice(+arg, 1); break;
+		case "delPortrait": delete p.portrait; break;
 		case "copySheet":
 			navigator.clipboard.writeText(sheetText(p)).then(() => { el.textContent = "已复制 ✓"; setTimeout(() => (el.textContent = "复制文字角色卡"), 1500); });
 			return;
@@ -718,6 +731,22 @@ document.addEventListener("click", e => {
 	}
 	render();
 });
+// 头像缩到最长边 600px 再存，避免撑爆 localStorage
+function loadPortrait(input, p) {
+	const file = input.files[0];
+	if (!file) return;
+	const img = new Image();
+	img.onload = () => {
+		const s = Math.min(1, 600 / Math.max(img.width, img.height));
+		const cv = document.createElement("canvas");
+		cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+		cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+		p.portrait = cv.toDataURL("image/jpeg", 0.85);
+		URL.revokeObjectURL(img.src);
+		render();
+	};
+	img.src = URL.createObjectURL(file);
+}
 function importFile(input) {
 	const file = input.files[0];
 	if (!file) return;
