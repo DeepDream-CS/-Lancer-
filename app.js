@@ -589,14 +589,15 @@ function renderSheet(p) {
 		<div class="row" style="margin-top:10px">
 			<button data-act="copySheet" class="primary">复制文字角色卡</button>
 			<button data-act="print">列印</button>
-			<button data-act="exportJson">汇出 JSON</button>
+			<button data-act="exportJson">导出本角色 JSON</button>
+			<button data-act="exportAll">导出全部角色备份</button>
 		</div>
 		<div class="row" style="margin-top:6px">
 			<b>角色卡图片：</b>
 			<button data-card="all" class="primary">导出全部图片</button>
 			<button data-card="pilot">只导出驾驶员卡</button>
 			<button data-card="mech">只导出当前机甲卡</button>
-			<button data-act="importJson">汇入 JSON</button>
+			<button data-act="importJson">导入 JSON</button>
 		</div>
 	</div>
 	<div class="card wide noprint"><h3>图片预览 <span class="muted">点击图片也可单独下载 PNG</span></h3><div id="cardPreview" class="card-preview">生成中…</div></div>
@@ -619,6 +620,7 @@ function render() {
 	const inWiz = p.wizard != null;
 	document.body.classList.toggle("in-wiz", inWiz);
 	document.getElementById("modal").innerHTML = chooser ? renderChooser(chooser) : "";
+	document.getElementById("notice").innerHTML = notice ? `<div class="notice ${notice.kind}"><div>${notice.html}</div><button data-act="dismissNotice" title="关闭">✕</button></div>` : "";
 	document.getElementById("app").innerHTML = inWiz ? renderWizard(p) :
 		tab === "pilot" ? renderPilot(p) : tab === "progress" ? renderProgress(p) : tab === "mech" ? renderMech(p) : renderSheet(p);
 	window.scrollTo(0, y);
@@ -719,6 +721,8 @@ document.addEventListener("click", e => {
 			navigator.clipboard.writeText(sheetText(p)).then(() => { el.textContent = "已复制 ✓"; setTimeout(() => (el.textContent = "复制文字角色卡"), 1500); });
 			return;
 		case "print": window.print(); return;
+		case "exportAll": downloadJson({ app: "lancer-builder", version: 1, pilots: db.pilots }, `lancer-全部角色备份-${new Date().toISOString().slice(0, 10)}`); return;
+		case "dismissNotice": notice = null; break;
 		case "exportJson": {
 			const blob = new Blob([JSON.stringify(p, null, 2)], { type: "application/json" });
 			const a = document.createElement("a");
@@ -747,18 +751,111 @@ function loadPortrait(input, p) {
 	};
 	img.src = URL.createObjectURL(file);
 }
-function importFile(input) {
-	const file = input.files[0];
-	if (!file) return;
-	file.text().then(t => {
-		try {
-			const n = JSON.parse(t);
-			if (!n.hase || !n.mechs) throw new Error("不是本车卡器汇出的角色");
-			n.id = blankPilot().id;
-			db.pilots.push(n); db.current = n.id; render();
-		} catch (err) { alert("汇入失败：" + err.message); }
-		input.value = "";
+// ---------- 导入 / 导出 ----------
+// 导入的 JSON 可以是：单个角色、角色数组，或「导出全部」的备份 {pilots:[…]}。
+// 每个角色都按 blankPilot() 补齐缺的字段，并去掉本车卡器数据里不存在的 id，避免旧档或手改档弄坏页面。
+const int = (v, lo, hi, d = 0) => (Number.isFinite(+v) ? Math.max(lo, Math.min(hi, Math.round(+v))) : d);
+const str = v => (typeof v === "string" ? v : "");
+function normalizePilot(raw, warn) {
+	const p = blankPilot();
+	const who = str(raw.name) || "未命名角色";
+	const drop = (kind, id) => warn.push(`「${who}」：找不到${kind} ${id}，已略过`);
+	for (const k of ["name", "callsign", "player", "background", "bgCustom", "bio", "appearance"]) if (typeof raw[k] === "string") p[k] = raw[k];
+	if (p.background && !BGS[p.background]) { drop("背景", p.background); p.bgCustom = p.bgCustom || p.background; p.background = ""; }
+	p.ll = int(raw.ll, 0, 12);
+	if (raw.hase) for (const k of Object.keys(p.hase)) p.hase[k] = int(raw.hase[k], 0, 6);
+	if (Array.isArray(raw.triggers)) p.triggers = raw.triggers.filter(t => t && typeof t === "object").map(t => {
+		let id = str(t.id), custom = str(t.custom);
+		if (id && !SKILLS[id]) { custom = custom || id; id = ""; }
+		return { id, custom, val: int(t.val, 2, 6, 2) & ~1 };
 	});
+	const ranks = (obj, table, kind) => {
+		const out = {};
+		if (obj && typeof obj === "object") for (const [id, r] of Object.entries(obj)) {
+			if (!table[id]) { drop(kind, id); continue; }
+			const v = int(r, 0, 3);
+			if (v) out[id] = v;
+		}
+		return out;
+	};
+	p.talents = ranks(raw.talents, TALENTS, "天赋");
+	p.licenses = ranks(raw.licenses, FRAMES, "牌照");
+	p.coreBonuses = (Array.isArray(raw.coreBonuses) ? raw.coreBonuses : []).filter(id => CBS[id] || (drop("核心加成", id), false));
+	if (raw.gear) {
+		const g = id => (!id ? "" : GEAR[id] ? id : (drop("驾驶员装备", id), ""));
+		p.gear.armor = g(raw.gear.armor);
+		p.gear.weapons = [0, 1].map(i => g((raw.gear.weapons || [])[i]));
+		p.gear.items = [0, 1, 2].map(i => g((raw.gear.items || [])[i]));
+	}
+	if (typeof raw.portrait === "string" && raw.portrait.startsWith("data:image/")) p.portrait = raw.portrait;
+	if (Array.isArray(raw.mechs) && raw.mechs.length) p.mechs = raw.mechs.map(rm => {
+		const m = blankMech();
+		if (!rm || typeof rm !== "object") return m;
+		m.name = str(rm.name) || m.name;
+		m.notes = str(rm.notes);
+		if (FRAMES[rm.frame]) m.frame = rm.frame;
+		else if (rm.frame) drop("骨架", rm.frame);
+		m.retrofit = int(rm.retrofit, -1, 9, -1);
+		m.stabilized = str(rm.stabilized);
+		m.overpower = WEAPONS[rm.overpower] ? rm.overpower : "";
+		m.systems = (Array.isArray(rm.systems) ? rm.systems : []).filter(id => SYSTEMS[id] || (drop("系统", id), false));
+		if (rm.loadout && typeof rm.loadout === "object") for (const [key, st] of Object.entries(rm.loadout)) {
+			if (!st || !Array.isArray(st.slots)) continue;
+			m.loadout[key] = {
+				link: str(st.link),
+				slots: st.slots.map(sl => {
+					const w = sl && WEAPONS[sl.w] ? sl.w : (sl && sl.w ? (drop("武器", sl.w), "") : "");
+					const mod = w && sl.mod && MODS[sl.mod] ? sl.mod : "";
+					return { w, mod };
+				}),
+			};
+		}
+		return m;
+	});
+	p.activeMech = int(raw.activeMech, 0, p.mechs.length - 1);
+	return p;
 }
+function importText(t, fileName) {
+	let data;
+	try { data = JSON.parse(t); } catch (e) { return notify(`「${fileName}」不是有效的 JSON 文件。`, "err"); }
+	const list = Array.isArray(data) ? data : data && Array.isArray(data.pilots) ? data.pilots : [data];
+	const raws = list.filter(x => x && typeof x === "object" && (x.hase || x.mechs || x.triggers));
+	if (!raws.length) return notify(`「${fileName}」里没有本车卡器的角色数据。（COMP/CON 导出的文件暂不支持）`, "err");
+	const warn = [];
+	const added = raws.map(r => normalizePilot(r, warn));
+	db.pilots.push(...added);
+	db.current = added[0].id;
+	chooser = null; tab = "pilot";
+	notify(`已导入 ${added.map(p => "「" + p.name + "」").join("、")}，可以直接修改了。` + (warn.length ? `<br>以下内容在本车卡器里找不到，已略过：<br>· ${warn.map(esc).join("<br>· ")}` : ""), warn.length ? "warn" : "ok");
+	window.scrollTo(0, 0);
+	render();
+}
+function importFiles(files) {
+	[...files].forEach(f => f.text().then(t => importText(t, f.name)));
+}
+function importFile(input) {
+	importFiles(input.files);
+	input.value = "";
+}
+function downloadJson(obj, name) {
+	const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+	const a = document.createElement("a");
+	a.href = URL.createObjectURL(blob);
+	a.download = name.replace(/[\\/:*?"<>|]/g, "_") + ".json";
+	a.click();
+	setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+// 页面顶部的提示条
+let notice = null;
+function notify(html, kind = "ok") { notice = { html, kind }; render(); }
+// 把 JSON 文件拖进页面任意位置即可导入
+document.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("Files")) { e.preventDefault(); document.body.classList.add("drop-hover"); } });
+document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("drop-hover"); });
+document.addEventListener("drop", e => {
+	if (!e.dataTransfer.files.length) return;
+	e.preventDefault();
+	document.body.classList.remove("drop-hover");
+	importFiles([...e.dataTransfer.files].filter(f => /\.json$/i.test(f.name) || f.type.includes("json")));
+});
 
 render();

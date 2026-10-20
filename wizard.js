@@ -284,6 +284,7 @@ function renderChooser(kind) {
 		<div class="choose">
 			<button data-wiz="choose" data-arg="guided"><b>🧭 引导式车卡</b><span>第一次玩或想了解规则？一步步讲解，每一步只做一件事，自动检查点数是否正确。</span></button>
 			<button data-wiz="choose" data-arg="custom"><b>🛠 自定义车卡</b><span>熟悉规则？直接打开完整编辑器，自由填写所有内容。</span></button>
+			<button data-act="importJson" class="choose-wide"><b>📂 导入已有角色（JSON）</b><span>选择之前从本车卡器导出的角色文件，导入后接着修改。也可以直接把文件拖进页面。</span></button>
 		</div>
 		${kind === "first" ? "" : `<button data-wiz="chooseCancel" class="modal-x">取消</button>`}
 	</div></div>`;

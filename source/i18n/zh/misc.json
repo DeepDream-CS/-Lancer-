@@ -204,7 +204,7 @@
  "t_tactician.terse": "攻击分心的敌人或从高处射击时获得优势",
  "t_technophile.terse": "获得一个智能不断提升、能重掷技能判定的AI",
  "t_vanguard.terse": "强化CQB武器，让守望更有效",
- "t_walking_armory.terse": "获得一个弹药箱，为主远距武器附加效果",
+ "t_walking_armory.terse": "获得一个弹药库，为主远距武器附加效果",
  "pg_archaic_melee.description": "这些武器以联盟之前的合金和技术制成，从工业时代的钢剑到石斧都有可能。尽管在某些世界仍被广泛使用，驾驶员使用的古董武器通常是遗物、传家宝或仪式用武器。",
  "pg_archaic_ranged.description": "这些武器是前现代的装置，例如火绳枪和弓，在某些社会中仍在使用。",
  "pg_light_a_c.description": "轻型合金/复合武器可能是刀、刺刀、拳刃和短剑。",

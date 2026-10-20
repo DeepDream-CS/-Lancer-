@@ -25,6 +25,11 @@ function render(e) {
 		case "quote":
 			return `<blockquote>${render(e.entries)}</blockquote>`;
 		case "reactionBlock":
+			// 规则站有几个天赋给予的装备只留了空框，用 BLOCK_FILLS 补上
+			if (!e.trigger && !(e.effect || []).join("").trim() && BLOCK_FILLS[e.name]) {
+				const f = BLOCK_FILLS[e.name];
+				return `<div class="blk"><div class="blk-h">${inline(e.translate_name || e.name)} <span class="muted">${f.meta}</span></div>${f.html}</div>`;
+			}
 			return `<div class="blk"><div class="blk-h">${inline(e.translate_name || e.name)} <span class="muted">${inline(e.action || "")}${e.frequency ? "，" + inline(e.frequency) : ""}</span></div>` +
 				(e.trigger ? `<p><b>触发：</b>${inline(e.trigger)}</p>` : "") +
 				(e.effect ? `<div><b>效果：</b>${render(e.effect)}</div>` : "") + `</div>`;
@@ -39,6 +44,23 @@ function render(e) {
 			return e.entries ? render(e.entries) : "";
 	}
 }
+
+// ---------- 规则站留空的天赋装备 ----------
+// 规则站天赋页里，以下几个由天赋给予的装备只有标题、效果是空的。
+// 效果文字尽量复用 source/i18n/zh 里同一装备的译文，没有的才在这里补译。
+const i18nZh = f => JSON.parse(fs.readFileSync(path.join(ROOT, "source/i18n/zh", f + ".json"), "utf8"));
+const zhW = i18nZh("weapons-2"), zhS = i18nZh("systems-2");
+const p_ = s => `<p>${s}</p>`;
+const AMMO_I = "<ul><li><b>重击弹</b>（1发）：这攻击得到<b>击退1</b>并造成<b>爆炸</b>伤害。</li><li><b>电击弹</b>（1发）：这攻击造成<b>能量</b>伤害。选择这次攻击的一个目标，无论命中与否，与其邻接的角色受到1点AP能量伤害。</li><li><b>磁轨弹</b>（1发）：这攻击得到<b>抛射</b>并造成<b>动能</b>伤害。</li></ul>";
+const BLOCK_FILLS = {
+	"Prototype Weapon": { meta: "主 特殊武器 · 威胁1 或 射程10 · 1d6+2 自选伤害类型 · 受限 1d6+2、杀绝", html: p_(zhW["mw_prototype_1.effect"]) },
+	"Last Argument of Kings": { meta: "完整科技", html: p_("对感应范围内且在视线范围内的一个目标进行<b>科技攻击</b>。成功的话，你植入一个病毒，引发目标反应炉的小型熔解：目标立即受到等同其当前<b>热度</b>的<b>燃烧</b>。如果这动作使目标过热，它会在目标重置热度之前结算。") },
+	"Fuel Rod Gun": { meta: "主 CQB · 射程3、威胁3 · 1d3+2 能量 · 受限3、独特", html: p_("<b>攻击时：</b>冷却4热度。") },
+	"Servant-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_1.effect"]) },
+	"Student-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_2.effect"]) },
+	"Englihtenment-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_3.effect"]) },
+	"Ammo Case": { meta: "受限6、每回合1次", html: p_("每回合一次，当你以<b>主远距武器</b>攻击时，你可以按所列消耗来消耗发数，为该攻击套用以下其中一种效果：") + AMMO_I },
+};
 
 // ---------- 繁中覆盖层 ----------
 const zh = { talents: {}, cb: {}, bg: {}, skills: {}, tags: {}, gear: {}, gms: {}, frames: {}, makers: {} };

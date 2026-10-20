@@ -12,6 +12,7 @@
 	<div class="top-ctl">
 		<select id="charSelect" title="切换角色"></select>
 		<button data-act="newChar">新建</button>
+		<button data-act="importJson" title="选择本车卡器导出的角色 JSON，导入后可直接修改；也可以把文件拖进页面">导入</button>
 		<button data-act="toWizard" title="用引导式流程检查/修改当前角色">引导模式</button>
 		<button data-act="dupChar">复制</button>
 		<button data-act="delChar" class="danger">删除</button>
@@ -25,6 +26,7 @@
 	<button data-tab="sheet">④ 角色卡 / 导出</button>
 	<div id="checkBadge" class="badge"></div>
 </nav>
+<div id="notice"></div>
 <main id="app"></main>
 <div id="modal"></div>
 <footer class="foot">
