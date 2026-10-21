@@ -328,3 +328,16 @@ pre.sheet { overflow-wrap:anywhere; }
   .text-sheet > summary { display:none; }
   .card { box-shadow:none; border:0; padding:0; background:white; }
 }
+
+/* 扩展内容（source/expansions）标记 */
+.tag.ext { background: #4a3b1c; color: #f0c674; border: 1px solid #7a6127; vertical-align: middle; }
+.mfr.ext-head { border-color: #c9a227; margin-top: 18px; }
+
+/* 驾驶员装备：按装甲 / 武器 / 其他装备分组，选单等宽 */
+.gear-group + .gear-group { margin-top: 6px; padding-top: 4px; border-top: 1px solid var(--line); }
+.gear-group h4 .muted { font-weight: 400; font-size: 12px; margin-left: 6px; }
+.gear-slots { display: grid; gap: 12px 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); align-items: start; }
+.gear-slot { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
+.gear-slot select { width: 100%; background: var(--panel); }
+.gear-label { font-size: 12px; color: var(--muted); }
+.gear-slot .wstat, .gear-slot .desc { margin: 0; }

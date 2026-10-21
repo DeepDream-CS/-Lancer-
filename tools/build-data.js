@@ -201,8 +201,50 @@ for (const k of ["weapons", "systems", "mods"]) data[k] = drop(data[k], ["descri
 	console.log("i18n applied:", n, "missing:", miss);
 })();
 
+// ---------- 扩展内容（source/expansions，PDF 转录，原文即中文） ----------
+// 在 v3.5 译名覆盖之后并入：扩展文字只经过 calibrate-text 与 v3.5 术语表（spec.terms），
+// 不做旧译名替换——那一步会把「内建武器」「百臂巨人」之类的普通词误换成核心条目的新译名。
+// 每个条目带 ext/pack；变体骨架排在其标准骨架之后，其余排在核心内容之后。
+function mergeExpansion(d) {
+	const v35 = require("./core-v35");
+	const terms = v35.translator(v35.spec.terms.map(t => [t.from, t.to]));
+	const fixText = v => typeof v === "string" ? terms(v) : Array.isArray(v) ? v.map(fixText) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fixText(x)])) : v;
+	const X = fixText(require("./calibrate-text").walk(require(path.join(ROOT, "source/expansions/all-expansions.js"))));
+	const strip = s => String(s || "").replace(/<[^>]+>/g, "").trim();
+	const mark = o => ({ ...o, ext: true, pack: X.PACK });
+	for (const f of X.frames) {
+		const { zh_name, ...frame } = f;
+		const row = mark({ license_level: 2, license_id: f.variant_of || f.id, ...frame });
+		const at = f.variant_of ? d.frames.findIndex(x => x.id === f.variant_of) : -1;
+		if (f.variant_of && at < 0) throw Error("变体骨架找不到标准骨架：" + f.id);
+		// 同一标准骨架有多个变体时，按列出顺序接在前一个变体之后
+		let pos = at + 1;
+		while (f.variant_of && d.frames[pos] && d.frames[pos].variant_of === f.variant_of) pos++;
+		if (f.variant_of) d.frames.splice(pos, 0, row); else d.frames.push(row);
+		d.zh.frames[f.name] = zh_name;
+	}
+	for (const t of X.talents) {
+		d.talents.push(mark({ id: t.id, name: t.name, terse: t.terse, ...(t.incomplete ? { incomplete: true } : {}), description: strip(t.desc),
+			ranks: t.ranks.map(r => ({ name: r.name, description: strip(r.html), ...(r.special_equipment ? { special_equipment: r.special_equipment } : {}) })) }));
+		d.zh.talents[t.name] = { name: t.name, desc: t.desc, ranks: t.ranks.map(r => ({ name: r.name, html: r.html })) };
+	}
+	for (const b of X.backgrounds) {
+		d.backgrounds.push(mark({ id: b.id, name: b.name, description: strip(b.html) }));
+		d.zh.bg[b.name.toLowerCase()] = { name: b.name, triggers: "触发例子：" + b.triggers, html: b.html };
+	}
+	for (const c of X.core_bonuses) {
+		const { html, ...cb } = c;
+		d.core_bonuses.push(mark(cb));
+		d.zh.cb[c.name] = { name: c.name, html };
+	}
+	for (const g of X.pilot_gear) { d.pilot_gear.push(mark(g)); d.zh.gear[g.name] = { name: g.name }; }
+	for (const k of ["weapons", "systems"]) for (const it of X[k]) d[k].push(mark({ ...it, zh_name: it.name }));
+	console.log("expansion merged:", ["frames", "talents", "backgrounds", "core_bonuses", "pilot_gear", "weapons", "systems"].map(k => `${k} ${X[k].length}`).join("，"));
+	return d;
+}
+
 // 兜底：整份数据再过一遍图标替换（含 HTML 里残留的实体）
-const calibrated = require('./core-v35').apply(require('./calibrate-text').walk(data));
+const calibrated = mergeExpansion(require('./core-v35').apply(require('./calibrate-text').walk(data)));
 const out = "// 自动生成，请勿手改。来源：massif-press/lancer-data + reno-lam.github.io/Lancer-Free-Version\nwindow.LANCER_DATA = " + deIcon(JSON.stringify(calibrated)) + ";\n";
 fs.writeFileSync(path.join(ROOT, "data.js"), out);
 console.log("data.js written,", (out.length / 1024).toFixed(0), "KB");

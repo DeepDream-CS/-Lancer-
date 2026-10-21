@@ -32,6 +32,7 @@ const MOUNT_SLOTS = {
 	"Aux/Aux": [["Auxiliary"], ["Auxiliary"]],
 	"Heavy": [["Superheavy", "Heavy", "Main", "Auxiliary"]],
 	"Integrated": [["Auxiliary"]],
+	"Superheavy": [["Superheavy"]], // 扩展核心奖励「超重挂载」
 };
 const T = {
 	mount: { "Main": "主", "Aux": "副", "Flex": "灵活", "Main/Aux": "主/副", "Aux/Aux": "副/副", "Heavy": "重型", "Integrated": "内建", "Auxiliary": "副", "Superheavy": "超重型", "Ship-class": "舰载级" },
@@ -59,7 +60,7 @@ function zhOf(kind, x) {
 function label(kind, x, html = true) {
 	const z = zhOf(kind, x);
 	if (!z) return html ? esc(x.name) : x.name;
-	return html ? `${esc(z)} <small>${esc(x.name)}</small>` : z;
+	return html ? `${esc(z)}${z === x.name ? "" : ` <small>${esc(x.name)}</small>`}` : z;
 }
 const plain = (kind, x) => label(kind, x, false);
 const makerName = m => (Z.makers[m] ? `${m} ${Z.makers[m]}` : m);
@@ -140,8 +141,13 @@ function itemAvailable(p, it) {
 	if (it.source === "GMS" && !it.license_level) return true;
 	return licenseRank(p, it.license) >= (it.license_level || 0);
 }
-const frameAvailable = (p, f) => db.ignoreLimits || f.id === EVEREST || (p.licenses[f.id] || 0) >= 2;
-const makerLicenseTotal = (p, m) => D.frames.filter(f => f.source === m).reduce((s, f) => s + (p.licenses[f.id] || 0), 0);
+// 变体骨架（扩展）沿用标准骨架的牌照：标准骨架牌照 II 即可使用；埃弗勒斯的变体人人可用
+const frameAvailable = (p, f) => db.ignoreLimits || [f.id, f.variant_of].includes(EVEREST) || (p.licenses[f.variant_of || f.id] || 0) >= 2;
+function licenseFrames() { return D.frames.filter(f => !f.variant_of); } // 读档时（load）就会用到，须是函数声明
+const frameName = f => zhOf("frame", f) || f.name;
+const variantNote = f => (f.variant_of ? `${frameName(FRAMES[f.variant_of])}变体` : "");
+const extBadge = x => (x && x.ext ? ` <span class="tag ext" title="来自扩展：${esc(x.pack || "")}">扩展</span>` : "");
+const makerLicenseTotal = (p, m) => licenseFrames().filter(f => f.source === m).reduce((s, f) => s + (p.licenses[f.id] || 0), 0);
 function cbEligible(p, cb, extra = 0) {
 	if (cb.source === "GMS" || db.ignoreLimits) return true;
 	const taken = p.coreBonuses.filter(id => CBS[id] && CBS[id].source === cb.source).length + extra;
@@ -156,6 +162,7 @@ function mountsOf(p, m) {
 	const mounts = f.mounts.map((t, i) => ({ key: "m" + i, type: t }));
 	if (hasCB(p, "cb_mount_retrofitting") && mounts[m.retrofit]) mounts[m.retrofit] = { ...mounts[m.retrofit], type: "Main/Aux", retro: true };
 	if (hasCB(p, "cb_improved_armament") && mounts.length < 3) mounts.push({ key: "ia", type: "Flex", note: "改良武装" });
+	if (hasCB(p, "cb_ext_superheavy_mounting") && mounts.length < 3) mounts.push({ key: "sh", type: "Superheavy", note: "超重挂载（核心奖励）" });
 	if (hasCB(p, "cb_integrated_weapon")) mounts.push({ key: "iw", type: "Integrated", note: "武器一体化（核心奖励）", noMods: true });
 	return mounts;
 }
@@ -291,7 +298,7 @@ function pilotParts(p) {
 	const bgz = bg && Z.bg[bg.name.toLowerCase()];
 	const trigSum = p.triggers.reduce((s, t) => s + (+t.val || 0), 0);
 	const skillOpts = D.skills.slice().sort((a, b) => a.family.localeCompare(b.family));
-	const gearSel = (path, type, val) => `<select data-k="${path}"><option value="">—</option>${D.pilot_gear.filter(g => g.type === type).map(g => opt(g.id, plain("gear", g), g.id === val)).join("")}</select>`;
+	const gearSel = (path, type, val) => `<select data-k="${path}"><option value="">—</option>${D.pilot_gear.filter(g => g.type === type).map(g => opt(g.id, plain("gear", g) + (g.ext ? "（扩展）" : ""), g.id === val)).join("")}</select>`;
 	const gearInfo = (id, slot) => {
 		const g = GEAR[id];
 		if (!g) return "";
@@ -322,7 +329,7 @@ function pilotParts(p) {
 	</div>`,
 	bg: `<div class="card">
 		<h3>背景</h3>
-		<div class="row"><select data-k="background"><option value="">— 自创背景 —</option>${D.backgrounds.map(b => opt(b.id, plain("bg", b), b.id === p.background)).join("")}</select>
+		<div class="row"><select data-k="background"><option value="">— 自创背景 —</option>${D.backgrounds.filter(b => !b.ext).map(b => opt(b.id, plain("bg", b), b.id === p.background)).join("")}${D.backgrounds.some(b => b.ext) ? `<optgroup label="扩展背景">${D.backgrounds.filter(b => b.ext).map(b => opt(b.id, plain("bg", b), b.id === p.background)).join("")}</optgroup>` : ""}</select>
 		<button data-act="rollBg" title="掷 1d20">🎲 随机</button></div>
 		${p.background ? "" : `<div class="row"><input type="text" data-k="bgCustom" placeholder="自创背景名称" value="${esc(p.bgCustom)}"></div>`}
 		${bgz ? `<div class="muted">${esc(bgz.triggers)}</div>${det("bg", "背景说明", bgz.html)}` : ""}
@@ -348,11 +355,12 @@ function pilotParts(p) {
 	</div>`,
 	gear: `<div class="card wide">
 		<h3>驾驶员装备 <span class="muted">一套装甲、最多两件武器、三件其他装备</span></h3>
-		<div class="grid">
-			<div><h4>装甲</h4>${gearSel("gear.armor", "Armor", p.gear.armor)}${gearInfo(p.gear.armor, "a")}</div>
-			${p.gear.weapons.map((w, i) => `<div><h4>武器 ${i + 1}</h4>${gearSel(`gear.weapons.${i}`, "Weapon", w)}${gearInfo(w, "w" + i)}</div>`).join("")}
-			${p.gear.items.map((w, i) => `<div><h4>装备 ${i + 1}</h4>${gearSel(`gear.items.${i}`, "Gear", w)}${gearInfo(w, "g" + i)}</div>`).join("")}
-		</div>
+		${[
+			["装甲", "防护服或其他个人装甲，会改变驾驶员数值", [["装甲", gearSel("gear.armor", "Armor", p.gear.armor), gearInfo(p.gear.armor, "a")]]],
+			["武器", "最多两件", p.gear.weapons.map((w, i) => [`武器 ${i + 1}`, gearSel(`gear.weapons.${i}`, "Weapon", w), gearInfo(w, "w" + i)])],
+			["其他装备", "最多三件", p.gear.items.map((w, i) => [`装备 ${i + 1}`, gearSel(`gear.items.${i}`, "Gear", w), gearInfo(w, "g" + i)])],
+		].map(([title, hint, slots]) => `<section class="gear-group"><h4>${title} <span class="muted">${hint}</span></h4>
+			<div class="gear-slots">${slots.map(([lab, sel, info]) => `<div class="gear-slot"><span class="gear-label">${lab}</span>${sel}${info}</div>`).join("")}</div></section>`).join("")}
 	</div>`,
 	};
 }
@@ -383,7 +391,7 @@ function progressParts(p) {
 		<h3>牌照 Licenses ${counter(lr, L.licenses)}</h3>
 		<p class="muted">每级 LL 得 1 牌照等级。牌照分一至三级，须依次取得；二级解锁该骨架。GMS（埃弗勒斯及 GMS 装备）永远可用。</p>
 		${MAKERS.slice(1).map(mk => `<div class="mfr" style="border-color:${MAKER_COLOR[mk]}">${esc(makerName(mk))} <span class="muted">合计 ${makerLicenseTotal(p, mk)} 级</span></div>
-			<div class="lic-grid">${D.frames.filter(f => f.source === mk).map(f => `<div class="lic ${p.licenses[f.id] ? "has" : ""}"><span>${label("frame", f)}</span>${stepper("lic", f.id, p.licenses[f.id] || 0, 0, 3, v => ["—", "I", "II", "III"][v])}</div>`).join("")}</div>`).join("")}
+			<div class="lic-grid">${licenseFrames().filter(f => f.source === mk).map(f => `<div class="lic ${p.licenses[f.id] ? "has" : ""}"><span>${label("frame", f)}${extBadge(f)}</span>${stepper("lic", f.id, p.licenses[f.id] || 0, 0, 3, v => ["—", "I", "II", "III"][v])}</div>`).join("")}</div>`).join("")}
 	</div>`,
 	cbs: `<div class="card wide">
 		<h3>核心奖励 Core Bonuses ${counter(p.coreBonuses.length, L.cbs)}</h3>
@@ -392,7 +400,7 @@ function progressParts(p) {
 			const have = hasCB(p, c.id);
 			const ok = have || cbEligible(p, c, 1);
 			const z = Z.cb[nk(c.name)];
-			return `<div class="list-item ${have ? "active" : ok ? "" : "locked"}"><div class="li-head"><span class="li-title">${label("cb", c)}</span>
+			return `<div class="list-item ${have ? "active" : ok ? "" : "locked"}"><div class="li-head"><span class="li-title">${label("cb", c)}${extBadge(c)}</span>
 				<button data-act="cb" data-arg="${c.id}" ${!have && !ok ? "disabled" : ""}>${have ? "移除" : "选择"}</button></div>
 				<div class="desc">${z ? z.html : esc(c.effect)}</div></div>`;
 		}).join("")}`).join("")}
@@ -401,11 +409,11 @@ function progressParts(p) {
 		<h3>天赋 Talents ${counter(tr, L.talents)}</h3>
 		<p class="muted">LL0 有三个一级天赋；每升一级可让一个天赋升一级，或取得一个新的一级天赋。</p>
 		${talentToolbar()}
-		${D.talents.map(t => {
+		${D.talents.map((t, i) => {
 			const r = p.talents[t.id] || 0;
 			const z = Z.talents[t.name];
 			const ranks = t.ranks.map((rk, i) => `<div class="rank ${i < r ? "have" : ""}"><div class="rank-h">${["I", "II", "III"][i]}．${esc(z ? z.ranks[i].name : rk.name)}</div>${z ? z.ranks[i].html : rk.description}</div>`).join("");
-			return `<div class="list-item ${r ? "active" : ""}" data-talent-row="${t.id}" data-selected="${!!r}"><div class="li-head"><span class="li-title">${label("talent", t)}</span>${stepper("tal", t.id, r, 0, 3, v => ["—", "I", "II", "III"][v])}</div>
+			return `${t.ext && !D.talents[i - 1]?.ext ? `<div class="mfr ext-head">扩展天赋 <span class="muted">${esc(t.pack || "")}</span></div>` : ""}<div class="list-item ${r ? "active" : ""} ${t.incomplete ? "locked" : ""}" data-talent-row="${t.id}" data-selected="${!!r}"><div class="li-head"><span class="li-title">${label("talent", t)}${extBadge(t)}</span>${t.ranks.length ? stepper("tal", t.id, r, 0, t.ranks.length, v => ["—", "I", "II", "III"][v]) : '<span class="muted">资料不全，暂不可选</span>'}</div>
 				<div class="muted">${esc(t.terse || "")}</div>${det("t" + t.id, "天赋详情", (z ? z.desc : "") + ranks)}</div>`;
 		}).join("")}
 	</div>`,
@@ -422,7 +430,7 @@ function itemOptions(p, list, cur, filter) {
 	list.filter(filter).forEach(it => {
 		const ok = itemAvailable(p, it) || it.id === cur;
 		if (!ok) return;
-		const g = it.source ? `${it.source}${it.license && it.license !== "GMS" ? " · " + (Z.frames[nk(it.license)] || it.license) + " " + it.license_level : ""}` : "天赋";
+		const g = (it.source ? `${it.source}${it.license && it.license !== "GMS" ? " · " + (Z.frames[nk(it.license)] || it.license) + " " + it.license_level : ""}` : "天赋") + (it.ext ? " · 扩展" : "");
 		(groups[g] = groups[g] || []).push(it);
 	});
 	return Object.entries(groups).map(([g, items]) => `<optgroup label="${esc(g)}">${items.map(it => opt(it.id, esc(plain("item", it)) + (it.sp ? ` [${it.sp}SP]` : ""), it.id === cur)).join("")}</optgroup>`).join("");
@@ -473,7 +481,7 @@ function mechParts(p) {
 	STAT_CTX = st ? { ...st, grit: LV(p.ll).grit, drone_hp: staticBonus(p,m,"drone_hp"), deployable_hp: staticBonus(p,m,"deployable_hp") } : {};
 	const mechTabs = `<div class="mech-tabs">${p.mechs.map((x, i) => `<button data-act="pickMech" data-arg="${i}" class="${i === p.activeMech ? "on" : ""}">${esc(x.name || "机甲" + (i + 1))}</button>`).join("")}
 		<button data-act="addMech">+ 新机甲</button>${p.mechs.length > 1 ? `<button data-act="delMech" class="danger">删除此机甲</button>` : ""}</div>`;
-	const frameSel = `<select data-k="mech.frame">${MAKERS.map(mk => `<optgroup label="${esc(makerName(mk))}">${D.frames.filter(x => x.source === mk).map(x => opt(x.id, esc(plain("frame", x)) + (frameAvailable(p, x) ? "" : " 🔒"), x.id === m.frame, !frameAvailable(p, x) && x.id !== m.frame)).join("")}</optgroup>`).join("")}</select>`;
+	const frameSel = `<select data-k="mech.frame">${MAKERS.map(mk => `<optgroup label="${esc(makerName(mk))}">${D.frames.filter(x => x.source === mk).map(x => opt(x.id, (x.variant_of ? "　└ " : "") + esc(plain("frame", x)) + (x.variant_of ? `（${esc(variantNote(x))}）` : x.ext ? "（扩展）" : "") + (frameAvailable(p, x) ? "" : " 🔒"), x.id === m.frame, !frameAvailable(p, x) && x.id !== m.frame)).join("")}</optgroup>`).join("")}</select>`;
 	if (!f) return { only: mechTabs + `<div class="card">${frameSel}</div>` };
 
 	const stat = (v, n, hl) => `<div class="stat ${hl ? "hl" : ""}"><b>${v}</b><span>${n}</span></div>`;
@@ -507,8 +515,8 @@ function mechParts(p) {
 				${mods.length ? `<select data-act="slotMod" data-arg="${mt.key}|${i}"><option value="">— 无模块 —</option>${itemOptions(p, mods, s.mod, () => true)}</select>` : "<span></span>"}</div>`;
 			if (w) html += weaponInfo(w, s.mod && MODS[s.mod]) + `<p class="muted">${esc(buildWeaponNote(p, m, {w, mount:mt, i}))}</p>`;
 			if (w && w.mount === "Superheavy") {
-				const others = mounts.filter(o => o.key !== mt.key && o.type !== "Integrated" && (!linkedBy[o.key] || linkedBy[o.key] === mt.key) && WEAPONS[m.loadout[o.key]?.slots?.[0]?.w]?.mount !== "Superheavy");
-				html += `<div class="row"><span class="muted">超重型武器需同时占用另一个挂载点：</span><select data-act="link" data-arg="${mt.key}"><option value="">— 选择 —</option>${others.map(o => opt(o.key, `${T.mount[o.type]}挂载点`, sst.link === o.key)).join("")}</select></div>`;
+				const others = superheavyLinkTargets(mounts, mt).filter(o => (!linkedBy[o.key] || linkedBy[o.key] === mt.key) && WEAPONS[m.loadout[o.key]?.slots?.[0]?.w]?.mount !== "Superheavy");
+				html += `<div class="row"><span class="muted">超重型武器需同时占用另一个挂载点${mt.type === "Superheavy" && others.some(o => o.type === "Heavy") ? "（超重挂载：必须是重型挂载点）" : ""}：</span><select data-act="link" data-arg="${mt.key}"><option value="">— 选择 —</option>${others.map(o => opt(o.key, `${T.mount[o.type]}挂载点`, sst.link === o.key)).join("")}</select></div>`;
 			}
 			return html;
 		}).join("");
@@ -524,7 +532,7 @@ function mechParts(p) {
 		if (!s) return "";
 		const z = Z.gms[s.name];
 		const lock = !itemAvailable(p, s);
-		return `<div class="list-item ${lock ? "locked" : ""}"><div class="li-head"><span class="li-title">${label("item", s)} <small>${s.sp || 0} SP</small></span><button data-act="delSys" data-arg="${i}" class="danger">✕</button></div>
+		return `<div class="list-item ${lock ? "locked" : ""}"><div class="li-head"><span class="li-title">${label("item", s)} <small>${s.sp || 0} SP</small>${extBadge(s)}</span><button data-act="delSys" data-arg="${i}" class="danger">✕</button></div>
 			<div class="wstat">${s.type ? (T.stype[s.type] || s.type) + " " : ""}${tagsHtml(limitedTags(s.tags, p, m))}</div>${det("s" + id + i, "系统效果", (s.effect ? `<p>${s.effect}</p>` : "") + actsHtml(s) || (z && z.html) || "")}</div>`;
 	}).join("");
 	const spPct = Math.min(100, (st.spUsed / st.sp) * 100);
@@ -536,6 +544,7 @@ function mechParts(p) {
 		<div class="row"><label>名称</label><input type="text" data-k="mech.name" value="${esc(m.name)}"></div>
 		<div class="row"><label>骨架</label>${frameSel}</div>
 		<div class="muted">${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")} · 挂载点：${f.mounts.map(x => T.mount[x]).join("、")}</div>
+		${f.ext ? `<div class="muted">${extBadge(f)} ${f.variant_of ? `${esc(variantNote(f))}：取得${esc(frameName(FRAMES[f.variant_of]))}牌照 II 后，可代替标准骨架使用；装备沿用该牌照。` : "授权骨架：牌照 I–III 解锁其骨架与装备。"}${f.maker_note ? esc("（" + f.maker_note + "）") : ""}</div>` : ""}
 		${det("fdesc", "骨架介绍", `<p>${f.description}</p>`)}
 		<h4>骨架特征</h4><div class="desc">${traits}${core}</div>
 	</div>`,
@@ -733,9 +742,9 @@ document.addEventListener("click", e => {
 		case "trig": p.triggers[arg].val = clamp(+p.triggers[arg].val + 2 * d, 2, 6); break;
 		case "addTrig": p.triggers.push({ id: "", custom: "", val: 2 }); break;
 		case "delTrig": p.triggers.splice(+arg, 1); break;
-		case "rollBg": p.background = D.backgrounds[Math.floor(Math.random() * D.backgrounds.length)].id; break;
+		case "rollBg": { const core = D.backgrounds.filter(b => !b.ext); p.background = core[Math.floor(Math.random() * core.length)].id; break; }
 		case "lic": { const v = clamp((p.licenses[arg] || 0) + d, 0, 3); if (v) p.licenses[arg] = v; else delete p.licenses[arg]; break; }
-		case "tal": { const v = clamp((p.talents[arg] || 0) + d, 0, 3); if (v) p.talents[arg] = v; else delete p.talents[arg]; migratePilot(p); break; }
+		case "tal": { const v = clamp((p.talents[arg] || 0) + d, 0, TALENTS[arg] ? TALENTS[arg].ranks.length : 0); if (v) p.talents[arg] = v; else delete p.talents[arg]; migratePilot(p); break; }
 		case "cb": p.coreBonuses = hasCB(p, arg) ? p.coreBonuses.filter(x => x !== arg) : [...p.coreBonuses, arg]; break;
 		case "pickMech": p.activeMech = +arg; break;
 		case "addMech": {
@@ -800,17 +809,17 @@ function normalizePilot(raw, warn) {
 		custom = custom.trim();
 		return { id, custom, val: int(t.val, 2, 6, 2) & ~1 };
 	});
-	const ranks = (obj, table, kind) => {
+	const ranks = (obj, table, kind, max = () => 3) => {
 		const out = {};
 		if (obj && typeof obj === "object") for (const [id, r] of Object.entries(obj)) {
 			if (!table[id]) { drop(kind, id); continue; }
-			const v = int(r, 0, 3);
+			const v = int(r, 0, max(table[id]));
 			if (v) out[id] = v;
 		}
 		return out;
 	};
-	p.talents = ranks(raw.talents, TALENTS, "天赋");
-	p.licenses = ranks(raw.licenses, FRAMES, "牌照");
+	p.talents = ranks(raw.talents, TALENTS, "天赋", t => t.ranks.length);
+	p.licenses = ranks(raw.licenses, by(licenseFrames()), "牌照"); // 变体骨架没有自己的牌照
 	p.coreBonuses = (Array.isArray(raw.coreBonuses) ? raw.coreBonuses : []).filter(id => CBS[id] || (drop("核心奖励", id), false));
 	if (raw.gear) {
 		const g = (id, type) => (!id ? "" : GEAR[id]?.type === type ? id : (drop("该栏位可用的驾驶员装备", id), ""));

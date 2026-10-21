@@ -34,12 +34,17 @@ function canModify(w, mod, mount) {
     (!mod.allowed_sizes?.length || mod.allowed_sizes.includes(w.mount)) &&
     !(mod.restricted_types || []).includes(w.type) && !(mod.restricted_sizes || []).includes(w.mount);
 }
+// 超重型武器可另占的挂载点。扩展核心奖励「超重挂载」的超重型挂载点：机甲有重型挂载点时，必须占用它。
+function superheavyLinkTargets(mounts, mt) {
+  const pool = mounts.filter(x => x.key !== mt.key && x.type !== 'Integrated');
+  return mt.type === 'Superheavy' && pool.some(x => x.type === 'Heavy') ? pool.filter(x => x.type === 'Heavy') : pool;
+}
 function linkedMounts(p, m) {
   const mounts = mountsOf(p, m), links = new Map();
   for (const mt of mounts) {
     const st = m.loadout[mt.key];
-    const target = mounts.find(x => x.key === st?.link && x.key !== mt.key && x.type !== 'Integrated');
-    if (mt.type === 'Heavy' && WEAPONS[st?.slots?.[0]?.w]?.mount === 'Superheavy' && target && !links.has(target.key)) {
+    const target = superheavyLinkTargets(mounts, mt).find(x => x.key === st?.link);
+    if (['Heavy', 'Superheavy'].includes(mt.type) && WEAPONS[st?.slots?.[0]?.w]?.mount === 'Superheavy' && target && !links.has(target.key)) {
       links.set(target.key, mt.key);
     }
   }
@@ -108,7 +113,7 @@ function loadoutChecks(p, m) {
     const st = m.loadout[mt.key] || {slots:[],link:''};
     const first = WEAPONS[st.slots[0]?.w];
     if (st.link) {
-      if (first?.mount !== 'Superheavy' || mt.type !== 'Heavy' || links.get(st.link) !== mt.key || occupiedLinks.has(st.link)) error('超重型武器的额外挂载点无效或被重复占用');
+      if (first?.mount !== 'Superheavy' || !['Heavy', 'Superheavy'].includes(mt.type) || links.get(st.link) !== mt.key || occupiedLinks.has(st.link)) error('超重型武器的额外挂载点无效或被重复占用');
       occupiedLinks.add(st.link);
     }
     if (links.has(mt.key) && st.slots.some(s => s.w || s.mod)) error('超重型武器占用的挂载点必须清空');

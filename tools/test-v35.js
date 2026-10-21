@@ -1,5 +1,13 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),crypto=require('crypto');
-const {spec,translator}=require('./core-v35');const c={window:{}};vm.runInNewContext(fs.readFileSync('data.js','utf8'),c);const d=c.window.LANCER_DATA,nk=s=>s.replace(/’/g,"'");let n=0;
+const {spec,translator}=require('./core-v35');const c={window:{}};vm.runInNewContext(fs.readFileSync('data.js','utf8'),c);const full=c.window.LANCER_DATA,nk=s=>s.replace(/’/g,"'");let n=0;
+// 扩展内容（ext:true，见 source/expansions）由 test-rules.js 检查；以下断言只针对核心规则书数据。
+function stripExt(d){const core={...d,zh:{...d.zh}},ext=k=>d[k].filter(x=>x.ext);
+  for(const k of ['frames','weapons','systems','mods','core_bonuses','talents','pilot_gear','skills','backgrounds'])core[k]=d[k].filter(x=>!x.ext);
+  for(const [kind,map,key] of [['frames','frames',x=>x.name],['talents','talents',x=>x.name],['backgrounds','bg',x=>x.name.toLowerCase()],['core_bonuses','cb',x=>x.name],['pilot_gear','gear',x=>x.name]]){
+    core.zh[map]={...d.zh[map]};ext(kind).forEach(x=>delete core.zh[map][key(x)]);
+  }
+  return core;}
+const d=stripExt(full);
 for(const row of spec.names){const x=d[row.kind].find(x=>row.id?x.id===row.id:nk(x.name)===nk(row.en));assert(x,row.en);
   const map={frames:'frames',core_bonuses:'cb',pilot_gear:'gear',skills:'skills',backgrounds:'bg'}[row.kind];
   const key=['skills','backgrounds'].includes(row.kind)?x.name.toLowerCase():row.kind==='pilot_gear'?x.name:nk(x.name);
@@ -13,6 +21,6 @@ for(const kind of ['frames','weapons','systems','mods','core_bonuses','talents',
  const raw=JSON.parse(fs.readFileSync(`source/lancer-data/${kind}.json`));
  assert.deepEqual(Array.from(d[kind],x=>[x.id,x.name]),raw.map(x=>[x.id,x.name]),kind+'的ID/英文查找名变化');
 }
-for(const term of spec.terms)assert(!JSON.stringify(d).includes(term.from),`仍有旧术语 ${term.from}`);
+for(const term of spec.terms)assert(!JSON.stringify(full).includes(term.from),`仍有旧术语 ${term.from}`);
 const tr=translator([['重机枪','重型机枪'],['主观性强化套装','主观性增强套装']]);assert.equal(tr('重机枪、重型机枪'),'重型机枪、重型机枪');
 console.log(`PASS ${n} translation assertions; numeric structure, stable IDs, lookup names and terminology verified.`);

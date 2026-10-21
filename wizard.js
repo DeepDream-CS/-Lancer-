@@ -190,11 +190,11 @@ const WIZ_STEPS = [
 			const card = f => {
 				const s = f.stats, ok = frameAvailable(p, f);
 				return `<div class="pick frame ${f.id === m.frame ? "on" : ""} ${ok ? "" : "locked"}" ${ok ? `data-wiz="frame" data-arg="${f.id}"` : ""}>
-					<b>${esc(zhOf("frame", f) || f.name)} <small>${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")}</small></b>
+					<b>${esc(frameName(f))}${extBadge(f)} <small>${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")}${f.variant_of ? " · " + esc(variantNote(f)) : ""}</small></b>
 					<span>HP ${s.hp} · 装甲 ${s.armor} · 回避 ${s.evasion} · 电子防御 ${s.edef} · 速度 ${s.speed} · SP ${s.sp} · 大小 ${s.size === 0.5 ? "½" : s.size}</span>
 					<span>挂载点：${f.mounts.map(x => T.mount[x]).join("、")}</span>
 					<span>特征：${f.traits.map(t => esc(t.name)).join("、")}</span>
-					${ok ? "" : `<span class="muted">需要 ${esc(zhOf("frame", f))} 牌照 II</span>`}
+					${ok ? "" : `<span class="muted">需要 ${esc(frameName(FRAMES[f.variant_of] || f))} 牌照 II</span>`}
 				</div>`;
 			};
 			const f = FRAMES[m.frame];
