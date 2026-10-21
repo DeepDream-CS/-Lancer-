@@ -60,6 +60,15 @@ test('Kobold license gates frame and invade systems',()=>assert(run("p=fixture(3
 test('Lich license gates frame; Dilemmas NHP counts toward AI cap',()=>assert(run("p=fixture(3);p.licenses={mf_ext_lich:3};m=blankMech('mf_ext_lich');p.mechs=[m];frameAvailable(p,FRAMES.mf_ext_lich)&&itemAvailable(p,SYSTEMS.ms_ext_reprieve)&&(m.systems=['ms_ext_dilemmas_nhp','ms_comp_con_class_assistant_unit'],loadoutChecks(p,m).some(c=>c[1].includes('AI 数量超限')))")));
 test('Sunzi license gates frame and gear',()=>assert(run("p=fixture(3);p.licenses={mf_ext_sunzi:2};frameAvailable(p,FRAMES.mf_ext_sunzi)&&licenseFrames().some(f=>f.id==='mf_ext_sunzi'&&f.source==='HA')&&itemAvailable(p,WEAPONS.mw_ext_warp_rifle)&&!itemAvailable(p,SYSTEMS.ms_ext_reality_breach)")));
 test('Zheng license gates frame, gear and melee-only mod',()=>assert(run("p=fixture(3);p.licenses={mf_ext_zheng:2};frameAvailable(p,FRAMES.mf_ext_zheng)&&itemAvailable(p,MODS.wm_ext_thermal_shroud)&&canModify(WEAPONS.mw_ext_tiger_hunter_gauntlets,MODS.wm_ext_thermal_shroud,{type:'Main'})&&!canModify(WEAPONS.mw_assault_rifle,MODS.wm_ext_thermal_shroud,{type:'Main'})&&!itemAvailable(p,WEAPONS.mw_ext_dd288)")));
+test('Frame filter: maker, role, source, unlocked and search',()=>{
+  const q=c=>run("p=fixture(2);p.licenses={mf_blackbeard:2};uiState.frame={q:'',maker:'',role:'',src:'',unlocked:false,..."+c+"};D.frames.filter(f=>frameMatches(f,p)).map(f=>f.id).join()");
+  assert.equal(q("{maker:'GMS',src:'core'}"),'mf_standard_pattern_i_everest');
+  assert(q("{src:'variant'}").split(',').every(id=>run("FRAMES['"+id+"'].variant_of")));
+  assert.equal(q("{unlocked:true,src:'core'}"),'mf_standard_pattern_i_everest,mf_blackbeard');
+  assert(q("{q:'黑胡子'}").split(',').includes('mf_ext_empakaai'));
+  assert(q("{role:'Artillery',maker:'HA'}").split(',').every(id=>run("FRAMES['"+id+"'].mechtype.includes('Artillery')")));
+  run("uiState.frame={q:'',maker:'',role:'',src:'',unlocked:false}");
+});
 test('Gilgamesh adds +1 limited charge',()=>assert.equal(run("p=fixture(2,'mf_ext_gilgamesh');m=p.mechs[0];p.hase.eng=2;limitedTags([{id:'tg_limited',val:3}],p,m)[0].val"),5));
 test('Iconoclast NHP outside AI cap; expansion talents have 3 ranks',()=>assert(run("p=fixture();p.talents={t_ext_iconoclast:1};m=p.mechs[0];m.systems=['ms_ext_unstable_nhp','ms_comp_con_class_assistant_unit'];itemAvailable(p,SYSTEMS.ms_ext_unstable_nhp)&&!loadoutChecks(p,m).some(c=>c[1].includes('AI'))&&D.talents.filter(t=>t.ext).every(t=>t.ranks.length===3&&Z.talents[t.name].ranks.every(r=>r.html))&&normalizePilot({talents:{t_ext_iconoclast:3,t_ext_sysop:2}},[]).talents.t_ext_iconoclast===3")));
 test('Superheavy Mounting adds a superheavy mount below 3 mounts',()=>assert(run("p=fixture(3,'mf_ext_kidd');p.coreBonuses=['cb_ext_superheavy_mounting'];m=p.mechs[0];const ms=mountsOf(p,m);ms.some(x=>x.key==='sh'&&x.type==='Superheavy')&&(p.mechs[0]=blankMech(EVEREST),!mountsOf(p,p.mechs[0]).some(x=>x.key==='sh'))")));

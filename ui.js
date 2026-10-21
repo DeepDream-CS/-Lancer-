@@ -1,6 +1,56 @@
 "use strict";
 // UI-only state stays separate from character exports.
-const uiState = { talentQuery: '', selectedTalents: false, systemQuery: '' };
+const uiState = { talentQuery: '', selectedTalents: false, systemQuery: '', frame: { q: '', maker: '', role: '', src: '', unlocked: false } };
+
+// ---------- 骨架筛选（机甲页选单与引导式「选择骨架」共用） ----------
+function frameMatches(f, p) {
+  const s = uiState.frame;
+  if (s.maker && f.source !== s.maker) return false;
+  if (s.role && !f.mechtype.includes(s.role)) return false;
+  if (s.src === 'core' && f.ext) return false;
+  if (s.src === 'ext' && !f.ext) return false;
+  if (s.src === 'variant' && !f.variant_of) return false;
+  if (s.src === 'license' && (!f.ext || f.variant_of)) return false;
+  if (s.unlocked && !frameAvailable(p, f)) return false;
+  const q = s.q.trim().toLocaleLowerCase();
+  if (!q) return true;
+  const text = [frameName(f), f.name, f.variant_of ? frameName(FRAMES[f.variant_of]) : '', ...f.mechtype.map(r => T.role[r] || r),
+    ...f.traits.map(t => t.name), f.core_system?.name, f.core_system?.active_name].join(' ').toLocaleLowerCase();
+  return text.includes(q);
+}
+const frameFilterActive = () => { const s = uiState.frame; return !!(s.q.trim() || s.maker || s.role || s.src || s.unlocked); };
+function frameToolbar() {
+  const s = uiState.frame, sel = (ui, cur, opts) => `<select data-ui="${ui}">${opts.map(([v, t]) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
+  return `<div class="catalog-toolbar frame-toolbar"><label class="search-field"><span>查找骨架</span><input type="search" data-ui="frameSearch" value="${esc(s.q)}" placeholder="名称、特征、核心系统或定位"></label>
+    <label class="filter-field"><span>厂商</span>${sel('frameMaker', s.maker, [['', '全部厂商'], ...MAKERS.map(m => [m, makerName(m)])])}</label>
+    <label class="filter-field"><span>定位</span>${sel('frameRole', s.role, [['', '全部定位'], ...Object.entries(T.role)])}</label>
+    <label class="filter-field"><span>来源</span>${sel('frameSrc', s.src, [['', '全部'], ['core', '核心规则书'], ['ext', '扩展（全部）'], ['license', '扩展授权骨架'], ['variant', '变体骨架']])}</label>
+    <label class="chk"><input type="checkbox" data-ui="frameUnlocked" ${s.unlocked ? 'checked' : ''}>只看可用</label>
+    <button data-ui="resetFrames" ${frameFilterActive() ? '' : 'disabled'}>重置</button><span class="muted" data-frame-count role="status"></span></div>
+    <p class="empty-state" data-frame-empty hidden>没有符合条件的骨架，试试其他条件或重置筛选。</p>`;
+}
+function filterFrames() {
+  const p = P(), m = M();
+  let shown = 0, total = D.frames.length;
+  // 机甲页：重建骨架选单，当前骨架始终保留
+  const select = document.querySelector('select[data-k="mech.frame"]');
+  if (select && m) {
+    select.innerHTML = frameOptions(p, m, f => frameMatches(f, p));
+    shown = D.frames.filter(f => frameMatches(f, p)).length;
+  }
+  // 引导式：隐藏不符合条件的卡片
+  const cards = [...document.querySelectorAll('[data-frame-card]')];
+  if (cards.length) { shown = 0; cards.forEach(c => { c.hidden = !frameMatches(FRAMES[c.dataset.frameCard], p); if (!c.hidden) shown++; }); total = cards.length; }
+  // 引导式：符合条件的骨架只在「尚未解锁」折叠区时，自动展开它，避免看起来像没有结果
+  let lockedShown = 0;
+  document.querySelectorAll('details[data-open-id="lockedFrames"]').forEach(d => {
+    lockedShown = [...d.querySelectorAll('[data-frame-card]')].filter(c => !c.hidden).length;
+    if (frameFilterActive() && lockedShown) d.open = true;
+  });
+  document.querySelectorAll('[data-frame-count]').forEach(el => el.textContent = `显示 ${shown} / ${total} 部` + (cards.length && lockedShown ? `（其中 ${lockedShown} 部尚未解锁）` : ''));
+  document.querySelectorAll('[data-frame-empty]').forEach(el => el.hidden = shown > 0);
+  document.querySelectorAll('[data-ui="resetFrames"]').forEach(el => el.disabled = !frameFilterActive());
+}
 
 function pageIntro(p) {
   const content = {
@@ -58,20 +108,25 @@ function enhanceUI() {
   });
   app.querySelectorAll('[data-act="delSys"]').forEach(el=>el.setAttribute('aria-label','移除系统 '+el.closest('.list-item').querySelector('.li-title').textContent));
   app.querySelectorAll('[data-act="delTrig"]').forEach(el=>el.setAttribute('aria-label',`移除触发 ${+el.dataset.arg+1}`));
-  filterTalents(); filterSystems();
+  filterTalents(); filterSystems(); filterFrames();
 }
 document.addEventListener('input',e=>{
   if(e.target.dataset.ui==='talentSearch'){uiState.talentQuery=e.target.value;filterTalents();}
   if(e.target.dataset.ui==='systemSearch'){uiState.systemQuery=e.target.value;filterSystems();}
+  if(e.target.dataset.ui==='frameSearch'){uiState.frame.q=e.target.value;filterFrames();}
 });
 document.addEventListener('change',e=>{
   if(e.target.dataset.ui==='selectedTalents'){uiState.selectedTalents=e.target.checked;filterTalents();}
+  const fk={frameMaker:'maker',frameRole:'role',frameSrc:'src'}[e.target.dataset.ui];
+  if(fk){uiState.frame[fk]=e.target.value;filterFrames();}
+  if(e.target.dataset.ui==='frameUnlocked'){uiState.frame.unlocked=e.target.checked;filterFrames();}
   if(e.target.id==='sysAdd'){const b=document.querySelector('[data-act="addSys"]');if(b)b.disabled=!e.target.value;}
 });
 document.addEventListener('click',e=>{
   const action=e.target.closest('[data-ui]')?.dataset.ui;
   if(action==='resetTalents') {uiState.talentQuery='';uiState.selectedTalents=false;render();document.querySelector('[data-ui="talentSearch"]')?.focus();}
   if(action==='disableGM'){db.ignoreLimits=false;render();}
+  if(action==='resetFrames'){uiState.frame={q:'',maker:'',role:'',src:'',unlocked:false};render();document.querySelector('[data-ui="frameSearch"]')?.focus();}
   const menu=document.getElementById('characterMenu');
   if(menu && (!e.target.closest('.character-menu') || e.target.closest('button'))) menu.open=false;
 });

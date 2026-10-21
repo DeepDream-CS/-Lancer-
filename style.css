@@ -341,3 +341,9 @@ pre.sheet { overflow-wrap:anywhere; }
 .gear-slot select { width: 100%; background: var(--panel); }
 .gear-label { font-size: 12px; color: var(--muted); }
 .gear-slot .wstat, .gear-slot .desc { margin: 0; }
+
+/* 骨架筛选器 */
+.frame-toolbar { margin: 10px 0; padding: 10px 12px; gap: 10px; }
+.filter-field { display: grid; gap: 6px; font-size: 12px; color: var(--muted); flex: 0 1 150px; }
+.filter-field select { width: 100%; }
+.frame-toolbar .search-field { flex: 1 1 200px; }

@@ -481,6 +481,13 @@ function weaponInfo(w, mod, p = P(), m = M()) {
 	if (mod) detail += `<div class="blk"><div class="blk-h">模块：${esc(plain("item", mod))} (${mod.sp}SP)</div><p>${mod.effect || ""}</p>${actsHtml(mod)}</div>`;
 	return `<div class="wstat">${esc(meta)} ${tagsHtml(prof.tags || w.tags)}</div>` + det("w" + w.id + (mod ? mod.id : ""), "武器效果", detail);
 }
+// 骨架选单的选项；filter 用于骨架筛选器（当前骨架始终保留，避免选单把它换掉）
+function frameOptions(p, m, filter = () => true) {
+	return MAKERS.map(mk => {
+		const list = D.frames.filter(x => x.source === mk && (x.id === m.frame || filter(x)));
+		return list.length ? `<optgroup label="${esc(makerName(mk))}">${list.map(x => opt(x.id, (x.variant_of ? "　└ " : "") + esc(plain("frame", x)) + (x.variant_of ? `（${esc(variantNote(x))}）` : x.ext ? "（扩展）" : "") + (frameAvailable(p, x) ? "" : " 🔒"), x.id === m.frame, !frameAvailable(p, x) && x.id !== m.frame)).join("")}</optgroup>` : "";
+	}).join("");
+}
 function mechParts(p) {
 	const m = M();
 	const f = FRAMES[m.frame];
@@ -488,8 +495,8 @@ function mechParts(p) {
 	STAT_CTX = st ? { ...st, grit: LV(p.ll).grit, drone_hp: staticBonus(p,m,"drone_hp"), deployable_hp: staticBonus(p,m,"deployable_hp") } : {};
 	const mechTabs = `<div class="mech-tabs">${p.mechs.map((x, i) => `<button data-act="pickMech" data-arg="${i}" class="${i === p.activeMech ? "on" : ""}">${esc(x.name || "机甲" + (i + 1))}</button>`).join("")}
 		<button data-act="addMech">+ 新机甲</button>${p.mechs.length > 1 ? `<button data-act="delMech" class="danger">删除此机甲</button>` : ""}</div>`;
-	const frameSel = `<select data-k="mech.frame">${MAKERS.map(mk => `<optgroup label="${esc(makerName(mk))}">${D.frames.filter(x => x.source === mk).map(x => opt(x.id, (x.variant_of ? "　└ " : "") + esc(plain("frame", x)) + (x.variant_of ? `（${esc(variantNote(x))}）` : x.ext ? "（扩展）" : "") + (frameAvailable(p, x) ? "" : " 🔒"), x.id === m.frame, !frameAvailable(p, x) && x.id !== m.frame)).join("")}</optgroup>`).join("")}</select>`;
-	if (!f) return { only: mechTabs + `<div class="card">${frameSel}</div>` };
+	const frameSel = `<select data-k="mech.frame">${frameOptions(p, m)}</select>`;
+	if (!f) return { only: mechTabs + `<div class="card">${frameSel}${frameToolbar()}</div>` };
 
 	const stat = (v, n, hl) => `<div class="stat ${hl ? "hl" : ""}"><b>${v}</b><span>${n}</span></div>`;
 	const statsHtml = `<div class="stats">
@@ -550,6 +557,7 @@ function mechParts(p) {
 		<h3>机甲</h3>
 		<div class="row"><label>名称</label><input type="text" data-k="mech.name" value="${esc(m.name)}"></div>
 		<div class="row"><label>骨架</label>${frameSel}</div>
+		${frameToolbar()}
 		<div class="muted">${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")} · 挂载点：${f.mounts.map(x => T.mount[x]).join("、")}</div>
 		${f.ext ? `<div class="muted">${extBadge(f)} ${f.variant_of ? `${esc(variantNote(f))}：取得${esc(frameName(FRAMES[f.variant_of]))}牌照 II 后，可代替标准骨架使用（两者互斥）；装备沿用该牌照。` : "授权骨架：牌照 I–III 解锁其骨架与装备。"}${f.maker_note ? esc("（" + f.maker_note + "）") : ""}</div>` : ""}
 		${det("fdesc", "骨架介绍", `<p>${f.description}</p>`)}
