@@ -35,9 +35,9 @@ const MOUNT_SLOTS = {
 };
 const T = {
 	mount: { "Main": "主", "Aux": "副", "Flex": "灵活", "Main/Aux": "主/副", "Aux/Aux": "副/副", "Heavy": "重型", "Integrated": "内建", "Auxiliary": "副", "Superheavy": "超重型", "Ship-class": "舰载级" },
-	wtype: { "Melee": "肉搏", "CQB": "CQB", "Rifle": "步枪", "Launcher": "发射器", "Cannon": "大炮", "Nexus": "巢房", "Special": "特殊", "Spool Weapon": "卷绕武器" },
+	wtype: { "Melee": "近战", "CQB": "CQB", "Rifle": "步枪", "Launcher": "发射器", "Cannon": "大炮", "Nexus": "巢房", "Special": "特殊", "Spool Weapon": "卷绕武器" },
 	dmg: { "Kinetic": "动能", "Explosive": "爆炸", "Energy": "能量", "Heat": "热度", "Burn": "燃烧", "Variable": "可变" },
-	range: { "Range": "射程", "Threat": "威胁", "Blast": "溅射", "Burst": "爆发", "Line": "直线", "Cone": "锥形", "Thrown": "投掷" },
+	range: { "Range": "射程", "Threat": "威胁", "Blast": "溅射", "Burst": "爆发", "Line": "线形", "Cone": "锥形", "Thrown": "投掷" },
 	hase: { hull: "机体 HULL", agi: "敏捷 AGI", sys: "系统 SYS", eng: "工程 ENG" },
 	stype: { "AI": "AI", "Deployable": "可展开", "Drone": "无人机", "Shield": "护盾", "Flight System": "飞行系统", "Tech": "科技" },
 	role: { "Balanced": "均衡", "Striker": "打击", "Controller": "控制", "Support": "支援", "Defender": "防御", "Artillery": "炮击" },
@@ -155,8 +155,8 @@ function mountsOf(p, m) {
 	if (!f) return [];
 	const mounts = f.mounts.map((t, i) => ({ key: "m" + i, type: t }));
 	if (hasCB(p, "cb_mount_retrofitting") && mounts[m.retrofit]) mounts[m.retrofit] = { ...mounts[m.retrofit], type: "Main/Aux", retro: true };
-	if (hasCB(p, "cb_improved_armament") && mounts.length < 3) mounts.push({ key: "ia", type: "Flex", note: "强化装备" });
-	if (hasCB(p, "cb_integrated_weapon")) mounts.push({ key: "iw", type: "Integrated", note: "内建武器（核心加成）", noMods: true });
+	if (hasCB(p, "cb_improved_armament") && mounts.length < 3) mounts.push({ key: "ia", type: "Flex", note: "改良武装" });
+	if (hasCB(p, "cb_integrated_weapon")) mounts.push({ key: "iw", type: "Integrated", note: "武器一体化（核心奖励）", noMods: true });
 	return mounts;
 }
 function integratedOf(f, p, m = p.mechs.find(m => m.frame === f?.id) || {}) {
@@ -230,15 +230,15 @@ function checks(p) {
 	const ids = p.triggers.map(t => t.id || t.custom).filter(Boolean);
 	if (new Set(ids).size !== ids.length) out.push(["err", "触发重复"]);
 	const hs = Object.values(p.hase).reduce((a, b) => a + b, 0);
-	if (hs !== L.skills) out.push(["warn", `机甲能力点数 ${hs}，应为 ${L.skills}`]);
+	if (hs !== L.skills) out.push(["warn", `机甲技能点数 ${hs}，应为 ${L.skills}`]);
 	const tr = Object.values(p.talents).reduce((a, b) => a + b, 0);
 	if (tr !== L.talents) out.push(["warn", `天赋等级合计 ${tr}，应为 ${L.talents}`]);
 	const lr = Object.values(p.licenses).reduce((a, b) => a + b, 0);
 	if (lr !== L.licenses) out.push([lr > L.licenses ? "err" : "warn", `牌照等级合计 ${lr}，应为 ${L.licenses}`]);
-	if (p.coreBonuses.length !== L.cbs) out.push([p.coreBonuses.length > L.cbs ? "err" : "warn", `核心加成 ${p.coreBonuses.length} 个，应为 ${L.cbs} 个`]);
+	if (p.coreBonuses.length !== L.cbs) out.push([p.coreBonuses.length > L.cbs ? "err" : "warn", `核心奖励 ${p.coreBonuses.length} 个，应为 ${L.cbs} 个`]);
 	if (!db.ignoreLimits) for (const mk of MAKERS.slice(1)) {
 		const n = p.coreBonuses.filter(id => CBS[id] && CBS[id].source === mk).length;
-		if (n && makerLicenseTotal(p, mk) < n * 3) out.push(["err", `${mk} 核心加成 ${n} 个需要该厂牌照合计 ${n * 3} 级（现有 ${makerLicenseTotal(p, mk)}）`]);
+		if (n && makerLicenseTotal(p, mk) < n * 3) out.push(["err", `${mk} 核心奖励 ${n} 个需要该厂牌照合计 ${n * 3} 级（现有 ${makerLicenseTotal(p, mk)}）`]);
 	}
 	if (!p.background && !p.bgCustom) out.push(["warn", "未选择背景"]);
 	p.mechs.forEach((m, mi) => {
@@ -280,7 +280,7 @@ function det(id, title, html) {
 const opt = (v, text, sel, dis) => `<option value="${esc(v)}" ${sel ? "selected" : ""} ${dis ? "disabled" : ""}>${text}</option>`;
 
 // ---------- 页面：驾驶员 ----------
-// 卫士服的数值写成一行：+3 HP、装甲、回避、电子防御、速度
+// 防护服的数值写成一行：+3 HP、装甲、回避、电子防御、速度
 const armorText = g => (g.bonuses || []).map(b => {
 	const n = { pilot_hp: "HP", pilot_armor: "装甲", pilot_evasion: "回避", pilot_edef: "电子防御", pilot_speed: "速度" }[b.id];
 	return n ? (b.replace ? `${n} ${b.val}` : `${n} +${b.val}`) : "";
@@ -297,7 +297,7 @@ function pilotParts(p) {
 		if (!g) return "";
 		const z = Z.gear[g.name];
 		const meta = [g.damage ? dmgText(g.damage) : "", g.range ? rngText(g.range) : "", armorText(g), tagsPlain(g.tags)].filter(Boolean).join(" · ");
-		// 规则站有译文的装备（大多是「其他装备」）直接用；卫士服和武器用自译的说明＋效果
+		// 规则站有译文的装备（大多是「其他装备」）直接用；防护服和武器用自译的说明＋效果
 		const own = (z && z.html) ? "" : (g.effect ? `<p><b>效果：</b>${g.effect}</p>` : "") + actsHtml(g);
 		if (z && z.html) return `<div class="wstat">${esc(meta)}</div><div class="desc">${z.html}</div>`;
 		return `<div class="wstat">${esc(meta)}</div>` + (own ? `<div class="desc">${own}</div>` : "") + det("gear-" + id + slot, "说明", g.description ? `<p>${g.description}</p>` : "");
@@ -326,7 +326,7 @@ function pilotParts(p) {
 		<button data-act="rollBg" title="掷 1d20">🎲 随机</button></div>
 		${p.background ? "" : `<div class="row"><input type="text" data-k="bgCustom" placeholder="自创背景名称" value="${esc(p.bgCustom)}"></div>`}
 		${bgz ? `<div class="muted">${esc(bgz.triggers)}</div>${det("bg", "背景说明", bgz.html)}` : ""}
-		<p class="muted">使用背景：在战斗以外，与背景相关的技能判定可得 +1 准度（或 +1 难度）。</p>
+		<p class="muted">使用背景：在战斗以外，与背景相关的技能检定可得 +1 准度（或 +1 难度）。</p>
 		<h4>外貌 / 经历</h4>
 		<textarea data-k="bio" placeholder="简单写写这个驾驶员的故事">${esc(p.bio)}</textarea>
 	</div>`,
@@ -367,26 +367,26 @@ function progressParts(p) {
 	const hs = Object.values(p.hase).reduce((a, b) => a + b, 0);
 	const tr = Object.values(p.talents).reduce((a, b) => a + b, 0);
 	const lr = Object.values(p.licenses).reduce((a, b) => a + b, 0);
-	const levelTable = `<table class="tbl"><tr><th>LL</th><th>毅力</th><th>机甲能力</th><th>牌照</th><th>天赋</th><th>核心加成</th><th>触发</th></tr>${Array.from({ length: 13 }, (_, i) => {
+	const levelTable = `<table class="tbl"><tr><th>LL</th><th>毅力</th><th>机甲技能</th><th>牌照</th><th>天赋</th><th>核心奖励</th><th>触发</th></tr>${Array.from({ length: 13 }, (_, i) => {
 		const l = LV(i);
 		return `<tr class="${i === p.ll ? "cur" : ""}"><td>${i}</td><td>${l.grit}</td><td>${l.skills}</td><td>${l.licenses}</td><td>${l.talents}</td><td>${l.cbs}</td><td>+${l.triggers}</td></tr>`;
 	}).join("")}</table>`;
 	const haseDesc = { hull: "每点 +2 HP；每两点 +1 维修上限", agi: "每点 +1 回避；每两点 +1 速度", sys: "每点 +1 电子防御与科技攻击；每两点 +1 SP", eng: "每点 +1 热度上限；每两点 +1 受限装备使用次数" };
 	return {
 	hase: `<div class="card">
-		<h3>机甲能力 HASE ${counter(hs, L.skills)}</h3>
+		<h3>机甲技能 HASE ${counter(hs, L.skills)}</h3>
 		${Object.keys(T.hase).map(k => `<div class="row" style="justify-content:space-between"><span><b>${T.hase[k]}</b><br><span class="muted">${haseDesc[k]}</span></span>${stepper("hase", k, p.hase[k], 0, 6, v => "+" + v)}</div>`).join("")}
 	</div>`,
 	levels: `<div class="card"><h3>等级表 <span class="muted">当前 LL${p.ll}</span></h3>${levelTable}
-		<p class="muted">每次升级可选择一项重分配：一个天赋的全部等级、一个牌照的全部等级，或换一个核心加成。重分配牌照导致核心加成失去资格时，须同时替换该核心加成。</p></div>`,
+		<p class="muted">每次升级可选择一项重分配：一个天赋的全部等级、一个牌照的全部等级，或换一个核心奖励。重分配牌照导致核心奖励失去资格时，须同时替换该核心奖励。</p></div>`,
 	licenses: `<div class="card wide">
 		<h3>牌照 Licenses ${counter(lr, L.licenses)}</h3>
-		<p class="muted">每级 LL 得 1 牌照等级。牌照分一至三级，须依次取得；二级解锁该骨架。GMS（埃佛勒斯及 GMS 装备）永远可用。</p>
+		<p class="muted">每级 LL 得 1 牌照等级。牌照分一至三级，须依次取得；二级解锁该骨架。GMS（埃弗勒斯及 GMS 装备）永远可用。</p>
 		${MAKERS.slice(1).map(mk => `<div class="mfr" style="border-color:${MAKER_COLOR[mk]}">${esc(makerName(mk))} <span class="muted">合计 ${makerLicenseTotal(p, mk)} 级</span></div>
 			<div class="lic-grid">${D.frames.filter(f => f.source === mk).map(f => `<div class="lic ${p.licenses[f.id] ? "has" : ""}"><span>${label("frame", f)}</span>${stepper("lic", f.id, p.licenses[f.id] || 0, 0, 3, v => ["—", "I", "II", "III"][v])}</div>`).join("")}</div>`).join("")}
 	</div>`,
 	cbs: `<div class="card wide">
-		<h3>核心加成 Core Bonuses ${counter(p.coreBonuses.length, L.cbs)}</h3>
+		<h3>核心奖励 Core Bonuses ${counter(p.coreBonuses.length, L.cbs)}</h3>
 		<p class="muted">每 3 级 LL 得一个。GMS 加成随时可选；其他厂商每个加成需要该厂商合计 3 级牌照（第二个需要 6 级，以此类推）。</p>
 		${MAKERS.map(mk => `<div class="mfr" style="border-color:${MAKER_COLOR[mk]}">${esc(makerName(mk))}</div>${D.core_bonuses.filter(c => c.source === mk).map(c => {
 			const have = hasCB(p, c.id);
@@ -427,7 +427,7 @@ function itemOptions(p, list, cur, filter) {
 	});
 	return Object.entries(groups).map(([g, items]) => `<optgroup label="${esc(g)}">${items.map(it => opt(it.id, esc(plain("item", it)) + (it.sp ? ` [${it.sp}SP]` : ""), it.id === cur)).join("")}</optgroup>`).join("");
 }
-const ACT = { "Quick": "快速动作", "Full": "完整动作", "Reaction": "反应", "Protocol": "协定", "Free": "免费动作", "Quick Tech": "快速科技", "Full Tech": "完整科技", "Invade": "入侵", "Deployable": "可展开", "Drone": "无人机", "Mine": "地雷", "cover": "掩体", "Rocket": "火箭", "Object": "物件", "Decoy": "诱饵", "Bomb": "炸弹" };
+const ACT = { "Quick": "快速动作", "Full": "完整动作", "Reaction": "反应", "Protocol": "协定", "Free": "自由动作", "Quick Tech": "快速科技", "Full Tech": "完整科技", "Invade": "入侵", "Deployable": "可展开", "Drone": "无人机", "Mine": "地雷", "cover": "掩体", "Rocket": "火箭", "Object": "物件", "Decoy": "诱饵", "Bomb": "炸弹" };
 const freqText = f => String(f || "").replace(/(\d+)\s*\/\s*round/i, "每轮$1次").replace(/(\d+)\s*\/\s*turn/i, "每回合$1次").replace(/(\d+)\s*\/\s*scene/i, "每场景$1次").replace(/unlimited/i, "无限");
 const txt = v => (v && typeof v === "object" ? v.detail || "" : v || "");
 // 系统、武器、骨架上的动作（反应、协定等）与可展开物（无人机、地雷等）
@@ -463,7 +463,7 @@ function weaponInfo(w, mod, p = P(), m = M()) {
 	if (w.on_attack) detail += `<p><b>攻击时：</b>${txt(w.on_attack)}</p>`;
 	if (w.profiles) detail += w.profiles.map(raw => { const pf = effectiveProfile(w, raw, mod, p, m); return `<div class="blk"><div class="blk-h">${esc(pf.name)}</div><div>${rngText(pf.range)} · ${dmgText(pf.damage)} ${tagsHtml(pf.tags)}</div>${pf.effect ? `<p>${pf.effect}</p>` : ""}${pf.on_hit ? `<p><b>命中时：</b>${txt(pf.on_hit)}</p>` : ""}${pf.on_crit ? `<p><b>会心一击时：</b>${txt(pf.on_crit)}</p>` : ""}${pf.on_attack ? `<p><b>攻击时：</b>${txt(pf.on_attack)}</p>` : ""}${actsHtml(pf)}</div>`; }).join("");
 	detail += actsHtml(w);
-	if (mod) detail += `<div class="blk"><div class="blk-h">改装：${esc(plain("item", mod))} (${mod.sp}SP)</div><p>${mod.effect || ""}</p>${actsHtml(mod)}</div>`;
+	if (mod) detail += `<div class="blk"><div class="blk-h">模块：${esc(plain("item", mod))} (${mod.sp}SP)</div><p>${mod.effect || ""}</p>${actsHtml(mod)}</div>`;
 	return `<div class="wstat">${esc(meta)} ${tagsHtml(prof.tags || w.tags)}</div>` + det("w" + w.id + (mod ? mod.id : ""), "武器效果", detail);
 }
 function mechParts(p) {
@@ -494,7 +494,7 @@ function mechParts(p) {
 	const linkedBy = Object.fromEntries(linkedMounts(p, m));
 	const mountHtml = mounts.map(mt => {
 		const sst = slotState(m, mt.key);
-		const title = `${T.mount[mt.type] || mt.type}挂载点${mt.retro ? "（改造挂载点）" : ""}${mt.note ? "（" + mt.note + "）" : ""}`;
+		const title = `${T.mount[mt.type] || mt.type}挂载点${mt.retro ? "（挂载点改装）" : ""}${mt.note ? "（" + mt.note + "）" : ""}`;
 		const stab = mt.type !== "Integrated" && hasCB(p, "cb_auto_stabilizing_hardpoints") ? `<label class="chk"><input type="radio" name="stab" data-act="stab" data-arg="${mt.key}" ${m.stabilized === mt.key ? "checked" : ""}> 自动稳定（+1准度）</label>` : "";
 		if (linkedBy[mt.key]) return `<div class="mount"><div class="mount-h">${title}</div><div class="muted">被超重型武器占用</div></div>`;
 		const slots = MOUNT_SLOTS[mt.type].map((acc, i) => {
@@ -504,7 +504,7 @@ function mechParts(p) {
 			const w = WEAPONS[s.w];
 			const mods = w && !mt.noMods && !w.no_mods ? D.mods.filter(md => canModify(w, md, mt)) : [];
 			let html = `<div class="slot"><select data-act="slotW" data-arg="${mt.key}|${i}"><option value="">— 空 —</option>${itemOptions(p, D.weapons, s.w, x => acc.includes(x.mount))}</select>
-				${mods.length ? `<select data-act="slotMod" data-arg="${mt.key}|${i}"><option value="">— 无改装 —</option>${itemOptions(p, mods, s.mod, () => true)}</select>` : "<span></span>"}</div>`;
+				${mods.length ? `<select data-act="slotMod" data-arg="${mt.key}|${i}"><option value="">— 无模块 —</option>${itemOptions(p, mods, s.mod, () => true)}</select>` : "<span></span>"}</div>`;
 			if (w) html += weaponInfo(w, s.mod && MODS[s.mod]) + `<p class="muted">${esc(buildWeaponNote(p, m, {w, mount:mt, i}))}</p>`;
 			if (w && w.mount === "Superheavy") {
 				const others = mounts.filter(o => o.key !== mt.key && o.type !== "Integrated" && (!linkedBy[o.key] || linkedBy[o.key] === mt.key) && WEAPONS[m.loadout[o.key]?.slots?.[0]?.w]?.mount !== "Superheavy");
@@ -515,8 +515,8 @@ function mechParts(p) {
 		return `<div class="mount"><div class="mount-h"><span>${title}</span>${stab}</div>${slots}</div>`;
 	}).join("");
 	const integ = integratedOf(f, p, m).map(w => `<div class="mount"><div class="mount-h">内建：${esc(plain("item", w))}</div>${w.mount ? weaponInfo(w) : `<div class="desc">${w.effect || ""}${actsHtml(w)}</div>`}</div>`).join("");
-	const retro = hasCB(p, "cb_mount_retrofitting") ? `<div class="row"><span class="muted">改造挂载点（核心加成）：把哪个挂载点换成主/副？</span><select data-act="retro"><option value="-1">—</option>${f.mounts.map((t, i) => opt(i, `${i + 1}. ${T.mount[t]}挂载点`, m.retrofit === i)).join("")}</select></div>` : "";
-	const overpower = hasCB(p, "cb_overpower_caliber") ? `<div class="row"><span class="muted">过强弹药（核心加成）指定武器：</span><select data-k="mech.overpower"><option value="">—</option>${equippedWeapons(p, m).filter(e => e.mount.type !== "Integrated" && !e.w.no_core_bonus).map(e => opt(`${e.mount.key}|${e.i}`, `${T.mount[e.mount.type]} ${e.mount.key}/${e.i + 1} · ${esc(plain("item", e.w))}`, m.overpower === `${e.mount.key}|${e.i}`)).join("")}</select></div>` : "";
+	const retro = hasCB(p, "cb_mount_retrofitting") ? `<div class="row"><span class="muted">挂载点改装（核心奖励）：把哪个挂载点换成主/副？</span><select data-act="retro"><option value="-1">—</option>${f.mounts.map((t, i) => opt(i, `${i + 1}. ${T.mount[t]}挂载点`, m.retrofit === i)).join("")}</select></div>` : "";
+	const overpower = hasCB(p, "cb_overpower_caliber") ? `<div class="row"><span class="muted">超功率口径（核心奖励）指定武器：</span><select data-k="mech.overpower"><option value="">—</option>${equippedWeapons(p, m).filter(e => e.mount.type !== "Integrated" && !e.w.no_core_bonus).map(e => opt(`${e.mount.key}|${e.i}`, `${T.mount[e.mount.type]} ${e.mount.key}/${e.i + 1} · ${esc(plain("item", e.w))}`, m.overpower === `${e.mount.key}|${e.i}`)).join("")}</select></div>` : "";
 
 	// 系统
 	const sysHtml = m.systems.map((id, i) => {
@@ -537,7 +537,7 @@ function mechParts(p) {
 		<div class="row"><label>骨架</label>${frameSel}</div>
 		<div class="muted">${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")} · 挂载点：${f.mounts.map(x => T.mount[x]).join("、")}</div>
 		${det("fdesc", "骨架介绍", `<p>${f.description}</p>`)}
-		<h4>骨架特性</h4><div class="desc">${traits}${core}</div>
+		<h4>骨架特征</h4><div class="desc">${traits}${core}</div>
 	</div>`,
 	stats: `<div class="card">
 		<h3>数值 <span class="muted">已计入常驻数值加成；条件效果见规则说明</span></h3>
@@ -570,10 +570,10 @@ function sheetText(p) {
 	lines.push(`背景：${bg ? plain("bg", bg) : p.bgCustom || "—"}`);
 	lines.push(`HP ${ps.hp}｜装甲 ${ps.armor}｜回避 ${ps.evasion}｜电子防御 ${ps.edef}｜速度 ${ps.speed}｜大小 ½`);
 	lines.push(`触发：${p.triggers.filter(t => t.id || t.custom).map(t => `${t.id ? plain("skill", SKILLS[t.id]) : t.custom} +${t.val}`).join("、") || "—"}`);
-	lines.push(`机甲能力：机体 +${p.hase.hull}　敏捷 +${p.hase.agi}　系统 +${p.hase.sys}　工程 +${p.hase.eng}`);
+	lines.push(`机甲技能：机体 +${p.hase.hull}　敏捷 +${p.hase.agi}　系统 +${p.hase.sys}　工程 +${p.hase.eng}`);
 	lines.push(`天赋：${Object.entries(p.talents).filter(([, r]) => r).map(([id, r]) => `${plain("talent", TALENTS[id])} ${["", "I", "II", "III"][r]}`).join("、") || "—"}`);
 	lines.push(`牌照：GMS${Object.entries(p.licenses).filter(([, r]) => r).map(([id, r]) => `、${plain("frame", FRAMES[id])} ${["", "I", "II", "III"][r]}`).join("")}`);
-	lines.push(`核心加成：${p.coreBonuses.map(id => plain("cb", CBS[id])).join("、") || "—"}`);
+	lines.push(`核心奖励：${p.coreBonuses.map(id => plain("cb", CBS[id])).join("、") || "—"}`);
 	const g = p.gear;
 	lines.push(`驾驶员装备：${[g.armor, ...g.weapons, ...g.items].filter(Boolean).map(id => plain("gear", GEAR[id])).join("、") || "—"}`);
 	if (p.bio) lines.push(`经历：${p.bio}`);
@@ -593,12 +593,12 @@ function sheetText(p) {
 		lines.push(`HP ${st.hp}｜装甲 ${st.armor}｜结构 ${st.structure}｜压力 ${st.stress}｜热度上限 ${st.heatcap}｜维修上限 ${st.repcap}`);
 		lines.push(`回避 ${st.evasion}｜电子防御 ${st.edef}｜速度 ${st.speed}｜大小 ${st.size === 0.5 ? "½" : st.size}｜感应 ${st.sensor}｜豁免目标 ${st.save}`);
 		lines.push(`科技攻击 ${st.tech >= 0 ? "+" : ""}${st.tech}｜攻击加值 +${st.attack}｜SP ${st.spUsed}/${st.sp}`);
-		lines.push(`特性：${f.traits.map(t => t.name).join("、")}｜核心系统：${f.core_system.name}`);
+		lines.push(`特征：${f.traits.map(t => t.name).join("、")}｜核心系统：${f.core_system.name}`);
 		lines.push("武器：");
 		integratedOf(f, p, m).forEach(w => { const pr = w.mount ? effectiveProfile(w, w.profiles?.[0] || w, null, p, m) : null; lines.push(`  · [内建] ${plain("item", w)}${pr ? `　${rngText(pr.range)}　${dmgText(pr.damage)}　${tagsPlain(pr.tags)}　${buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})}` : ""}`); });
 		equippedWeapons(p, m).forEach(e => {
 			const prof = effectiveProfile(e.w, e.w.profiles ? e.w.profiles[0] : e.w, e.mod, p, m);
-			lines.push(`  · [${T.mount[e.mount.type]}] ${plain("item", e.w)}　${T.mount[e.w.mount]}${T.wtype[e.w.type] || ""}　${rngText(prof.range)}　${dmgText(prof.damage)}${tagsPlain(prof.tags) ? "　" + tagsPlain(prof.tags) : ""}${e.mod ? "　改装：" + plain("item", e.mod) : ""}${m.stabilized === e.mount.key ? "　(+1准度)" : ""}${buildWeaponNote(p, m, e) ? "　" + buildWeaponNote(p, m, e) : ""}`);
+			lines.push(`  · [${T.mount[e.mount.type]}] ${plain("item", e.w)}　${T.mount[e.w.mount]}${T.wtype[e.w.type] || ""}　${rngText(prof.range)}　${dmgText(prof.damage)}${tagsPlain(prof.tags) ? "　" + tagsPlain(prof.tags) : ""}${e.mod ? "　模块：" + plain("item", e.mod) : ""}${m.stabilized === e.mount.key ? "　(+1准度)" : ""}${buildWeaponNote(p, m, e) ? "　" + buildWeaponNote(p, m, e) : ""}`);
 		});
 		lines.push(`系统：${m.systems.map(id => SYSTEMS[id] ? `${plain("item", SYSTEMS[id])}(${SYSTEMS[id].sp || 0} SP；${tagsPlain(limitedTags(SYSTEMS[id].tags,p,m))})` : "").filter(Boolean).join("、") || "—"}`);
 		if (m.notes) lines.push(`备注：${m.notes}`);
@@ -811,7 +811,7 @@ function normalizePilot(raw, warn) {
 	};
 	p.talents = ranks(raw.talents, TALENTS, "天赋");
 	p.licenses = ranks(raw.licenses, FRAMES, "牌照");
-	p.coreBonuses = (Array.isArray(raw.coreBonuses) ? raw.coreBonuses : []).filter(id => CBS[id] || (drop("核心加成", id), false));
+	p.coreBonuses = (Array.isArray(raw.coreBonuses) ? raw.coreBonuses : []).filter(id => CBS[id] || (drop("核心奖励", id), false));
 	if (raw.gear) {
 		const g = (id, type) => (!id ? "" : GEAR[id]?.type === type ? id : (drop("该栏位可用的驾驶员装备", id), ""));
 		p.gear.armor = g(raw.gear.armor, "Armor");

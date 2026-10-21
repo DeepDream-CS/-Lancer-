@@ -111,7 +111,7 @@ async function drawPilotCard(p) {
 		fill(g, val, 78, y, 285, h > 30 ? 26 : h, { size: 15 });
 	});
 
-	// 等级与机甲能力
+	// 等级与机甲技能
 	const hx = [["LL", p.ll, 437, 121, "L"], ["毅力", "+" + L.grit, 479, 121, "R"], ["机体", "+" + p.hase.hull, 458, 157, "L"], ["系统", "+" + p.hase.sys, 500, 157, "R"], ["敏捷", "+" + p.hase.agi, 437, 193, "L"], ["工程", "+" + p.hase.eng, 479, 193, "R"]];
 	hx.forEach(([lab, v, x, y, side]) => {
 		hex(g, x, y, 20, v);
@@ -165,8 +165,8 @@ async function drawPilotCard(p) {
 		else text(g, "LL" + (i + 1), 586, y + 19, 16, { bold: true, color: C_HINT });
 	}
 
-	// 核心加成
-	title(g, "核心加成", "Core Bonuses", 34, 776);
+	// 核心奖励
+	title(g, "核心奖励", "Core Bonuses", 34, 776);
 	for (let i = 0; i < 4; i++) {
 		const x = i % 2 ? 295 : 36, y = 787 + Math.floor(i / 2) * 34;
 		bar(g, x, y, 246, 26);
@@ -206,7 +206,7 @@ function weaponRows(p, m) {
 	const rows = [];
 	const add = (w, mountName, mod, note = '') => {
 		const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
-		const eff = [stripHtml(w.effect), w.on_hit ? "命中：" + stripHtml(txt(w.on_hit)) : "", w.on_crit ? "会心一击：" + stripHtml(txt(w.on_crit)) : "", w.on_attack ? "攻击时：" + stripHtml(txt(w.on_attack)) : "", mod ? `改装「${plain("item", mod)}」：${stripHtml(mod.effect)}` : ""].filter(Boolean).join(" ");
+		const eff = [stripHtml(w.effect), w.on_hit ? "命中：" + stripHtml(txt(w.on_hit)) : "", w.on_crit ? "会心一击：" + stripHtml(txt(w.on_crit)) : "", w.on_attack ? "攻击时：" + stripHtml(txt(w.on_attack)) : "", mod ? `模块「${plain("item", mod)}」：${stripHtml(mod.effect)}` : ""].filter(Boolean).join(" ");
 		rows.push([plain("item", w), mountName + " / " + (T.mount[w.mount] || w.mount) + (T.wtype[w.type] || w.type || ""), rngText(prof.range), dmgText(prof.damage), tagsPlain(prof.tags || w.tags), [note, eff].filter(Boolean).join(' ') ]);
 	};
 	integratedOf(f, p, m).filter(w => w.mount).forEach(w => add(w, "内建", null, buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})));
@@ -249,8 +249,8 @@ function drawMechCard(p, m) {
 		text(g, v ?? "", x + 42, 198, 22, { align: "center", bold: true });
 	});
 
-	// 骨架特性（最多 4 条）
-	title(g, "骨架特性", "Frame Traits", 36, 241);
+	// 骨架特征（最多 4 条）
+	title(g, "骨架特征", "Frame Traits", 36, 241);
 	const traits = f ? f.traits : [];
 	for (let i = 0; i < 4; i++) {
 		const x = i % 2 ? 472 : 34, y = 251 + Math.floor(i / 2) * 50, w = 420, h = 44;
@@ -263,8 +263,8 @@ function drawMechCard(p, m) {
 		}
 	}
 
-	// 核心系统与核心加成
-	title(g, "核心加成", "Core Bonus", 38, 380);
+	// 核心系统与核心奖励
+	title(g, "核心奖励", "Core Bonus", 38, 380);
 	text(g, "核心能力", 708, 373, 18, { align: "right" });
 	text(g, "CORE POWER", 708, 373, 18, { bold: true });
 	hex(g, 869, 366, 20, 1);

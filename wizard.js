@@ -20,7 +20,7 @@ const WIZ_STEPS = [
 		body: () => `
 			<p>《Lancer》的角色由两部分组成：<b>驾驶员</b>（你扮演的人）和<b>机甲</b>（驾驶员开的机器）。这个引导会按规则书的顺序，一步一步带你做完一张能上桌的角色卡。</p>
 			<div class="wiz-flow">
-				<div><b>驾驶员</b><span>等级 → 资料 → 背景 → 触发 → 机甲能力 → 天赋 → 牌照/核心加成 → 装备</span></div>
+				<div><b>驾驶员</b><span>等级 → 资料 → 背景 → 触发 → 机甲技能 → 天赋 → 牌照/核心奖励 → 装备</span></div>
 				<div><b>机甲</b><span>选择骨架 → 安装武器与系统</span></div>
 			</div>
 			${tip("<b>没有金钱，只有牌照。</b>你能用什么机甲和装备，取决于你的<b>牌照等级（LL）</b>。每完成一次任务，LL 就会 +1，角色随之变强。")}
@@ -36,13 +36,13 @@ const WIZ_STEPS = [
 			<div class="row" style="margin:12px 0"><b>起始牌照等级：</b>${stepper("ll", "", p.ll, 0, 12, v => "LL" + v)}</div>
 			<div class="wiz-gets">
 				<div><b>${L.triggers / 2}</b><span>次「+2 触发」<small>合计 +${L.triggers}</small></span></div>
-				<div><b>${L.skills}</b><span>机甲能力点</span></div>
+				<div><b>${L.skills}</b><span>机甲技能点</span></div>
 				<div><b>${L.talents}</b><span>天赋等级</span></div>
 				<div><b>${L.licenses}</b><span>牌照等级</span></div>
-				<div><b>${L.cbs}</b><span>核心加成</span></div>
+				<div><b>${L.cbs}</b><span>核心奖励</span></div>
 				<div><b>+${L.grit}</b><span>毅力 Grit</span></div>
 			</div>
-			${tip("<b>毅力（Grit）</b>＝LL÷2（进位）。它会加到机甲的 HP、SP、攻击判定和豁免目标上，也会让驾驶员 HP 变成 6＋毅力。")}
+			${tip("<b>毅力（Grit）</b>＝LL÷2（进位）。它会加到机甲的 HP、SP、攻击掷骰和豁免目标上，也会让驾驶员 HP 变成 6＋毅力。")}
 			${progressParts(p).levels}`;
 		},
 	},
@@ -65,7 +65,7 @@ const WIZ_STEPS = [
 			const z = bg && Z.bg[bg.name.toLowerCase()];
 			return `
 			<p><b>背景</b>描述驾驶员成为枪骑兵之前的人生。它不限制你现在的样子，但能帮你和 GM 想象坐在机甲里的是什么人。</p>
-			${tip("<b>规则作用：</b>在战斗以外，与背景相关的技能判定可以得到 +1 准度（GM 也可能让它带来 +1 难度）。每个背景还附带几个「触发例子」，下一步会用到。")}
+			${tip("<b>规则作用：</b>在战斗以外，与背景相关的技能检定可以得到 +1 准度（GM 也可能让它带来 +1 难度）。每个背景还附带几个「触发例子」，下一步会用到。")}
 			<div class="row"><button data-act="rollBg">🎲 掷 1d20 随机</button>
 				<span class="muted">或点下面的卡片，也可以</span>
 				<input type="text" style="max-width:240px" data-k="bgCustom" placeholder="自创背景名称" value="${esc(p.bgCustom)}" ${p.background ? "disabled" : ""}>
@@ -94,26 +94,26 @@ const WIZ_STEPS = [
 			const sug = bgSuggestedSkills(p);
 			const have = new Set(p.triggers.map(t => t.id));
 			return `
-			<p><b>触发（Trigger）</b>是驾驶员擅长的事，像「打脸」「快速到达某地」。当你在故事中做的事符合某个触发，技能判定就加上它的数值（+2、+4 或 +6）。一次判定只能用一个触发。</p>
+			<p><b>触发（Trigger）</b>是驾驶员擅长的事，像「打脸」「快速到达某地」。当你在故事中做的事符合某个触发，技能检定就加上它的数值（+2、+4 或 +6）。一次检定只能用一个触发。</p>
 			${tip(`LL0 选 <b>四个 +2 触发</b>。${p.ll ? `你是 LL${p.ll}，另外还有 <b>${p.ll} 次</b>「让一个触发 +2 或新增一个 +2 触发」，单项最高 +6。合计应为 <b>+${L.triggers}</b>。` : ""}`)}
-			${tip("触发只用于驾驶员本人的行动和技能判定；用机甲做事时改用下一步的「机甲能力」。GM 同意的话，也可以自定义更具体的触发（例如「冷血杀人」）。", "muted")}
+			${tip("触发只用于驾驶员本人的行动和技能检定；用机甲做事时改用下一步的「机甲技能」。GM 同意的话，也可以自定义更具体的触发（例如「冷血杀人」）。", "muted")}
 			${sug.length ? `<div class="row"><b>你的背景推荐：</b>${sug.map(s => `<button data-wiz="chip" data-arg="${s.id}" ${have.has(s.id) ? "disabled" : ""}>＋ ${esc(zhOf("skill", s))}</button>`).join("")}</div>` : ""}
 			${pilotParts(p).triggers}`;
 		},
 	},
 	{
-		id: "hase", title: "机甲能力",
+		id: "hase", title: "机甲技能",
 		check: p => {
 			const L = LV(p.ll), s = sumOf(p.hase);
-			return s === L.skills ? [] : [`机甲能力点应为 ${L.skills}（现在 ${s}）`];
+			return s === L.skills ? [] : [`机甲技能点应为 ${L.skills}（现在 ${s}）`];
 		},
 		body: p => {
 			const st = mechStats(p, { frame: EVEREST, systems: [], loadout: {} });
 			return `
-			<p><b>机甲能力（HASE）</b>代表驾驶员建造和驾驶机甲的本事。它们会直接加到你机甲的数值上，也用于机甲的技能判定和豁免。</p>
+			<p><b>机甲技能（HASE）</b>代表驾驶员建造和驾驶机甲的本事。它们会直接加到你机甲的数值上，也用于机甲的技能检定和豁免。</p>
 			${tip(`LL0 有 <b>2 点</b>（一项 +2 或两项各 +1），之后每级 +1，单项最高 +6。${p.ll ? `你现在共有 <b>${LV(p.ll).skills}</b> 点。` : ""}`)}
 			<div class="grid">${progressParts(p).hase}
-				<div class="card"><h3>以埃佛勒斯为例 <span class="muted">右边数字会随你的分配变化</span></h3>
+				<div class="card"><h3>以埃弗勒斯为例 <span class="muted">右边数字会随你的分配变化</span></h3>
 					<div class="stats">
 						<div class="stat hl"><b>${st.hp}</b><span>HP（机体）</span></div>
 						<div class="stat"><b>${st.repcap}</b><span>维修上限（机体）</span></div>
@@ -149,32 +149,32 @@ const WIZ_STEPS = [
 		body: p => `
 			<p><b>牌照</b>决定你能用哪些机甲和装备。每一部授权骨架都有自己的牌照，分 I、II、III 级，必须依次取得：</p>
 			<ul class="wiz-list"><li><b>I 级</b>：解锁这牌照的第一批武器和系统。</li><li><b>II 级</b>：解锁<b>骨架本身</b>和更多装备。</li><li><b>III 级</b>：解锁最强的装备。</li></ul>
-			${tip(`你每有 1 级 LL 就有 1 牌照等级，共 <b>${LV(p.ll).licenses}</b> 级。GMS（埃佛勒斯和 GMS 装备）永远免费可用。`)}
-			${tip("装备可以混搭：解锁后，任何牌照的武器和系统都能装在任何骨架上。想开某部骨架，就把它的牌照升到 II。同一厂商的牌照合计每满 3 级，才能选该厂商的一个核心加成。", "muted")}
+			${tip(`你每有 1 级 LL 就有 1 牌照等级，共 <b>${LV(p.ll).licenses}</b> 级。GMS（埃弗勒斯和 GMS 装备）永远免费可用。`)}
+			${tip("装备可以混搭：解锁后，任何牌照的武器和系统都能装在任何骨架上。想开某部骨架，就把它的牌照升到 II。同一厂商的牌照合计每满 3 级，才能选该厂商的一个核心奖励。", "muted")}
 			${progressParts(p).licenses}`,
 	},
 	{
-		id: "cbs", title: "核心加成", show: p => LV(p.ll).cbs > 0,
+		id: "cbs", title: "核心奖励", show: p => LV(p.ll).cbs > 0,
 		check: p => {
 			const L = LV(p.ll), out = [];
-			if (p.coreBonuses.length !== L.cbs) out.push(`核心加成应为 ${L.cbs} 个（现在 ${p.coreBonuses.length}）`);
-			return out.concat(checks(p).filter(c => c[1].includes("核心加成") && c[1].includes("需要")).map(c => c[1]));
+			if (p.coreBonuses.length !== L.cbs) out.push(`核心奖励应为 ${L.cbs} 个（现在 ${p.coreBonuses.length}）`);
+			return out.concat(checks(p).filter(c => c[1].includes("核心奖励") && c[1].includes("需要")).map(c => c[1]));
 		},
 		body: p => `
-			<p><b>核心加成</b>是对你所有机甲都有效的永久改造。每 3 级 LL（3、6、9、12）可以选一个。</p>
-			${tip("GMS 的核心加成随时可选；其他厂商的每个核心加成，需要你在该厂商的牌照合计达到 3 级（第二个要 6 级，依此类推）。不符合条件的会显示为灰色。")}
+			<p><b>核心奖励</b>是对你所有机甲都有效的永久改造。每 3 级 LL（3、6、9、12）可以选一个。</p>
+			${tip("GMS 的核心奖励随时可选；其他厂商的每个核心奖励，需要你在该厂商的牌照合计达到 3 级（第二个要 6 级，依此类推）。不符合条件的会显示为灰色。")}
 			${progressParts(p).cbs}`,
 	},
 	{
 		id: "gear", title: "驾驶员装备",
-		check: p => (p.gear.armor ? [] : ["（可选）通常会给驾驶员一套卫士服"]),
+		check: p => (p.gear.armor ? [] : ["（可选）通常会给驾驶员一套防护服"]),
 		soft: true,
 		body: p => {
 			const ps = pilotStats(p);
 			return `
-			<p>驾驶员离开机甲时也需要保护自己。出任务前可以带：<b>一套装甲（卫士服）</b>、<b>最多两件武器</b>、<b>最多三件其他装备</b>。</p>
-			${tip(`驾驶员基本数值：HP 6＋毅力、回避 10、电子防御 10、速度 4、大小 ½。卫士服会改变这些数值。目前：<b>HP ${ps.hp}、装甲 ${ps.armor}、回避 ${ps.evasion}、电子防御 ${ps.edef}、速度 ${ps.speed}</b>。`)}
-			${tip("新手推荐：「轻型卫士服」（+3 HP 不影响行动）或「突击卫士服」（多 1 装甲），一件招牌武器，再加止血贴之类的实用装备。", "muted")}
+			<p>驾驶员离开机甲时也需要保护自己。出任务前可以带：<b>一套装甲（防护服）</b>、<b>最多两件武器</b>、<b>最多三件其他装备</b>。</p>
+			${tip(`驾驶员基本数值：HP 6＋毅力、回避 10、电子防御 10、速度 4、大小 ½。防护服会改变这些数值。目前：<b>HP ${ps.hp}、装甲 ${ps.armor}、回避 ${ps.evasion}、电子防御 ${ps.edef}、速度 ${ps.speed}</b>。`)}
+			${tip("新手推荐：「轻型防护服」（+3 HP 不影响行动）或「突击防护服」（多 1 装甲），一件招牌武器，再加止血贴之类的实用装备。", "muted")}
 			${pilotParts(p).gear}`;
 		},
 	},
@@ -193,17 +193,17 @@ const WIZ_STEPS = [
 					<b>${esc(zhOf("frame", f) || f.name)} <small>${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")}</small></b>
 					<span>HP ${s.hp} · 装甲 ${s.armor} · 回避 ${s.evasion} · 电子防御 ${s.edef} · 速度 ${s.speed} · SP ${s.sp} · 大小 ${s.size === 0.5 ? "½" : s.size}</span>
 					<span>挂载点：${f.mounts.map(x => T.mount[x]).join("、")}</span>
-					<span>特性：${f.traits.map(t => esc(t.name)).join("、")}</span>
+					<span>特征：${f.traits.map(t => esc(t.name)).join("、")}</span>
 					${ok ? "" : `<span class="muted">需要 ${esc(zhOf("frame", f))} 牌照 II</span>`}
 				</div>`;
 			};
 			const f = FRAMES[m.frame];
 			return `
-			<p><b>骨架</b>是机甲的基础，决定它的大小、基本数值、<b>挂载点</b>（能装几件什么尺寸的武器）、<b>SP</b>（能装多少系统），以及独有的<b>特性</b>和每任务通常只能用一次的<b>核心系统</b>。</p>
-			${tip(p.ll ? "下面列出你牌照 II 级以上的骨架，以及所有人都能用的埃佛勒斯。" : "LL0 只能使用 GMS 的埃佛勒斯——一部没有短板的万用机甲。升级后拿到牌照 II，就能换开其他骨架。")}
+			<p><b>骨架</b>是机甲的基础，决定它的大小、基本数值、<b>挂载点</b>（能装几件什么尺寸的武器）、<b>SP</b>（能装多少系统），以及独有的<b>特征</b>和每任务通常只能用一次的<b>核心系统</b>。</p>
+			${tip(p.ll ? "下面列出你牌照 II 级以上的骨架，以及所有人都能用的埃弗勒斯。" : "LL0 只能使用 GMS 的埃弗勒斯——一部没有短板的万用机甲。升级后拿到牌照 II，就能换开其他骨架。")}
 			<div class="row"><label>机甲名称</label><input type="text" data-k="mech.name" value="${esc(m.name === "新机甲" ? "" : m.name)}" placeholder="例如：雷神"></div>
 			<div class="pick-grid">${avail.map(card).join("")}</div>
-			${f ? `<div class="card"><h3>${esc(zhOf("frame", f))} 的特性与核心系统</h3>${mechParts(p).info.replace(/^[\s\S]*?<h4>骨架特性<\/h4>/, "<div>")}</div>` : ""}
+			${f ? `<div class="card"><h3>${esc(zhOf("frame", f))} 的特征与核心系统</h3>${mechParts(p).info.replace(/^[\s\S]*?<h4>骨架特征<\/h4>/, "<div>")}</div>` : ""}
 			${avail.length < D.frames.length ? det("lockedFrames", `查看尚未解锁的骨架（${D.frames.length - avail.length} 部）`, `<div class="pick-grid">${D.frames.filter(x => !frameAvailable(p, x)).map(card).join("")}</div>`) : ""}`;
 		},
 	},
@@ -211,7 +211,7 @@ const WIZ_STEPS = [
 		id: "loadout", title: "武器与系统",
 		check: p => {
 			const m = M(), out = [];
-			// 空武器配置是允许的；内建武器由骨架与天赋提供。
+			// 空武器配置是允许的；武器一体化由骨架与天赋提供。
 			const st = mechStats(p, m);
 			if (st && st.spUsed > st.sp) out.push(`SP 超出（${st.spUsed}/${st.sp}）`);
 			return out.concat(checks(p).filter(c => c[1].startsWith("机甲「")).map(c => c[1]));
@@ -223,10 +223,10 @@ const WIZ_STEPS = [
 			<p>最后给机甲装上武器和系统。</p>
 			<ul class="wiz-list">
 				<li><b>武器</b>装在挂载点上：<b>主</b>挂载点装一件主或副武器；<b>重型</b>挂载点装一件重型、主或副武器；<b>灵活</b>挂载点装一件主武器或两件副武器；<b>主/副</b>装一主一副或两副；<b>副/副</b>装两件副武器。<b>超重型</b>武器要占用一个重型挂载点＋另一个挂载点。</li>
-				<li><b>系统</b>用 <b>SP</b> 安装（骨架 SP＋毅力＋每两点系统值 +1），装多少都行，只要 SP 够。部分武器和改装也要 SP。</li>
+				<li><b>系统</b>用 <b>SP</b> 安装（骨架 SP＋毅力＋每两点系统值 +1），装多少都行，只要 SP 够。部分武器和模块也要 SP。</li>
 				<li>除了标有「独特」的装备，同一件武器或系统可以重复选。下拉列表里只会出现你已解锁的装备。</li>
 			</ul>
-			${tip(p.ll ? "提示：先选武器再用剩余 SP 装系统。武器下方的「武器效果」可以展开看完整规则。" : "LL0 推荐（规则书范例）：重型挂载点装<b>反物资步枪</b>、主挂载点装<b>突击步枪</b>、灵活挂载点装两把<b>战术匕首</b>；系统选 B型毒咒炸弹、快速喷射跳跃系统、三式投射护盾（各 2 SP）。", "muted")}
+			${tip(p.ll ? "提示：先选武器再用剩余 SP 装系统。武器下方的「武器效果」可以展开看完整规则。" : "LL0 推荐（规则书范例）：重型挂载点装<b>反器材步枪</b>、主挂载点装<b>突击步枪</b>、灵活挂载点装两把<b>战术匕首</b>；系统选 B型毒咒弹、快速猛跃喷射系统、三式护盾（各 2 SP）。", "muted")}
 			<div class="grid">${x.stats}${x.weapons}${x.systems}</div>`;
 		},
 	},
@@ -238,7 +238,7 @@ const WIZ_STEPS = [
 			return `
 			<p>${cs.length ? "差一点就完成了！下面还有几项没对上规则，可以点左边的步骤回去修改，也可以先完成、之后在编辑器里再调整。" : "🎉 恭喜，你的角色已通过车卡基础检查！条件效果与自定义内容请按规则和 GM 裁定结算。"}</p>
 			${cs.length ? `<ul class="warn-list">${cs.map(([lv, t]) => `<li class="${lv}">${esc(t)}</li>`).join("")}</ul>` : ""}
-			${tip("<b>之后升级时：</b>每完成一个任务 LL+1，并得到：一次 +2 触发、一点机甲能力、一级天赋、一级牌照；每 3 级再得一个核心加成。升级时还可以把一个天赋或一个牌照的全部等级重新分配，或换掉一个核心加成。")}
+			${tip("<b>之后升级时：</b>每完成一个任务 LL+1，并得到：一次 +2 触发、一点机甲技能、一级天赋、一级牌照；每 3 级再得一个核心奖励。升级时还可以把一个天赋或一个牌照的全部等级重新分配，或换掉一个核心奖励。")}
 			<div class="row" style="margin:12px 0"><button class="primary" data-wiz="finish">完成，进入编辑器</button><button data-act="copySheet">复制文字角色卡</button></div>
 			<pre class="sheet">${esc(sheetText(p))}</pre>`;
 		},

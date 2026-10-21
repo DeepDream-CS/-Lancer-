@@ -1,0 +1,3000 @@
+{
+  "source": "用户提供《枪骑兵》核心规则书v3.5.pdf",
+  "pageConvention": "PDF物理页码，从1开始",
+  "names": [
+    {
+      "kind": "frames",
+      "en": "Everest",
+      "name": "埃弗勒斯",
+      "page": 115,
+      "previous": "埃佛勒斯"
+    },
+    {
+      "kind": "frames",
+      "en": "Black Witch",
+      "name": "黑巫蛾",
+      "page": 153,
+      "previous": "黑巫"
+    },
+    {
+      "kind": "frames",
+      "en": "Death’s Head",
+      "name": "鬼面蛾",
+      "page": 157,
+      "previous": "骷髅天蛾"
+    },
+    {
+      "kind": "frames",
+      "en": "Dusk Wing",
+      "name": "珠弄蝶",
+      "page": 161,
+      "previous": "暮翼"
+    },
+    {
+      "kind": "frames",
+      "en": "Monarch",
+      "name": "金斑蝶",
+      "page": 169,
+      "previous": "帝王蝶"
+    },
+    {
+      "kind": "frames",
+      "en": "Mourning Cloak",
+      "name": "黄蛱蝶",
+      "page": 173,
+      "previous": "黄缘蛱蝶"
+    },
+    {
+      "kind": "frames",
+      "en": "Balor",
+      "name": "炎魔",
+      "page": 185,
+      "previous": "巴罗尔"
+    },
+    {
+      "kind": "frames",
+      "en": "Hydra",
+      "name": "多头蛇",
+      "page": 199,
+      "previous": "九头蛇"
+    },
+    {
+      "kind": "frames",
+      "en": "Minotaur",
+      "name": "牛头怪",
+      "page": 207,
+      "previous": "米诺陶洛斯"
+    },
+    {
+      "kind": "frames",
+      "en": "Pegasus",
+      "name": "天马",
+      "page": 211,
+      "previous": "飞马"
+    },
+    {
+      "kind": "frames",
+      "en": "Genghis",
+      "name": "成吉思",
+      "page": 223,
+      "previous": "成吉思汗"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Auto-Stabilizing Hardpoints",
+      "name": "自稳定承力点",
+      "page": 111,
+      "previous": "自动稳定挂载点"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Overpower Caliber",
+      "name": "超功率口径",
+      "page": 111,
+      "previous": "过强弹药"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Improved Armament",
+      "name": "改良武装",
+      "page": 111,
+      "previous": "强化装备"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Integrated Weapon",
+      "name": "武器一体化",
+      "page": 111,
+      "previous": "内建武器"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Mount Retrofitting",
+      "name": "挂载点改装",
+      "page": 111,
+      "previous": "改造挂载点"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Universal Compatibility",
+      "name": "寰宇兼容",
+      "page": 111,
+      "previous": "寰宇兼容"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Briareos Frame",
+      "name": "布里阿柔斯骨架深化改造",
+      "page": 120,
+      "previous": "百臂巨人骨架"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Fomorian Frame",
+      "name": "弗莫尔骨架深化改造",
+      "page": 120,
+      "previous": "弗摩尔骨架"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Gyges Frame",
+      "name": "裘格斯改良武装",
+      "page": 120,
+      "previous": "盖吉兹骨架"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Reinforced Frame",
+      "name": "强化骨架",
+      "page": 120,
+      "previous": "强化骨架"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Sloped Plating",
+      "name": "倾斜电镀层",
+      "page": 120,
+      "previous": "倾斜装甲"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Titanomachy Mesh",
+      "name": "泰坦之战格网",
+      "page": 120,
+      "previous": "泰坦战网"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "All-Theater Movement Suite",
+      "name": "全战区移动套装",
+      "page": 151,
+      "previous": "全地形移动套装"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Full Subjectivity Sync",
+      "name": "完全主观性同步",
+      "page": 151,
+      "previous": "全主观性同步"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Ghostweave",
+      "name": "鬼影织物",
+      "page": 151,
+      "previous": "鬼影绣"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Integrated Nerveweave",
+      "name": "整合神经编织",
+      "page": 151,
+      "previous": "整合神经系统"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Kai Bioplating",
+      "name": "凯氏生物镀层",
+      "page": 151,
+      "previous": "快式生物装甲"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Neurolink Targeting",
+      "name": "神经连接锁定",
+      "page": 151,
+      "previous": "神经连接锁定"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "The Lesson of Disbelief",
+      "name": "不信之训",
+      "page": 184,
+      "previous": "不信之课"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "The Lesson of the Open Door",
+      "name": "开门之训",
+      "page": 184,
+      "previous": "开门之课"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "The Lesson of the Held Image",
+      "name": "固像之训",
+      "page": 184,
+      "previous": "固像之课"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "The Lesson of Thinking-Tomorrow’s-Thought",
+      "name": "先见之训",
+      "page": 184,
+      "previous": "明想之课"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "The Lesson of Transubstantiation",
+      "name": "体变之训",
+      "page": 184,
+      "previous": "变体之课"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "The Lesson of Shaping",
+      "name": "陶冶之训",
+      "page": 184,
+      "previous": "陶冶之课"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Adaptive Reactor",
+      "name": "适应性反应炉",
+      "page": 218,
+      "previous": "适应性反应炉"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Armory-Sculpted Chassis",
+      "name": "兵工厂特制底盘",
+      "page": 218,
+      "previous": "兵工厂特制支架"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Heatfall Coolant System",
+      "name": "热落冷却系统",
+      "page": 218,
+      "previous": "热落冷却系统"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Integrated Ammo Feeds",
+      "name": "内建弹药供给",
+      "page": 218,
+      "previous": "内建给弹器"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Superior by Design",
+      "name": "优越始于设计",
+      "page": 218,
+      "previous": "优越始于设计"
+    },
+    {
+      "kind": "core_bonuses",
+      "en": "Stasis Shielding",
+      "name": "静滞护盾",
+      "page": 218,
+      "previous": "静滞护盾"
+    },
+    {
+      "kind": "weapons",
+      "en": "Anti-Materiel Rifle",
+      "name": "反器材步枪",
+      "page": 112,
+      "previous": "反物资步枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Cyclone Pulse Rifle",
+      "name": "气旋脉冲步枪",
+      "page": 112,
+      "previous": "台风脉冲步枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Heavy Machine Gun",
+      "name": "重型机枪",
+      "page": 112,
+      "previous": "重机枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Heavy Melee Weapon",
+      "name": "重型近战武器",
+      "page": 112,
+      "previous": "重肉搏武器"
+    },
+    {
+      "kind": "weapons",
+      "en": "Missile Rack",
+      "name": "导弹发射架",
+      "page": 112,
+      "previous": "飞弹发射架"
+    },
+    {
+      "kind": "weapons",
+      "en": "Segment Knife",
+      "name": "多段刀",
+      "page": 112,
+      "previous": "多节刀"
+    },
+    {
+      "kind": "weapons",
+      "en": "Shotgun",
+      "name": "霰弹枪",
+      "page": 112,
+      "previous": "散弹枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Tactical Melee Weapon",
+      "name": "战术近战武器",
+      "page": 112,
+      "previous": "战术肉搏武器"
+    },
+    {
+      "kind": "weapons",
+      "en": "Thermal Lance",
+      "name": "热能长枪",
+      "page": 112,
+      "previous": "高热长枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Thermal Pistol",
+      "name": "热能手枪",
+      "page": 112,
+      "previous": "高热手枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Thermal Rifle",
+      "name": "热能步枪",
+      "page": 112,
+      "previous": "高热步枪"
+    },
+    {
+      "kind": "systems",
+      "en": "COMP/CON-Class Assistant Unit",
+      "name": "伙伴/礼宾级辅助单元",
+      "page": 113,
+      "previous": "COMP/CON级辅助单位"
+    },
+    {
+      "kind": "systems",
+      "en": "Custom Paint Job",
+      "name": "定制涂装作业",
+      "page": 113,
+      "previous": "个人涂装"
+    },
+    {
+      "kind": "systems",
+      "en": "Manipulators",
+      "name": "操纵器",
+      "page": 113,
+      "previous": "微型操纵器"
+    },
+    {
+      "kind": "systems",
+      "en": "Pattern-A Jericho Deployable Cover",
+      "name": "A型耶利哥可展开掩体",
+      "page": 113,
+      "previous": "A型耶利哥展开掩体"
+    },
+    {
+      "kind": "systems",
+      "en": "Pattern-B HEX Charges",
+      "name": "B型毒咒弹",
+      "page": 113,
+      "previous": "B型毒咒炸弹"
+    },
+    {
+      "kind": "systems",
+      "en": "Turret Drones",
+      "name": "炮塔无人机",
+      "page": 114,
+      "previous": "无人炮塔"
+    },
+    {
+      "kind": "systems",
+      "en": "Type-3 Projected Shield",
+      "name": "三式护盾",
+      "page": 114,
+      "previous": "三式投射护盾"
+    },
+    {
+      "kind": "systems",
+      "en": "EVA Module",
+      "name": "EVA模块",
+      "page": 114,
+      "previous": "EVA模组"
+    },
+    {
+      "kind": "systems",
+      "en": "Rapid Burst Jump Jet System",
+      "name": "快速猛跃喷射系统",
+      "page": 114,
+      "previous": "快速喷射跳跃系统"
+    },
+    {
+      "kind": "systems",
+      "en": "Type-I Flight System",
+      "name": "一式飞行系统",
+      "page": 114,
+      "previous": "第一类飞行系统"
+    },
+    {
+      "kind": "weapons",
+      "en": "Chain Axe",
+      "id": "mw_chain_axe",
+      "name": "链斧",
+      "page": 123,
+      "previous": "链锯斧"
+    },
+    {
+      "kind": "weapons",
+      "en": "Bristlecrown Flechette Launcher",
+      "id": "mw_bristlecrown_flechette_launcher",
+      "name": "刺鬃冠镖弹发射器",
+      "page": 123,
+      "previous": "刺冠箭弹发射器"
+    },
+    {
+      "kind": "systems",
+      "en": "Synthetic Muscle Netting",
+      "id": "ms_synthetic_muscle_netting",
+      "name": "合成肌肉织网",
+      "page": 123,
+      "previous": "合成肌肉网"
+    },
+    {
+      "kind": "systems",
+      "en": "Reinforced Cabling",
+      "id": "ms_reinforced_cabling",
+      "name": "强化缆绳",
+      "page": 124,
+      "previous": "强化缆索"
+    },
+    {
+      "kind": "systems",
+      "en": "SEKHMET-Class NHP",
+      "id": "ms_sekhmet_class_nhp",
+      "name": "塞赫麦特级NHP",
+      "page": 124,
+      "previous": "塞赫美特级NHP"
+    },
+    {
+      "kind": "weapons",
+      "en": "Assault Cannon",
+      "id": "mw_assault_cannon",
+      "name": "突击加农炮",
+      "page": 127,
+      "previous": "突击炮"
+    },
+    {
+      "kind": "weapons",
+      "en": "Concussion Missiles",
+      "id": "mw_concussion_missiles",
+      "name": "震荡导弹",
+      "page": 127,
+      "previous": "震荡飞弹"
+    },
+    {
+      "kind": "systems",
+      "en": "Argonaut Shield",
+      "id": "ms_argonaut_shield",
+      "name": "阿尔戈大盾",
+      "page": 127,
+      "previous": "阿尔戈英雄盾"
+    },
+    {
+      "kind": "systems",
+      "en": "Aegis Shield Generator",
+      "id": "ms_aegis_shield_generator",
+      "name": "埃癸斯护盾发生器",
+      "page": 127,
+      "previous": "神盾护盾发生器"
+    },
+    {
+      "kind": "systems",
+      "en": "Portable Bunker",
+      "id": "ms_portable_bunker",
+      "name": "便携式地堡",
+      "page": 128,
+      "previous": "便携式碉堡"
+    },
+    {
+      "kind": "weapons",
+      "en": "Leviathan Heavy Assault Cannon",
+      "id": "mw_leviathan_heavy_assault_cannon",
+      "name": "利维坦重型突击加农炮",
+      "page": 128,
+      "previous": "利维坦重型突击炮"
+    },
+    {
+      "kind": "systems",
+      "en": "Cable Winch System",
+      "id": "ms_cable_winch_system",
+      "name": "缆盘系统",
+      "page": 131,
+      "previous": "缆索绞盘系统"
+    },
+    {
+      "kind": "systems",
+      "en": "MULE Harness",
+      "id": "ms_mule_harness",
+      "name": "马骡装具",
+      "page": 131,
+      "previous": "骡子挽具"
+    },
+    {
+      "kind": "systems",
+      "en": "Whitewash Sealant Spray",
+      "id": "ms_whitewash_sealant_spray",
+      "name": "白浴密封喷雾",
+      "page": 131,
+      "previous": "白洗密封喷剂"
+    },
+    {
+      "kind": "systems",
+      "en": "Aceso Stabilizer",
+      "id": "ms_aceso_stabilizer",
+      "name": "阿刻索稳定器",
+      "page": 132,
+      "previous": "阿克索稳定器"
+    },
+    {
+      "kind": "weapons",
+      "en": "Cutter MkII Plasma Torch",
+      "id": "mw_cutter_mkii_plasma_torch",
+      "name": "“切割者”Mk2等离子炬",
+      "page": 132,
+      "previous": "切割者MkII等离子炬"
+    },
+    {
+      "kind": "systems",
+      "en": "Bulwark Mods",
+      "id": "ms_bulwark_mods",
+      "name": "壁垒模块",
+      "page": 135,
+      "previous": "壁垒改装"
+    },
+    {
+      "kind": "weapons",
+      "en": "War Pike",
+      "id": "mw_war_pike",
+      "name": "刺枪",
+      "page": 135,
+      "previous": "战矛"
+    },
+    {
+      "kind": "systems",
+      "en": "Armor-Lock Plating",
+      "id": "ms_armor_lock_plating",
+      "name": "装甲锁定镀层",
+      "page": 135,
+      "previous": "装甲锁镀层"
+    },
+    {
+      "kind": "mods",
+      "en": "Thermal Charge",
+      "id": "wm_thermal_charge",
+      "name": "高热炸药",
+      "page": 135,
+      "previous": "热能炸药"
+    },
+    {
+      "kind": "weapons",
+      "en": "Power Knuckles",
+      "id": "mw_power_knuckles",
+      "name": "动力指虎",
+      "page": 136,
+      "previous": "动力拳套"
+    },
+    {
+      "kind": "systems",
+      "en": "Ramjet",
+      "id": "ms_ramjet",
+      "name": "冲压式喷气发动机",
+      "page": 136,
+      "previous": "冲压喷射器"
+    },
+    {
+      "kind": "systems",
+      "en": "BB Breach/Blast Charges",
+      "id": "ms_bb_breach_blast_charges",
+      "name": "BB突破/爆破炸药",
+      "page": 139,
+      "previous": "BB破门/爆破炸药"
+    },
+    {
+      "kind": "weapons",
+      "en": "Bolt Thrower",
+      "id": "mw_bolt_thrower",
+      "name": "投矛器",
+      "page": 139,
+      "previous": "弩炮"
+    },
+    {
+      "kind": "systems",
+      "en": "“Roland” Chamber",
+      "id": "ms_roland_chamber",
+      "name": "“罗兰”弹仓",
+      "page": 139,
+      "previous": "「罗兰」膛室"
+    },
+    {
+      "kind": "weapons",
+      "en": "Kinetic Hammer",
+      "id": "mw_kinetic_hammer",
+      "name": "动力锤",
+      "page": 140,
+      "previous": "动能锤"
+    },
+    {
+      "kind": "mods",
+      "en": "UNCLE-Class Comp/Con",
+      "id": "wm_uncle_class_comp_con",
+      "name": "“老爹级”伙伴/礼宾单元",
+      "page": 140,
+      "previous": "UNCLE级COMP/CON"
+    },
+    {
+      "kind": "weapons",
+      "en": "Deck-Sweeper Automatic Shotgun",
+      "id": "mw_deck_sweeper_automatic_shotgun",
+      "name": "“甲板清扫者”自动霰弹枪",
+      "page": 143,
+      "previous": "扫甲板自动散弹枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Daisy Cutter",
+      "id": "mw_daisy_cutter",
+      "name": "摘菊使者",
+      "page": 143,
+      "previous": "雏菊切割者"
+    },
+    {
+      "kind": "mods",
+      "en": "Throughbolt Rounds",
+      "id": "wm_throughbolt_rounds",
+      "name": "过穿螺旋弹",
+      "page": 144,
+      "previous": "贯穿弹"
+    },
+    {
+      "kind": "systems",
+      "en": "HyperDense Armor",
+      "id": "ms_hyperdense_armor",
+      "name": "超密度装甲",
+      "page": 144,
+      "previous": "超致密装甲"
+    },
+    {
+      "kind": "systems",
+      "en": "Webjaw Snare",
+      "id": "ms_webjaw_snare",
+      "name": "网颚陷阱",
+      "page": 147,
+      "previous": "蛛颚陷阱"
+    },
+    {
+      "kind": "systems",
+      "en": "Caltrop Launcher",
+      "id": "ms_caltrop_launcher",
+      "name": "蒺藜发射器",
+      "page": 147,
+      "previous": "铁蒺藜发射器"
+    },
+    {
+      "kind": "weapons",
+      "en": "Impaler Nailgun",
+      "id": "mw_impaler_nailgun",
+      "name": "穿刺者钉枪",
+      "page": 147,
+      "previous": "穿刺钉枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Combat Drill",
+      "id": "mw_combat_drill",
+      "name": "作战用钻机",
+      "page": 148,
+      "previous": "战斗钻头"
+    },
+    {
+      "kind": "systems",
+      "en": "Charged Stake",
+      "id": "ms_charged_stake",
+      "name": "充能标桩",
+      "page": 148,
+      "previous": "充能木桩"
+    },
+    {
+      "kind": "systems",
+      "en": "Ferrous Lash",
+      "id": "ms_ferrous_lash",
+      "name": "黑铁鞭",
+      "page": 155,
+      "previous": "铁磁鞭"
+    },
+    {
+      "kind": "weapons",
+      "en": "Magnetic Cannon",
+      "id": "mw_magnetic_cannon",
+      "name": "磁能加农炮",
+      "page": 155,
+      "previous": "磁力炮"
+    },
+    {
+      "kind": "systems",
+      "en": "ICEOUT Drone",
+      "id": "ms_iceout_drone",
+      "name": "冰遁无人机",
+      "page": 155,
+      "previous": "冰封无人机"
+    },
+    {
+      "kind": "systems",
+      "en": "Perimeter Command Plate",
+      "id": "ms_perimeter_command_plate",
+      "name": "周边指令基板",
+      "page": 156,
+      "previous": "周界指令板"
+    },
+    {
+      "kind": "systems",
+      "en": "Black ICE Module",
+      "id": "ms_black_ice_module",
+      "name": "黑冰模块",
+      "page": 156,
+      "previous": "黑冰模组"
+    },
+    {
+      "kind": "systems",
+      "en": "Magnetic Shield",
+      "id": "ms_magnetic_shield",
+      "name": "磁能盾",
+      "page": 156,
+      "previous": "磁力护盾"
+    },
+    {
+      "kind": "systems",
+      "en": "High-Stress Mag Clamps",
+      "id": "ms_high_stress_mag_clamps",
+      "name": "高压磁能钳",
+      "page": 159,
+      "previous": "高应力磁力钳"
+    },
+    {
+      "kind": "systems",
+      "en": "Tracking Bug",
+      "id": "ms_tracking_bug",
+      "name": "追踪漏洞",
+      "page": 159,
+      "previous": "追踪器"
+    },
+    {
+      "kind": "weapons",
+      "en": "Railgun",
+      "id": "mw_railgun",
+      "name": "磁轨炮",
+      "page": 160,
+      "previous": "电磁轨道炮"
+    },
+    {
+      "kind": "systems",
+      "en": "Neurospike",
+      "id": "ms_neurospike",
+      "name": "神经刺",
+      "page": 163,
+      "previous": "神经尖刺"
+    },
+    {
+      "kind": "weapons",
+      "en": "Veil Rifle",
+      "id": "mw_veil_rifle",
+      "name": "面纱步枪",
+      "page": 163,
+      "previous": "帷幕步枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Burst Launcher",
+      "id": "mw_burst_launcher",
+      "name": "爆裂投射器",
+      "page": 163,
+      "previous": "爆发发射器"
+    },
+    {
+      "kind": "systems",
+      "en": "Flicker Field Projector",
+      "id": "ms_flicker_field_projector",
+      "name": "闪烁力场投影器",
+      "page": 163,
+      "previous": "闪烁力场投射器"
+    },
+    {
+      "kind": "systems",
+      "en": "StunCrown",
+      "id": "ms_stuncrown",
+      "name": "晕眩冠冕",
+      "page": 164,
+      "previous": "晕眩冠"
+    },
+    {
+      "kind": "systems",
+      "en": "Flash Charges",
+      "id": "ms_flash_charges",
+      "name": "闪光炸药",
+      "page": 167,
+      "previous": "闪光弹"
+    },
+    {
+      "kind": "systems",
+      "en": "Reactive Weave",
+      "id": "ms_reactive_weave",
+      "name": "反应织物",
+      "page": 167,
+      "previous": "反应编织"
+    },
+    {
+      "kind": "weapons",
+      "en": "Rail Rifle",
+      "id": "mw_rail_rifle",
+      "name": "磁轨步枪",
+      "page": 167,
+      "previous": "电磁轨道步枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Shock Knife",
+      "id": "mw_shock_knife",
+      "name": "电击匕首",
+      "page": 167,
+      "previous": "电击刀"
+    },
+    {
+      "kind": "systems",
+      "en": "Active Camouflage",
+      "id": "ms_active_camouflage",
+      "name": "主动光学迷彩",
+      "page": 168,
+      "previous": "主动迷彩"
+    },
+    {
+      "kind": "mods",
+      "en": "Shock Wreath",
+      "id": "wm_shock_wreath",
+      "name": "电击环",
+      "page": 168,
+      "previous": "电击花环"
+    },
+    {
+      "kind": "weapons",
+      "en": "Sharanga Missiles",
+      "id": "mw_sharanga_missiles",
+      "name": "舍罗伽导弹",
+      "page": 171,
+      "previous": "沙朗迦飞弹"
+    },
+    {
+      "kind": "weapons",
+      "en": "Gandiva Missiles",
+      "id": "mw_gandiva_missiles",
+      "name": "甘提娑导弹",
+      "page": 171,
+      "previous": "甘狄拔飞弹"
+    },
+    {
+      "kind": "mods",
+      "en": "Stabilizer Mod",
+      "id": "wm_stabilizer_mod",
+      "name": "稳定器模块",
+      "page": 171,
+      "previous": "稳定器改装"
+    },
+    {
+      "kind": "weapons",
+      "en": "Pinaka Missiles",
+      "id": "mw_pinaka_missiles",
+      "name": "毗那喀导弹",
+      "page": 172,
+      "previous": "比那卡飞弹"
+    },
+    {
+      "kind": "weapons",
+      "en": "Fold Knife",
+      "id": "mw_fold_knife",
+      "name": "翘曲匕首",
+      "page": 175,
+      "previous": "折叠刀"
+    },
+    {
+      "kind": "weapons",
+      "en": "Vijaya Rockets",
+      "id": "mw_vijaya_rockets",
+      "name": "维阿雅火箭",
+      "page": 175,
+      "previous": "胜利火箭"
+    },
+    {
+      "kind": "systems",
+      "en": "Hunter Logic Suite",
+      "id": "ms_hunter_logic_suite",
+      "name": "猎人逻辑套件",
+      "page": 175,
+      "previous": "猎手逻辑套件"
+    },
+    {
+      "kind": "systems",
+      "en": "Singularity Motivator",
+      "id": "ms_singularity_motivator",
+      "name": "奇点动力",
+      "page": 175,
+      "previous": "奇点驱动器"
+    },
+    {
+      "kind": "systems",
+      "en": "FADE Cloak",
+      "id": "ms_fade_cloak",
+      "name": "FADE斗篷",
+      "page": 176,
+      "previous": "消散斗篷"
+    },
+    {
+      "kind": "weapons",
+      "en": "Variable Sword",
+      "id": "mw_variable_sword",
+      "name": "幻剑",
+      "page": 176,
+      "previous": "可变剑"
+    },
+    {
+      "kind": "systems",
+      "en": "Markerlight",
+      "id": "ms_markerlight",
+      "name": "标光",
+      "page": 179,
+      "previous": "标记光"
+    },
+    {
+      "kind": "weapons",
+      "en": "Oracle LMG-I",
+      "id": "mw_oracle_lmg_i",
+      "name": "神谕LMG-I",
+      "page": 179,
+      "previous": "神谕轻机枪-I"
+    },
+    {
+      "kind": "systems",
+      "en": "Retractable Profile",
+      "id": "ms_retractable_profile",
+      "name": "可伸缩剖面",
+      "page": 179,
+      "previous": "可收缩轮廓"
+    },
+    {
+      "kind": "systems",
+      "en": "LB/OC Cloaking Field",
+      "id": "ms_lb_oc_cloaking_field",
+      "name": "LB/OC隐形场",
+      "page": 180,
+      "previous": "LB/OC隐形力场"
+    },
+    {
+      "kind": "systems",
+      "en": "Hive Drone",
+      "id": "ms_hive_drone",
+      "name": "虫巢无人机",
+      "page": 187,
+      "previous": "蜂巢无人机"
+    },
+    {
+      "kind": "systems",
+      "en": "Scanner Swarm",
+      "id": "ms_scanner_swarm",
+      "name": "扫描虫群",
+      "page": 187,
+      "previous": "扫描蜂群"
+    },
+    {
+      "kind": "mods",
+      "en": "Nanocomposite Adaptation",
+      "id": "wm_nanocomposite_adaptation",
+      "name": "纳米复合物适应",
+      "page": 187,
+      "previous": "纳米复合改造"
+    },
+    {
+      "kind": "systems",
+      "en": "Swarm Body",
+      "id": "ms_swarm_body",
+      "name": "虫群之躯",
+      "page": 187,
+      "previous": "蜂群之躯"
+    },
+    {
+      "kind": "weapons",
+      "en": "Nanobot Whip",
+      "id": "mw_nanobot_whip",
+      "name": "纳米机械鞭",
+      "page": 188,
+      "previous": "纳米机器人鞭"
+    },
+    {
+      "kind": "weapons",
+      "en": "Swarm/Hive Nanites",
+      "id": "mw_swarm_hive_nanites",
+      "name": "“虫群/虫巢”巢房",
+      "page": 188,
+      "previous": "蜂群/蜂巢纳米机器"
+    },
+    {
+      "kind": "systems",
+      "en": "Metahook",
+      "id": "ms_metahook",
+      "name": "超挂钩",
+      "page": 192,
+      "previous": "元钩"
+    },
+    {
+      "kind": "systems",
+      "en": "OSIRIS-Class NHP",
+      "id": "ms_osiris_class_nhp",
+      "name": "欧西里斯级NHP",
+      "page": 193,
+      "previous": "奥西里斯级NHP"
+    },
+    {
+      "kind": "systems",
+      "en": "Mimic Mesh",
+      "id": "ms_mimic_mesh",
+      "name": "拟态网络",
+      "page": 197,
+      "previous": "拟态网"
+    },
+    {
+      "kind": "systems",
+      "en": "Monitor Module",
+      "id": "ms_monitor_module",
+      "name": "监控模块",
+      "page": 197,
+      "previous": "监视模组"
+    },
+    {
+      "kind": "weapons",
+      "en": "Vorpal Gun",
+      "id": "mw_vorpal_gun",
+      "name": "斩首炮",
+      "page": 198,
+      "previous": "斩首枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Ghast Nexus",
+      "id": "mw_ghast_nexus",
+      "name": "妖鬼巢房",
+      "page": 202,
+      "previous": "恶鬼巢房"
+    },
+    {
+      "kind": "systems",
+      "en": "Tempest Drone",
+      "id": "ms_tempest_drone",
+      "name": "暴风无人机",
+      "page": 202,
+      "previous": "风暴无人机"
+    },
+    {
+      "kind": "weapons",
+      "en": "Annihilation Nexus",
+      "id": "mw_annihilation_nexus",
+      "name": "湮灭巢房",
+      "page": 202,
+      "previous": "歼灭巢房"
+    },
+    {
+      "kind": "systems",
+      "en": "Beckoner",
+      "id": "ms_beckoner",
+      "name": "招手者",
+      "page": 205,
+      "previous": "召唤者"
+    },
+    {
+      "kind": "systems",
+      "en": "Smite",
+      "id": "ms_smite",
+      "name": "惩击",
+      "page": 205,
+      "previous": "天罚"
+    },
+    {
+      "kind": "systems",
+      "en": "EMP Pulse",
+      "id": "ms_emp_pulse",
+      "name": "EMP脉冲",
+      "page": 206,
+      "previous": "电磁脉冲"
+    },
+    {
+      "kind": "systems",
+      "en": "Lightning Generator",
+      "id": "ms_lightning_generator",
+      "name": "雷电发生器",
+      "page": 206,
+      "previous": "闪电发生器"
+    },
+    {
+      "kind": "systems",
+      "en": "Mesmer Charges",
+      "id": "ms_mesmer_charges",
+      "name": "催眠炸药",
+      "page": 209,
+      "previous": "催眠弹"
+    },
+    {
+      "kind": "systems",
+      "en": "Aggressive System Sync",
+      "id": "ms_aggressive_system_sync",
+      "name": "积极系统同步",
+      "page": 209,
+      "previous": "侵略性系统同步"
+    },
+    {
+      "kind": "systems",
+      "en": "Metafold Carver",
+      "id": "ms_metafold_carver",
+      "name": "空间翘曲雕刻",
+      "page": 209,
+      "previous": "元折叠雕刻器"
+    },
+    {
+      "kind": "systems",
+      "en": "Interdiction Field",
+      "id": "ms_interdiction_field",
+      "name": "拦截场",
+      "page": 210,
+      "previous": "封锁力场"
+    },
+    {
+      "kind": "systems",
+      "en": "Law of Blades",
+      "id": "ms_law_of_blades",
+      "name": "刀剑律法",
+      "page": 210,
+      "previous": "刀锋律法"
+    },
+    {
+      "kind": "systems",
+      "en": "“Roller” Directed Payload Charges",
+      "id": "ms_roller_directed_payload_charges",
+      "name": "“滚筒”定向推进炸药",
+      "page": 221,
+      "previous": "「滚轮」定向载荷炸药"
+    },
+    {
+      "kind": "systems",
+      "en": "Flak Launcher",
+      "id": "ms_flak_launcher",
+      "name": "高射炮发射器",
+      "page": 222,
+      "previous": "防空炮发射器"
+    },
+    {
+      "kind": "systems",
+      "en": "External Ammo Feed",
+      "id": "ms_external_ammo_feed",
+      "name": "外置供弹系统",
+      "page": 222,
+      "previous": "外置供弹"
+    },
+    {
+      "kind": "systems",
+      "en": "Explosive Vents",
+      "id": "ms_explosive_vents",
+      "name": "爆炸性通风",
+      "page": 225,
+      "previous": "爆炸排气口"
+    },
+    {
+      "kind": "systems",
+      "en": "AGNI-Class NHP",
+      "id": "ms_agni_class_nhp",
+      "name": "阿格尼级NHP",
+      "page": 226,
+      "previous": "阿耆尼级NHP"
+    },
+    {
+      "kind": "weapons",
+      "en": "Plasma Thrower",
+      "id": "mw_plasma_thrower",
+      "name": "等离子体喷射器",
+      "page": 226,
+      "previous": "等离子喷射器"
+    },
+    {
+      "kind": "systems",
+      "en": "Grounding Charges",
+      "id": "ms_grounding_charges",
+      "name": "搁浅炸药",
+      "page": 229,
+      "previous": "接地炸药"
+    },
+    {
+      "kind": "weapons",
+      "en": "Stub Cannon",
+      "id": "mw_stub_cannon",
+      "name": "短管加农炮",
+      "page": 229,
+      "previous": "短管炮"
+    },
+    {
+      "kind": "systems",
+      "en": "Clamp Bombs",
+      "id": "ms_clamp_bombs",
+      "name": "夹钳炸弹",
+      "page": 230,
+      "previous": "夹附炸弹"
+    },
+    {
+      "kind": "systems",
+      "en": "Stasis Bolt",
+      "id": "ms_stasis_bolt",
+      "name": "静滞插销",
+      "page": 233,
+      "previous": "停滞弹"
+    },
+    {
+      "kind": "systems",
+      "en": "Stasis Generator",
+      "id": "ms_stasis_generator",
+      "name": "静滞发生器",
+      "page": 233,
+      "previous": "停滞发生器"
+    },
+    {
+      "kind": "systems",
+      "en": "Stasis Barrier",
+      "id": "ms_stasis_barrier",
+      "name": "静滞护盾",
+      "page": 233,
+      "previous": "停滞屏障"
+    },
+    {
+      "kind": "mods",
+      "en": "Phase-Ready Mod",
+      "id": "wm_phase_ready_mod",
+      "name": "相位准备模块",
+      "page": 233,
+      "previous": "相位就绪改装"
+    },
+    {
+      "kind": "systems",
+      "en": "Blinkshield",
+      "id": "ms_blinkshield",
+      "name": "霎盾",
+      "page": 234,
+      "previous": "瞬空护盾"
+    },
+    {
+      "kind": "weapons",
+      "en": "Displacer",
+      "id": "mw_displacer",
+      "name": "置换枪",
+      "page": 234,
+      "previous": "置换器"
+    },
+    {
+      "kind": "systems",
+      "en": "ENCLAVE-Pattern Support Shield",
+      "id": "ms_enclave_pattern_support_shield",
+      "name": "飞地模式支援护盾",
+      "page": 237,
+      "previous": "飞地型支援护盾"
+    },
+    {
+      "kind": "weapons",
+      "en": "Shatterhead Colony Missiles",
+      "id": "mw_shatterhead_colony_missiles",
+      "name": "碎头集落导弹",
+      "page": 237,
+      "previous": "碎首集群飞弹"
+    },
+    {
+      "kind": "systems",
+      "en": "Flash Anchor",
+      "id": "ms_flash_anchor",
+      "name": "闪现锚点",
+      "page": 237,
+      "previous": "闪光锚"
+    },
+    {
+      "kind": "mods",
+      "en": "Paracausal Mod",
+      "id": "wm_paracausal_mod",
+      "name": "非因果律模块",
+      "page": 238,
+      "previous": "超因果改装"
+    },
+    {
+      "kind": "weapons",
+      "en": "SOL-Pattern Laser Rifle",
+      "id": "mw_sol_pattern_laser_rifle",
+      "name": "索尔式镭射步枪",
+      "page": 241,
+      "previous": "SOL型激光步枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "ANDROMEDA-Pattern Heavy Laser Rifle",
+      "id": "mw_andromeda_pattern_heavy_laser_rifle",
+      "name": "仙女座式重型镭射炮",
+      "page": 241,
+      "previous": "仙女座型重型激光步枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Tachyon Lance",
+      "id": "mw_tachyon_lance",
+      "name": "迅子长枪",
+      "page": 242,
+      "previous": "超光子长枪"
+    },
+    {
+      "kind": "weapons",
+      "en": "Annihilator",
+      "id": "mw_annihilator",
+      "name": "湮灭者",
+      "page": 245,
+      "previous": "歼灭者"
+    },
+    {
+      "kind": "systems",
+      "en": "Deep Well Heat Sink",
+      "id": "ms_deep_well_heat_sink",
+      "name": "深井实验性冷源",
+      "page": 245,
+      "previous": "深井散热器"
+    },
+    {
+      "kind": "systems",
+      "en": "Plasma Gauntlet",
+      "id": "ms_plasma_gauntlet",
+      "name": "等离子护手",
+      "page": 246,
+      "previous": "等离子拳套"
+    },
+    {
+      "kind": "systems",
+      "en": "Enlightenment-Class NHP",
+      "id": "ms_technophile_3",
+      "name": "开悟级NHP",
+      "page": 97,
+      "previous": "觉醒级NHP"
+    },
+    {
+      "kind": "weapons",
+      "en": "Latch Drone",
+      "id": "mw_lancaster_integrated",
+      "name": "碰锁无人机",
+      "page": 129,
+      "previous": "附着无人机"
+    },
+    {
+      "kind": "weapons",
+      "en": "Apocalypse Rail",
+      "id": "mw_barbarossa_integrated",
+      "name": "末日导轨",
+      "page": 219,
+      "previous": "天启轨道炮"
+    },
+    {
+      "kind": "weapons",
+      "en": "ZF4 SOLIDCORE",
+      "id": "mw_sherman_integrated",
+      "name": "ZF4固态堆芯",
+      "page": 239,
+      "previous": "ZF4坚核"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Archaic Melee",
+      "name": "古董近战",
+      "page": 101,
+      "previous": "古董肉搏"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Archaic Ranged",
+      "name": "古董远程",
+      "page": 101,
+      "previous": "古董远距"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Light A/C",
+      "name": "轻型A/C",
+      "page": 101,
+      "previous": "轻A/C"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Medium A/C",
+      "name": "中型A/C",
+      "page": 101,
+      "previous": "中A/C"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Heavy A/C",
+      "name": "重型A/C",
+      "page": 101,
+      "previous": "重A/C"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Light Signature",
+      "name": "轻型招牌武器",
+      "page": 102,
+      "previous": "轻招牌武器"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Medium Signature",
+      "name": "中型招牌武器",
+      "page": 102,
+      "previous": "中招牌武器"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Heavy Signature",
+      "name": "重型招牌武器",
+      "page": 102,
+      "previous": "重招牌武器"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Light Hardsuit",
+      "name": "轻型防护服",
+      "page": 103,
+      "previous": "轻型卫士服"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Assault Hardsuit",
+      "name": "突击防护服",
+      "page": 103,
+      "previous": "突击卫士服"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Heavy Hardsuit",
+      "name": "重型防护服",
+      "page": 103,
+      "previous": "重型卫士服"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Mobility Hardsuit",
+      "name": "机动防护服",
+      "page": 103,
+      "previous": "机动卫士服"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Stealth Hardsuit",
+      "name": "隐形防护服",
+      "page": 103,
+      "previous": "匿迹卫士服"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Patch",
+      "name": "补丁",
+      "page": 105,
+      "previous": "止血贴"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Stims",
+      "name": "刺激物",
+      "page": 105,
+      "previous": "战斗药"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Antiphoton Visor",
+      "name": "反光子面罩",
+      "page": 106,
+      "previous": "遮光眼罩"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Dataplating",
+      "name": "数据镀层",
+      "page": 106,
+      "previous": "内置电脑"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Subjectivity-Enhancement Suite",
+      "name": "主观性增强套装",
+      "page": 106,
+      "previous": "主观性强化套装"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Infoskin",
+      "name": "讯息外皮",
+      "page": 106,
+      "previous": "电子外皮"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Nanite Spray",
+      "name": "纳米喷雾",
+      "page": 106,
+      "previous": "纳米机器喷剂"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Omnihook",
+      "name": "万物终端",
+      "page": 107,
+      "previous": "万用终端"
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "SSC Sylph Undersuit",
+      "name": "SSC风精底层防护服",
+      "page": 107,
+      "previous": "SSC风精内衣"
+    },
+    {
+      "kind": "skills",
+      "en": "Act Unseen or Unheard",
+      "name": "销声匿迹",
+      "page": 23,
+      "previous": "隐藏身影"
+    },
+    {
+      "kind": "skills",
+      "en": "Blow Something Up",
+      "name": "爆破",
+      "page": 23,
+      "previous": "爆破东西"
+    },
+    {
+      "kind": "skills",
+      "en": "Hack or Fix",
+      "name": "入侵修理",
+      "page": 23,
+      "previous": "入侵或修理"
+    },
+    {
+      "kind": "backgrounds",
+      "en": "Celebrity",
+      "name": "名流",
+      "page": 18,
+      "previous": "名伶"
+    },
+    {
+      "kind": "backgrounds",
+      "en": "Far-Field Team",
+      "name": "远场小队",
+      "page": 18,
+      "previous": "探索者"
+    },
+    {
+      "kind": "backgrounds",
+      "en": "Spaceborn",
+      "name": "太空民",
+      "page": 21,
+      "previous": "虚空住民"
+    },
+    {
+      "kind": "backgrounds",
+      "en": "Starship Pilot",
+      "name": "星舰领航员",
+      "page": 21,
+      "previous": "星舰驾驶员"
+    },
+    {
+      "kind": "skills",
+      "en": "Get a Hold of Something",
+      "name": "取得某物",
+      "page": 23
+    },
+    {
+      "kind": "skills",
+      "en": "Invent or Create",
+      "name": "发明创造",
+      "page": 23
+    },
+    {
+      "kind": "skills",
+      "en": "Lead or Inspire",
+      "name": "领导启发",
+      "page": 23
+    },
+    {
+      "kind": "backgrounds",
+      "en": "Mercenary",
+      "name": "雇佣兵",
+      "page": 19
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Frag Grenades",
+      "name": "破片手雷",
+      "page": 105
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Camo Cloth",
+      "name": "迷彩织物",
+      "page": 106
+    },
+    {
+      "kind": "pilot_gear",
+      "en": "Extra Rations",
+      "name": "额外口粮",
+      "page": 106
+    }
+  ],
+  "talents": [
+    {
+      "page": 85,
+      "en": "Ace",
+      "name": "王牌",
+      "ranks": [
+        "杂技",
+        "补燃器",
+        "超音速"
+      ]
+    },
+    {
+      "page": 85,
+      "en": "Bonded",
+      "name": "羁绊",
+      "ranks": [
+        "最佳拍档",
+        "日舞",
+        "掩护我！"
+      ]
+    },
+    {
+      "page": 86,
+      "en": "Brawler",
+      "name": "拳师",
+      "ranks": [
+        "擒拿术",
+        "重锤",
+        "击倒技"
+      ]
+    },
+    {
+      "page": 86,
+      "en": "Brutal",
+      "name": "暴虐",
+      "ranks": [
+        "捕食者",
+        "扑杀",
+        "无情"
+      ]
+    },
+    {
+      "page": 86,
+      "en": "Crack Shot",
+      "name": "神枪手",
+      "ranks": [
+        "保持稳定",
+        "瞄准具校正",
+        "看招"
+      ]
+    },
+    {
+      "page": 87,
+      "en": "Centimane",
+      "name": "百臂",
+      "ranks": [
+        "万齿",
+        "暴露弱点",
+        "潮汐抑制"
+      ]
+    },
+    {
+      "page": 87,
+      "en": "Combined Arms",
+      "name": "混合作战",
+      "ranks": [
+        "锋刃之盾",
+        "CQB训练",
+        "腥风血雨"
+      ]
+    },
+    {
+      "page": 88,
+      "en": "Duelist",
+      "name": "决斗士",
+      "ranks": [
+        "党羽",
+        "剑圣",
+        "势不可挡"
+      ]
+    },
+    {
+      "page": 88,
+      "en": "Drone Commander",
+      "name": "无人机指挥官",
+      "ranks": [
+        "牧羊人",
+        "高能虫群",
+        "生机盎然"
+      ]
+    },
+    {
+      "page": 89,
+      "en": "Engineer",
+      "name": "工程师",
+      "ranks": [
+        "原型",
+        "修正",
+        "定稿"
+      ]
+    },
+    {
+      "page": 89,
+      "en": "Executioner",
+      "name": "处刑人",
+      "ranks": [
+        "回锋斩",
+        "大刀斩",
+        "无处可逃"
+      ]
+    },
+    {
+      "page": 90,
+      "en": "Exemplar",
+      "name": "模范",
+      "ranks": [
+        "光荣挑战",
+        "惩戒",
+        "至死方休"
+      ]
+    },
+    {
+      "page": 90,
+      "en": "Gunslinger",
+      "name": "枪侠",
+      "ranks": [
+        "开场白",
+        "腰射",
+        "我用心杀戮"
+      ]
+    },
+    {
+      "page": 91,
+      "en": "Grease Monkey",
+      "name": "机械师",
+      "ranks": [
+        "违规容量升级",
+        "机甲羁绊",
+        "强力靠山"
+      ]
+    },
+    {
+      "page": 91,
+      "en": "Hacker",
+      "name": "骇客",
+      "ranks": [
+        "雪崩",
+        "安全协议骇入",
+        "王的最后受辞"
+      ]
+    },
+    {
+      "page": 92,
+      "en": "Heavy Gunner",
+      "name": "重炮手",
+      "ranks": [
+        "掩护火力",
+        "锤击",
+        "夹叉火力"
+      ]
+    },
+    {
+      "page": 92,
+      "en": "Hunter",
+      "name": "猎人",
+      "ranks": [
+        "跳扑",
+        "匕首戏法",
+        "蔑刃"
+      ]
+    },
+    {
+      "page": 92,
+      "en": "Infiltrator",
+      "name": "潜行者",
+      "ranks": [
+        "潜行",
+        "埋伏",
+        "幕后操纵者"
+      ]
+    },
+    {
+      "page": 93,
+      "en": "Juggernaut",
+      "name": "主宰",
+      "ranks": [
+        "动量",
+        "动能转移",
+        "势如破竹"
+      ]
+    },
+    {
+      "page": 93,
+      "en": "Leader",
+      "name": "领袖",
+      "ranks": [
+        "战地指挥官",
+        "公开频道",
+        "振奋军心"
+      ]
+    },
+    {
+      "page": 94,
+      "en": "Nuclear Cavalier",
+      "name": "核子游侠",
+      "ranks": [
+        "侵蚀性放热",
+        "融核泄漏",
+        "来，接着！"
+      ]
+    },
+    {
+      "page": 94,
+      "en": "Siege Specialist",
+      "name": "攻城专家",
+      "ranks": [
+        "风钻",
+        "冲击",
+        "附带损害"
+      ]
+    },
+    {
+      "page": 94,
+      "en": "Skirmisher",
+      "name": "散兵",
+      "ranks": [
+        "内建箔条发射器",
+        "破锁者",
+        "迂回"
+      ]
+    },
+    {
+      "page": 95,
+      "en": "Spotter",
+      "name": "观察员",
+      "ranks": [
+        "入微",
+        "全视",
+        "边沁/傅柯对消"
+      ]
+    },
+    {
+      "page": 95,
+      "en": "Stormbringer",
+      "name": "兴风者",
+      "ranks": [
+        "地震倾洪",
+        "屈身风暴",
+        "洪流"
+      ]
+    },
+    {
+      "page": 96,
+      "en": "Tactician",
+      "name": "战术家",
+      "ranks": [
+        "乘虚而入",
+        "背光",
+        "集火"
+      ]
+    },
+    {
+      "page": 96,
+      "en": "Technophile",
+      "name": "科技狂热者",
+      "ranks": [
+        "侍从碎片",
+        "学生碎片",
+        "开悟"
+      ]
+    },
+    {
+      "page": 97,
+      "en": "Vanguard",
+      "name": "先锋",
+      "ranks": [
+        "握手礼仪",
+        "透视追踪器",
+        "永恒守望"
+      ]
+    },
+    {
+      "page": 97,
+      "en": "Walking Armory",
+      "name": "自走兵器库",
+      "ranks": [
+        "军备",
+        "扩张选项",
+        "效率"
+      ]
+    }
+  ],
+  "terms": [
+    {
+      "from": "核心加成",
+      "to": "核心奖励",
+      "page": 32
+    },
+    {
+      "from": "免费动作",
+      "to": "自由动作",
+      "page": 58
+    },
+    {
+      "from": "普通移动",
+      "to": "标准移动",
+      "page": 59
+    },
+    {
+      "from": "机甲能力",
+      "to": "机甲技能",
+      "page": 17
+    },
+    {
+      "from": "危险区",
+      "to": "超温危域",
+      "page": 99
+    },
+    {
+      "from": "卫士服",
+      "to": "防护服",
+      "page": 103
+    },
+    {
+      "from": "肉搏武器",
+      "to": "近战武器",
+      "page": 98
+    },
+    {
+      "from": "肉搏攻击",
+      "to": "近战攻击",
+      "page": 61
+    },
+    {
+      "from": "远距武器",
+      "to": "远程武器",
+      "page": 98
+    },
+    {
+      "from": "远距攻击",
+      "to": "远程攻击",
+      "page": 61
+    },
+    {
+      "from": "攻击判定",
+      "to": "攻击掷骰",
+      "page": 61
+    },
+    {
+      "from": "判定",
+      "to": "检定",
+      "page": 12
+    },
+    {
+      "from": "直线{VAL}",
+      "to": "线形{VAL}",
+      "page": 98
+    },
+    {
+      "from": "爆炸{VAL}",
+      "to": "溅射{VAL}",
+      "page": 98
+    }
+  ],
+  "fields": [
+    {
+      "kind": "frames",
+      "id": "mf_standard_pattern_i_everest",
+      "path": "traits.0.name",
+      "value": "先制",
+      "page": 116
+    },
+    {
+      "kind": "frames",
+      "id": "mf_standard_pattern_i_everest",
+      "path": "traits.1.name",
+      "value": "可替换组件",
+      "page": 116
+    },
+    {
+      "kind": "frames",
+      "id": "mf_standard_pattern_i_everest",
+      "path": "core_system.name",
+      "value": "高能燃油喷嘴",
+      "page": 116
+    },
+    {
+      "kind": "frames",
+      "id": "mf_standard_pattern_i_everest",
+      "path": "core_system.active_name",
+      "value": "增强出力",
+      "page": 116
+    },
+    {
+      "kind": "frames",
+      "id": "mf_blackbeard",
+      "path": "traits.0.name",
+      "value": "擒拿绳索",
+      "page": 121
+    },
+    {
+      "kind": "frames",
+      "id": "mf_blackbeard",
+      "path": "traits.1.name",
+      "value": "锁定/杀戮子系统",
+      "page": 121
+    },
+    {
+      "kind": "frames",
+      "id": "mf_blackbeard",
+      "path": "traits.2.name",
+      "value": "外置反应堆",
+      "page": 121
+    },
+    {
+      "kind": "frames",
+      "id": "mf_blackbeard",
+      "path": "core_system.name",
+      "value": "突击钩爪",
+      "page": 121
+    },
+    {
+      "kind": "frames",
+      "id": "mf_blackbeard",
+      "path": "core_system.active_name",
+      "value": "万用鱼叉",
+      "page": 121
+    },
+    {
+      "kind": "frames",
+      "id": "mf_drake",
+      "path": "traits.0.name",
+      "value": "重型骨架",
+      "page": 125
+    },
+    {
+      "kind": "frames",
+      "id": "mf_drake",
+      "path": "traits.1.name",
+      "value": "爆发镀层",
+      "page": 125
+    },
+    {
+      "kind": "frames",
+      "id": "mf_drake",
+      "path": "traits.2.name",
+      "value": "缓慢",
+      "page": 125
+    },
+    {
+      "kind": "frames",
+      "id": "mf_drake",
+      "path": "traits.3.name",
+      "value": "护法",
+      "page": 125
+    },
+    {
+      "kind": "frames",
+      "id": "mf_drake",
+      "path": "core_system.name",
+      "value": "要塞",
+      "page": 125
+    },
+    {
+      "kind": "frames",
+      "id": "mf_drake",
+      "path": "core_system.active_name",
+      "value": "要塞协定",
+      "page": 125
+    },
+    {
+      "kind": "frames",
+      "id": "mf_lancaster",
+      "path": "traits.0.name",
+      "value": "隔热",
+      "page": 129
+    },
+    {
+      "kind": "frames",
+      "id": "mf_lancaster",
+      "path": "traits.1.name",
+      "value": "战地维修",
+      "page": 129
+    },
+    {
+      "kind": "frames",
+      "id": "mf_lancaster",
+      "path": "traits.2.name",
+      "value": "冗余系统",
+      "page": 129
+    },
+    {
+      "kind": "frames",
+      "id": "mf_lancaster",
+      "path": "core_system.name",
+      "value": "碰锁无人机",
+      "page": 129
+    },
+    {
+      "kind": "frames",
+      "id": "mf_lancaster",
+      "path": "core_system.active_name",
+      "value": "增压器",
+      "page": 129
+    },
+    {
+      "kind": "frames",
+      "id": "mf_nelson",
+      "path": "traits.0.name",
+      "value": "劲势",
+      "page": 133
+    },
+    {
+      "kind": "frames",
+      "id": "mf_nelson",
+      "path": "traits.1.name",
+      "value": "散兵",
+      "page": 133
+    },
+    {
+      "kind": "frames",
+      "id": "mf_nelson",
+      "path": "core_system.name",
+      "value": "永恒动量驱动机",
+      "page": 133
+    },
+    {
+      "kind": "frames",
+      "id": "mf_nelson",
+      "path": "core_system.active_name",
+      "value": "PMD启动",
+      "page": 133
+    },
+    {
+      "kind": "frames",
+      "id": "mf_raleigh",
+      "path": "traits.0.name",
+      "value": "全金属外壳",
+      "page": 137
+    },
+    {
+      "kind": "frames",
+      "id": "mf_raleigh",
+      "path": "traits.1.name",
+      "value": "隔离弹匣",
+      "page": 137
+    },
+    {
+      "kind": "frames",
+      "id": "mf_raleigh",
+      "path": "core_system.name",
+      "value": "M35雷神之锤加农炮",
+      "page": 137
+    },
+    {
+      "kind": "frames",
+      "id": "mf_raleigh",
+      "path": "core_system.active_name",
+      "value": "雷神",
+      "page": 137
+    },
+    {
+      "kind": "frames",
+      "id": "mf_tortuga",
+      "path": "traits.0.name",
+      "value": "哨兵",
+      "page": 141
+    },
+    {
+      "kind": "frames",
+      "id": "mf_tortuga",
+      "path": "traits.1.name",
+      "value": "护法",
+      "page": 141
+    },
+    {
+      "kind": "frames",
+      "id": "mf_tortuga",
+      "path": "core_system.name",
+      "value": "监视人副驾驶系统",
+      "page": 141
+    },
+    {
+      "kind": "frames",
+      "id": "mf_tortuga",
+      "path": "core_system.active_name",
+      "value": "超反射模式",
+      "page": 141
+    },
+    {
+      "kind": "frames",
+      "id": "mf_vlad",
+      "path": "traits.0.name",
+      "value": "肢解",
+      "page": 145
+    },
+    {
+      "kind": "frames",
+      "id": "mf_vlad",
+      "path": "traits.1.name",
+      "value": "伯劳装甲",
+      "page": 145
+    },
+    {
+      "kind": "frames",
+      "id": "mf_vlad",
+      "path": "core_system.name",
+      "value": "伯劳装甲",
+      "page": 145
+    },
+    {
+      "kind": "frames",
+      "id": "mf_vlad",
+      "path": "core_system.active_name",
+      "value": "折磨荆棘",
+      "page": 145
+    },
+    {
+      "kind": "frames",
+      "id": "mf_black_witch",
+      "path": "traits.0.name",
+      "value": "偏转力场",
+      "page": 153
+    },
+    {
+      "kind": "frames",
+      "id": "mf_black_witch",
+      "path": "traits.1.name",
+      "value": "磁力格挡",
+      "page": 153
+    },
+    {
+      "kind": "frames",
+      "id": "mf_black_witch",
+      "path": "core_system.name",
+      "value": "磁场投射器",
+      "page": 153
+    },
+    {
+      "kind": "frames",
+      "id": "mf_black_witch",
+      "path": "core_system.active_name",
+      "value": "磁场",
+      "page": 153
+    },
+    {
+      "kind": "frames",
+      "id": "mf_deaths_head",
+      "path": "traits.0.name",
+      "value": "神经连接",
+      "page": 157
+    },
+    {
+      "kind": "frames",
+      "id": "mf_deaths_head",
+      "path": "traits.1.name",
+      "value": "完美锁定",
+      "page": 157
+    },
+    {
+      "kind": "frames",
+      "id": "mf_deaths_head",
+      "path": "core_system.name",
+      "value": "预知锁定",
+      "page": 157
+    },
+    {
+      "kind": "frames",
+      "id": "mf_deaths_head",
+      "path": "core_system.active_name",
+      "value": "神经分流",
+      "page": 157
+    },
+    {
+      "kind": "frames",
+      "id": "mf_dusk_wing",
+      "path": "traits.0.name",
+      "value": "机动喷口",
+      "page": 161
+    },
+    {
+      "kind": "frames",
+      "id": "mf_dusk_wing",
+      "path": "traits.1.name",
+      "value": "丑角斗篷",
+      "page": 161
+    },
+    {
+      "kind": "frames",
+      "id": "mf_dusk_wing",
+      "path": "traits.2.name",
+      "value": "脆弱",
+      "page": 161
+    },
+    {
+      "kind": "frames",
+      "id": "mf_dusk_wing",
+      "path": "core_system.name",
+      "value": "节德柱衔接",
+      "page": 161
+    },
+    {
+      "kind": "frames",
+      "id": "mf_dusk_wing",
+      "path": "core_system.active_name",
+      "value": "镜厅",
+      "page": 161
+    },
+    {
+      "kind": "frames",
+      "id": "mf_metalmark",
+      "path": "traits.0.name",
+      "value": "闪烁斗篷",
+      "page": 165
+    },
+    {
+      "kind": "frames",
+      "id": "mf_metalmark",
+      "path": "traits.1.name",
+      "value": "适应性甲壳",
+      "page": 165
+    },
+    {
+      "kind": "frames",
+      "id": "mf_metalmark",
+      "path": "core_system.name",
+      "value": "战术斗篷",
+      "page": 165
+    },
+    {
+      "kind": "frames",
+      "id": "mf_metalmark",
+      "path": "core_system.active_name",
+      "value": "战术斗篷",
+      "page": 165
+    },
+    {
+      "kind": "frames",
+      "id": "mf_monarch",
+      "path": "traits.0.name",
+      "value": "复仇者发射井",
+      "page": 169
+    },
+    {
+      "kind": "frames",
+      "id": "mf_monarch",
+      "path": "traits.1.name",
+      "value": "追踪荷载",
+      "page": 169
+    },
+    {
+      "kind": "frames",
+      "id": "mf_monarch",
+      "path": "core_system.name",
+      "value": "SSC-30高穿透导弹系统",
+      "page": 169
+    },
+    {
+      "kind": "frames",
+      "id": "mf_monarch",
+      "path": "core_system.active_name",
+      "value": "神罚",
+      "page": 169
+    },
+    {
+      "kind": "frames",
+      "id": "mf_mourning_cloak",
+      "path": "traits.0.name",
+      "value": "猎人",
+      "page": 173
+    },
+    {
+      "kind": "frames",
+      "id": "mf_mourning_cloak",
+      "path": "traits.1.name",
+      "value": "生物组件",
+      "page": 173
+    },
+    {
+      "kind": "frames",
+      "id": "mf_mourning_cloak",
+      "path": "core_system.name",
+      "value": "EX滑流模块",
+      "page": 173
+    },
+    {
+      "kind": "frames",
+      "id": "mf_mourning_cloak",
+      "path": "core_system.active_name",
+      "value": "稳定奇点",
+      "page": 173
+    },
+    {
+      "kind": "frames",
+      "id": "mf_swallowtail",
+      "path": "traits.0.name",
+      "value": "内建斗篷",
+      "page": 177
+    },
+    {
+      "kind": "frames",
+      "id": "mf_swallowtail",
+      "path": "traits.1.name",
+      "value": "先知扫描仪",
+      "page": 177
+    },
+    {
+      "kind": "frames",
+      "id": "mf_swallowtail",
+      "path": "core_system.name",
+      "value": "云侦战术模拟虫群",
+      "page": 177
+    },
+    {
+      "kind": "frames",
+      "id": "mf_swallowtail",
+      "path": "core_system.active_name",
+      "value": "先知叹息",
+      "page": 177
+    },
+    {
+      "kind": "frames",
+      "id": "mf_balor",
+      "path": "traits.0.name",
+      "value": "洗涤虫群",
+      "page": 185
+    },
+    {
+      "kind": "frames",
+      "id": "mf_balor",
+      "path": "traits.1.name",
+      "value": "再生",
+      "page": 185
+    },
+    {
+      "kind": "frames",
+      "id": "mf_balor",
+      "path": "traits.2.name",
+      "value": "自我永存",
+      "page": 185
+    },
+    {
+      "kind": "frames",
+      "id": "mf_balor",
+      "path": "core_system.name",
+      "value": "地狱虫群",
+      "page": 185
+    },
+    {
+      "kind": "frames",
+      "id": "mf_balor",
+      "path": "core_system.active_name",
+      "value": "虫巢狂乱",
+      "page": 185
+    },
+    {
+      "kind": "frames",
+      "id": "mf_goblin",
+      "path": "traits.0.name",
+      "value": "礼拜编码",
+      "page": 189
+    },
+    {
+      "kind": "frames",
+      "id": "mf_goblin",
+      "path": "traits.1.name",
+      "value": "反应性编码",
+      "page": 189
+    },
+    {
+      "kind": "frames",
+      "id": "mf_goblin",
+      "path": "traits.2.name",
+      "value": "脆弱",
+      "page": 189
+    },
+    {
+      "kind": "frames",
+      "id": "mf_goblin",
+      "path": "core_system.name",
+      "value": "直觉装具",
+      "page": 189
+    },
+    {
+      "kind": "frames",
+      "id": "mf_goblin",
+      "path": "core_system.active_name",
+      "value": "共生",
+      "page": 189
+    },
+    {
+      "kind": "frames",
+      "id": "mf_gorgon",
+      "path": "traits.0.name",
+      "value": "转移性麻痹",
+      "page": 195
+    },
+    {
+      "kind": "frames",
+      "id": "mf_gorgon",
+      "path": "traits.1.name",
+      "value": "凝视",
+      "page": 195
+    },
+    {
+      "kind": "frames",
+      "id": "mf_gorgon",
+      "path": "traits.2.name",
+      "value": "护法",
+      "page": 195
+    },
+    {
+      "kind": "frames",
+      "id": "mf_gorgon",
+      "path": "core_system.name",
+      "value": "蛇怪定向反认知超分形",
+      "page": 195
+    },
+    {
+      "kind": "frames",
+      "id": "mf_gorgon",
+      "path": "core_system.active_name",
+      "value": "排出蛇怪",
+      "page": 195
+    },
+    {
+      "kind": "frames",
+      "id": "mf_hydra",
+      "path": "traits.0.name",
+      "value": "系统连结",
+      "page": 199
+    },
+    {
+      "kind": "frames",
+      "id": "mf_hydra",
+      "path": "traits.1.name",
+      "value": "牧羊人领域",
+      "page": 199
+    },
+    {
+      "kind": "frames",
+      "id": "mf_hydra",
+      "path": "core_system.name",
+      "value": "“大蛇”解体",
+      "page": 199
+    },
+    {
+      "kind": "frames",
+      "id": "mf_hydra",
+      "path": "core_system.active_name",
+      "value": "全部展开",
+      "page": 201
+    },
+    {
+      "kind": "frames",
+      "id": "mf_manticore",
+      "path": "traits.0.name",
+      "value": "熔渣外壳",
+      "page": 203
+    },
+    {
+      "kind": "frames",
+      "id": "mf_manticore",
+      "path": "traits.1.name",
+      "value": "不稳定系统",
+      "page": 203
+    },
+    {
+      "kind": "frames",
+      "id": "mf_manticore",
+      "path": "traits.2.name",
+      "value": "鞭挞神性之敌",
+      "page": 203
+    },
+    {
+      "kind": "frames",
+      "id": "mf_manticore",
+      "path": "core_system.name",
+      "value": "充电外骨骼",
+      "page": 203
+    },
+    {
+      "kind": "frames",
+      "id": "mf_manticore",
+      "path": "core_system.active_name",
+      "value": "拉之仇敌圣殿的破灭",
+      "page": 203
+    },
+    {
+      "kind": "frames",
+      "id": "mf_minotaur",
+      "path": "traits.0.name",
+      "value": "倒置驾驶舱",
+      "page": 207
+    },
+    {
+      "kind": "frames",
+      "id": "mf_minotaur",
+      "path": "traits.1.name",
+      "value": "内建空间翘曲",
+      "page": 207
+    },
+    {
+      "kind": "frames",
+      "id": "mf_minotaur",
+      "path": "traits.2.name",
+      "value": "局部性迷宫",
+      "page": 207
+    },
+    {
+      "kind": "frames",
+      "id": "mf_minotaur",
+      "path": "core_system.name",
+      "value": "超空间翘曲迷宫",
+      "page": 207
+    },
+    {
+      "kind": "frames",
+      "id": "mf_minotaur",
+      "path": "core_system.active_name",
+      "value": "迷宫",
+      "page": 207
+    },
+    {
+      "kind": "frames",
+      "id": "mf_pegasus",
+      "path": "traits.0.name",
+      "value": "¿%:?排!出枪",
+      "page": 211
+    },
+    {
+      "kind": "frames",
+      "id": "mf_pegasus",
+      "path": "traits.1.name",
+      "value": "顺便一说，我无所不知",
+      "page": 211
+    },
+    {
+      "kind": "frames",
+      "id": "mf_pegasus",
+      "path": "core_system.name",
+      "value": "巫沙布提万物枪",
+      "page": 211
+    },
+    {
+      "kind": "frames",
+      "id": "mf_pegasus",
+      "path": "core_system.active_name",
+      "value": "释放巫沙布提",
+      "page": 211
+    },
+    {
+      "kind": "frames",
+      "id": "mf_barbarossa",
+      "path": "traits.0.name",
+      "value": "重型骨架",
+      "page": 219
+    },
+    {
+      "kind": "frames",
+      "id": "mf_barbarossa",
+      "path": "traits.1.name",
+      "value": "爆破镀层",
+      "page": 219
+    },
+    {
+      "kind": "frames",
+      "id": "mf_barbarossa",
+      "path": "traits.2.name",
+      "value": "巨像",
+      "page": 219
+    },
+    {
+      "kind": "frames",
+      "id": "mf_barbarossa",
+      "path": "traits.3.name",
+      "value": "缓慢",
+      "page": 219
+    },
+    {
+      "kind": "frames",
+      "id": "mf_barbarossa",
+      "path": "core_system.name",
+      "value": "末日导轨",
+      "page": 219
+    },
+    {
+      "kind": "frames",
+      "id": "mf_barbarossa",
+      "path": "core_system.active_name",
+      "value": "导轨充能",
+      "page": 221
+    },
+    {
+      "kind": "frames",
+      "id": "mf_genghis",
+      "path": "traits.0.name",
+      "value": "隔热",
+      "page": 223
+    },
+    {
+      "kind": "frames",
+      "id": "mf_genghis",
+      "path": "traits.1.name",
+      "value": "紧急通风",
+      "page": 223
+    },
+    {
+      "kind": "frames",
+      "id": "mf_genghis",
+      "path": "core_system.name",
+      "value": "TBK维持套件",
+      "page": 223
+    },
+    {
+      "kind": "frames",
+      "id": "mf_genghis",
+      "path": "core_system.active_name",
+      "value": "暴露能量电池",
+      "page": 223
+    },
+    {
+      "kind": "frames",
+      "id": "mf_iskander",
+      "path": "traits.0.name",
+      "value": "突击发射器",
+      "page": 227
+    },
+    {
+      "kind": "frames",
+      "id": "mf_iskander",
+      "path": "traits.1.name",
+      "value": "布雷兵",
+      "page": 227
+    },
+    {
+      "kind": "frames",
+      "id": "mf_iskander",
+      "path": "traits.2.name",
+      "value": "万能钥匙",
+      "page": 227
+    },
+    {
+      "kind": "frames",
+      "id": "mf_iskander",
+      "path": "core_system.name",
+      "value": "广域播种机",
+      "page": 227
+    },
+    {
+      "kind": "frames",
+      "id": "mf_iskander",
+      "path": "core_system.active_name",
+      "value": "死亡之云",
+      "page": 227
+    },
+    {
+      "kind": "frames",
+      "id": "mf_napoleon",
+      "path": "traits.0.name",
+      "value": "重型护盾",
+      "page": 231
+    },
+    {
+      "kind": "frames",
+      "id": "mf_napoleon",
+      "path": "traits.1.name",
+      "value": "闪烁神盾",
+      "page": 231
+    },
+    {
+      "kind": "frames",
+      "id": "mf_napoleon",
+      "path": "core_system.name",
+      "value": "真黑神盾",
+      "page": 231
+    },
+    {
+      "kind": "frames",
+      "id": "mf_napoleon",
+      "path": "core_system.active_name",
+      "value": "激活神盾",
+      "page": 231
+    },
+    {
+      "kind": "frames",
+      "id": "mf_saladin",
+      "path": "traits.0.name",
+      "value": "强化骨架",
+      "page": 235
+    },
+    {
+      "kind": "frames",
+      "id": "mf_saladin",
+      "path": "traits.1.name",
+      "value": "护法",
+      "page": 235
+    },
+    {
+      "kind": "frames",
+      "id": "mf_saladin",
+      "path": "traits.2.name",
+      "value": "扭曲护盾",
+      "page": 235
+    },
+    {
+      "kind": "frames",
+      "id": "mf_saladin",
+      "path": "core_system.name",
+      "value": "迅子循环",
+      "page": 235
+    },
+    {
+      "kind": "frames",
+      "id": "mf_saladin",
+      "path": "core_system.active_name",
+      "value": "迅子护盾",
+      "page": 235
+    },
+    {
+      "kind": "frames",
+      "id": "mf_sherman",
+      "path": "traits.0.name",
+      "value": "优秀反应炉",
+      "page": 239
+    },
+    {
+      "kind": "frames",
+      "id": "mf_sherman",
+      "path": "traits.1.name",
+      "value": "默图尔停点",
+      "page": 239
+    },
+    {
+      "kind": "frames",
+      "id": "mf_sherman",
+      "path": "traits.2.name",
+      "value": "排热",
+      "page": 239
+    },
+    {
+      "kind": "frames",
+      "id": "mf_sherman",
+      "path": "core_system.name",
+      "value": "区域聚焦四代固态堆芯",
+      "page": 239
+    },
+    {
+      "kind": "frames",
+      "id": "mf_sherman",
+      "path": "core_system.active_name",
+      "value": "堆芯烧毁协定",
+      "page": 239
+    },
+    {
+      "kind": "frames",
+      "id": "mf_tokugawa",
+      "path": "traits.0.name",
+      "value": "界限突破",
+      "page": 243
+    },
+    {
+      "kind": "frames",
+      "id": "mf_tokugawa",
+      "path": "traits.1.name",
+      "value": "等离子鞘",
+      "page": 243
+    },
+    {
+      "kind": "frames",
+      "id": "mf_tokugawa",
+      "path": "core_system.name",
+      "value": "过热反应炉馈送装置",
+      "page": 243
+    },
+    {
+      "kind": "frames",
+      "id": "mf_tokugawa",
+      "path": "core_system.active_name",
+      "value": "辉光",
+      "page": 243
+    },
+    {
+      "kind": "frames",
+      "id": "mf_mourning_cloak",
+      "path": "core_system.passive_name",
+      "value": "霎间跃迁",
+      "page": 173
+    },
+    {
+      "kind": "frames",
+      "id": "mf_manticore",
+      "path": "core_system.passive_name",
+      "value": "充电外骨骼",
+      "page": 203
+    },
+    {
+      "kind": "frames",
+      "id": "mf_minotaur",
+      "path": "core_system.passive_name",
+      "value": "超空间翘曲迷宫",
+      "page": 207
+    },
+    {
+      "kind": "frames",
+      "id": "mf_pegasus",
+      "path": "core_system.passive_name",
+      "value": "巫沙布提万物枪",
+      "page": 211
+    },
+    {
+      "kind": "frames",
+      "id": "mf_deaths_head",
+      "path": "core_system.active_actions.0.name",
+      "value": "死印",
+      "page": 157
+    },
+    {
+      "kind": "tags",
+      "id": "tg_mod",
+      "path": "name",
+      "value": "模块",
+      "page": 99
+    },
+    {
+      "kind": "tags",
+      "id": "tg_grenade",
+      "path": "name",
+      "value": "榴弹",
+      "page": 99
+    },
+    {
+      "kind": "tags",
+      "id": "tg_heat_self",
+      "path": "name",
+      "value": "热度{VAL}（自身）",
+      "page": 99
+    }
+  ]
+}

@@ -202,7 +202,7 @@ for (const k of ["weapons", "systems", "mods"]) data[k] = drop(data[k], ["descri
 })();
 
 // 兜底：整份数据再过一遍图标替换（含 HTML 里残留的实体）
-const calibrated = require('./calibrate-text').walk(data);
+const calibrated = require('./core-v35').apply(require('./calibrate-text').walk(data));
 const out = "// 自动生成，请勿手改。来源：massif-press/lancer-data + reno-lam.github.io/Lancer-Free-Version\nwindow.LANCER_DATA = " + deIcon(JSON.stringify(calibrated)) + ";\n";
 fs.writeFileSync(path.join(ROOT, "data.js"), out);
 console.log("data.js written,", (out.length / 1024).toFixed(0), "KB");

@@ -83,8 +83,8 @@ function effectiveProfile(w, profile, mod, p, m) {
 function buildWeaponNote(p, m, entry) {
   const notes = [];
   if (hasCB(p, 'cb_auto_stabilizing_hardpoints') && m.stabilized === entry.mount.key) notes.push('+1准度');
-  if (hasCB(p, 'cb_overpower_caliber') && m.overpower === `${entry.mount.key}|${entry.i}`) notes.push('过强弹药：每轮一次，命中时+1d6额外伤害');
-  if (m.frame === 'mf_deaths_head' && entry.w.type !== 'Melee') notes.push('远距攻击判定+1');
+  if (hasCB(p, 'cb_overpower_caliber') && m.overpower === `${entry.mount.key}|${entry.i}`) notes.push('超功率口径：每轮一次，命中时+1d6额外伤害');
+  if (m.frame === 'mf_deaths_head' && entry.w.type !== 'Melee') notes.push('远程攻击检定+1');
   if (entry.w.id.startsWith('mw_prototype_') && m.prototypeOptics === 'yes') notes.push('+1准度（调整光学）');
   return notes.join('；');
 }
@@ -93,9 +93,9 @@ function creationChecks(p) {
   if (p.ll === 0 && (p.triggers.length !== 4 || p.triggers.some(t => t.val !== 2))) out.push(['err','LL0 必须选择四个不同的 +2 触发']);
   if (p.triggers.length < 4) out.push(['err','驾驶员至少保留四个触发']);
   if (p.triggers.some(t => ![2,4,6].includes(t.val))) out.push(['err','触发单项只能为 +2、+4 或 +6']);
-  if (Object.values(p.hase).some(v => !Number.isInteger(v) || v < 0 || v > 6)) out.push(['err','机甲能力单项必须为 0–6 的整数']);
+  if (Object.values(p.hase).some(v => !Number.isInteger(v) || v < 0 || v > 6)) out.push(['err','机甲技能单项必须为 0–6 的整数']);
   if (p.ll === 0 && (Object.keys(p.talents).length !== 3 || Object.values(p.talents).some(v => v !== 1))) out.push(['err','LL0 必须选择三个不同的一级天赋']);
-  if (new Set(p.coreBonuses).size !== p.coreBonuses.length) out.push(['err','核心加成不能重复选择']);
+  if (new Set(p.coreBonuses).size !== p.coreBonuses.length) out.push(['err','核心奖励不能重复选择']);
   const gear = [[p.gear.armor, 'Armor'], ...p.gear.weapons.map(id => [id,'Weapon']), ...p.gear.items.map(id => [id,'Gear'])];
   if (gear.some(([id,type]) => id && GEAR[id]?.type !== type)) out.push(['err','驾驶员装备放入了错误的栏位']);
   return out;
@@ -117,20 +117,20 @@ function loadoutChecks(p, m) {
       const w = WEAPONS[sl.w];
       if (!w || !slotAccepts(mt,i,st.slots).includes(w.mount)) error(`挂载点 ${mt.key} 的武器尺寸或槽位组合不合法`);
       if (w && !itemAvailable(p,w)) error(`${plain('item',w)} 未解锁或属于内建装备`);
-      if (sl.mod && (!MODS[sl.mod] || !w || !canModify(w,MODS[sl.mod],mt))) error('武器改装不适用于该武器或内建挂载点');
+      if (sl.mod && (!MODS[sl.mod] || !w || !canModify(w,MODS[sl.mod],mt))) error('武器模块不适用于该武器或内建挂载点');
     }
   }
   for (const [key,st] of Object.entries(m.loadout)) if (!mounts.some(mt=>mt.key===key) && st.slots?.some(s=>s.w)) error(`挂载点 ${key} 已不存在，请移除残留装备或重新选择骨架`);
   const eq = equippedWeapons(p,m);
   const all = [...eq.map(e=>e.w),...eq.map(e=>e.mod).filter(Boolean),...m.systems.map(id=>SYSTEMS[id]).filter(Boolean)];
   const ai = all.filter(x=>(x.tags||[]).some(t=>t.id==='tg_ai')).length;
-  if (ai > 1 + staticBonus(p,m,'ai_cap')) error(`AI 数量超限（${ai}/${1 + staticBonus(p,m,'ai_cap')}，含武器改装）`);
+  if (ai > 1 + staticBonus(p,m,'ai_cap')) error(`AI 数量超限（${ai}/${1 + staticBonus(p,m,'ai_cap')}，含武器模块）`);
   for (const id of m.systems) if (SYSTEMS[id] && !itemAvailable(p,SYSTEMS[id])) error(`${plain('item',SYSTEMS[id])} 未解锁或已由天赋内建提供`);
   const families = all.filter(x=>x.talent_item).map(x=>x.talent_id);
   if (new Set(families).size < families.length) error('同一天赋提供的装备不能重复安装或同时安装多个等级');
-  if (hasCB(p,'cb_auto_stabilizing_hardpoints') && !mounts.some(mt=>mt.key===m.stabilized && !links.has(mt.key) && mt.type!=='Integrated')) error('请为自动稳定挂载点选择一个可用的普通挂载点');
-  if (hasCB(p,'cb_mount_retrofitting') && !mounts.some(mt=>mt.retro)) error('请指定改造挂载点的目标');
-  if (hasCB(p,'cb_overpower_caliber') && !eq.some(e=>`${e.mount.key}|${e.i}`===m.overpower && e.mount.type!=='Integrated' && !e.w.no_core_bonus)) error('请为过强弹药指定一件可用武器');
+  if (hasCB(p,'cb_auto_stabilizing_hardpoints') && !mounts.some(mt=>mt.key===m.stabilized && !links.has(mt.key) && mt.type!=='Integrated')) error('请为自稳定承力点选择一个可用的普通挂载点');
+  if (hasCB(p,'cb_mount_retrofitting') && !mounts.some(mt=>mt.retro)) error('请指定挂载点改装的目标');
+  if (hasCB(p,'cb_overpower_caliber') && !eq.some(e=>`${e.mount.key}|${e.i}`===m.overpower && e.mount.type!=='Integrated' && !e.w.no_core_bonus)) error('请为超功率口径指定一件可用武器');
   if (p.talents.t_engineer >= 2) {
     const count = [m.prototypeOptics,m.prototypeSmart,m.prototypeReactor].filter(x=>x==='yes').length;
     if (count !== 2) error('工程师原型武器须选择两项调整');
@@ -143,13 +143,13 @@ function migratePilot(p, warn = []) {
     if (WEAPONS[m.overpower]) {
       const matches = Object.entries(m.loadout).flatMap(([key,st]) => st.slots.map((s,i)=>s.w===m.overpower ? `${key}|${i}` : '').filter(Boolean));
       m.overpower = matches.length === 1 ? matches[0] : '';
-      if (matches.length > 1) warn.push('过强弹药原来指向多个同名武器，请重新指定其中一件。');
+      if (matches.length > 1) warn.push('超功率口径原来指向多个同名武器，请重新指定其中一件。');
     }
     for (const st of Object.values(m.loadout)) for (let i=0;i<st.slots.length;i++) {
       const w = WEAPONS[st.slots[i]?.w];
       if (w?.talent_item && talentEquipment(p,'integrated').some(x=>x.talent_id===w.talent_id)) {
         st.slots[i]={w:'',mod:''};
-        warn.push(`${plain('item',w)} 已改为天赋内建武器，不再占用普通挂载点。`);
+        warn.push(`${plain('item',w)} 已改为天赋武器一体化，不再占用普通挂载点。`);
       }
     }
     m.systems = m.systems.filter(id => !talentEquipment(p,'integrated').some(x=>x.talent_id && x.talent_id===SYSTEMS[id]?.talent_id));
@@ -162,6 +162,6 @@ function migratePilot(p, warn = []) {
 function prototypeEditor(p,m) {
   if (!p.talents.t_engineer) return '';
   const select = (key, options, current) => `<select data-k="mech.${key}">${options.map(([id,label])=>opt(id,label,id===current)).join('')}</select>`;
-  const choices = [['Melee','肉搏'],['CQB','CQB'],['Rifle','步枪'],['Cannon','大炮'],['Launcher','发射器'],['Nexus','巢房']];
+  const choices = [['Melee','近战'],['CQB','CQB'],['Rifle','步枪'],['Cannon','大炮'],['Launcher','发射器'],['Nexus','巢房']];
   return `<div class="blk"><b>原型武器配置（全面维修时选择）</b><div class="row">${select('prototypeType',choices,m.prototypeType || 'Rifle')}${select('prototypeDamage',[['Kinetic','动能'],['Explosive','爆炸'],['Energy','能量']],m.prototypeDamage || 'Kinetic')}</div>${p.talents.t_engineer>=2 ? ['Optics','Smart','Reactor'].map((k,i)=>`<label>${['调整光学（+1准度）','调整电脑（智慧）','移除反应炉屏蔽（可选范围攻击，承受2热度）'][i]} ${select('prototype'+k,[['no','未选'],['yes','选择']],m['prototype'+k] || 'no')}</label>`).join('<br>') : ''}</div>`;
 }
