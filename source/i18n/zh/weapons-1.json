@@ -55,7 +55,7 @@
  "mw_kinetic_hammer.zh_name": "动能锤",
  "mw_deck_sweeper_automatic_shotgun.zh_name": "扫甲板自动散弹枪",
  "mw_daisy_cutter.zh_name": "雏菊切割者",
- "mw_daisy_cutter.on_attack": "在攻击的锥形范围内制造一片烟尘与碎屑，为受影响区域提供软掩护，持续到你下一回合结束。",
+ "mw_daisy_cutter.on_attack": "在攻击的锥形范围内制造一片烟尘与碎屑，为受影响区域提供软性掩护，持续到你下一回合结束。",
  "mw_catalytic_hammer.zh_name": "催化锤",
  "mw_catalytic_hammer.on_crit.detail": "你的目标必须通过机体豁免，否则陷入晕眩，直到其下一回合结束。",
  "mw_impact_lance.zh_name": "冲击长枪",
@@ -69,5 +69,5 @@
  "mw_vulture_dmr.zh_name": "秃鹫精确射手步枪",
  "mw_railgun.zh_name": "电磁轨道炮",
  "mw_veil_rifle.zh_name": "帷幕步枪",
- "mw_veil_rifle.effect": "这武器不会攻击被卷入其范围效果的友方角色；而是以一层闪烁的能量场笼罩他们，干扰瞄准系统，给予他们软掩护，直到其下一回合结束。"
+ "mw_veil_rifle.effect": "这武器不会攻击被卷入其范围效果的友方角色；而是以一层闪烁的能量场笼罩他们，干扰瞄准系统，给予他们软性掩护，直到其下一回合结束。"
 }

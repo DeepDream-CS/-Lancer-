@@ -9,6 +9,7 @@ const out = {};
 const put = (file, key, val) => { if (val && typeof val === "string") (out[file] = out[file] || {})[key] = val; };
 // 动作与可展开物（无人机、地雷等）
 function acts(file, prefix, o) {
+	(o.ammo || []).forEach((a, i) => { for (const f of ['name', 'detail']) put(file, `${prefix}.ammo.${i}.${f}`, a[f]); });
 	for (const k of ["actions", "active_actions", "passive_actions"]) {
 		if (!Array.isArray(o[k])) continue;
 		o[k].forEach((a, i) => { for (const f of ["name", "trigger", "detail"]) put(file, `${prefix}.${k}.${i}.${f}`, a[f]); });
@@ -38,7 +39,7 @@ ws.forEach((w, n) => {
 		if (w[k] && typeof w[k] === "object") put(file, `${w.id}.${k}.detail`, w[k].detail);
 		else put(file, `${w.id}.${k}`, w[k]);
 	}
-	(w.profiles || []).forEach((p, i) => { put(file, `${w.id}.profiles.${i}.name`, p.name); put(file, `${w.id}.profiles.${i}.effect`, p.effect); acts(file, `${w.id}.profiles.${i}`, p); });
+	(w.profiles || []).forEach((p, i) => { put(file, `${w.id}.profiles.${i}.name`, p.name); put(file, `${w.id}.profiles.${i}.effect`, p.effect); for (const k of ['on_hit','on_crit','on_attack']) { if (p[k] && typeof p[k] === 'object') put(file, `${w.id}.profiles.${i}.${k}.detail`, p[k].detail); else put(file, `${w.id}.profiles.${i}.${k}`, p[k]); } acts(file, `${w.id}.profiles.${i}`, p); });
 	acts(file, w.id, w);
 });
 const ss = ld("systems");

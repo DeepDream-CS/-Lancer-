@@ -37,7 +37,7 @@ const T = {
 	mount: { "Main": "主", "Aux": "副", "Flex": "灵活", "Main/Aux": "主/副", "Aux/Aux": "副/副", "Heavy": "重型", "Integrated": "内建", "Auxiliary": "副", "Superheavy": "超重型", "Ship-class": "舰载级" },
 	wtype: { "Melee": "肉搏", "CQB": "CQB", "Rifle": "步枪", "Launcher": "发射器", "Cannon": "大炮", "Nexus": "巢房", "Special": "特殊", "Spool Weapon": "卷绕武器" },
 	dmg: { "Kinetic": "动能", "Explosive": "爆炸", "Energy": "能量", "Heat": "热度", "Burn": "燃烧", "Variable": "可变" },
-	range: { "Range": "射程", "Threat": "威胁", "Blast": "爆炸", "Burst": "爆发", "Line": "直线", "Cone": "锥形", "Thrown": "投掷" },
+	range: { "Range": "射程", "Threat": "威胁", "Blast": "溅射", "Burst": "爆发", "Line": "直线", "Cone": "锥形", "Thrown": "投掷" },
 	hase: { hull: "机体 HULL", agi: "敏捷 AGI", sys: "系统 SYS", eng: "工程 ENG" },
 	stype: { "AI": "AI", "Deployable": "可展开", "Drone": "无人机", "Shield": "护盾", "Flight System": "飞行系统", "Tech": "科技" },
 	role: { "Balanced": "均衡", "Striker": "打击", "Controller": "控制", "Support": "支援", "Defender": "防御", "Artillery": "炮击" },
@@ -65,18 +65,14 @@ const plain = (kind, x) => label(kind, x, false);
 const makerName = m => (Z.makers[m] ? `${m} ${Z.makers[m]}` : m);
 
 function tagText(t) {
-	const def = TAGS[t.id];
-	if (!def) return t.id;
-	const key = def.name.toLowerCase();
-	const z = Z.tags[key] || Z.tags[key.replace(/\s*\{val\}/, "")];
-	const val = def.name.includes("{VAL}") && t.val != null ? String(t.val) : "";
-	if (!z) return def.name.replace(/\s*\{VAL\}/g, val ? " " + val : "");
-	if (z.name.includes("X")) return z.name.replace(/X/g, val);
-	return val ? `${z.name} ${val}` : z.name;
+  const def = TAGS[t.id];
+  if (!def) return t.id;
+  const basic = ['tg_accurate','tg_inaccurate','tg_overkill'].includes(t.id);
+  return def.name.replace(/\{VAL\}/g, String(t.val ?? (basic ? '' : 'X'))).trim();
 }
 // 这些标签只是给 COMP/CON 用的内部标记，不显示
 const HIDDEN_TAGS = ["tg_pilot_weapon", "tg_gear", "tg_personal_armor", "tg_set_damage_type", "tg_set_max_uses", "tg_set_damage_value", "tg_no_cascade"];
-const tagsHtml = tags => (tags || []).filter(t => !HIDDEN_TAGS.includes(t.id)).map(t => `<span class="tag" title="${esc(TAGS[t.id] ? TAGS[t.id].description.replace(/\{VAL\}/g, t.val ?? "X") : "")}">${esc(tagText(t))}</span>`).join("");
+const tagsHtml = tags => (tags || []).filter(t => !HIDDEN_TAGS.includes(t.id)).map(t => `<span class="tag" title="${esc(TAGS[t.id] ? TAGS[t.id].description.replace(/\{VAL\}/g, t.val ?? (['tg_accurate','tg_inaccurate','tg_overkill'].includes(t.id) ? 1 : "X")) : "")}">${esc(tagText(t))}</span>`).join("");
 const tagsPlain = tags => (tags || []).filter(t => !HIDDEN_TAGS.includes(t.id)).map(tagText).join("、");
 const dmgText = d => (d || []).filter(x => x.val !== "N/A").map(x => { const k = x.type ? x.type[0].toUpperCase() + x.type.slice(1) : ""; return `${x.val}${T.dmg[k] || x.type || ""}`; }).join("+");
 const rngText = r => (r || []).map(x => `${T.range[x.type] || x.type}${x.val === "N/A" ? "：无" : x.val}`).join(" ");
@@ -107,8 +103,12 @@ function blankMech(frame = EVEREST) {
 }
 function load() {
 	try {
-		const s = JSON.parse(localStorage.getItem(STORE));
-		if (s && s.pilots && s.pilots.length) return s;
+		const rawSave = localStorage.getItem(STORE);
+		const s = JSON.parse(rawSave);
+		if (rawSave && s?.pilots?.length && !localStorage.getItem(STORE + '-before-rules-20261021')) {
+			try { localStorage.setItem(STORE + '-before-rules-20261021', rawSave); } catch (_) { /* 不影响空间不足时读取原存档 */ }
+		}
+		if (s && Array.isArray(s.pilots) && s.pilots.length) { s.pilots = s.pilots.map(raw => ({...normalizePilot(raw, []), id: str(raw.id) || blankPilot().id})); return s; }
 	} catch (e) { /* 忽略损坏的存档 */ }
 	const p = blankPilot();
 	return { pilots: [p], current: p.id, ignoreLimits: false };
@@ -125,7 +125,7 @@ const licenseRank = (p, licName) => {
 };
 function itemAvailable(p, it) {
 	if (db.ignoreLimits && it.source) return true;
-	if (it.talent_item) return (p.talents[it.talent_id] || 0) >= (it.talent_rank || 1);
+	if (it.talent_item) return talentEquipment(p, 'special_equipment').some(x => x.id === it.id);
 	if (!it.source) return false;
 	if (it.source === "GMS" && !it.license_level) return true;
 	return licenseRank(p, it.license) >= (it.license_level || 0);
@@ -149,10 +149,10 @@ function mountsOf(p, m) {
 	if (hasCB(p, "cb_integrated_weapon")) mounts.push({ key: "iw", type: "Integrated", note: "内建武器（核心加成）", noMods: true });
 	return mounts;
 }
-function integratedOf(f) {
+function integratedOf(f, p, m = p.mechs.find(m => m.frame === f?.id) || {}) {
 	if (!f) return [];
-	const ids = [...(f.core_system.integrated || []), ...f.traits.flatMap(t => t.integrated || [])];
-	return ids.map(id => WEAPONS[id] || SYSTEMS[id]).filter(Boolean);
+	const ids = [...(f.core_system.integrated || []), ...f.traits.flatMap(t => t.integrated || []), ...talentEquipment(p, "integrated").map(x => x.id)];
+	return [...new Set(ids)].map(id => WEAPONS[id] || SYSTEMS[id]).filter(Boolean).map(x => x.mount ? configuredWeapon(x, m) : x);
 }
 const slotState = (m, key) => (m.loadout[key] = m.loadout[key] || { slots: [], link: "" });
 
@@ -160,13 +160,13 @@ const slotState = (m, key) => (m.loadout[key] = m.loadout[key] || { slots: [], l
 function equippedWeapons(p, m) {
 	const out = [];
 	const mounts = mountsOf(p, m);
-	const linked = new Set(mounts.map(mt => slotState(m, mt.key).link).filter(Boolean));
+	const linked = linkedMounts(p, m);
 	for (const mt of mounts) {
 		if (linked.has(mt.key)) continue;
 		const st = slotState(m, mt.key);
 		MOUNT_SLOTS[mt.type].forEach((acc, i) => {
 			const s = st.slots[i];
-			if (s && s.w && WEAPONS[s.w]) out.push({ mount: mt, i, w: WEAPONS[s.w], mod: s.mod && MODS[s.mod] });
+			if (s && s.w && WEAPONS[s.w] && slotAccepts(mt, i, st.slots).includes(WEAPONS[s.w].mount)) out.push({ mount: mt, i, w: WEAPONS[s.w], mod: s.mod && MODS[s.mod] });
 		});
 	}
 	return out;
@@ -176,12 +176,7 @@ function mechStats(p, m) {
 	const f = FRAMES[m.frame];
 	if (!f) return null;
 	const s = f.stats, h = p.hase, L = LV(p.ll);
-	const bonus = id => {
-		let v = 0;
-		p.coreBonuses.forEach(c => (CBS[c] && CBS[c].bonuses || []).forEach(b => { if (b.id === id) v += +b.val || 0; }));
-		m.systems.forEach(sid => (SYSTEMS[sid] && SYSTEMS[sid].bonuses || []).forEach(b => { if (b.id === id) v += +b.val || 0; }));
-		return v;
-	};
+	const bonus = id => staticBonus(p, m, id);
 	let size = s.size;
 	if (bonus("size")) size = size < 1 ? 1 : Math.min(3, size + 1);
 	const spUsed = m.systems.reduce((a, id) => a + (SYSTEMS[id] ? SYSTEMS[id].sp || 0 : 0), 0) +
@@ -191,14 +186,14 @@ function mechStats(p, m) {
 		hp: s.hp + L.grit + h.hull * 2 + bonus("hp"),
 		armor: Math.min(4, s.armor + bonus("armor")),
 		evasion: s.evasion + h.agi + bonus("evasion"),
-		speed: s.speed + Math.floor(h.agi / 2),
+		speed: s.speed + Math.floor(h.agi / 2) + bonus("speed"),
 		edef: s.edef + h.sys + bonus("edef"),
-		tech: s.tech_attack + h.sys,
-		sensor: s.sensor_range,
+		tech: s.tech_attack + h.sys + bonus("tech_attack"),
+		sensor: s.sensor_range + bonus("sensor"),
 		save: s.save + L.grit + bonus("save"),
-		heatcap: s.heatcap + h.eng,
-		repcap: s.repcap + Math.floor(h.hull / 2),
-		sp: s.sp + L.grit + Math.floor(h.sys / 2),
+		heatcap: s.heatcap + h.eng + bonus("heatcap"),
+		repcap: s.repcap + Math.floor(h.hull / 2) + bonus("repcap"),
+		sp: s.sp + L.grit + Math.floor(h.sys / 2) + bonus("sp"),
 		spUsed,
 		attack: L.grit,
 		limited: Math.floor(h.eng / 2) + bonus("limited_bonus"),
@@ -217,7 +212,7 @@ function pilotStats(p) {
 
 // ---------- 检查 ----------
 function checks(p) {
-	const out = []; // [level, text]
+	const out = creationChecks(p); // [level, text]
 	const L = LV(p.ll);
 	const trig = p.triggers.reduce((s, t) => s + (+t.val || 0), 0);
 	if (trig !== L.triggers) out.push(["warn", `触发点数合计 +${trig}，LL${p.ll} 应为 +${L.triggers}`]);
@@ -241,6 +236,7 @@ function checks(p) {
 		const tag = `机甲「${m.name || mi + 1}」`;
 		if (!f) return out.push(["err", `${tag} 未选择骨架`]);
 		if (!frameAvailable(p, f)) out.push(["err", `${tag} 的骨架 ${f.name} 需要该牌照 2 级`]);
+		out.push(...loadoutChecks(p, m));
 		const st = mechStats(p, m);
 		if (st.spUsed > st.sp) out.push(["err", `${tag} SP 超出：${st.spUsed}/${st.sp}`]);
 		const eq = equippedWeapons(p, m);
@@ -325,14 +321,14 @@ function pilotParts(p) {
 	</div>`,
 	triggers: `<div class="card wide">
 		<h3>触发 Triggers ${counter(trigSum, L.triggers)}</h3>
-		<p class="muted">LL0 有四个 +2 触发；每升一级可让一个触发 +2 或新增一个 +2 触发（单项最高 +6）。可从范例中选，也可自订。</p>
+		<p class="muted">LL0 有四个 +2 触发；每升一级可让一个触发 +2 或新增一个 +2 触发（单项最高 +6）。可从范例中选，也可自定义。</p>
 		${p.triggers.map((t, i) => {
 			const sk = SKILLS[t.id];
 			const z = sk && Z.skills[sk.name.toLowerCase()];
 			return `<div class="list-item"><div class="li-head">
 				<span class="row" style="flex:1">
-					<select data-k="triggers.${i}.id"><option value="">— 自订触发 —</option>${skillOpts.map(s => opt(s.id, plain("skill", s), s.id === t.id)).join("")}</select>
-					${t.id ? "" : `<input type="text" style="max-width:220px" data-k="triggers.${i}.custom" placeholder="自订触发名称" value="${esc(t.custom)}">`}
+					<select data-k="triggers.${i}.id"><option value="">— 自定义触发 —</option>${skillOpts.map(s => opt(s.id, plain("skill", s), s.id === t.id)).join("")}</select>
+					${t.id ? "" : `<input type="text" style="max-width:220px" data-k="triggers.${i}.custom" placeholder="自定义触发名称" value="${esc(t.custom)}">`}
 				</span>
 				<span>${stepper("trig", i, +t.val, 2, 6, v => "+" + v)} <button data-act="delTrig" data-arg="${i}" class="danger">✕</button></span>
 			</div>${sk ? det("sk" + t.id + i, esc(sk.description), (z && z.html) || esc(sk.detail)) : ""}</div>`;
@@ -371,7 +367,7 @@ function progressParts(p) {
 		${Object.keys(T.hase).map(k => `<div class="row" style="justify-content:space-between"><span><b>${T.hase[k]}</b><br><span class="muted">${haseDesc[k]}</span></span>${stepper("hase", k, p.hase[k], 0, 6, v => "+" + v)}</div>`).join("")}
 	</div>`,
 	levels: `<div class="card"><h3>等级表 <span class="muted">当前 LL${p.ll}</span></h3>${levelTable}
-		<p class="muted">升级时可重分配：一个天赋的全部等级、一个牌照的全部等级，或换一个核心加成。</p></div>`,
+		<p class="muted">每次升级可选择一项重分配：一个天赋的全部等级、一个牌照的全部等级，或换一个核心加成。重分配牌照导致核心加成失去资格时，须同时替换该核心加成。</p></div>`,
 	licenses: `<div class="card wide">
 		<h3>牌照 Licenses ${counter(lr, L.licenses)}</h3>
 		<p class="muted">每级 LL 得 1 牌照等级。牌照分一至三级，须依次取得；二级解锁该骨架。GMS（埃佛勒斯及 GMS 装备）永远可用。</p>
@@ -431,28 +427,29 @@ const statVal = v => {
 // 个别数据把单个动作写成对象而不是数组，这里统一成数组
 const asList = v => (Array.isArray(v) ? v : v && typeof v === "object" ? [v] : []);
 function actsHtml(o) {
-	let h = "";
+  let h = "";
+  if (o.ammo) h += o.ammo.map(a => `<div class="blk"><b>${esc(a.name)}（${a.cost || 1}发）</b><p>${a.detail || ""}</p></div>`).join("");
 	for (const k of ["actions", "active_actions", "passive_actions"]) for (const a of asList(o[k])) {
 		if (!a.detail && !a.name) continue;
 		const meta = [ACT[a.activation] || a.activation, freqText(a.frequency)].filter(x => x && x !== "None").join("，");
 		h += `<div class="blk"><div class="blk-h">${esc(a.name || "")} <span class="muted">${esc(meta)}</span></div>${a.trigger ? `<p><b>触发：</b>${a.trigger}</p>` : ""}<p>${a.detail || ""}</p></div>`;
 	}
 	for (const k of ["deployables", "active_deployables"]) for (const d of asList(o[k])) {
-		const st = [d.size != null ? "大小" + (d.size === 0.5 ? "½" : d.size) : "", d.hp != null ? statVal(d.hp) + " HP" : "", d.armor ? "装甲" + statVal(d.armor) : "", d.evasion != null ? "回避" + statVal(d.evasion) : "", d.edef != null ? "电子防御" + statVal(d.edef) : ""].filter(Boolean).join(" · ");
+		const st = [d.size != null ? "大小" + (d.size === 0.5 ? "½" : d.size) : "", d.hp != null ? (Number(statVal(d.hp)) + (STAT_CTX[d.type === "Drone" ? "drone_hp" : "deployable_hp"] || 0)) + " HP" : "", d.armor ? "装甲" + statVal(d.armor) : "", d.evasion != null ? "回避" + statVal(d.evasion) : "", d.edef != null ? "电子防御" + statVal(d.edef) : ""].filter(Boolean).join(" · ");
 		h += `<div class="blk"><div class="blk-h">${esc(d.name || "")} <span class="muted">${esc(ACT[d.type] || d.type || "")}${st ? " · " + esc(st) : ""}</span></div><p>${d.detail || ""}</p>${actsHtml(d)}</div>`;
 	}
 	return h;
 }
-function weaponInfo(w, mod) {
-	const prof = w.profiles ? w.profiles[0] : w;
+function weaponInfo(w, mod, p = P(), m = M()) {
+	const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
 	const meta = [`${T.mount[w.mount] || w.mount}${T.wtype[w.type] || w.type}`, rngText(prof.range), dmgText(prof.damage)].filter(Boolean).join(" · ");
 	const z = Z.gms[w.name];
 	let detail = (z && z.html) || "";
 	if (w.effect) detail += `<p>${w.effect}</p>`;
 	if (w.on_hit) detail += `<p><b>命中时：</b>${txt(w.on_hit)}</p>`;
-	if (w.on_crit) detail += `<p><b>重击时：</b>${txt(w.on_crit)}</p>`;
+	if (w.on_crit) detail += `<p><b>会心一击时：</b>${txt(w.on_crit)}</p>`;
 	if (w.on_attack) detail += `<p><b>攻击时：</b>${txt(w.on_attack)}</p>`;
-	if (w.profiles) detail += w.profiles.map(pf => `<div class="blk"><div class="blk-h">${esc(pf.name)}</div><div>${rngText(pf.range)} · ${dmgText(pf.damage)} ${tagsHtml(pf.tags)}</div>${pf.effect ? `<p>${pf.effect}</p>` : ""}${actsHtml(pf)}</div>`).join("");
+	if (w.profiles) detail += w.profiles.map(raw => { const pf = effectiveProfile(w, raw, mod, p, m); return `<div class="blk"><div class="blk-h">${esc(pf.name)}</div><div>${rngText(pf.range)} · ${dmgText(pf.damage)} ${tagsHtml(pf.tags)}</div>${pf.effect ? `<p>${pf.effect}</p>` : ""}${pf.on_hit ? `<p><b>命中时：</b>${txt(pf.on_hit)}</p>` : ""}${pf.on_crit ? `<p><b>会心一击时：</b>${txt(pf.on_crit)}</p>` : ""}${pf.on_attack ? `<p><b>攻击时：</b>${txt(pf.on_attack)}</p>` : ""}${actsHtml(pf)}</div>`; }).join("");
 	detail += actsHtml(w);
 	if (mod) detail += `<div class="blk"><div class="blk-h">改装：${esc(plain("item", mod))} (${mod.sp}SP)</div><p>${mod.effect || ""}</p>${actsHtml(mod)}</div>`;
 	return `<div class="wstat">${esc(meta)} ${tagsHtml(prof.tags || w.tags)}</div>` + det("w" + w.id + (mod ? mod.id : ""), "武器效果", detail);
@@ -461,7 +458,7 @@ function mechParts(p) {
 	const m = M();
 	const f = FRAMES[m.frame];
 	const st = mechStats(p, m);
-	STAT_CTX = st ? { ...st, grit: LV(p.ll).grit } : {};
+	STAT_CTX = st ? { ...st, grit: LV(p.ll).grit, drone_hp: staticBonus(p,m,"drone_hp"), deployable_hp: staticBonus(p,m,"deployable_hp") } : {};
 	const mechTabs = `<div class="mech-tabs">${p.mechs.map((x, i) => `<button data-act="pickMech" data-arg="${i}" class="${i === p.activeMech ? "on" : ""}">${esc(x.name || "机甲" + (i + 1))}</button>`).join("")}
 		<button data-act="addMech">+ 新机甲</button>${p.mechs.length > 1 ? `<button data-act="delMech" class="danger">删除此机甲</button>` : ""}</div>`;
 	const frameSel = `<select data-k="mech.frame">${MAKERS.map(mk => `<optgroup label="${esc(makerName(mk))}">${D.frames.filter(x => x.source === mk).map(x => opt(x.id, esc(plain("frame", x)) + (frameAvailable(p, x) ? "" : " 🔒"), x.id === m.frame, !frameAvailable(p, x) && x.id !== m.frame)).join("")}</optgroup>`).join("")}</select>`;
@@ -475,40 +472,39 @@ function mechParts(p) {
 		${stat((st.tech >= 0 ? "+" : "") + st.tech, "科技攻击")}${stat("+" + st.attack, "攻击加值")}${stat("+" + st.limited, "受限加成")}${stat(st.sp, "SP")}
 	</div>`;
 
-	const traits = f.traits.map(t => `<div class="blk"><div class="blk-h">${esc(t.name)}</div><p>${t.description}</p></div>`).join("");
+	const traits = f.traits.map(t => `<div class="blk"><div class="blk-h">${esc(t.name)}</div><p>${t.description}</p>${actsHtml(t)}</div>`).join("");
 	const cs = f.core_system;
 	const coreActs = actsHtml(cs);
 	const core = `<div class="blk"><div class="blk-h">核心系统：${esc(cs.name)}</div>${cs.passive_name ? `<p><b>${esc(cs.passive_name)}（被动）</b>：${cs.passive_effect || ""}</p>` : ""}<p><b>${esc(cs.active_name || "")}</b> <span class="muted">${esc(ACT[cs.activation] || cs.activation || "")}，消耗1 CP</span>：${cs.active_effect || ""}</p>${coreActs}</div>`;
 
 	// 挂载点
 	const mounts = mountsOf(p, m);
-	const linkedBy = {};
-	mounts.forEach(mt => { const l = slotState(m, mt.key).link; if (l) linkedBy[l] = mt.key; });
+	const linkedBy = Object.fromEntries(linkedMounts(p, m));
 	const mountHtml = mounts.map(mt => {
 		const sst = slotState(m, mt.key);
 		const title = `${T.mount[mt.type] || mt.type}挂载点${mt.retro ? "（改造挂载点）" : ""}${mt.note ? "（" + mt.note + "）" : ""}`;
-		const stab = hasCB(p, "cb_auto_stabilizing_hardpoints") ? `<label class="chk"><input type="radio" name="stab" data-act="stab" data-arg="${mt.key}" ${m.stabilized === mt.key ? "checked" : ""}> 自动稳定（+1准度）</label>` : "";
+		const stab = mt.type !== "Integrated" && hasCB(p, "cb_auto_stabilizing_hardpoints") ? `<label class="chk"><input type="radio" name="stab" data-act="stab" data-arg="${mt.key}" ${m.stabilized === mt.key ? "checked" : ""}> 自动稳定（+1准度）</label>` : "";
 		if (linkedBy[mt.key]) return `<div class="mount"><div class="mount-h">${title}</div><div class="muted">被超重型武器占用</div></div>`;
 		const slots = MOUNT_SLOTS[mt.type].map((acc, i) => {
 			const s = sst.slots[i] || {};
 			const first = sst.slots[0] && WEAPONS[sst.slots[0].w];
-			if (i === 1 && first && first.mount !== "Auxiliary") return "";
+			if (!slotAccepts(mt, i, sst.slots).length) return "";
 			const w = WEAPONS[s.w];
-			const mods = w && !mt.noMods && !w.no_mods ? D.mods.filter(md => (!md.allowed_types || md.allowed_types.includes(w.type)) && !(md.restricted_sizes || []).includes(w.mount)) : [];
+			const mods = w && !mt.noMods && !w.no_mods ? D.mods.filter(md => canModify(w, md, mt)) : [];
 			let html = `<div class="slot"><select data-act="slotW" data-arg="${mt.key}|${i}"><option value="">— 空 —</option>${itemOptions(p, D.weapons, s.w, x => acc.includes(x.mount))}</select>
 				${mods.length ? `<select data-act="slotMod" data-arg="${mt.key}|${i}"><option value="">— 无改装 —</option>${itemOptions(p, mods, s.mod, () => true)}</select>` : "<span></span>"}</div>`;
-			if (w) html += weaponInfo(w, s.mod && MODS[s.mod]);
+			if (w) html += weaponInfo(w, s.mod && MODS[s.mod]) + `<p class="muted">${esc(buildWeaponNote(p, m, {w, mount:mt, i}))}</p>`;
 			if (w && w.mount === "Superheavy") {
-				const others = mounts.filter(o => o.key !== mt.key && o.type !== "Integrated");
+				const others = mounts.filter(o => o.key !== mt.key && o.type !== "Integrated" && (!linkedBy[o.key] || linkedBy[o.key] === mt.key) && WEAPONS[m.loadout[o.key]?.slots?.[0]?.w]?.mount !== "Superheavy");
 				html += `<div class="row"><span class="muted">超重型武器需同时占用另一个挂载点：</span><select data-act="link" data-arg="${mt.key}"><option value="">— 选择 —</option>${others.map(o => opt(o.key, `${T.mount[o.type]}挂载点`, sst.link === o.key)).join("")}</select></div>`;
 			}
 			return html;
 		}).join("");
 		return `<div class="mount"><div class="mount-h"><span>${title}</span>${stab}</div>${slots}</div>`;
 	}).join("");
-	const integ = integratedOf(f).map(w => `<div class="mount"><div class="mount-h">内建：${esc(plain("item", w))}</div>${w.mount ? weaponInfo(w) : `<div class="desc">${w.effect || ""}${actsHtml(w)}</div>`}</div>`).join("");
+	const integ = integratedOf(f, p, m).map(w => `<div class="mount"><div class="mount-h">内建：${esc(plain("item", w))}</div>${w.mount ? weaponInfo(w) : `<div class="desc">${w.effect || ""}${actsHtml(w)}</div>`}</div>`).join("");
 	const retro = hasCB(p, "cb_mount_retrofitting") ? `<div class="row"><span class="muted">改造挂载点（核心加成）：把哪个挂载点换成主/副？</span><select data-act="retro"><option value="-1">—</option>${f.mounts.map((t, i) => opt(i, `${i + 1}. ${T.mount[t]}挂载点`, m.retrofit === i)).join("")}</select></div>` : "";
-	const overpower = hasCB(p, "cb_overpower_caliber") ? `<div class="row"><span class="muted">过强弹药（核心加成）指定武器：</span><select data-k="mech.overpower"><option value="">—</option>${equippedWeapons(p, m).map(e => opt(e.w.id, esc(plain("item", e.w)), m.overpower === e.w.id)).join("")}</select></div>` : "";
+	const overpower = hasCB(p, "cb_overpower_caliber") ? `<div class="row"><span class="muted">过强弹药（核心加成）指定武器：</span><select data-k="mech.overpower"><option value="">—</option>${equippedWeapons(p, m).filter(e => e.mount.type !== "Integrated" && !e.w.no_core_bonus).map(e => opt(`${e.mount.key}|${e.i}`, `${T.mount[e.mount.type]} ${e.mount.key}/${e.i + 1} · ${esc(plain("item", e.w))}`, m.overpower === `${e.mount.key}|${e.i}`)).join("")}</select></div>` : "";
 
 	// 系统
 	const sysHtml = m.systems.map((id, i) => {
@@ -517,7 +513,7 @@ function mechParts(p) {
 		const z = Z.gms[s.name];
 		const lock = !itemAvailable(p, s);
 		return `<div class="list-item ${lock ? "locked" : ""}"><div class="li-head"><span class="li-title">${label("item", s)} <small>${s.sp || 0} SP</small></span><button data-act="delSys" data-arg="${i}" class="danger">✕</button></div>
-			<div class="wstat">${s.type ? (T.stype[s.type] || s.type) + " " : ""}${tagsHtml(s.tags)}</div>${det("s" + id + i, "系统效果", (z && z.html) || ((s.effect ? `<p>${s.effect}</p>` : "") + actsHtml(s)))}</div>`;
+			<div class="wstat">${s.type ? (T.stype[s.type] || s.type) + " " : ""}${tagsHtml(limitedTags(s.tags, p, m))}</div>${det("s" + id + i, "系统效果", (s.effect ? `<p>${s.effect}</p>` : "") + actsHtml(s) || (z && z.html) || "")}</div>`;
 	}).join("");
 	const spPct = Math.min(100, (st.spUsed / st.sp) * 100);
 
@@ -532,13 +528,13 @@ function mechParts(p) {
 		<h4>骨架特性</h4><div class="desc">${traits}${core}</div>
 	</div>`,
 	stats: `<div class="card">
-		<h3>数值 <span class="muted">已计入毅力、HASE、核心加成与系统</span></h3>
+		<h3>数值 <span class="muted">已计入常驻数值加成；条件效果见规则说明</span></h3>
 		${statsHtml}
 		<h4>SP ${st.spUsed} / ${st.sp}</h4>
 		<div class="spbar ${st.spUsed > st.sp ? "over" : ""}"><div style="width:${spPct}%"></div></div>
 	</div>`,
 	weapons: `<div class="card">
-		<h3>武器</h3>${retro}${mountHtml}${integ}${overpower}
+		<h3>武器</h3>${prototypeEditor(p, m)}${retro}${mountHtml}${integ}${overpower}
 	</div>`,
 	systems: `<div class="card">
 		<h3>系统 <span class="muted">剩余 ${st.sp - st.spUsed} SP</span></h3>
@@ -569,10 +565,17 @@ function sheetText(p) {
 	const g = p.gear;
 	lines.push(`驾驶员装备：${[g.armor, ...g.weapons, ...g.items].filter(Boolean).map(id => plain("gear", GEAR[id])).join("、") || "—"}`);
 	if (p.bio) lines.push(`经历：${p.bio}`);
+	lines.push('驾驶员规则详述：');
+	for (const [id,rank] of Object.entries(p.talents)) {
+		const t=TALENTS[id], z=t && Z.talents[t.name];
+		if(t) t.ranks.slice(0,rank).forEach((r,i)=>lines.push(`${plain('talent',t)} ${roman(i+1)}：${stripHtml(z?.ranks[i]?.html || r.description)}`));
+	}
+	for (const id of p.coreBonuses) { const c=CBS[id]; if(c) lines.push(`${plain('cb',c)}：${stripHtml(Z.cb[nk(c.name)]?.html || c.effect)}`); }
 	p.mechs.forEach(m => {
 		const f = FRAMES[m.frame];
 		if (!f) return;
 		const st = mechStats(p, m);
+		STAT_CTX = { ...st, grit: L.grit, drone_hp: staticBonus(p,m,'drone_hp'), deployable_hp: staticBonus(p,m,'deployable_hp') };
 		lines.push("");
 		lines.push(`【机甲】${m.name}　骨架：${f.source} ${plain("frame", f)}`);
 		lines.push(`HP ${st.hp}｜装甲 ${st.armor}｜结构 ${st.structure}｜压力 ${st.stress}｜热度上限 ${st.heatcap}｜维修上限 ${st.repcap}`);
@@ -580,13 +583,20 @@ function sheetText(p) {
 		lines.push(`科技攻击 ${st.tech >= 0 ? "+" : ""}${st.tech}｜攻击加值 +${st.attack}｜SP ${st.spUsed}/${st.sp}`);
 		lines.push(`特性：${f.traits.map(t => t.name).join("、")}｜核心系统：${f.core_system.name}`);
 		lines.push("武器：");
-		integratedOf(f).forEach(w => lines.push(`  · [内建] ${plain("item", w)}`));
+		integratedOf(f, p, m).forEach(w => { const pr = w.mount ? effectiveProfile(w, w.profiles?.[0] || w, null, p, m) : null; lines.push(`  · [内建] ${plain("item", w)}${pr ? `　${rngText(pr.range)}　${dmgText(pr.damage)}　${tagsPlain(pr.tags)}　${buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})}` : ""}`); });
 		equippedWeapons(p, m).forEach(e => {
-			const prof = e.w.profiles ? e.w.profiles[0] : e.w;
-			lines.push(`  · [${T.mount[e.mount.type]}] ${plain("item", e.w)}　${T.mount[e.w.mount]}${T.wtype[e.w.type] || ""}　${rngText(prof.range)}　${dmgText(prof.damage)}${tagsPlain(prof.tags) ? "　" + tagsPlain(prof.tags) : ""}${e.mod ? "　改装：" + plain("item", e.mod) : ""}${m.stabilized === e.mount.key ? "　(+1准度)" : ""}${m.overpower === e.w.id ? "　(过强弹药)" : ""}`);
+			const prof = effectiveProfile(e.w, e.w.profiles ? e.w.profiles[0] : e.w, e.mod, p, m);
+			lines.push(`  · [${T.mount[e.mount.type]}] ${plain("item", e.w)}　${T.mount[e.w.mount]}${T.wtype[e.w.type] || ""}　${rngText(prof.range)}　${dmgText(prof.damage)}${tagsPlain(prof.tags) ? "　" + tagsPlain(prof.tags) : ""}${e.mod ? "　改装：" + plain("item", e.mod) : ""}${m.stabilized === e.mount.key ? "　(+1准度)" : ""}${buildWeaponNote(p, m, e) ? "　" + buildWeaponNote(p, m, e) : ""}`);
 		});
-		lines.push(`系统：${m.systems.map(id => SYSTEMS[id] ? `${plain("item", SYSTEMS[id])}(${SYSTEMS[id].sp || 0})` : "").filter(Boolean).join("、") || "—"}`);
+		lines.push(`系统：${m.systems.map(id => SYSTEMS[id] ? `${plain("item", SYSTEMS[id])}(${SYSTEMS[id].sp || 0} SP；${tagsPlain(limitedTags(SYSTEMS[id].tags,p,m))})` : "").filter(Boolean).join("、") || "—"}`);
 		if (m.notes) lines.push(`备注：${m.notes}`);
+		lines.push("规则详述（条件效果按场上情况结算）：");
+		for (const t of f.traits) lines.push(`${t.name}：${stripHtml(t.description)} ${stripHtml(actsHtml(t))}`);
+		const core = f.core_system;
+		lines.push(`${core.name}：${stripHtml(core.active_effect)} ${stripHtml(core.passive_effect)} ${stripHtml(actsHtml(core))}`);
+		for (const w of integratedOf(f,p,m)) lines.push(`${plain("item",w)}：${stripHtml(w.mount ? weaponInfo(w,null,p,m) : (w.effect||'')+actsHtml(w))}`);
+		for (const e of equippedWeapons(p,m)) lines.push(`${plain("item",e.w)}：${stripHtml(weaponInfo(e.w,e.mod,p,m))} ${buildWeaponNote(p,m,e)}`);
+		for (const id of m.systems) { const s = SYSTEMS[id]; if(s) lines.push(`${plain("item",s)}：${stripHtml(s.effect)} ${stripHtml(actsHtml(s))}`); }
 	});
 	return lines.join("\n");
 }
@@ -595,10 +605,10 @@ function renderSheet(p) {
 	return `<div class="grid">
 	<div class="card wide noprint">
 		<h3>规则检查</h3>
-		${cs.length ? `<ul class="warn-list">${cs.map(([lv, t]) => `<li class="${lv}">${esc(t)}</li>`).join("")}</ul>` : `<p class="oklist">✓ 全部符合 LL${p.ll} 的车卡规则</p>`}
+		${cs.length ? `<ul class="warn-list">${cs.map(([lv, t]) => `<li class="${lv}">${esc(t)}</li>`).join("")}</ul>` : `<p class="oklist">✓ 已通过 LL${p.ll} 的车卡基础检查</p>`}
 		<div class="row" style="margin-top:10px">
 			<button data-act="copySheet" class="primary">复制文字角色卡</button>
-			<button data-act="print">列印</button>
+			<button data-act="print">打印</button>
 			<button data-act="exportJson">导出本角色 JSON</button>
 			<button data-act="exportAll">导出全部角色备份</button>
 		</div>
@@ -610,7 +620,7 @@ function renderSheet(p) {
 			<button data-act="importJson">导入 JSON</button>
 		</div>
 	</div>
-	<div class="card wide noprint"><h3>图片预览 <span class="muted">点击图片也可单独下载 PNG</span></h3><div id="cardPreview" class="card-preview">生成中…</div></div>
+	<div class="card wide noprint"><h3>图片预览 <span class="muted">点击图片也可单独下载 PNG</span></h3><p class="muted">图片为固定版式摘要，长文会省略。完整配置请保留 JSON，详细规则见下方文字角色卡。</p><div id="cardPreview" class="card-preview">生成中…</div></div>
 	<div class="card wide"><pre class="sheet" id="sheetText">${esc(sheetText(p))}</pre></div>
 	</div>`;
 }
@@ -624,7 +634,7 @@ function render() {
 	const cs = checks(p);
 	const badge = document.getElementById("checkBadge");
 	badge.className = "badge " + (cs.length ? "bad" : "ok");
-	badge.textContent = cs.length ? `⚠ ${cs.length} 项待处理` : "✓ 符合规则";
+	badge.textContent = cs.length ? `⚠ ${cs.length} 项待处理` : "✓ 基础检查通过";
 	badge.title = cs.map(c => c[1]).join("\n");
 	const y = window.scrollY;
 	const inWiz = p.wizard != null;
@@ -674,7 +684,7 @@ document.addEventListener("change", e => {
 		if (act === "slotW") {
 			st.slots[i] = { w: el.value, mod: "" };
 			const w = WEAPONS[el.value];
-			if (+i === 0 && w && w.mount !== "Auxiliary") st.slots.length = 1;
+			if (+i === 0 && w && w.mount !== "Auxiliary" && mountsOf(p, m).find(mt => mt.key === key)?.type === "Flex") st.slots.length = 1;
 			if (!w || w.mount !== "Superheavy") st.link = "";
 		} else st.slots[i].mod = el.value;
 	} else if (act === "link") {
@@ -716,7 +726,7 @@ document.addEventListener("click", e => {
 		case "delTrig": p.triggers.splice(+arg, 1); break;
 		case "rollBg": p.background = D.backgrounds[Math.floor(Math.random() * D.backgrounds.length)].id; break;
 		case "lic": { const v = clamp((p.licenses[arg] || 0) + d, 0, 3); if (v) p.licenses[arg] = v; else delete p.licenses[arg]; break; }
-		case "tal": { const v = clamp((p.talents[arg] || 0) + d, 0, 3); if (v) p.talents[arg] = v; else delete p.talents[arg]; break; }
+		case "tal": { const v = clamp((p.talents[arg] || 0) + d, 0, 3); if (v) p.talents[arg] = v; else delete p.talents[arg]; migratePilot(p); break; }
 		case "cb": p.coreBonuses = hasCB(p, arg) ? p.coreBonuses.filter(x => x !== arg) : [...p.coreBonuses, arg]; break;
 		case "pickMech": p.activeMech = +arg; break;
 		case "addMech": {
@@ -764,8 +774,8 @@ function loadPortrait(input, p) {
 // ---------- 导入 / 导出 ----------
 // 导入的 JSON 可以是：单个角色、角色数组，或「导出全部」的备份 {pilots:[…]}。
 // 每个角色都按 blankPilot() 补齐缺的字段，并去掉本车卡器数据里不存在的 id，避免旧档或手改档弄坏页面。
-const int = (v, lo, hi, d = 0) => (Number.isFinite(+v) ? Math.max(lo, Math.min(hi, Math.round(+v))) : d);
-const str = v => (typeof v === "string" ? v : "");
+function int(v, lo, hi, d = 0) { return Number.isFinite(+v) ? Math.max(lo, Math.min(hi, Math.round(+v))) : d; }
+function str(v) { return typeof v === "string" ? v : ""; }
 function normalizePilot(raw, warn) {
 	const p = blankPilot();
 	const who = str(raw.name) || "未命名角色";
@@ -777,6 +787,7 @@ function normalizePilot(raw, warn) {
 	if (Array.isArray(raw.triggers)) p.triggers = raw.triggers.filter(t => t && typeof t === "object").map(t => {
 		let id = str(t.id), custom = str(t.custom);
 		if (id && !SKILLS[id]) { custom = custom || id; id = ""; }
+		custom = custom.trim();
 		return { id, custom, val: int(t.val, 2, 6, 2) & ~1 };
 	});
 	const ranks = (obj, table, kind) => {
@@ -792,10 +803,10 @@ function normalizePilot(raw, warn) {
 	p.licenses = ranks(raw.licenses, FRAMES, "牌照");
 	p.coreBonuses = (Array.isArray(raw.coreBonuses) ? raw.coreBonuses : []).filter(id => CBS[id] || (drop("核心加成", id), false));
 	if (raw.gear) {
-		const g = id => (!id ? "" : GEAR[id] ? id : (drop("驾驶员装备", id), ""));
-		p.gear.armor = g(raw.gear.armor);
-		p.gear.weapons = [0, 1].map(i => g((raw.gear.weapons || [])[i]));
-		p.gear.items = [0, 1, 2].map(i => g((raw.gear.items || [])[i]));
+		const g = (id, type) => (!id ? "" : GEAR[id]?.type === type ? id : (drop("该栏位可用的驾驶员装备", id), ""));
+		p.gear.armor = g(raw.gear.armor, "Armor");
+		p.gear.weapons = [0, 1].map(i => g((raw.gear.weapons || [])[i], "Weapon"));
+		p.gear.items = [0, 1, 2].map(i => g((raw.gear.items || [])[i], "Gear"));
 	}
 	if (typeof raw.portrait === "string" && raw.portrait.startsWith("data:image/")) p.portrait = raw.portrait;
 	if (Array.isArray(raw.mechs) && raw.mechs.length) p.mechs = raw.mechs.map(rm => {
@@ -807,7 +818,8 @@ function normalizePilot(raw, warn) {
 		else if (rm.frame) drop("骨架", rm.frame);
 		m.retrofit = int(rm.retrofit, -1, 9, -1);
 		m.stabilized = str(rm.stabilized);
-		m.overpower = WEAPONS[rm.overpower] ? rm.overpower : "";
+		m.overpower = str(rm.overpower);
+		for (const k of ["prototypeType","prototypeDamage","prototypeOptics","prototypeSmart","prototypeReactor"]) m[k] = str(rm[k]);
 		m.systems = (Array.isArray(rm.systems) ? rm.systems : []).filter(id => SYSTEMS[id] || (drop("系统", id), false));
 		if (rm.loadout && typeof rm.loadout === "object") for (const [key, st] of Object.entries(rm.loadout)) {
 			if (!st || !Array.isArray(st.slots)) continue;
@@ -823,20 +835,22 @@ function normalizePilot(raw, warn) {
 		return m;
 	});
 	p.activeMech = int(raw.activeMech, 0, p.mechs.length - 1);
+  p.wizard = typeof raw.wizard === 'string' && WIZ_STEPS.some(s=>s.id===raw.wizard) ? raw.wizard : null;
+  migratePilot(p, warn);
 	return p;
 }
 function importText(t, fileName) {
 	let data;
-	try { data = JSON.parse(t); } catch (e) { return notify(`「${fileName}」不是有效的 JSON 文件。`, "err"); }
+	try { data = JSON.parse(t); } catch (e) { return notify(`「${esc(fileName)}」不是有效的 JSON 文件。`, "err"); }
 	const list = Array.isArray(data) ? data : data && Array.isArray(data.pilots) ? data.pilots : [data];
 	const raws = list.filter(x => x && typeof x === "object" && (x.hase || x.mechs || x.triggers));
-	if (!raws.length) return notify(`「${fileName}」里没有本车卡器的角色数据。（COMP/CON 导出的文件暂不支持）`, "err");
+	if (!raws.length) return notify(`「${esc(fileName)}」里没有本车卡器的角色数据。（COMP/CON 导出的文件暂不支持）`, "err");
 	const warn = [];
 	const added = raws.map(r => normalizePilot(r, warn));
 	db.pilots.push(...added);
 	db.current = added[0].id;
 	chooser = null; tab = "pilot";
-	notify(`已导入 ${added.map(p => "「" + p.name + "」").join("、")}，可以直接修改了。` + (warn.length ? `<br>以下内容在本车卡器里找不到，已略过：<br>· ${warn.map(esc).join("<br>· ")}` : ""), warn.length ? "warn" : "ok");
+	notify(`已导入 ${added.map(p => "「" + esc(p.name) + "」").join("、")}，可以直接修改了。` + (warn.length ? `<br>导入调整说明：<br>· ${warn.map(esc).join("<br>· ")}` : ""), warn.length ? "warn" : "ok");
 	window.scrollTo(0, 0);
 	render();
 }

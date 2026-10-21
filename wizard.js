@@ -87,7 +87,7 @@ const WIZ_STEPS = [
 			if (p.triggers.some(t => !t.id && !t.custom)) out.push("有空白的触发");
 			const ids = p.triggers.map(t => t.id || t.custom).filter(Boolean);
 			if (new Set(ids).size !== ids.length) out.push("有重复的触发");
-			return out;
+			return out.concat(creationChecks(p).filter(c=>c[1].includes("触发")).map(c=>c[1]));
 		},
 		body: p => {
 			const L = LV(p.ll);
@@ -96,7 +96,7 @@ const WIZ_STEPS = [
 			return `
 			<p><b>触发（Trigger）</b>是驾驶员擅长的事，像「打脸」「快速到达某地」。当你在故事中做的事符合某个触发，技能判定就加上它的数值（+2、+4 或 +6）。一次判定只能用一个触发。</p>
 			${tip(`LL0 选 <b>四个 +2 触发</b>。${p.ll ? `你是 LL${p.ll}，另外还有 <b>${p.ll} 次</b>「让一个触发 +2 或新增一个 +2 触发」，单项最高 +6。合计应为 <b>+${L.triggers}</b>。` : ""}`)}
-			${tip("触发只用于驾驶员本人的行动和技能判定；用机甲做事时改用下一步的「机甲能力」。GM 同意的话，也可以自订更具体的触发（例如「冷血杀人」）。", "muted")}
+			${tip("触发只用于驾驶员本人的行动和技能判定；用机甲做事时改用下一步的「机甲能力」。GM 同意的话，也可以自定义更具体的触发（例如「冷血杀人」）。", "muted")}
 			${sug.length ? `<div class="row"><b>你的背景推荐：</b>${sug.map(s => `<button data-wiz="chip" data-arg="${s.id}" ${have.has(s.id) ? "disabled" : ""}>＋ ${esc(zhOf("skill", s))}</button>`).join("")}</div>` : ""}
 			${pilotParts(p).triggers}`;
 		},
@@ -132,7 +132,7 @@ const WIZ_STEPS = [
 		id: "talents", title: "天赋",
 		check: p => {
 			const L = LV(p.ll), s = sumOf(p.talents);
-			return s === L.talents ? [] : [`天赋等级合计应为 ${L.talents}（现在 ${s}）`];
+			return [...(s === L.talents ? [] : [`天赋等级合计应为 ${L.talents}（现在 ${s}）`]), ...creationChecks(p).filter(c=>c[1].includes("天赋")).map(c=>c[1])];
 		},
 		body: p => `
 			<p><b>天赋</b>是驾驶员独特的技巧，让你在某种武器、系统或打法上特别出色。每个天赋分 I、II、III 三级，必须依次取得。</p>
@@ -211,10 +211,10 @@ const WIZ_STEPS = [
 		id: "loadout", title: "武器与系统",
 		check: p => {
 			const m = M(), out = [];
-			if (!equippedWeapons(p, m).length) out.push("至少装一件武器");
+			// 空武器配置是允许的；内建武器由骨架与天赋提供。
 			const st = mechStats(p, m);
 			if (st && st.spUsed > st.sp) out.push(`SP 超出（${st.spUsed}/${st.sp}）`);
-			return out.concat(checks(p).filter(c => c[1].includes("超重型") || c[1].includes("独特") || c[1].includes("未解锁")).map(c => c[1]));
+			return out.concat(checks(p).filter(c => c[1].startsWith("机甲「")).map(c => c[1]));
 		},
 		body: p => {
 			const x = mechParts(p);
@@ -236,7 +236,7 @@ const WIZ_STEPS = [
 		body: p => {
 			const cs = checks(p);
 			return `
-			<p>${cs.length ? "差一点就完成了！下面还有几项没对上规则，可以点左边的步骤回去修改，也可以先完成、之后在编辑器里再调整。" : "🎉 恭喜，你的角色已经完全符合规则，可以上桌了！"}</p>
+			<p>${cs.length ? "差一点就完成了！下面还有几项没对上规则，可以点左边的步骤回去修改，也可以先完成、之后在编辑器里再调整。" : "🎉 恭喜，你的角色已通过车卡基础检查！条件效果与自定义内容请按规则和 GM 裁定结算。"}</p>
 			${cs.length ? `<ul class="warn-list">${cs.map(([lv, t]) => `<li class="${lv}">${esc(t)}</li>`).join("")}</ul>` : ""}
 			${tip("<b>之后升级时：</b>每完成一个任务 LL+1，并得到：一次 +2 触发、一点机甲能力、一级天赋、一级牌照；每 3 级再得一个核心加成。升级时还可以把一个天赋或一个牌照的全部等级重新分配，或换掉一个核心加成。")}
 			<div class="row" style="margin:12px 0"><button class="primary" data-wiz="finish">完成，进入编辑器</button><button data-act="copySheet">复制文字角色卡</button></div>

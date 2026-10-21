@@ -112,7 +112,7 @@ async function drawPilotCard(p) {
 	});
 
 	// 等级与机甲能力
-	const hx = [["LL", p.ll, 437, 121, "L"], ["毅力", "+" + L.grit, 479, 121, "R"], ["舱体", "+" + p.hase.hull, 458, 157, "L"], ["系统", "+" + p.hase.sys, 500, 157, "R"], ["敏捷", "+" + p.hase.agi, 437, 193, "L"], ["工程学", "+" + p.hase.eng, 479, 193, "R"]];
+	const hx = [["LL", p.ll, 437, 121, "L"], ["毅力", "+" + L.grit, 479, 121, "R"], ["机体", "+" + p.hase.hull, 458, 157, "L"], ["系统", "+" + p.hase.sys, 500, 157, "R"], ["敏捷", "+" + p.hase.agi, 437, 193, "L"], ["工程", "+" + p.hase.eng, 479, 193, "R"]];
 	hx.forEach(([lab, v, x, y, side]) => {
 		hex(g, x, y, 20, v);
 		text(g, lab, side === "L" ? x - 26 : x + 26, y + 6, 17, { align: side === "L" ? "right" : "left", bold: lab === "LL" });
@@ -193,7 +193,7 @@ async function drawPilotCard(p) {
 	[1070, 1112, 1153].forEach((y, i) => { bar(g, 146, y, 583, 32); fill(g, gearLine(p.gear.items[i]), 146, y, 583, 32, { size: 15 }); });
 
 	// 驾驶员数值
-	[["HP", ps.hp, 855, 893], ["最大HP", ps.hp, 873, 928], ["护甲", ps.armor, 855, 963], ["电子防御", ps.edef, 873, 998], ["闪避", ps.evasion, 855, 1033], ["速度", ps.speed, 873, 1068]].forEach(([lab, v, x, y]) => {
+	[["HP", ps.hp, 855, 893], ["最大HP", ps.hp, 873, 928], ["装甲", ps.armor, 855, 963], ["电子防御", ps.edef, 873, 998], ["回避", ps.evasion, 855, 1033], ["速度", ps.speed, 873, 1068]].forEach(([lab, v, x, y]) => {
 		hex(g, x, y, 20, v);
 		text(g, lab, x - 25, y + 6, 17, { align: "right", bold: lab === "HP" });
 	});
@@ -204,20 +204,20 @@ async function drawPilotCard(p) {
 function weaponRows(p, m) {
 	const f = FRAMES[m.frame];
 	const rows = [];
-	const add = (w, mountName, mod) => {
-		const prof = w.profiles ? w.profiles[0] : w;
-		const eff = [stripHtml(w.effect), w.on_hit ? "命中：" + stripHtml(txt(w.on_hit)) : "", w.on_crit ? "会心：" + stripHtml(txt(w.on_crit)) : "", w.on_attack ? "攻击时：" + stripHtml(txt(w.on_attack)) : "", mod ? `改装「${plain("item", mod)}」：${stripHtml(mod.effect)}` : ""].filter(Boolean).join(" ");
-		rows.push([plain("item", w), mountName + " / " + (T.mount[w.mount] || w.mount) + (T.wtype[w.type] || w.type || ""), rngText(prof.range), dmgText(prof.damage), tagsPlain(prof.tags || w.tags), eff]);
+	const add = (w, mountName, mod, note = '') => {
+		const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
+		const eff = [stripHtml(w.effect), w.on_hit ? "命中：" + stripHtml(txt(w.on_hit)) : "", w.on_crit ? "会心一击：" + stripHtml(txt(w.on_crit)) : "", w.on_attack ? "攻击时：" + stripHtml(txt(w.on_attack)) : "", mod ? `改装「${plain("item", mod)}」：${stripHtml(mod.effect)}` : ""].filter(Boolean).join(" ");
+		rows.push([plain("item", w), mountName + " / " + (T.mount[w.mount] || w.mount) + (T.wtype[w.type] || w.type || ""), rngText(prof.range), dmgText(prof.damage), tagsPlain(prof.tags || w.tags), [note, eff].filter(Boolean).join(' ') ]);
 	};
-	integratedOf(f).filter(w => w.mount).forEach(w => add(w, "内建"));
-	equippedWeapons(p, m).forEach(e => add(e.w, (T.mount[e.mount.type] || e.mount.type), e.mod));
+	integratedOf(f, p, m).filter(w => w.mount).forEach(w => add(w, "内建", null, buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})));
+	equippedWeapons(p, m).forEach(e => add(e.w, (T.mount[e.mount.type] || e.mount.type), e.mod, buildWeaponNote(p,m,e)));
 	return rows;
 }
-function systemRows(m) {
-	return m.systems.map(id => SYSTEMS[id]).filter(Boolean).map(s => {
+function systemRows(m, p) {
+	return [...m.systems.map(id => SYSTEMS[id]).filter(Boolean), ...integratedOf(FRAMES[m.frame],p,m).filter(s=>!s.mount)].map(s => {
 		const acts = asList(s.actions).map(a => `${a.name ? a.name + "：" : ""}${stripHtml(a.detail)}`);
 		const deps = asList(s.deployables).map(d => `${d.name}：${stripHtml(d.detail)}`);
-		return [plain("item", s), s.sp || 0, tagsPlain(s.tags), [stripHtml(s.effect), ...acts, ...deps].filter(Boolean).join(" ")];
+		return [plain("item", s), s.sp || 0, tagsPlain(limitedTags(s.tags,p,m)), [stripHtml(s.effect), ...acts, ...deps].filter(Boolean).join(" ")];
 	});
 }
 
@@ -229,28 +229,28 @@ function drawMechCard(p, m) {
 
 	mechIcon(g, 38, 20);
 	text(g, "机甲", 66, 44, 36);
-	[["名称", m.name, 68], ["框架", f ? `${f.source} ${zhOf("frame", f) || f.name}` : "", 104]].forEach(([lab, val, y]) => {
+	[["名称", m.name, 68], ["骨架", f ? `${f.source} ${zhOf("frame", f) || f.name}` : "", 104]].forEach(([lab, val, y]) => {
 		bar(g, 37, y, 328, 26); text(g, lab, 39, y + 18, 17); fill(g, val, 80, y, 285, 26, { size: 15 });
 	});
 
-	[["LL", p.ll, 445, 44, "L"], ["毅力", "+" + L.grit, 487, 44, "R"], ["舱体", "+" + p.hase.hull, 466, 80, "L"], ["系统", "+" + p.hase.sys, 506, 80, "R"], ["敏捷", "+" + p.hase.agi, 445, 116, "L"], ["工程学", "+" + p.hase.eng, 487, 116, "R"]].forEach(([lab, v, x, y, side]) => {
+	[["LL", p.ll, 445, 44, "L"], ["毅力", "+" + L.grit, 487, 44, "R"], ["机体", "+" + p.hase.hull, 466, 80, "L"], ["系统", "+" + p.hase.sys, 506, 80, "R"], ["敏捷", "+" + p.hase.agi, 445, 116, "L"], ["工程", "+" + p.hase.eng, 487, 116, "R"]].forEach(([lab, v, x, y, side]) => {
 		hex(g, x, y, 20, v);
 		text(g, lab, side === "L" ? x - 25 : x + 25, y + 7, 18, { align: side === "L" ? "right" : "left", bold: lab === "LL" });
 	});
-	[["结构点", st.structure, 755, 46, "L"], ["HP", st.hp, 812, 46, "R"], ["应力", st.stress, 734, 82, "L"], ["热量", st.heatcap, 795, 82, "R"], ["过量护盾", "", 753, 117, "L"], ["护甲", st.armor, 793, 117, "R"]].forEach(([lab, v, x, y, side]) => {
+	[["结构", st.structure, 755, 46, "L"], ["HP", st.hp, 812, 46, "R"], ["压力", st.stress, 734, 82, "L"], ["热度上限", st.heatcap, 795, 82, "R"], ["护盾", "", 753, 117, "L"], ["装甲", st.armor, 793, 117, "R"]].forEach(([lab, v, x, y, side]) => {
 		hex(g, x, y, 20, v);
 		text(g, lab, side === "L" ? x - 25 : x + 25, y + 7, 18, { align: side === "L" ? "right" : "left", bold: lab === "HP" });
 	});
 	const signed = v => (v >= 0 ? "+" : "") + v;
-	[["攻击加成", signed(st.attack ?? 0)], ["电子战力", signed(st.tech ?? 0)], ["保护门槛", st.save], ["速度", st.speed], ["电子防御", st.edef], ["闪避", st.evasion], ["感应器", st.sensor], ["体型", st.size === 0.5 ? "½" : st.size]].forEach(([lab, v], i) => {
+	[["攻击加成", signed(st.attack ?? 0)], ["科技攻击", signed(st.tech ?? 0)], ["豁免目标", st.save], ["速度", st.speed], ["电子防御", st.edef], ["回避", st.evasion], ["感应", st.sensor], ["大小", st.size === 0.5 ? "½" : st.size]].forEach(([lab, v], i) => {
 		const x = 37 + i * 110.2;
 		bar(g, x, 152, 84, 56);
 		text(g, lab, x + 42, 166, 12, { align: "center" });
 		text(g, v ?? "", x + 42, 198, 22, { align: "center", bold: true });
 	});
 
-	// 框架特质（最多 4 条）
-	title(g, "框架特质", "Frame Traits", 36, 241);
+	// 骨架特性（最多 4 条）
+	title(g, "骨架特性", "Frame Traits", 36, 241);
 	const traits = f ? f.traits : [];
 	for (let i = 0; i < 4; i++) {
 		const x = i % 2 ? 472 : 34, y = 251 + Math.floor(i / 2) * 50, w = 420, h = 44;
@@ -292,7 +292,7 @@ function drawMechCard(p, m) {
 
 	// 武器
 	title(g, "武器", "Weapons", 38, 538);
-	const wc = [[37, 217, "名字", ""], [263, 128, "槽位", "MOUNT"], [400, 100, "射程", "RANGE"], [509, 100, "伤害", "DAMAGE"], [621, 100, "词条", "TAGS"], [734, 160, "效果", "EFFECTS"]];
+	const wc = [[37, 217, "名字", ""], [263, 128, "槽位", "MOUNT"], [400, 100, "射程", "RANGE"], [509, 100, "伤害", "DAMAGE"], [621, 100, "标签", "TAGS"], [734, 160, "效果", "EFFECTS"]];
 	const header = (cols, y) => cols.forEach(([x, , zh, en]) => { text(g, zh, x, y, 12); g.font = font(12); text(g, en, x + g.measureText(zh).width, y, 12, { bold: true }); });
 	header(wc, 563);
 	const wr = weaponRows(p, m);
@@ -308,9 +308,9 @@ function drawMechCard(p, m) {
 	title(g, "系统", "Systems", 38, 881);
 	text(g, "总", 820, 887, 18, { align: "right" }); text(g, "SP", 820, 887, 18, { bold: true });
 	hex(g, 869, 880, 21, `${st.spUsed ?? 0}/${st.sp ?? 0}`);
-	const sc = [[37, 217, "名字", ""], [263, 53, "", "SP"], [327, 173, "词条", "TAGS"], [509, 384, "效果", "EFFECTS"]];
+	const sc = [[37, 217, "名字", ""], [263, 53, "", "SP"], [327, 173, "标签", "TAGS"], [509, 384, "效果", "EFFECTS"]];
 	header(sc, 903);
-	const sr = systemRows(m);
+	const sr = systemRows(m, p);
 	for (let i = 0; i < 6; i++) {
 		const y = 908 + i * 44.2;
 		sc.forEach(([x, w]) => bar(g, x, y, w, 37));
