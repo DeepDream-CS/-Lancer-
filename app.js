@@ -146,6 +146,13 @@ const frameAvailable = (p, f) => db.ignoreLimits || [f.id, f.variant_of].include
 function licenseFrames() { return D.frames.filter(f => !f.variant_of); } // 读档时（load）就会用到，须是函数声明
 const frameName = f => zhOf("frame", f) || f.name;
 const variantNote = f => (f.variant_of ? `${frameName(FRAMES[f.variant_of])}变体` : "");
+// 扩展骨架用到变体、高效、无形等扩展规则时，附带说明
+const extRulesNote = f => {
+	if (!f.ext || !D.ext_rules) return "";
+	const text = JSON.stringify(f);
+	const hit = D.ext_rules.filter(r => (r.term === "变体" ? f.variant_of : text.includes(r.term)));
+	return hit.length ? det("extRules" + f.id, "扩展规则说明", hit.map(r => `<h5>${esc(r.title)}</h5>${r.html}`).join("")) : "";
+};
 const extBadge = x => (x && x.ext ? ` <span class="tag ext" title="来自扩展：${esc(x.pack || "")}">扩展</span>` : "");
 const makerLicenseTotal = (p, m) => licenseFrames().filter(f => f.source === m).reduce((s, f) => s + (p.licenses[f.id] || 0), 0);
 function cbEligible(p, cb, extra = 0) {
@@ -200,7 +207,7 @@ function mechStats(p, m) {
 		equippedWeapons(p, m).reduce((a, e) => a + (e.w.sp || 0) + (e.mod ? e.mod.sp || 0 : 0), 0);
 	return {
 		size, structure: s.structure, stress: s.stress,
-		hp: s.hp + L.grit + h.hull * 2 + bonus("hp"),
+		hp: s.hp + (f.no_grit_hp ? 0 : L.grit) + h.hull * 2 + bonus("hp"), // 帝王蝶「风暴盾」：HP 不因毅力提高
 		armor: Math.min(4, s.armor + bonus("armor")),
 		evasion: s.evasion + h.agi + bonus("evasion"),
 		speed: s.speed + Math.floor(h.agi / 2) + bonus("speed"),
@@ -544,9 +551,10 @@ function mechParts(p) {
 		<div class="row"><label>名称</label><input type="text" data-k="mech.name" value="${esc(m.name)}"></div>
 		<div class="row"><label>骨架</label>${frameSel}</div>
 		<div class="muted">${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")} · 挂载点：${f.mounts.map(x => T.mount[x]).join("、")}</div>
-		${f.ext ? `<div class="muted">${extBadge(f)} ${f.variant_of ? `${esc(variantNote(f))}：取得${esc(frameName(FRAMES[f.variant_of]))}牌照 II 后，可代替标准骨架使用；装备沿用该牌照。` : "授权骨架：牌照 I–III 解锁其骨架与装备。"}${f.maker_note ? esc("（" + f.maker_note + "）") : ""}</div>` : ""}
+		${f.ext ? `<div class="muted">${extBadge(f)} ${f.variant_of ? `${esc(variantNote(f))}：取得${esc(frameName(FRAMES[f.variant_of]))}牌照 II 后，可代替标准骨架使用（两者互斥）；装备沿用该牌照。` : "授权骨架：牌照 I–III 解锁其骨架与装备。"}${f.maker_note ? esc("（" + f.maker_note + "）") : ""}</div>` : ""}
 		${det("fdesc", "骨架介绍", `<p>${f.description}</p>`)}
 		<h4>骨架特征</h4><div class="desc">${traits}${core}</div>
+		${extRulesNote(f)}
 	</div>`,
 	stats: `<div class="card">
 		<h3>数值 <span class="muted">已计入常驻数值加成；条件效果见规则说明</span></h3>

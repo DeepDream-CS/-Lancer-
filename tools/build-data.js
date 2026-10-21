@@ -238,8 +238,9 @@ function mergeExpansion(d) {
 		d.zh.cb[c.name] = { name: c.name, html };
 	}
 	for (const g of X.pilot_gear) { d.pilot_gear.push(mark(g)); d.zh.gear[g.name] = { name: g.name }; }
-	for (const k of ["weapons", "systems"]) for (const it of X[k]) d[k].push(mark({ ...it, zh_name: it.name }));
-	console.log("expansion merged:", ["frames", "talents", "backgrounds", "core_bonuses", "pilot_gear", "weapons", "systems"].map(k => `${k} ${X[k].length}`).join("，"));
+	for (const k of ["weapons", "systems", "mods"]) for (const it of X[k] || []) d[k].push(mark({ ...it, zh_name: it.name }));
+	d.ext_rules = X.rules; // 变体骨架、新标签、新状态的规则说明
+	console.log("expansion merged:", ["frames", "talents", "backgrounds", "core_bonuses", "pilot_gear", "weapons", "systems", "mods"].map(k => `${k} ${(X[k] || []).length}`).join("，"));
 	return d;
 }
 

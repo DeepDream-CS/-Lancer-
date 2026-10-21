@@ -6,6 +6,7 @@ function stripExt(d){const core={...d,zh:{...d.zh}},ext=k=>d[k].filter(x=>x.ext)
   for(const [kind,map,key] of [['frames','frames',x=>x.name],['talents','talents',x=>x.name],['backgrounds','bg',x=>x.name.toLowerCase()],['core_bonuses','cb',x=>x.name],['pilot_gear','gear',x=>x.name]]){
     core.zh[map]={...d.zh[map]};ext(kind).forEach(x=>delete core.zh[map][key(x)]);
   }
+  delete core.ext_rules;
   return core;}
 const d=stripExt(full);
 for(const row of spec.names){const x=d[row.kind].find(x=>row.id?x.id===row.id:nk(x.name)===nk(row.en));assert(x,row.en);

@@ -77,7 +77,13 @@ function effectiveProfile(w, profile, mod, p, m) {
     value += (mod?.added_range || []).filter(b => b.type === r.type).reduce((n,b) => n + (+b.val || 0), 0);
     return {...r, val: value};
   });
-  const tags = [...(base.tags || w.tags || []), ...(mod?.added_tags || [])];
+  const tags = [...(base.tags || w.tags || [])];
+  // stack_tags（扩展「超巨质量模组」）：同名数值标签相加，例如击退+1，而不是另列一个标签
+  for (const t of mod?.added_tags || []) {
+    const same = mod.stack_tags && tags.findIndex(x => x.id === t.id && Number.isFinite(+x.val));
+    if (same >= 0 && same !== false) tags[same] = {...tags[same], val: +tags[same].val + (+t.val || 0)};
+    else tags.push(t);
+  }
   if (w.type === 'Melee' && w.mount === 'Auxiliary' && p.talents.t_hunter >= 2) {
     const t = tags.find(t => t.id === 'tg_thrown');
     if (t) tags[tags.indexOf(t)] = {...t, val: Math.max(5, +t.val || 0)};
