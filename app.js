@@ -35,7 +35,7 @@ const MOUNT_SLOTS = {
 };
 const T = {
 	mount: { "Main": "主", "Aux": "副", "Flex": "灵活", "Main/Aux": "主/副", "Aux/Aux": "副/副", "Heavy": "重型", "Integrated": "内建", "Auxiliary": "副", "Superheavy": "超重型", "Ship-class": "舰载级" },
-	wtype: { "Melee": "肉搏", "CQB": "CQB", "Rifle": "步枪", "Launcher": "发射器", "Cannon": "大炮", "Nexus": "巢房", "Special": "特殊" },
+	wtype: { "Melee": "肉搏", "CQB": "CQB", "Rifle": "步枪", "Launcher": "发射器", "Cannon": "大炮", "Nexus": "巢房", "Special": "特殊", "Spool Weapon": "卷绕武器" },
 	dmg: { "Kinetic": "动能", "Explosive": "爆炸", "Energy": "能量", "Heat": "热度", "Burn": "燃烧", "Variable": "可变" },
 	range: { "Range": "射程", "Threat": "威胁", "Blast": "爆炸", "Burst": "爆发", "Line": "直线", "Cone": "锥形", "Thrown": "投掷" },
 	hase: { hull: "机体 HULL", agi: "敏捷 AGI", sys: "系统 SYS", eng: "工程 ENG" },
@@ -78,8 +78,8 @@ function tagText(t) {
 const HIDDEN_TAGS = ["tg_pilot_weapon", "tg_gear", "tg_personal_armor", "tg_set_damage_type", "tg_set_max_uses", "tg_set_damage_value", "tg_no_cascade"];
 const tagsHtml = tags => (tags || []).filter(t => !HIDDEN_TAGS.includes(t.id)).map(t => `<span class="tag" title="${esc(TAGS[t.id] ? TAGS[t.id].description.replace(/\{VAL\}/g, t.val ?? "X") : "")}">${esc(tagText(t))}</span>`).join("");
 const tagsPlain = tags => (tags || []).filter(t => !HIDDEN_TAGS.includes(t.id)).map(tagText).join("、");
-const dmgText = d => (d || []).map(x => { const k = x.type ? x.type[0].toUpperCase() + x.type.slice(1) : ""; return `${x.val}${T.dmg[k] || x.type || ""}`; }).join("+");
-const rngText = r => (r || []).map(x => `${T.range[x.type] || x.type}${x.val}`).join(" ");
+const dmgText = d => (d || []).filter(x => x.val !== "N/A").map(x => { const k = x.type ? x.type[0].toUpperCase() + x.type.slice(1) : ""; return `${x.val}${T.dmg[k] || x.type || ""}`; }).join("+");
+const rngText = r => (r || []).map(x => `${T.range[x.type] || x.type}${x.val === "N/A" ? "：无" : x.val}`).join(" ");
 
 // ---------- 状态与存储 ----------
 const STORE = "lancer-builder-v1";
@@ -273,6 +273,11 @@ function det(id, title, html) {
 const opt = (v, text, sel, dis) => `<option value="${esc(v)}" ${sel ? "selected" : ""} ${dis ? "disabled" : ""}>${text}</option>`;
 
 // ---------- 页面：驾驶员 ----------
+// 卫士服的数值写成一行：+3 HP、装甲、回避、电子防御、速度
+const armorText = g => (g.bonuses || []).map(b => {
+	const n = { pilot_hp: "HP", pilot_armor: "装甲", pilot_evasion: "回避", pilot_edef: "电子防御", pilot_speed: "速度" }[b.id];
+	return n ? (b.replace ? `${n} ${b.val}` : `${n} +${b.val}`) : "";
+}).filter(Boolean).join("、");
 function pilotParts(p) {
 	const L = LV(p.ll), ps = pilotStats(p);
 	const bg = BGS[p.background];
@@ -284,8 +289,11 @@ function pilotParts(p) {
 		const g = GEAR[id];
 		if (!g) return "";
 		const z = Z.gear[g.name];
-		const meta = [g.damage ? dmgText(g.damage) : "", g.range ? rngText(g.range) : "", tagsPlain(g.tags)].filter(Boolean).join(" · ");
-		return `<div class="wstat">${esc(meta)}</div>` + det("gear-" + id + slot, "说明", (z && z.html) || esc(g.description || g.effect || ""));
+		const meta = [g.damage ? dmgText(g.damage) : "", g.range ? rngText(g.range) : "", armorText(g), tagsPlain(g.tags)].filter(Boolean).join(" · ");
+		// 规则站有译文的装备（大多是「其他装备」）直接用；卫士服和武器用自译的说明＋效果
+		const own = (z && z.html) ? "" : (g.effect ? `<p><b>效果：</b>${g.effect}</p>` : "") + actsHtml(g);
+		if (z && z.html) return `<div class="wstat">${esc(meta)}</div><div class="desc">${z.html}</div>`;
+		return `<div class="wstat">${esc(meta)}</div>` + (own ? `<div class="desc">${own}</div>` : "") + det("gear-" + id + slot, "说明", g.description ? `<p>${g.description}</p>` : "");
 	};
 	return {
 	basic: `<div class="card">
@@ -411,7 +419,7 @@ function itemOptions(p, list, cur, filter) {
 	});
 	return Object.entries(groups).map(([g, items]) => `<optgroup label="${esc(g)}">${items.map(it => opt(it.id, esc(plain("item", it)) + (it.sp ? ` [${it.sp}SP]` : ""), it.id === cur)).join("")}</optgroup>`).join("");
 }
-const ACT = { "Quick": "快速动作", "Full": "完整动作", "Reaction": "反应", "Protocol": "协定", "Free": "免费动作", "Quick Tech": "快速科技", "Full Tech": "完整科技", "Invade": "入侵", "Deployable": "可展开", "Drone": "无人机", "Mine": "地雷" };
+const ACT = { "Quick": "快速动作", "Full": "完整动作", "Reaction": "反应", "Protocol": "协定", "Free": "免费动作", "Quick Tech": "快速科技", "Full Tech": "完整科技", "Invade": "入侵", "Deployable": "可展开", "Drone": "无人机", "Mine": "地雷", "cover": "掩体", "Rocket": "火箭", "Object": "物件", "Decoy": "诱饵", "Bomb": "炸弹" };
 const freqText = f => String(f || "").replace(/(\d+)\s*\/\s*round/i, "每轮$1次").replace(/(\d+)\s*\/\s*turn/i, "每回合$1次").replace(/(\d+)\s*\/\s*scene/i, "每场景$1次").replace(/unlimited/i, "无限");
 const txt = v => (v && typeof v === "object" ? v.detail || "" : v || "");
 // 系统、武器、骨架上的动作（反应、协定等）与可展开物（无人机、地雷等）
@@ -420,14 +428,16 @@ const statVal = v => {
 	const r = String(v).replace(/\{(\w+)\}/g, (m, k) => (STAT_CTX[k] != null ? STAT_CTX[k] : m));
 	return /^[\d\s+]+$/.test(r) ? r.split("+").reduce((a, b) => a + (+b || 0), 0) : r;
 };
+// 个别数据把单个动作写成对象而不是数组，这里统一成数组
+const asList = v => (Array.isArray(v) ? v : v && typeof v === "object" ? [v] : []);
 function actsHtml(o) {
 	let h = "";
-	for (const k of ["actions", "active_actions", "passive_actions"]) for (const a of o[k] || []) {
+	for (const k of ["actions", "active_actions", "passive_actions"]) for (const a of asList(o[k])) {
 		if (!a.detail && !a.name) continue;
 		const meta = [ACT[a.activation] || a.activation, freqText(a.frequency)].filter(x => x && x !== "None").join("，");
 		h += `<div class="blk"><div class="blk-h">${esc(a.name || "")} <span class="muted">${esc(meta)}</span></div>${a.trigger ? `<p><b>触发：</b>${a.trigger}</p>` : ""}<p>${a.detail || ""}</p></div>`;
 	}
-	for (const k of ["deployables", "active_deployables"]) for (const d of o[k] || []) {
+	for (const k of ["deployables", "active_deployables"]) for (const d of asList(o[k])) {
 		const st = [d.size != null ? "大小" + (d.size === 0.5 ? "½" : d.size) : "", d.hp != null ? statVal(d.hp) + " HP" : "", d.armor ? "装甲" + statVal(d.armor) : "", d.evasion != null ? "回避" + statVal(d.evasion) : "", d.edef != null ? "电子防御" + statVal(d.edef) : ""].filter(Boolean).join(" · ");
 		h += `<div class="blk"><div class="blk-h">${esc(d.name || "")} <span class="muted">${esc(ACT[d.type] || d.type || "")}${st ? " · " + esc(st) : ""}</span></div><p>${d.detail || ""}</p>${actsHtml(d)}</div>`;
 	}

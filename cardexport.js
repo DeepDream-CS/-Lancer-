@@ -215,8 +215,8 @@ function weaponRows(p, m) {
 }
 function systemRows(m) {
 	return m.systems.map(id => SYSTEMS[id]).filter(Boolean).map(s => {
-		const acts = (s.actions || []).map(a => `${a.name ? a.name + "：" : ""}${stripHtml(a.detail)}`);
-		const deps = (s.deployables || []).map(d => `${d.name}：${stripHtml(d.detail)}`);
+		const acts = asList(s.actions).map(a => `${a.name ? a.name + "：" : ""}${stripHtml(a.detail)}`);
+		const deps = asList(s.deployables).map(d => `${d.name}：${stripHtml(d.detail)}`);
 		return [plain("item", s), s.sp || 0, tagsPlain(s.tags), [stripHtml(s.effect), ...acts, ...deps].filter(Boolean).join(" ")];
 	});
 }

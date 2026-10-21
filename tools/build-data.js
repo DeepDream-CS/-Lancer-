@@ -8,8 +8,19 @@ const ld = f => JSON.parse(fs.readFileSync(path.join(ROOT, "source/lancer-data",
 const tw = f => JSON.parse(fs.readFileSync(path.join(ROOT, "source/cn", f + ".json"), "utf8"));
 
 // ---------- 繁中条目渲染（5etools 风格 entries → HTML） ----------
+// 规则站用图标代表术语（⊕ 准度、⌿ 射程、🌡 热度……），很多设备显示成方块或怪符号，统一换成中文
+const ICONS = [
+	[/威胁\s*(&#10683;|⦻)/g, "威胁"], [/(&#10683;|⦻)\s*/g, "威胁"],
+	[/(&#8853;|⊕)/g, "准度"], [/(&#8854;|⊖)/g, "难度"],
+	[/(&#8960;|⌀)/g, "动能"], [/(&#9889;|⚡)/g, "能量"], [/(&#128165;|💥)/g, "爆炸"],
+	[/(&#128293;|🔥)/g, "燃烧"], [/(&#127777;|🌡)/g, "热度"],
+	[/(&#9023;|⌿)\s*/g, "射程"], [/(&#9672;|◈)\s*/g, "爆发"], [/(&#128320;|🕀)\s*/g, "溅射"],
+	[/&#127881;\s*/g, "锥形"], [/&#8663;\s*/g, "直线"],
+	[/於/g, "于"],
+];
+const deIcon = s => ICONS.reduce((t, [re, to]) => t.replace(re, to), String(s));
 function inline(s) {
-	return String(s)
+	return deIcon(s)
 		.replace(/\{@b ([^}|]*)[^}]*\}/g, "<b>$1</b>")
 		.replace(/\{@i ([^}|]*)[^}]*\}/g, "<i>$1</i>")
 		.replace(/\{@\w+ ([^}|]*)[^}]*\}/g, "$1")
@@ -62,6 +73,9 @@ const BLOCK_FILLS = {
 	"Ammo Case": { meta: "受限6、每回合1次", html: p_("每回合一次，当你以<b>主远距武器</b>攻击时，你可以按所列消耗来消耗发数，为该攻击套用以下其中一种效果：") + AMMO_I },
 };
 
+// 规则站漏译的天赋等级名
+const RANK_NAME_FIX = { "Sundance": "日舞小子" };
+
 // ---------- 繁中覆盖层 ----------
 const zh = { talents: {}, cb: {}, bg: {}, skills: {}, tags: {}, gear: {}, gms: {}, frames: {}, makers: {} };
 
@@ -69,7 +83,7 @@ for (const t of tw("talents").talents) {
 	zh.talents[t.name] = {
 		name: t.translate_name,
 		desc: render(t.desc),
-		ranks: t.ranks.map(r => ({ name: r.translate_name || r.name, html: render(r.entries) })),
+		ranks: t.ranks.map(r => ({ name: r.translate_name || RANK_NAME_FIX[r.name] || r.name, html: render(r.entries) })),
 	};
 }
 for (const c of tw("core-bonuses").core_bonuses) {
@@ -187,7 +201,8 @@ for (const k of ["weapons", "systems", "mods"]) data[k] = drop(data[k], ["descri
 	console.log("i18n applied:", n, "missing:", miss);
 })();
 
-const out = "// 自动生成，请勿手改。来源：massif-press/lancer-data + reno-lam.github.io/Lancer-Free-Version\nwindow.LANCER_DATA = " + JSON.stringify(data) + ";\n";
+// 兜底：整份数据再过一遍图标替换（含 HTML 里残留的实体）
+const out = "// 自动生成，请勿手改。来源：massif-press/lancer-data + reno-lam.github.io/Lancer-Free-Version\nwindow.LANCER_DATA = " + deIcon(JSON.stringify(data)) + ";\n";
 fs.writeFileSync(path.join(ROOT, "data.js"), out);
 console.log("data.js written,", (out.length / 1024).toFixed(0), "KB");
 console.log("zh coverage:", Object.fromEntries(Object.entries(zh).map(([k, v]) => [k, Object.keys(v).length])));

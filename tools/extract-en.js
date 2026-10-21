@@ -57,7 +57,11 @@ for (const m of ld("mods")) {
 for (const t of ld("tags")) { put("misc", `${t.id}.name`, t.name); put("misc", `${t.id}.description`, t.description); }
 for (const s of ld("skills")) put("misc", `${s.id}.description`, s.description);
 for (const t of ld("talents")) put("misc", `${t.id}.terse`, t.terse);
-for (const g of ld("pilot_gear")) put("misc", `${g.id}.description`, g.description);
+for (const g of ld("pilot_gear")) {
+	put("misc", `${g.id}.description`, g.description);
+	put("misc", `${g.id}.effect`, g.effect);
+	acts("misc", g.id, g);
+}
 
 const dir = path.join(ROOT, "source/i18n/en");
 fs.mkdirSync(dir, { recursive: true });
