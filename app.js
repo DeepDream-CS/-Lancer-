@@ -377,6 +377,20 @@ function renderPilot(p) {
 }
 
 // ---------- 页面：等级成长 ----------
+// 牌照各级解锁的骨架与装备（升级前也能查看后续等级给什么）
+const licenseOf = it => (it.license && it.license !== "GMS" ? FRAME_BY_NAME[nk(it.license).toLowerCase()] : null);
+function licenseContents(p, f) {
+	const rank = p.licenses[f.id] || 0;
+	const items = [...D.weapons, ...D.systems, ...D.mods].filter(it => it.source && licenseOf(it) === f);
+	const kind = it => WEAPONS[it.id] ? `${T.mount[it.mount] || it.mount}${T.wtype[it.type] || it.type}` : MODS[it.id] ? "武器改装" : (T.stype[it.type] || "系统");
+	const variants = D.frames.filter(v => v.variant_of === f.id);
+	return [1, 2, 3].map(lv => {
+		const list = items.filter(it => (it.license_level || 0) === lv).map(it =>
+			`<li title="${esc(stripHtml(it.effect || ""))}">${esc(plain("item", it))} <span class="muted">${esc(kind(it))}${it.sp ? ` · ${it.sp} SP` : ""}</span></li>`);
+		if (lv === 2) list.unshift(`<li><b>${esc(frameName(f))}骨架</b>${variants.length ? ` <span class="muted">（也可改用变体：${variants.map(v => esc(frameName(v))).join("、")}）</span>` : ""}</li>`);
+		return `<div class="lic-rank ${rank >= lv ? "have" : ""}"><div class="lic-rank-h">${["", "I", "II", "III"][lv]} 级${rank >= lv ? " · 已解锁" : ""}</div><ul>${list.join("") || '<li class="muted">—</li>'}</ul></div>`;
+	}).join("");
+}
 function progressParts(p) {
 	const L = LV(p.ll);
 	const hs = Object.values(p.hase).reduce((a, b) => a + b, 0);
@@ -398,7 +412,7 @@ function progressParts(p) {
 		<h3>牌照 Licenses ${counter(lr, L.licenses)}</h3>
 		<p class="muted">每级 LL 得 1 牌照等级。牌照分一至三级，须依次取得；二级解锁该骨架。GMS（埃弗勒斯及 GMS 装备）永远可用。</p>
 		${MAKERS.slice(1).map(mk => `<div class="mfr" style="border-color:${MAKER_COLOR[mk]}">${esc(makerName(mk))} <span class="muted">合计 ${makerLicenseTotal(p, mk)} 级</span></div>
-			<div class="lic-grid">${licenseFrames().filter(f => f.source === mk).map(f => `<div class="lic ${p.licenses[f.id] ? "has" : ""}"><span>${label("frame", f)}${extBadge(f)}</span>${stepper("lic", f.id, p.licenses[f.id] || 0, 0, 3, v => ["—", "I", "II", "III"][v])}</div>`).join("")}</div>`).join("")}
+			<div class="lic-grid">${licenseFrames().filter(f => f.source === mk).map(f => `<div class="lic ${p.licenses[f.id] ? "has" : ""}"><div class="lic-head"><span>${label("frame", f)}${extBadge(f)}</span>${stepper("lic", f.id, p.licenses[f.id] || 0, 0, 3, v => ["—", "I", "II", "III"][v])}</div>${det("lic-" + f.id, "牌照内容", licenseContents(p, f))}</div>`).join("")}</div>`).join("")}
 	</div>`,
 	cbs: `<div class="card wide">
 		<h3>核心奖励 Core Bonuses ${counter(p.coreBonuses.length, L.cbs)}</h3>

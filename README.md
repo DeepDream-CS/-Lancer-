@@ -2,7 +2,7 @@
 
 直接双击 `index.html` 用浏览器打开即可，无需安装。也可以 `node tools/serve.js` 后访问 http://localhost:8765 。
 
-2026-10-21 规则与译文校准记录见 [VALIDATION.md](VALIDATION.md)，界面改进见 [UI-UX.md](UI-UX.md)。运行 `node tools/test-rules.js` 可执行 51 项回归检查。图片角色卡为固定版式摘要，完整配置请保留 JSON。
+2026-10-21 规则与译文校准记录见 [VALIDATION.md](VALIDATION.md)，界面改进见 [UI-UX.md](UI-UX.md)。运行 `node tools/test-rules.js` 可执行 52 项回归检查。图片角色卡为固定版式摘要，完整配置请保留 JSON。
 
 - 第一次打开或点「新建」时，可以选择：
   - **引导式车卡**：按规则书顺序一步步完成（起始等级 → 资料 → 背景 → 触发 → 机甲技能 → 天赋 → 牌照 → 核心奖励 → 驾驶员装备 → 骨架 → 武器与系统 → 总检查），每步附规则讲解，并实时检查点数。LL0 会自动跳过牌照和核心奖励。中途关掉网页，下次会回到原来的步骤。
