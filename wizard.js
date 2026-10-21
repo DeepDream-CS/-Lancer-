@@ -326,7 +326,7 @@ document.addEventListener("click", e => {
 		}
 		case "frame": {
 			const m = M();
-			if (m.frame !== arg) { m.frame = arg; m.loadout = {}; m.retrofit = -1; m.stabilized = ""; }
+			if (!changeFrame(m,arg)) return;
 			break;
 		}
 		default: return;

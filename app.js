@@ -113,7 +113,17 @@ function load() {
 	const p = blankPilot();
 	return { pilots: [p], current: p.id, ignoreLimits: false };
 }
-function save() { localStorage.setItem(STORE, JSON.stringify(db)); }
+function save() {
+	const status=document.getElementById('saveStatus');
+	try {
+		localStorage.setItem(STORE, JSON.stringify(db));
+		if(status){status.textContent='✓ 已保存到此浏览器';status.className='save-status saved';status.title='角色保存在当前浏览器；换设备前请导出 JSON。';}
+		return true;
+	} catch(error) {
+		if(status){status.textContent='⚠ 保存失败，请导出备份';status.className='save-status failed';status.title='浏览器存储不可用或空间不足。当前修改仍在页面中，请立即导出 JSON。';}
+		return false;
+	}
+}
 const P = () => db.pilots.find(p => p.id === db.current) || db.pilots[0];
 const M = () => { const p = P(); return p.mechs[p.activeMech] || p.mechs[0]; };
 
@@ -256,7 +266,8 @@ function checks(p) {
 
 // ---------- 通用小组件 ----------
 function stepper(act, arg, val, min, max, fmt = v => v) {
-	return `<span class="stepper"><button data-act="${act}" data-arg="${esc(arg)}" data-d="-1" ${val <= min ? "disabled" : ""}>−</button><span>${fmt(val)}</span><button data-act="${act}" data-arg="${esc(arg)}" data-d="1" ${val >= max ? "disabled" : ""}>+</button></span>`;
+	const subject=act==='tal' ? plain('talent',TALENTS[arg]) : act==='lic' ? plain('frame',FRAMES[arg]) : act==='hase' ? T.hase[arg] : act==='trig' ? `触发 ${+arg+1}` : '牌照等级';
+	return `<span class="stepper"><button aria-label="减少${esc(subject)}" data-act="${act}" data-arg="${esc(arg)}" data-d="-1" ${val <= min ? "disabled" : ""}>−</button><span>${fmt(val)}</span><button aria-label="增加${esc(subject)}" data-act="${act}" data-arg="${esc(arg)}" data-d="1" ${val >= max ? "disabled" : ""}>+</button></span>`;
 }
 function counter(have, need) {
 	const c = have === need ? "ok" : have > need ? "over" : "under";
@@ -389,11 +400,12 @@ function progressParts(p) {
 	talents: `<div class="card wide">
 		<h3>天赋 Talents ${counter(tr, L.talents)}</h3>
 		<p class="muted">LL0 有三个一级天赋；每升一级可让一个天赋升一级，或取得一个新的一级天赋。</p>
+		${talentToolbar()}
 		${D.talents.map(t => {
 			const r = p.talents[t.id] || 0;
 			const z = Z.talents[t.name];
 			const ranks = t.ranks.map((rk, i) => `<div class="rank ${i < r ? "have" : ""}"><div class="rank-h">${["I", "II", "III"][i]}．${esc(z ? z.ranks[i].name : rk.name)}</div>${z ? z.ranks[i].html : rk.description}</div>`).join("");
-			return `<div class="list-item ${r ? "active" : ""}"><div class="li-head"><span class="li-title">${label("talent", t)}</span>${stepper("tal", t.id, r, 0, 3, v => ["—", "I", "II", "III"][v])}</div>
+			return `<div class="list-item ${r ? "active" : ""}" data-talent-row="${t.id}" data-selected="${!!r}"><div class="li-head"><span class="li-title">${label("talent", t)}</span>${stepper("tal", t.id, r, 0, 3, v => ["—", "I", "II", "III"][v])}</div>
 				<div class="muted">${esc(t.terse || "")}</div>${det("t" + t.id, "天赋详情", (z ? z.desc : "") + ranks)}</div>`;
 		}).join("")}
 	</div>`,
@@ -539,7 +551,7 @@ function mechParts(p) {
 	systems: `<div class="card">
 		<h3>系统 <span class="muted">剩余 ${st.sp - st.spUsed} SP</span></h3>
 		${sysHtml || '<p class="muted">尚未安装系统</p>'}
-		<div class="row"><select id="sysAdd" style="flex:1"><option value="">— 选择系统 —</option>${itemOptions(p, D.systems, "", s => !(isUnique(s) && m.systems.includes(s.id)))}</select><button data-act="addSys" class="primary">安装</button></div>
+		<div class="system-picker"><label class="search-field"><span>添加系统</span><input type="search" data-ui="systemSearch" value="${esc(uiState.systemQuery)}" placeholder="搜索系统名称或效果"></label><p class="muted" id="systemSearchCount" role="status"></p><div class="row"><select id="sysAdd" aria-label="选择要安装的系统" style="flex:1"><option value="">— 选择系统 —</option>${itemOptions(p, D.systems, "", s => !(isUnique(s) && m.systems.includes(s.id)))}</select><button data-act="addSys" class="primary" disabled>安装</button></div></div>
 		<h4>备注</h4><textarea data-k="mech.notes">${esc(m.notes)}</textarea>
 	</div>`,
 	};
@@ -606,28 +618,20 @@ function renderSheet(p) {
 	<div class="card wide noprint">
 		<h3>规则检查</h3>
 		${cs.length ? `<ul class="warn-list">${cs.map(([lv, t]) => `<li class="${lv}">${esc(t)}</li>`).join("")}</ul>` : `<p class="oklist">✓ 已通过 LL${p.ll} 的车卡基础检查</p>`}
-		<div class="row" style="margin-top:10px">
-			<button data-act="copySheet" class="primary">复制文字角色卡</button>
-			<button data-act="print">打印</button>
-			<button data-act="exportJson">导出本角色 JSON</button>
-			<button data-act="exportAll">导出全部角色备份</button>
-		</div>
-		<div class="row" style="margin-top:6px">
-			<b>角色卡图片：</b>
-			<button data-card="all" class="primary">导出全部图片</button>
-			<button data-card="pilot">只导出驾驶员卡</button>
-			<button data-card="mech">只导出当前机甲卡</button>
-			<button data-act="importJson">导入 JSON</button>
-		</div>
+		${cs.length ? '<div class="row correction-links"><span>继续完善：</span><button data-tab="pilot">驾驶员资料 →</button><button data-tab="progress">点数与牌照 →</button><button data-tab="mech">机甲配置 →</button></div>' : ''}
 	</div>
+	<div class="card export-card noprint"><h3>分享与上桌</h3><p class="muted">发给 GM 或队友，或打印一份带到游戏桌。</p><div class="row"><button data-card="all" class="primary">下载全部图片</button><button data-act="copySheet">复制文字角色卡</button><button data-act="print">打印</button></div><details><summary>单独下载一张卡</summary><div class="row"><button data-card="pilot">驾驶员卡 PNG</button><button data-card="mech">当前机甲卡 PNG</button></div></details></div>
+	<div class="card export-card noprint"><h3>备份与继续编辑</h3><p class="muted">JSON 保留完整配置，可在其他浏览器导入后继续编辑。</p><div class="row"><button data-act="exportJson" class="primary">备份当前角色</button><button data-act="exportAll">备份全部角色</button><button data-act="importJson">导入 JSON</button></div></div>
 	<div class="card wide noprint"><h3>图片预览 <span class="muted">点击图片也可单独下载 PNG</span></h3><p class="muted">图片为固定版式摘要，长文会省略。完整配置请保留 JSON，详细规则见下方文字角色卡。</p><div id="cardPreview" class="card-preview">生成中…</div></div>
-	<div class="card wide"><pre class="sheet" id="sheetText">${esc(sheetText(p))}</pre></div>
+	<div class="card wide"><details class="text-sheet" data-open-id="sheet-text" ${openSet.has('sheet-text')?'open':''}><summary>文字角色卡与完整规则详述</summary><pre class="sheet" id="sheetText">${esc(sheetText(p))}</pre></details></div>
 	</div>`;
 }
 
 // ---------- 主渲染 ----------
 function render() {
 	const p = P();
+	const focused=document.activeElement;
+	const focusKey=focused?.dataset ? ['act','arg','d','k','ui'].map(k=>[k,focused.dataset[k]]) : null;
 	document.getElementById("charSelect").innerHTML = db.pilots.map(x => opt(x.id, esc(`${x.name || "未命名"}${x.callsign ? "「" + x.callsign + "」" : ""} LL${x.ll}`), x.id === p.id)).join("");
 	document.getElementById("ignoreLimits").checked = !!db.ignoreLimits;
 	document.querySelectorAll(".tabs button[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
@@ -641,11 +645,16 @@ function render() {
 	document.body.classList.toggle("in-wiz", inWiz);
 	document.getElementById("modal").innerHTML = chooser ? renderChooser(chooser) : "";
 	document.getElementById("notice").innerHTML = notice ? `<div class="notice ${notice.kind}"><div>${notice.html}</div><button data-act="dismissNotice" title="关闭">✕</button></div>` : "";
-	document.getElementById("app").innerHTML = inWiz ? renderWizard(p) :
-		tab === "pilot" ? renderPilot(p) : tab === "progress" ? renderProgress(p) : tab === "mech" ? renderMech(p) : renderSheet(p);
+	document.getElementById("app").innerHTML = inWiz ? renderWizard(p) : pageIntro(p) +
+		(tab === "pilot" ? renderPilot(p) : tab === "progress" ? renderProgress(p) : tab === "mech" ? renderMech(p) : renderSheet(p));
 	window.scrollTo(0, y);
 	if (!inWiz && tab === "sheet") renderCardPreviews(p);
 	save();
+	enhanceUI();
+	if(focusKey?.some(([,v])=>v!==undefined)) {
+		const next=[...document.querySelectorAll('#app button,#app input,#app select,#app textarea')].find(el=>focusKey.every(([k,v])=>el.dataset[k]===v));
+		if(next&&!next.disabled&&!next.closest('[hidden]')) next.focus({preventScroll:true});
+	}
 }
 
 // ---------- 事件 ----------
@@ -661,7 +670,7 @@ function bind(el) {
 	if (k.startsWith("mech.")) {
 		const m = M();
 		const key = k.slice(5);
-		if (key === "frame" && m.frame !== el.value) { m.frame = el.value; m.loadout = {}; m.retrofit = -1; m.stabilized = ""; }
+		if (key === "frame" && m.frame !== el.value) { if(!changeFrame(m,el.value)) el.value=m.frame; }
 		else m[key] = el.value;
 	} else setPath(p, k, el.value);
 }
@@ -704,7 +713,7 @@ document.addEventListener("toggle", e => {
 document.addEventListener("click", e => {
 	const tb = e.target.closest("[data-tab]");
 	if (tb) { tab = tb.dataset.tab; window.scrollTo(0, 0); return render(); }
-	if (e.target.id === "checkBadge") { tab = "sheet"; return render(); }
+	if (e.target.id === "checkBadge") { tab = "sheet"; window.scrollTo(0,0); return render(); }
 	const el = e.target.closest("button[data-act]");
 	if (!el) return;
 	const p = P(), m = M();
@@ -738,7 +747,8 @@ document.addEventListener("click", e => {
 		case "delSys": m.systems.splice(+arg, 1); break;
 		case "delPortrait": delete p.portrait; break;
 		case "copySheet":
-			navigator.clipboard.writeText(sheetText(p)).then(() => { el.textContent = "已复制 ✓"; setTimeout(() => (el.textContent = "复制文字角色卡"), 1500); });
+			if(!navigator.clipboard) { openSet.add('sheet-text'); tab='sheet'; return notify('此浏览器不支持自动复制。请展开文字角色卡，选中后手动复制。','warn'); }
+			navigator.clipboard.writeText(sheetText(p)).then(() => { el.textContent = "已复制 ✓"; setTimeout(() => (el.textContent = "复制文字角色卡"), 1500); }).catch(()=>{openSet.add('sheet-text');tab='sheet';notify('复制未成功。请在下方文字角色卡中选中文字后手动复制。','warn');});
 			return;
 		case "print": window.print(); return;
 		case "exportAll": downloadJson({ app: "lancer-builder", version: 1, pilots: db.pilots }, `lancer-全部角色备份-${new Date().toISOString().slice(0, 10)}`); return;

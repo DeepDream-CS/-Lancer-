@@ -348,7 +348,11 @@ async function renderCardPreviews(p) {
 		const fig = document.createElement("figure");
 		cv.className = "card-img";
 		cv.title = "点击下载：" + name;
+		cv.tabIndex = 0;
+		cv.setAttribute('role','button');
+		cv.setAttribute('aria-label','下载 '+name+' PNG');
 		cv.onclick = () => downloadCanvas(cv, name);
+		cv.onkeydown = e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();downloadCanvas(cv,name);} };
 		fig.appendChild(cv);
 		const cap = document.createElement("figcaption");
 		cap.textContent = name;

@@ -7,27 +7,32 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<a class="skip-link" href="#app">跳到编辑区域</a>
 <header class="top">
 	<div class="brand">LANCER<span>简易车卡器</span></div>
 	<div class="top-ctl">
-		<select id="charSelect" title="切换角色"></select>
+		<select id="charSelect" title="切换角色" aria-label="切换角色"></select>
 		<button data-act="newChar">新建</button>
-		<button data-act="importJson" title="选择本车卡器导出的角色 JSON，导入后可直接修改；也可以把文件拖进页面">导入</button>
-		<button data-act="toWizard" title="用引导式流程检查/修改当前角色">引导模式</button>
-		<button data-act="dupChar">复制</button>
-		<button data-act="delChar" class="danger">删除</button>
-		<label class="chk" title="GM 规划或特殊规则时使用：所有牌照、核心加成都可选"><input type="checkbox" id="ignoreLimits"> 无视牌照限制</label>
+		<button data-act="toWizard" title="用引导式流程检查/修改当前角色">引导车卡</button>
+		<details class="character-menu" id="characterMenu"><summary>角色管理</summary><div class="character-menu-panel">
+			<button data-act="importJson">导入角色 JSON</button>
+			<button data-act="exportAll">备份全部角色</button>
+			<button data-act="dupChar">复制当前角色</button>
+			<label class="chk"><input type="checkbox" id="ignoreLimits"> 无视牌照限制（GM）</label>
+			<button data-act="delChar" class="danger">删除当前角色</button>
+		</div></details>
+		<span id="saveStatus" class="save-status" role="status" aria-live="polite">保存在此浏览器</span>
 	</div>
 </header>
-<nav class="tabs">
+<nav class="tabs" aria-label="角色编辑页面">
 	<button data-tab="pilot" class="on">① 驾驶员</button>
 	<button data-tab="progress">② 等级成长</button>
 	<button data-tab="mech">③ 机甲</button>
-	<button data-tab="sheet">④ 角色卡 / 导出</button>
-	<div id="checkBadge" class="badge"></div>
+	<button data-tab="sheet" aria-label="④ 角色卡 / 导出">④ <span class="tab-full">角色卡 / 导出</span><span class="tab-short">导出</span></button>
+	<button id="checkBadge" class="badge" title="查看规则检查"></button>
 </nav>
 <div id="notice"></div>
-<main id="app"></main>
+<main id="app" tabindex="-1"></main>
 <div id="modal"></div>
 <footer class="foot">
 	规则文本：<a href="https://reno-lam.github.io/Lancer-Free-Version/" target="_blank">Lancer 免费版繁中规则站</a>；数值数据：<a href="https://github.com/massif-press/lancer-data" target="_blank">massif-press/lancer-data</a>（COMP/CON 开源数据）。角色存在浏览器本地（localStorage），换电脑请用导出 JSON。
@@ -37,6 +42,7 @@
 <script src="wizard.js"></script>
 <script src="cardexport.js"></script>
 <script src="rules.js"></script>
+<script src="ui.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

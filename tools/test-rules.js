@@ -8,7 +8,7 @@ function runtime(saved) {
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     document:{body:el(),addEventListener(){},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);},querySelectorAll(){return[];}},
     window:{scrollTo(){}},navigator:{},confirm:()=>true});
-  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
+  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','ui.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
   return code=>vm.runInContext(code,ctx);
 }
 const run=runtime(); let passed=0;
@@ -42,4 +42,7 @@ test('Old save backup retained before migration',()=>{const saved=JSON.parse(run
 test('Accuracy tag without parameter does not display X',()=>assert.equal(run("tagText({id:'tg_accurate'})"),'精准'));
 test('Overpower applies to one slot, including PNG summary',()=>assert(run(`p=fixture(3);m=p.mechs[0];p.coreBonuses=['cb_overpower_caliber'];m.loadout.m0={slots:[{w:'mw_assault_rifle',mod:''}],link:''};m.loadout.m1={slots:[{w:'mw_assault_rifle',mod:''},{w:'',mod:''}],link:''};m.overpower='m0|0';weaponRows(p,m).filter(r=>r[5].includes('过强弹药')).length===1`)));
 test('Superheavy cannot link its own mount',()=>assert(run(`p=fixture();m=p.mechs[0];m.loadout.m2={slots:[{w:'mw_cyclone_pulse_rifle',mod:''}],link:'m2'};loadoutChecks(p,m).some(c=>c[1].includes('额外挂载点无效'))`)));
+test('Cancel frame switch preserves weapons and frame',()=>assert(run(`p=fixture();m=p.mechs[0];m.loadout.m0={slots:[{w:'mw_assault_rifle'}],link:''};confirm=()=>false;!changeFrame(m,'mf_nelson')&&m.frame===EVEREST&&m.loadout.m0.slots[0].w==='mw_assault_rifle'`)));
+test('Confirmed frame switch resets mounts and keeps systems',()=>assert(run(`m.systems=['ms_manipulators'];m.overpower='m0|0';confirm=()=>true;changeFrame(m,'mf_nelson')&&m.frame==='mf_nelson'&&Object.keys(m.loadout).length===0&&m.systems[0]==='ms_manipulators'&&m.overpower===''`)));
+test('Storage failure preserves in-memory character and shows failure',()=>assert(run(`const oldSet=localStorage.setItem;localStorage.setItem=()=>{throw Error('QuotaExceededError');};const before=JSON.stringify(db),saved=save();localStorage.setItem=oldSet;!saved&&JSON.stringify(db)===before&&document.getElementById('saveStatus').textContent.includes('保存失败')`)));
 console.log(passed+' regression checks passed.');
