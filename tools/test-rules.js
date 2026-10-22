@@ -76,6 +76,15 @@ test('Glossary: tags merged, ambiguous words not tagged',()=>{
   assert(run("getGlossary().list.some(g=>g.term==='受限'&&g.def.includes('标签「受限X」'))"));
   assert.equal(terms("必须通过机体豁免，否则受到 2 热度并受损；反应堆过热；受限3 系统"),"机体,豁免,热度,受损,过热,受限");
   assert.equal(terms("安装系统需要 SP，热度上限 6"),"SP,热度上限");
+  // 字面意义不标记（自检发现的误标）
+  assert.equal(terms("强化你的飞行系统，用于快速换位"),"飞行");
+  assert.equal(terms("当你强化一个盟友角色时"),"强化");
+  assert.equal(terms("侍从级NHP，压抑恐惧和其他强烈反应"),"");
+  assert.equal(terms("超过热度上限时"),"热度上限");
+  assert.equal(terms("兰开斯特是最可靠、做工最好的机甲；其独特造型；无限宽广"),"");
+  assert.equal(terms("该武器获得可靠2、不准，独特"),"可靠X,不准X,独特");
+  assert.equal(terms("上层结构武器化；失去 1 点结构"),"结构");
+  assert.equal(terms("触发其他反应；+2 触发"),"反应,触发");
   assert(terms("无形").includes("无形")&&run("getGlossary().list.find(g=>g.term==='无形').cat")==='扩展规则');
 });
 test('Gilgamesh adds +1 limited charge',()=>assert.equal(run("p=fixture(2,'mf_ext_gilgamesh');m=p.mechs[0];p.hase.eng=2;limitedTags([{id:'tg_limited',val:3}],p,m)[0].val"),5));

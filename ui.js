@@ -152,9 +152,14 @@ function getGlossary() {
   const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const list = [], patterns = [], byTerm = {};
   const add = (entry, pats) => { const i = list.push(entry) - 1; pats.forEach(src => patterns.push({ src, i })); return entry; };
+  // 带数值的标签（精准X、投掷X……）：后接数字，或在「获得不准」「、独特」这类标签位置才标记，避免「精准无误」「投掷盾牌」之类的字面用法
+  const strict = name => `(?<=^|[、，,。；：:（(\\s「]|获得|得到|具有|带有|失去)${name}(?=$|[、，,。；：）)\\s」]|标签|并|和)`;
+  const strictTags = typeof GLOSSARY_STRICT_TAGS === 'undefined' ? [] : GLOSSARY_STRICT_TAGS;
+  const strictNames = new Set(D.tags.filter(t => strictTags.includes(t.id)).map(t => t.name));
   for (const g of GLOSSARY_SRC) {
     if (g.stop) { patterns.push({ src: escRe(g.t), i: -1 }); continue; } // 多义词：匹配但不标记
-    byTerm[g.t] = add({ term: g.t, cat: g.cat, def: g.d, alias: g.a || [] }, g.re || [g.t, ...(g.a || [])].map(escRe));
+    const pats = g.re || (strictNames.has(g.t) ? [strict(escRe(g.t))] : [g.t, ...(g.a || [])].map(escRe));
+    byTerm[g.t] = add({ term: g.t, cat: g.cat, def: g.d, alias: g.a || [] }, pats);
   }
   // 扩展规则：替换占位说明
   for (const r of D.ext_rules || []) {
@@ -167,13 +172,23 @@ function getGlossary() {
   for (const t of D.tags) {
     if (skip.test(t.id) || !t.name) continue;
     const shown = t.name.replace(/\{VAL\}/g, 'X'), key = t.name.replace(/\{VAL\}/g, '').replace(/（AP）$/, '').trim();
-    const pat = escRe(t.name).replace(/\\\{VAL\\\}/g, '\\d*');
+    const hasVal = t.name.includes('{VAL}'), base = escRe(t.name.replace(/\{VAL\}/g, '').trim());
+    const pats = hasVal ? [escRe(t.name).replace(/\\\{VAL\\\}/g, '\\d+'), strict(base)]
+      : t.id === 'tg_ai' ? ['(?<![A-Za-z])AI(?![A-Za-z])']
+      : strictTags.includes(t.id) ? [strict(base)] : [escRe(t.name)];
     const desc = esc(String(t.description || '').replace(/\{VAL\}/g, 'X'));
-    if (byTerm[key]) { byTerm[key].def += `<p class="muted">标签「${esc(shown)}」：${desc}</p>`; patterns.push({ src: pat, i: list.indexOf(byTerm[key]) }); }
-    else byTerm[key] = add({ term: shown, cat: '标签', def: desc, alias: [] }, [pat]);
+    const own = byTerm[key];
+    if (own) {
+      own.def += `<p class="muted">标签「${esc(shown)}」：${desc}</p>`;
+      // 手写术语有自己的上下文规则时，只补上「名称+数字」的写法，不再加入宽松的字面匹配
+      const extra = GLOSSARY_SRC.find(g => g.t === key)?.re ? (hasVal ? pats.slice(0, 1) : []) : pats;
+      extra.forEach(src => patterns.push({ src, i: list.indexOf(own) }));
+    }
+    else byTerm[key] = add({ term: shown, cat: '标签', def: desc, alias: [] }, pats);
   }
-  // 长的写法优先（「热度上限」先于「热度」）
-  patterns.sort((a, b) => b.src.length - a.src.length);
+  // 长的写法优先（「热度上限」先于「热度」）：按实际匹配文字的长度排序，不计前后文条件
+  const litLen = src => src.replace(/\(\?<?[=!](?:[^()]|\([^()]*\))*\)/g, '').replace(/\\[ds]\+?|[\\^$?+*]/g, '').length;
+  patterns.sort((a, b) => litLen(b.src) - litLen(a.src));
   return (glossaryCache = { list, re: new RegExp(patterns.map(p => `(${p.src})`).join('|'), 'g'), byIdx: patterns.map(p => p.i), cats: [...new Set(list.map(g => g.cat))] });
 }
 // 不在这些位置标记术语：表单控件、按钮、标题、名称等
