@@ -304,7 +304,7 @@ function renderWeaponTable() {
   const box = document.getElementById('weaponTable');
   if (!box?.querySelector) return;
   const p = P(), s = weaponTableState;
-  const mounts = ['Auxiliary', 'Main', 'Heavy', 'Superheavy', 'Ship-class'], types = [...new Set(D.weapons.map(w => w.type))];
+  const mounts = ['Auxiliary', 'Main', 'Heavy', 'Superheavy', 'Ship-class', 'Drone'], types = [...new Set(D.weapons.map(w => w.type))];
   const sel = (key, cur, opts) => `<label class="filter-field"><span>${{ mount: '尺寸', type: '类型', src: '来源' }[key]}</span><select data-wt="${key}">${opts.map(([v, t]) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
   box.querySelector('.wt-filters').innerHTML =
     sel('mount', s.mount, [['', '全部尺寸'], ...mounts.map(m => [m, T.mount[m] || m])]) +

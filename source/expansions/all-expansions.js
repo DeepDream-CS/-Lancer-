@@ -739,6 +739,280 @@ const frames = [
 				p("<i>主要依靠殖民地的口粮以及放射性越来越严重的空气供应生存，晓礼从一艘濒死之船上拾取材料进行改装，这给予了她的机甲前所未有的徒手攻击能力。</i>"),
 		},
 	},
+	{
+		id: "mf_ext_mitchell", name: "米切尔", zh_name: "米切尔", source: "IPS-N",
+		mechtype: ["Artillery", "Controller"], mounts: ["Flex", "Flex", "Heavy"],
+		stats: stats({ size: 3, armor: 1, hp: 8, evasion: 8, edef: 8, heatcap: 5, repcap: 5, sensor_range: 10, tech_attack: -1, save: 10, speed: 4, sp: 6 }),
+		description: p("无人机并非是什么新奇技术。在现代术语中，它们常被归为 RPV——「远程驾驶载具」，并被大多数现代评论员视为底盘。然而，历史上最引人注目的 RPV 计划是在远离机械化作战之情况下进行。") +
+			p("第二委员会的远程空中支援计划（RASP）是在革命黎明前建立，他们录用了一批最具前途最具心理弹性的海军航空兵候选人，置其于较低风险的无人机驾驶领域。在那个可依赖人力逐年递减的年代，可用战争物资的减少幅度却低得多，面对这一情况，第二委员会转而投入这批驾驶员，先是去控制抵抗运动，然后试图用武力平叛，最后在不离开空气调节设备与万物网连接的条件下进行了一场战争。") +
+			p("随着革命的结束与第三委员会的崛起，RASP 遭到关停，其幸存驾驶员大多接受审判，或是被迫退役，有些恢复了正常。随着机械化底盘兴起，远程控制轨道（乃至大气）打击飞行器与直接驾驶载具不相上下的异常复杂性，与该计划相关的制造商将侧重点转向了不断膨胀的底盘市场（无论军民），而不再继续为已不复存在的市场生产 RPV 炮艇。") +
+			p("尽管如此，数百年后——也就是 4930u——IPS-N 十年风险管理报告显示，他们的军用底盘系列常会在远超其有效射程的战场上交战和被击败，通常是固定炮塔、防御工事或飞行器。毕竟，与 IPS-N 底盘在舰对舰作战或近距离作战中的有效性一样——没有哪家公司承认自己拥有 IPS-N 那样的绝对影响力和市场渗透力，能够假设自己的底盘只在理想化环境中而非在常规联合武器作战中使用。因此，必须开发一种能够消除防御工事，消灭远程威胁，可靠地与大气层打击飞行器交战的武器系统，并与公司拥有快速地形穿越能力的旗舰机甲如纳尔逊进行协同，同时确保公司自身作为坚固耐用与低工时后勤的品牌形象。一言蔽之，他们需要一台飞行器，而非另一条机械化底盘生产线。") +
+			p("据信，实现这一目标（并填补防御市场上另一缺漏）的最有效手段，即是对自 IPS-N 作为企业国开始特许经营以来就从未生产过的设计进行现代化改造。大多数研究过 RASP 炮艇部件的其他公司早已消失、合并、破产或纯粹地失去了技术储备，得益于数个世纪的额外技术发展，IPS-N 加入了白斑鱼（Walleye）和箭鱼（Swordfish）海军飞船的元素，创造了全新的存在。") +
+			p("至少，他们是如此宣传的；这是广告团队精心编织的悄无声息的谎言，通过筛选驾驶员的驾驶舱而非原设计的 RPV 接口为其增添可信度。") +
+			p("无论是理论还是行为和效果上，IPS-N 米切尔均为早已逝去之时代那棱角分明，武器厚重的幽灵。"),
+		traits: [
+			{ name: "旋式涡轮风扇", description: "米切尔可选择将其任意或所有移动视为<b>飞行</b>。此外，它在飞行时对<b>敏捷</b>检定和豁免 +1 准度。" },
+			{ name: "自主瞄准阵列", description: "1/轮，当米切尔消耗<b>锁定</b>进行远程攻击时，它可选择为该攻击获得以下效果之一：" +
+				ul(["<b>AP</b>", "命中 +1d3 额外伤害", "<b>智慧</b>（或失去<b>智慧</b>标签，若有的话）"]) + "这是对使用<b>锁定</b>常规增益之外的补充。" },
+			{ name: "固定翼飞行器", description: "米切尔无法拾取物体，操纵物体或环境，或<b>擒拿</b>。此外，除<b>冲撞</b>外，它无法进行<b>近战攻击</b>。" },
+		],
+		core_system: {
+			name: "饱和火力学说",
+			passive_name: "", passive_effect: "",
+			active_name: "雷霆自晴空而来", activation: "Quick",
+			active_effect: "在场景结束前，被你远程攻击命中的角色<b>离散</b>，直到对方下一回合结束。1/轮，装备在米切尔上的一把<b>装填</b>武器在开火时可选择不消耗装填。" +
+				p("<i>你想想吧，被围困城市中的市民们会如何计时？</i>") +
+				p("<i>无法访问卫星。电力被切断，连同水和卫生设施。钟楼被碾碎在曾是街道的泥地里，从破碎地基上撑起的瓦砾柱，构成了可怜的日晷。</i>") +
+				p("<i>空袭划定了他们的每日。午餐时间的轰炸袭击，在防空洞内弯腰，咀嚼着罐头食品，落在他们肩上的混凝土灰尘。晚祷前进行的低空扫射。还有空投燃烧弹，投在那他们曾经送孩子上学的铁轨上。</i>") +
+				p("<i>日复一日，使死亡麻木，使死亡之武器化作了时钟指针的轻扫，无情地旋转到午夜。</i>"),
+		},
+	},
+	{
+		id: "mf_ext_spectre", name: "幽灵", zh_name: "幽灵", source: "HORUS",
+		mechtype: ["Defender", "Controller"], mounts: ["Main/Aux", "Heavy"],
+		stats: stats({ size: 2, armor: 1, hp: 10, evasion: 10, edef: 8, heatcap: 5, repcap: 5, sensor_range: 5, tech_attack: 0, save: 10, speed: 3, sp: 6 }),
+		description: p("正如所有在温和历史学中归于过去之事物那样，见证联盟第二委员会垮台和第三委员会崛起的革命，被整理归纳于一只小盒子里。就是那个三十一年，他们说；要是把危机产生与同时期不断攀升的异议也算进去，那就会更久了，但我们认为这是个公平的跨度。从那血腥年代算起，已过去四百多年，这似乎也成为了一个合理的看法。它允许我们在末尾点上一个句点——第二委员会作为一个有组织的政治实体，已经死了。") +
+			p("更多的数字接踵而至。死于战争、饥荒和瘟疫的数十亿；因 TBK 事件而灭绝的独特物种估量；每天从联盟制造厂生产出的底盘、轰炸机、枪炮与刺刀的天文数字。有些人甚至胆大包天地猜测被工作折磨至死的速生克隆体数量，或通过等价生产价值来衡量的生命价值。用吗哪，这不是理所当然，它就是最利索最科学的计量货币。") +
+			p("当谈及革命时，他们有意将历史的故事掩盖在这些数字的宽慰罩袍下。也许是为了避免见证全新的传奇在他们周身诞生，或者本能地从这些故事所体现的恐怖中退缩：心灵的畏惧，犹如猎犬冲向熊熊火炬。在联盟边界，迷失者、受伤者和无家可归者明白，革命仍有故事要讲——它的范围绝不仅限于那三十一年。那时的战争便是透过千万碎片投射到如今的战争中，在视界边缘，在自由桑贾克地下。") +
+			p("这就是革命的教训：紧紧团结在你兄弟姐妹身旁。为众，而献一。用你那炽烈情感去追逐自由，去爱上原则。站在人类有史以来最强烈的帝国面前，背后是它能动用的一切技术和工业能力的重量，然后说——不。不是今天。永远不是。") +
+			p("在荷鲁斯前，星际团结旅的猎人师团及其工程师们将数万不同天体的传统、材料和技能，融于一个整体——融于一场战斗。幽灵 PG 是他们的遗产，不疑有他。它是钢铁与电缆构成的雄伟形象，它是他们的故事、他们的鲜血，他们的意志。便让这句话永垂不朽：") +
+			p("敌人决不会得逞。") +
+			p("历史决不会重演。"),
+		traits: [
+			{ name: "唯你", description: "1/场景，当幽灵受到攻击后 <b>HP</b> 降低到 0 时，它可解开因果律。以一个反应，对攻击者的<b>回避</b>进行远程攻击掷骰；命中则对触发攻击的所有伤害和效果<b>免疫</b>，并对攻击者造成相同伤害和效果，好似对方以自己为目标命中般（即使这几乎不可能）。" },
+			{ name: "唯我", description: "1/轮，当<b>射程4</b>内的一个盟友角色成为一次远程攻击的目标时，你可强制该攻击以幽灵为目标。" },
+		],
+		core_system: {
+			name: "盛放",
+			passive_name: "", passive_effect: "",
+			active_name: "一片绯红色的罂粟田", activation: "Protocol",
+			active_effect: "场景结束前，每次你失去<b>结构</b>或被摧毁时，你的机甲会绽放成由类血腥之花数据结构组成的幽灵花园，创造一个持续到场景结束的<b>爆发2</b>。进入该区域或在该区域内开始回合的敌方角色立即受到 3 <b>燃烧</b>并<b>受损</b>直到对方下一回合结束；在对方回合结束时被<b>锁定</b>。你和盟友将该区域视为<b>软性掩护</b>。" +
+				p("<i>就在那，黑铁门前检查站。在漫长日轮班后，面无表情的男人站在它前，手持步枪，调整着防弹背心。你看到它背后的喷泉了吗？大理石被酸雨侵蚀；雌雄难辨的雕像的眼睛，被切成灰色条纹状的泪水，从它们朝天堂仰望的位置落下？</i>") +
+				p("<i>起初，它不想看到，勇敢的国王与王后啊，一个逝去时代的统治者。然后，它便也不必再看了。</i>") +
+				p("<i>在更远处，是行政官的庭院，窗帘紧闭，遮挡着阴沉天帘。军团将领们低声商议。新闻摄像机咔嚓作响，好似昆虫窸窣。给守卫一个母亲般的微笑。感受外套下油料的溅落，随后生命逝去的重量突然压在了你的肩膀上——比阿特拉斯蛾要微弱，在你同志战友双手支撑下。</i>") +
+				p("<i>生命只是个小小的代价。沉默的生命，就像一朵鲜花苍白的花蕾，从未盛开成更伟大的作品。</i>") +
+				p("<i>就像对你不再信仰的神明祈祷那样轻声细语 没有谁是自由的，直到我们所有都自由时。</i>"),
+		},
+	},
+	{
+		id: "mf_ext_hubble", name: "哈勃", zh_name: "哈勃", source: "HA",
+		mechtype: ["Artillery", "Controller"], mounts: ["Flex", "Heavy"],
+		stats: stats({ size: 2, armor: 2, hp: 8, evasion: 8, edef: 8, heatcap: 7, repcap: 4, sensor_range: 5, tech_attack: -2, save: 10, speed: 4, sp: 6 }),
+		description: p("哈勃不该存在。") +
+			p("它不是 HA 底盘。这是一台 GMS 否认曾生产过的 GMS 底盘。它的设计直接导致了最高级别的 6 起人类沙文主义犯罪定罪，以及第三委员会初期对反人类罪行的 2 次死刑判决，并间接导致自革命以来数世纪的无数死亡。它是第二委员会 TBK 学说的核心组成部分——世界杀手是烈火与硫磺，而哈勃则是墓地的细心栽培者，委婉地归类为“基础设施保护有机中和”的战场职责。") +
+			p("“绝对软目标否决”领域其他更现代的机甲大多数是意外事故：以红浴扭曲集群为中心的荷鲁斯模式组，以及 SSC 失败的生物实验，均此类似。但哈勃，它被清晰而明确地制造出来，其唯一目的便是将有机环境及其居民转化为一种无差别浆液，以便后来的地球化改造工作能够重建一个更适合其新殖民居民的星球。为实现这一目标，它使用了一套精心设计的致命病原体、化学物质和精神活性物质的武器库。") +
+			p("从哈勃密封驾驶舱内望去，除了外部摄像头闪烁的画面，以及与你呼吸同步的压缩空气嘶鸣外，别无他物。") +
+			p("在外面，除了一座剧毒花园，别无他物。"),
+		traits: [
+			{ name: "机载生物化学合成", description: "当哈勃一次攻击命中敌方角色时，哈勃可承受 1 <b>热度</b>，并根据武器大小造成额外<b>燃烧</b>（副：1，主：2，重和超重：3）。" },
+			{ name: "即抛式重组载体", description: "1/轮，哈勃在施加<b>燃烧</b>时可忽略<b>抗性</b>。" },
+			{ name: "弱计算机", description: "在所有<b>系统</b>豁免和检定中，哈勃 +1 <b>难度</b>。" },
+		],
+		core_system: {
+			name: "L 类病原 TBK 套组",
+			passive_name: "", passive_effect: "",
+			active_name: "终焉降临", activation: "Quick",
+			active_effect: "场景结束前，当你对敌方角色施以<b>燃烧</b>时，对方会获得一个感染标记。受感染的角色会自动失败第一次清除<b>燃烧</b>的检定。此外，当非<b>低等兵</b>感染角色受到<b>结构伤害</b>或因<b>燃烧</b>而被摧毁时，会在其上绽放出具有高度传染性的病毒颗粒云；<b>爆发2</b> 内所有其他敌方角色受到 4 <b>燃烧</b>并感染。" +
+				p("<i>腐朽之树与腥臭泥沼皆有颜色，沉淀枯叶与舒展枝条皆有芬芳。在自我造就的荒原中，呼吸与心跳交织成乐章。</i>") +
+				p("<i>此乃教诲：黑色非铁之本色，白色非雪之纯净，红色非果之娇艳，绿色非草之鲜翠。</i>") +
+				p("<i>这些色彩，非你花园之真颜。</i>"),
+		},
+	},
+	{
+		id: "mf_ext_pharos", name: "法罗斯", zh_name: "法罗斯", source: "IPS-N",
+		mechtype: ["Artillery", "Support"], mounts: ["Flex", "Heavy"],
+		stats: stats({ size: 2, armor: 2, hp: 8, evasion: 6, edef: 8, heatcap: 4, repcap: 5, sensor_range: 20, tech_attack: 1, save: 10, speed: 3, sp: 6 }),
+		description: p("IPS-N 产品目录为每个基于机甲的登舰战战术层提供了宽泛的底盘选择——由卡利班和黑胡子领导冲锋，由托尔图加确保推进，由德雷克镇守进入的船体缺口。飘浮在远处的则是法罗斯；在一支突破小队只能目视下个走廊的地方，法罗斯监视着整艘飞船，并提供精确制导和支援火力。法罗斯是战场上真正的首选底盘——它们指挥第一次冲锋，突破船体，瞄准发射嵌入小队的电磁弹弓。一旦最初冲突结束，它们就会在交战飞船间的太空海湾上绕轨运行，提供战术支援和实时情况报告。高度先进的传感器套件比其他底盘更接近于飞船，使它们在超出船上防御系统范围的远距离协调方面具有优势。"),
+		traits: [
+			{ name: "太空行走", description: "法罗斯内置 <b>EVA</b> 系统，允许它在零重力环境中<b>飞行</b>而不会<b>缓慢</b>。" },
+			{ name: "天空之眼", description: "以一个<b>快速动作</b>，法罗斯可在感应内指定一个盟友角色为<b>眼</b>。法罗斯与其盟友可以从<b>眼</b>的位置划出视线，以确定远程攻击是否绕过掩护——只要他们都在你的感应范围内。你一次只能选择一只<b>眼</b>。若你选择新的角色，或者你<b>受扰</b>或<b>晕眩</b>，那么该角色就不再是你的<b>眼</b>。" },
+			{ name: "有效载荷制导", description: "当法罗斯用远程武器命中没有掩护的角色时，该角色被<b>锁定</b>。" },
+		],
+		core_system: {
+			name: "代达罗斯光学套件",
+			passive_name: "", passive_effect: "",
+			active_name: "栅栏轨道", activation: "Protocol",
+			active_effect: "你的机甲 <b>EVA</b> 系统开始超频运转，允许你在移动时<b>悬浮</b>。你在<b>固定</b>或<b>晕眩</b>时不会坠落。你和你所有在你感应中的盟友均视为你<b>天空之眼</b>特征的<b>眼</b>。" +
+				p("此外，只要该核心处于激活，你就可获得<b>后座测微仪</b>反应。你可将此核心以<b>协定</b>停用，否则它将持续到场景结束。") +
+				p("<i>代达罗斯是直接传感器集群和实时战术上行无人机的结合，是综合大气内外信息收集系统。关键组件是对联合作战目标基础设施的无损开放馈送，使每个链接帧之间的全角度数据流保持恒定。</i>"),
+			active_actions: [{ name: "后座测微仪", activation: "Reaction", frequency: "1/round", trigger: "盟军角色攻击你视线感应内的一个目标但未命中。",
+				detail: "掷骰 <b>1d6</b>；结果为 4+则攻击视为命中但造成一半伤害。<b>1~3</b> 则仍未命中但你可对目标<b>锁定</b>。" }],
+		},
+	},
+	{
+		id: "mf_ext_sicklewing", name: "镰翅蛾", zh_name: "镰翅蛾", source: "SSC",
+		mechtype: ["Controller", "Support"], mounts: ["Main/Aux"],
+		stats: stats({ size: 1, armor: 0, hp: 6, evasion: 12, edef: 8, heatcap: 5, repcap: 3, sensor_range: 10, tech_attack: 1, save: 12, speed: 6, sp: 8 }),
+		description: p("镰翅蛾只计划在内部发布，是奢华象征定制底盘系列成员的非官方荣誉。这些骨架潜藏于秘密中，预期在辰星太空内外进行可否认的隐秘行动，且从未公开注册为史密斯-岛野底盘，而是分配到不同的皮包公司。作为完全可否认资产，该牌照通常伴随公共记录的彻底删除，这既保护了联络人，也减少了特工叛变的可能性。") +
+			p("镰翅蛾着重设计于促进公司信息直接检索和资产回收，尤其在城市环境中。它配备了来自 SSC 最顶尖的渗透技术，包括尖端编码套件，旨在颠覆敌对数字架构从而破坏自身，所有这些都通过“洞悉”神经放大器模块的神秘透镜聚焦。镰翅蛾擅长摧毁坚固目标，以及破坏敌对合作。"),
+		traits: [
+			{ name: "曲跃蹈跟", description: "镰翅蛾将所有固体表面视为平地而移动；它可正常地移动无需攀爬，尽管若它被冲撞<b>伏卧</b>仍会开始坠落。它对坠落伤害免疫，在进行标准移动时可全<b>速度</b>水平跳跃，向上跳跃至一半<b>速度</b>（任意组合）。" },
+			{ name: "针眼密探", description: "当镰翅蛾<b>扫描</b>一个角色时，它会获得所有三条信息而非只选一条。以此法收集的信息是从公共记录、截获传输和非原始法典档案中抓取。这些信息永远正确，即使它可能有限。1/轮，镰翅蛾可用自由动作<b>扫描</b>黑猫邻近的一个角色。" },
+			{ name: "脆弱", description: "镰翅蛾在<b>机体</b>检定和豁免上 <b>+1 难度</b>。" },
+		],
+		core_system: {
+			name: "“黑猫”干扰无人机",
+			passive_name: "黑猫",
+			passive_effect: "黑猫无人机（大小 1/2，[10+毅力]HP，回避/电子防御[见下文]，标签：无人机，悬浮，隐形）" +
+				p("你的机甲拥有一台<b>回避</b>、<b>电子防御</b>和<b>速度</b>与你相同的同伴无人机，它可在你回合中独立移动和行动。若它是在<b>感应</b>内，你可用一个<b>快速动作</b>把它整合到你的机甲身上，如此它就不会被攻击。你可用一个<b>快速动作</b>将其重新部署到<b>感应</b>内的空间。当你休息或<b>全面维修</b>时，你的无人机恢复所有 HP，如果它被摧毁则自动修复。") +
+				p("黑猫邻近的敌对角色在所有检定和豁免中 <b>+1 难度</b>，并在检定或豁免失败时受到 <b>2AP 能量伤害</b>。以一个<b>快速科技</b>动作，你可强迫邻近黑猫的角色通过<b>系统</b>豁免，失败则遭受<b>入侵</b>选项。") +
+				p("<i>镰翅蛾操作系统标准配备“黑猫”干扰/拦截/渗透无人机。这些无人机被进一步定制以在驾驶员个体印痕，形成可预测合作伙伴关系，使他们能够作为个体操作人员或大型团队成员协同工作。</i>"),
+			active_deployables: [{ name: "黑猫无人机", type: "Drone", size: 0.5, hp: "10+{grit}", evasion: "{evasion}", edef: "{edef}", detail: "标签：无人机、悬浮、隐形；<b>速度</b>与你相同，可在你回合中独立移动和行动。" }],
+			active_name: "定向干扰", activation: "Protocol",
+			active_effect: "黑猫恢复所有 HP，若它已被摧毁则立即修复。在场景结束前，邻近的敌对角色只要进行检定或豁免，就必须双骰取低。此外，若失败，除造成伤害外，你还可选择以下选项之一：" +
+				ul(["任意方向推动 3 空间。", "受到 2 热度。", "缓慢并受损直到他们下回合结束。"]),
+		},
+	},
+	{
+		id: "mf_ext_feathered_serpent", name: "羽蛇", zh_name: "羽蛇", source: "HORUS",
+		mechtype: ["Defender"], mounts: ["Main", "Heavy"],
+		stats: stats({ size: 1, armor: 2, hp: 8, evasion: 6, edef: 8, heatcap: 6, repcap: 5, sensor_range: 10, tech_attack: 1, save: 11, speed: 3, sp: 6 }),
+		description: p("与大多数荷鲁斯模式组不同，羽蛇模式组普遍存在且在刻意下受认可。它们包裹在璀璨的多层聚合物中，不断地在它们表面投射出一种催眠模因图案，以吸引战斗人员的目光。一旦目标落入其束缚，它们就会释放出大量能量和等离子体来摧毁目标。羽蛇骨架的设计是为引起人们关注，并已被视为刻意将公众和个体目光吸引到各种犯罪企业和滥用权力的联盟太空，就像它们常被用来执行诱饵任务，以保护秘密的准军事渗透一样。") +
+			p("被逮捕的驾驶员中，有小部分在被强迫下马后表现出自恋狂和强迫性自恋的症状，值得注意的是，这些症状具有短暂性，并与驾驶时间成正比的速度逐渐消散。就事实而言，这些驾驶员正以散布正体不明且非法操纵性模因的指控而接受审查。更让 UIB 和本地调查人员担心的是，在出现羽蛇的该地区大量发生数据盗窃、系统停机和失踪人员案件，而这些案件似乎与驾驶员的任何动机无关。这究竟是巧合，还是第三方通过煽动本地动荡而故意制造的烟幕弹，目前尚未可知。"),
+		traits: [
+			{ name: "我飞", description: "当羽蛇移动或<b>推进</b>时可<b>飞行</b>。" },
+			{ name: "看着我吧", description: "羽蛇无法<b>躲藏</b>。" },
+			{ name: "我的羽毛最漂亮了", description: "1/轮，当敌方角色在视线<b>感应</b>内结束回合时，羽蛇可使用其反应迫使对方进行<b>系统</b>豁免。失败后，他们在下回合结束前无法将视线划到羽蛇外的任何角色。忽略障碍，羽蛇总是在相同时间内被视为在他们视线内。" },
+		],
+		core_system: {
+			name: "拟星模因印痕",
+			passive_name: "", passive_effect: "",
+			active_name: "我就像个灿烂的太阳", activation: "Full",
+			active_effect: "你爆发化身为至高天的虚拟火焰和致盲模因光芒。<b>爆发2</b> 内的敌对角色无法将视线划出该区域外，若他们在该区域结束自己回合则受到 <b>2 热度</b>，并且他们必须通过<b>系统</b>豁免否则<b>受扰</b>直到他们下一回合结束。每个角色以此法<b>受扰</b> 1/场景。若该区域外的敌对角色在你视线感应内结束其回合，他们必须通过<b>系统</b>豁免否则立即向你移动最多 <b>3 空间</b>。该光环持续到场景结束，你被摧毁，或你用<b>快速动作</b>解除。" +
+				p("<i>羽蛇的虚拟皮肤由数量不详的微小合成鳞片组成。每个鳞片都集成电路连接到机载计算机，使其同步投射出统一的图案。在极端情况下，几层鳞瓣可同时脱落形成一片辉耀云，当每个鳞片在热和光的冲击下燃烧其内部电池时可极大扩张模因的力量。</i>"),
+		},
+	},
+	{
+		id: "mf_ext_tametomo", name: "为朝", zh_name: "为朝", source: "HA",
+		mechtype: ["Striker"], mounts: ["Flex", "Main"],
+		stats: stats({ size: 1, armor: 1, hp: 10, evasion: 8, edef: 6, heatcap: 10, repcap: 4, sensor_range: 8, tech_attack: -2, save: 11, speed: 3, sp: 6 }),
+		description: p("“地狱天使”、“塔”、“哈里逊最后一舞”“节制之夏”——为朝有很多名字。它近乎神话般的地位正是由其非常现实的稀缺性所支撑：若非在特殊情况下，为朝牌照不允授权。传说一个身披火焰的巨大人形，空气干燥，火花飞扬，毕剥作响，苦涩的臭氧覆盖战场。传说从泰坦之弓上射出狂暴的等离子之箭前，尖啸着划破苍穹——以及此后被烧焦的田野，永远失去的生命。") +
+			p("这就是为朝的传说：他们是最后的王牌，是一笔殉道者的交易。当所有希望俱灭，军团溃败，当谢尔曼蹒跚顿足，当萨拉丁棱盾尽失，当最后的堡垒倒塌前，打印编码被送出。它是永受地狱之苦的灯塔——那些必死之人——让命烛灯盏从两头开始燃烧。不为撤退或逃跑，为朝只给一个选择：背贴着墙，蜷缩着，带着恐惧死去，或者将熔炉置入你的心脏，让火焰从双手燃起，然后死去。在最终之战幸存下来的少数幸运儿被誉为兵工厂的英雄——用社会保障的地位来证明。"),
+		traits: [
+			{ name: "高性能", description: "每当为朝在<b>准度</b>骰上掷出 1 或<b>难度</b>骰上掷出 6 时，它受到 <b>1 热度</b>并重新掷该骰。若结果继续为 1 或 6 则可以继续触发此效果。" },
+			{ name: "等离子光轮", description: "为朝对<b>燃烧</b>具有<b>抗性</b>，只要它受到<b>燃烧</b>就获得<b>软性掩护</b>，不过它无法借此<b>躲藏</b>。<b>燃烧</b>无法使为朝降低到 <b>1HP</b> 以下。" },
+			{ name: "不稳定系统", description: "为朝被毁时，其下一回合结束时如同<b>自毁</b>般爆炸。" },
+		],
+		core_system: {
+			name: "MK3 等离子耀斑弓", integrated: ["mw_ext_pt3_flare_bow"],
+			passive_name: "", passive_effect: "",
+			active_name: "沉船一击", activation: "Protocol",
+			active_effect: "<b>PT3 耀斑弓</b>立即获得 4 充能。场景结束前，若你以此弓消耗 3 或更多充能的攻击并命中，你的目标开始承受临界反应堆泄漏；他们会在每回合开始时<b>受损</b>并受到 <b>2 燃烧</b>和 <b>2 热度</b>。他们可通过<b>稳住阵脚</b>来结束该影响。" +
+				p("如果他们在它被激活时被摧毁，则在<b>爆发2</b>内爆炸，迫使区域内的所有角色通过<b>敏捷</b>豁免，失败承受 <b>2d6 能量伤害</b>（成功减半），并直到你下一回合结束前留下供<b>软性掩护</b>的爆炸云，同时致使任意在该区域开始其回合或在其回合中首次进入该区域的角色受到 <b>2 燃烧</b>。") +
+				p("<i>为朝底盘之卓越在于独特的维苏威级堆芯——这是种通过硬化通道循环过热等离子体渗透至全机甲的实验设计。</i>") +
+				p("<i>这些通道出口覆盖着横跨背部电枢的磁场，将等离子体拉伸成高强度的流体环路。随更多能量注入环路，环路产生弹性张力，直到磁场以定向螺栓弹出。</i>") +
+				p("<i>为朝在火焰、愤怒和痛苦中成长——这是最后也是唯一战争之燃料，燃烧直至永恒。</i>"),
+		},
+	},
+	// ---------- 变体骨架（补充截图）：标准骨架可能是扩展骨架，须排在其后 ----------
+	{
+		id: "mf_ext_bligh", name: "布莱", zh_name: "布莱", variant_of: "mf_ext_kidd", source: "IPS-N",
+		mechtype: ["Support", "Striker"], mounts: ["Main"],
+		stats: stats({ size: 2, armor: 1, hp: 8, evasion: 8, edef: 8, heatcap: 6, repcap: 6, sensor_range: 8, tech_attack: 0, save: 10, speed: 4, sp: 8 }),
+		description: p("布莱起初并非以一台机械化底盘开发，而是作为安装在飞船上的自动无人机控制打印平台，用于控制在甲板上工作的群集「船工」无人机。直到近来，随着基德的崛起，这些独立支援系统才得以整合于一台移动骨架上，使其具备机动性的同时部署在战场。"),
+		traits: [
+			{ name: "牧羊人领域", description: "与布莱邻接的<b>无人机</b>、<b>可展开</b>和物品对所有伤害具有<b>抗性</b>。" },
+			{ name: "无需仁慈", description: "在回合中，当布莱执行针对盟友角色的<b>科技动作</b>或部署非可无人机<b>可展开</b>时，它可在<b>感应</b>中选择最多 2 架船工无人机。它们立即用装备好的一把武器进行攻击。无人机在所有意图和目的上都被视为攻击者，但将你的<b>毅力</b>添加到攻击骰中。每架无人机只能攻击 1/轮。" },
+		],
+		core_system: {
+			name: "进度-3 C.R.E.W. 打印机", integrated: ["mw_ext_crew_sword", "mw_ext_crew_rifle", "mw_ext_crew_cannon"],
+			passive_name: "「船工」无人机（系统，无人机）",
+			passive_effect: "你的机甲配备了一台内置打印机，用于部署船工无人机。在你回合结束时，以一个<b>自由动作</b>，你可在一个邻接的自由空间部署一架船工无人机。你同一时间最多可拥有 4 架船工无人机。你可用一个<b>快速动作</b>将<b>感应</b>内任意船工无人机召回，将其从战场上移除。" +
+				p("船工无人机配备了所有三种船工武器（见内建武器；布莱本身无法使用这些武器）。") +
+				p("船工无人机<b>大小1/2</b>，具有 5 HP、1 装甲和内置 EVA 模块。它们共享你的<b>速度</b>、<b>回避</b>和<b>电子防御</b>。船工无人机能够在你的回合中独立移动等同其<b>速度</b>。") +
+				p("船工无人机无法执行反应。每次战斗结束后，无人机全部解体。"),
+			active_name: "夺取控制区", activation: "Protocol",
+			active_effect: "（高效）你可以立即部署最多 2 架船工无人机。" +
+				p("<i>MT-34 船工无人机被用于诸多 IPS-N 商船。双足船工能够可靠地胜任简单体力劳动任务，当连接到中央指挥节点并配备专用作战智能软件时，它能大放异彩。船工配备了万物接口 2 级操纵器，可携带各种专用武器，最适合用作快速部署和高效反登机反应措施。船工生产成本低廉，用途广泛，是任何称职船长的首选。</i>"),
+			active_deployables: [{ name: "「船工」无人机", type: "Drone", size: 0.5, hp: 5, armor: 1, detail: "共享你的速度、回避和电子防御；内置 EVA 模块；配备船工之剑、船工步枪、船工加农炮；不能执行反应。" }],
+		},
+	},
+	{
+		id: "mf_ext_oleander", name: "夹竹桃蛾", zh_name: "夹竹桃蛾", variant_of: "mf_deaths_head", source: "SSC",
+		mechtype: ["Artillery"], mounts: ["Main", "Heavy"],
+		stats: stats({ size: 1, armor: 0, hp: 8, evasion: 10, edef: 8, heatcap: 6, repcap: 2, sensor_range: 15, tech_attack: 1, save: 10, speed: 5, sp: 6 }),
+		description: p("夹竹桃蛾不易获得公开牌照。这是款战场激活型测试原型骨架/混合底盘，位于奢华圣像系列和告别佳人产品线之间。夹竹桃蛾是尖端且难以操控的产品，其设计意图为 SSC 的下一世代产品。能够试验这些先进骨架的枪骑兵少之又少，通常经 SSC 管理员亲手选拔。虽然最初经验报告充满希望，但在夜灵+系列产品线为公司带来效绩前，还有很多工作要做。"),
+		traits: [
+			{ name: "致命射杀", description: "1/轮，以一个<b>快速动作</b>，夹竹桃蛾在当前回合结束前的下次远程<b>攻击掷骰</b>可获得 +5。" },
+			{ name: "底盘一体化", description: "夹竹桃蛾忽略<b>重火器</b>标签。" },
+			{ name: "精密仪器", description: "夹竹桃蛾的<b>重型</b>远程武器开火无法超过 1/回合。" },
+		],
+		core_system: {
+			name: "模块化武库组件",
+			passive_name: "完化组件",
+			passive_effect: "你的<b>重型</b>远程武器获得以下效果之一。你可在<b>休息</b>时选择不同效果：" +
+				ul(["<b>辅助导轨</b>：<b>击退2</b>，以及<b>会心一击</b>目标<b>伏卧</b>。", "<b>千里眼准镜</b>：<b>导引</b>。", "<b>绝对-0-模块</b>：攻击结算后，你清除 2 <b>热度</b>。",
+					"<b>后坐力稳定器</b>：<b>会心一击</b>从 20 替换为 18+ 攻击掷数结果。", "<b>穿透子程序</b>：<b>会心一击</b>此次攻击伤害无法以任何方式减免。"]),
+			active_name: "全系统已上线！开火！", activation: "Protocol",
+			active_effect: "（高效）直到当前回合结束，你的<b>重型</b>远程武器会获得<b>完化组件</b>所有效果。" +
+				p("<i>M.A.A（模块化武库组件）是 SSC 在先进理论武器制造和设计方面的最新尝试。正如其组装的夹竹桃蛾，它是个战场激活测试系统，目前的问题是太过耗电，无法通过容纳它的底盘永久部署。它鼓励持照驾驶员在所提供的配置中进行实验和循环，以向 SSC 所有者提供各种现场数据汇编。</i>"),
+		},
+	},
+	{
+		id: "mf_ext_habsburg", name: "哈布斯堡", zh_name: "哈布斯堡", variant_of: "mf_saladin", source: "HA",
+		mechtype: ["Defender"], mounts: ["Main"],
+		stats: stats({ size: 2, armor: 2, hp: 8, evasion: 6, edef: 8, heatcap: 8, repcap: 4, sensor_range: 8, tech_attack: -2, save: 10, speed: 3, sp: 7 }),
+		description: p("哈布斯堡是款略有些鲜为人知的哈里逊兵工厂骨架，常被大多数枪骑兵所遗忘。哈布斯堡骨架老旧，仅比 Mk1「世界杀手」略年轻，这款骨架的生产线最终发展成为著名「萨拉丁」机械化底盘生产线。尽管它拥有诸多与萨拉丁类似的防御系统，但哈布斯堡所使用的技术比人们从当代哈里逊兵工厂骨架中所期望的要粗糙和不雅得多。"),
+		traits: [
+			{ name: "艾森盾", description: "哈布斯堡将所有来自敌方来源的伤害减少 1。与它或其 <b>E-R-桥塔</b>邻接的盟友角色也从该效果中受益。" },
+			{ name: "重型骨架", description: "比哈布斯堡小的角色无法将其推动、拉动、<b>伏卧</b>或<b>击退</b>。" },
+			{ name: "护法", description: "邻接的盟友可以将哈布斯堡当作<b>硬性掩护</b>。" },
+		],
+		core_system: {
+			name: "艾森精密-中继-发射器",
+			passive_name: "E-R-桥塔（系统，可展开，受限3）",
+			passive_effect: "<b>桥塔</b>（大小1，10 HP，装甲2，回避5，标签：可展开）。以一个<b>快速动作</b>，你可消耗 1 充能将 E-R-桥塔部署到<b>感应</b>内任意自由空间。桥塔固定在地面上，无法以任何方式移动。" +
+				p("每当你激活带有<b>盾牌</b>标签的系统时，该系统无法致使你<b>缓慢</b>，你可从<b>感应</b>内任意桥塔开始计算其射程。") +
+				p("若通过桥塔展开的盾牌会致使你被<b>固定</b>，那么你不会被固定。当桥塔被摧毁时，通过桥塔部署的具有持续时间（例如直到下一回合结束或直到停用）的盾牌将立即停用。"),
+			active_name: "形式严峻，但仍可控", activation: "Protocol",
+			active_effect: "（高效）在你下一回合结束前，<b>艾森盾</b>会减少 2 点来自敌方来源的所有伤害。" +
+				p("<i>艾森盾代表了局部力场技术应用中的一个半废弃死胡同，被认为过于耗电和射程过短。自那以后，专有 HA 中继发射器的引入赋予了被弃用的艾森盾第二春。从底盘直接发射的坚固发射桥塔解决了原始艾森盾的有限覆盖问题，而内置的固体核心电池则充分满足了能源需求。</i>"),
+			active_deployables: [{ name: "E-R-桥塔", type: "Deployable", size: 1, hp: 10, armor: 2, evasion: 5, detail: "受限3；以快速动作部署到感应内任意自由空间，无法移动。" }],
+		},
+	},
+	{
+		id: "mf_ext_salamander", name: "火蜥蜴", zh_name: "火蜥蜴", variant_of: "mf_ext_kobold", source: "HORUS",
+		mechtype: ["Controller"], mounts: ["Flex", "Main"],
+		stats: stats({ size: 1, armor: 1, hp: 8, evasion: 7, edef: 10, heatcap: 5, repcap: 3, sensor_range: 8, tech_attack: 1, save: 11, speed: 4, sp: 6 }),
+		description: p("作为 K-PG 的近亲突变体，S-PG 的诞生环境与狗头人相似。这位游击专家比它的表亲庞大得多，擅长用矿井、锻造厂和打印厂中常见的几乎任何裂变材料制造 I.E.D.，甚至能够将机甲反应堆废料重构为强大的炸药。这些炸弹可轻松隐蔽，卡拉金安全部队很快就称之为「矿渣爆爆」，能够瞬间烧毁周围环境。当火蜥蜴与一组 K-PG 骨架恰当地配合时，它会化身为可怖的力量倍增器，它设置的矿渣爆爆可轻松被较小机甲引爆。虽然 K-PG 突变为 S-PG 背后的确切机制尚不清楚，但模式组研究领域的专家认为，火蜥蜴代表了种进化的成熟形式，所有 K-PG 在一定时间内都能完成这种突变。虽然这一理论的验证仍悬而未决，但它可能对负责 K-PG 礼拜编码的基本性质有着惊人的影响。"),
+		traits: [
+			{ name: "炉心废料萃取法", description: "1/轮，当火蜥蜴使用<b>科技攻击</b>成功命中敌方角色时，它可在目标<b>射程3</b>内自由空间安置一枚<b>矿渣爆爆</b>。" },
+			{ name: "紧急熔渣排泄", description: "每当火蜥蜴失去<b>结构</b>或<b>压力</b>时，它可在<b>射程3</b>内自由空间安置一枚<b>矿渣爆爆</b>。" },
+			{ name: "隔热", description: "火蜥蜴对<b>燃烧</b>免疫。" },
+		],
+		core_system: {
+			name: "挥发性聚合物",
+			passive_name: "矿渣爆爆",
+			passive_effect: "矿渣爆爆是<b>大小1</b>、<b>回避5</b>和 10 HP 的地形物品。矿渣爆爆在其被创造的回合结束时做好准备。当一枚准备好的矿渣爆爆被摧毁时，它会在<b>爆发2</b>中引爆，对位于该区域的角色造成 4 <b>燃烧</b>，成功的<b>工程</b>豁免伤害减半。",
+			active_name: "熔渣之息", activation: "Full",
+			active_effect: "（高效）你排出大量挥发性熔渣，致使<b>射程8</b>内的<b>溅射2</b>爆炸。该区域中的角色受到 6 <b>燃烧</b>，成功的<b>工程</b>豁免伤害减半。该区域内的物品和地形自动受到 10 AP 能量伤害。结算该动作后，你可在受影响区域的自由空间安置 3 枚矿渣爆爆。" +
+				p("<i>通过雾化强效促进剂并将其分散在近距离附近，火蜥蜴释放出一股吞噬一切的火焰风暴，足以吞没肉躯与钢铁。</i>"),
+		},
+	},
+	{
+		id: "mf_ext_stetchkin", name: "史泰钦", zh_name: "史泰钦", variant_of: "mf_ext_mitchell", source: "IPS-N",
+		mechtype: ["Support", "Controller"], mounts: ["Heavy", "Main"],
+		stats: stats({ size: 3, armor: 1, hp: 8, evasion: 8, edef: 8, heatcap: 5, repcap: 4, sensor_range: 20, tech_attack: 1, save: 10, speed: 4, sp: 6 }),
+		description: p("无人机最初的用途并非用于进攻作战，而是监视与侦察。从其诞生至今的数千年间，这一传统始终未变：它们是警惕的永恒之眼，是信息的收集者与筛选者，是掌握枪口的手，瞄准任何胆敢违背无人机所有者限制的人。勿踏入禁区。勿谈论某些话题。勿聚集过多人群。") +
+			p("如今的史泰钦——与第二委员会时期的设计不同，它在同系列底盘重构和现代化改造后获得此名——正是为此而生。其大量武器挂点与载重设备被移除，取而代之的是一套强大的摄像头、雷达及数据库追踪关联设备。这些设备与卫星及地面侦察资源协同工作，以全面描绘威胁环境。射击何处、瞄准何方、杀死何人——这些是战斗团队最迫切的问题，而史泰钦的侦察能力恰能解答。同样，史泰钦相较于其炮艇同僚，在计算能力与系统攻击能力上的显著提升，使其能够主动入侵敌方系统，锁定关键组件并瘫痪移动手段，防止目标逃脱其自身武器或史泰钦精准引导的重型载荷。") +
+			p("监视资产与火力资产本应协同作战：一方定位并预判，另一方清除已识别的问题。涡轮风扇在寂静空气中低沉的嗡鸣，仍是这种亵渎却传统的联姻的标志——除此之外，唯有火焰的噼啪声与即将到来的行军靴声。"),
+		traits: [
+			{ name: "旋式涡轮风扇", description: "史泰钦可选择将其任意或所有移动视为<b>飞行</b>。此外，它在飞行时对<b>敏捷</b>检定和豁免 +1 准度。" },
+			{ name: "轨迹计算机", description: "1/轮，史泰钦可用<b>快速动作</b>指定<b>感应</b>内的一个敌方角色为<b>优先目标</b>。该角色被<b>锁定</b>；直至其下一回合结束前，使用<b>导引</b>或<b>抛射</b>攻击该目标时<b>射程</b> +5 并<b>威胁</b> +1；若为<b>科技攻击</b>，则<b>感应</b> +3。" },
+			{ name: "固定翼飞行器", description: "史泰钦无法拾取物体，操纵物体或环境，或<b>擒拿</b>。此外，除<b>冲撞</b>外，它无法进行<b>近战攻击</b>。" },
+		],
+		core_system: {
+			name: "理想城",
+			passive_name: "纯净社会",
+			passive_effect: "指定<b>优先目标</b>时，对其下次攻击获得<b>击退3</b>。",
+			active_name: "纪律社会", activation: "Quick",
+			active_effect: "在场景结束前，当你指定<b>优先目标</b>时，对方必须通过<b>系统</b>豁免，否则<b>固定</b>直至下一回合结束。此外，你可同时指定 2 个<b>优先目标</b>。" +
+				p("<i>监视若无行动便无实际价值。你拥有数千不眨之眼；一扇窥视每家每户的窗；一只贴在每扇门上的耳。</i>") +
+				p("<i>这是为何？指尖权力直抵脑海，答曰：“以正其道”。</i>") +
+				p("<i>净化你的视野。识别那些会玷污你秩序社会之人，并清除他们。挑出他们的外貌、形态与能力的细节，并昭示天下。固定那些试图逃离你所创法律之人，令其面对你的正义。如同任何瘟疫与其携带者，你给出的选择唯有放逐或灭绝。</i>") +
+				p("<i>这便是监视之目的。</i>"),
+		},
+	},
 ];
 
 // ---------------------------------------------------------------- 武器
@@ -865,6 +1139,70 @@ const weapons = [
 			{ name: "未充能", damage: [{ type: "Kinetic", val: "1d6" }], range: [{ type: "Threat", val: 1 }], tags: [tag("tg_reliable", 3)] },
 			{ name: "充能", damage: [{ type: "Explosive", val: "4d6+8" }], range: [{ type: "Threat", val: 3 }], tags: [tag("tg_reliable", 8), tag("tg_knockback", 8)], effect: "以快速动作充能后，在你下一回合开始时生效。" },
 		] },
+	// 布莱「船工」无人机的武器（mount: Drone，布莱本身不能使用）
+	{ id: "mw_ext_crew_sword", name: "船工之剑", mount: "Drone", type: "Melee",
+		damage: [{ type: "Energy", val: 3 }], range: [{ type: "Threat", val: 1 }], tags: [tag("tg_ap")],
+		effect: "船工无人机的近战武器，布莱无法使用。" },
+	{ id: "mw_ext_crew_rifle", name: "船工步枪", mount: "Drone", type: "Rifle",
+		damage: [{ type: "Kinetic", val: 3 }], range: [{ type: "Range", val: 8 }], tags: [tag("tg_reliable", 1)],
+		effect: "船工无人机的远程武器，布莱无法使用。" },
+	{ id: "mw_ext_crew_cannon", name: "船工加农炮", mount: "Drone", type: "Cannon",
+		damage: [{ type: "Explosive", val: 2 }], range: [{ type: "Range", val: 8 }, { type: "Blast", val: 1 }], tags: [tag("tg_arcing"), tag("tg_knockback", 1)],
+		effect: "船工无人机的远程武器，布莱无法使用。" },
+	// 米切尔牌照
+	{ id: "mw_ext_incendiary_grenade_launcher", name: "燃烧榴弹发射器", mount: "Main", type: "Launcher", source: "IPS-N", license: "米切尔", license_level: 1,
+		damage: [{ type: "Explosive", val: 1 }, { type: "Burn", val: 2 }], range: [{ type: "Range", val: 10 }], tags: [tag("tg_knockback", 1)],
+		effect: "若目标被<b>锁定</b>，该武器获得<b>击退2</b>。" },
+	{ id: "mw_ext_cluster_bomb_dispenser", name: "集束炸弹分撒器", mount: "Heavy", type: "Launcher", source: "IPS-N", license: "米切尔", license_level: 1,
+		damage: [{ type: "Explosive", val: "1d6+3" }], range: [{ type: "Range", val: 10 }, { type: "Line", val: 5 }], tags: [tag("tg_loading"), tag("tg_reliable", 3)],
+		effect: "使用该武器进行攻击时，从该武器射程内任何点绘制<b>线形5</b>。攻击结算后，此线形下的区域将变为<b>困难地形</b>，直到下一回合结束。" },
+	{ id: "mw_ext_fast_cycle_missile_rack", name: "快循环导弹支架", mount: "Main", type: "Nexus", source: "IPS-N", license: "米切尔", license_level: 3,
+		damage: [{ type: "Variable", val: "1d6+3" }], range: [{ type: "Range", val: 12 }], tags: [tag("tg_loading"), tag("tg_smart"), tag("tg_seeking")],
+		on_attack: "选择该攻击是造成<b>动能</b>、<b>能量</b>还是<b>爆炸</b>伤害。" },
+	// 幽灵牌照
+	{ id: "mw_ext_chain_spear", name: "链矛", mount: "Main", type: "Melee", source: "HORUS", license: "幽灵", license_level: 1,
+		damage: [{ type: "Kinetic", val: "1d6" }], range: [{ type: "Threat", val: 1 }], tags: [tag("tg_thrown", 5)],
+		on_hit: "目标必须进行<b>机体</b>豁免；失败则对方会被直线拉向你最多 <b>5 空间</b>，若你们二者交战则停止移动。这一移动不会引起反应。" },
+	{ id: "mw_ext_swan_song_lance", name: "“绝唱”归零长矛", mount: "Heavy", type: "Rifle", source: "HORUS", license: "幽灵", license_level: 3,
+		damage: [{ type: "Kinetic", val: "1d6+4" }], range: [{ type: "Range", val: 15 }], tags: [tag("tg_inaccurate")],
+		effect: "若你在使用该武器开火前减少过对盟友角色伤害，取消过对他们的攻击，或引起过一次失误，则它将获得 <b>AP</b> 并失去<b>不准</b>。" },
+	// 哈勃牌照
+	{ id: "mw_ext_ea17_mortar", name: "EA17 特种有效荷载迫击炮", mount: "Superheavy", type: "Launcher", source: "HA", license: "哈勃", license_level: 3,
+		damage: [{ type: "Explosive", val: 1 }, { type: "Burn", val: 8 }], range: [{ type: "Range", val: 15 }, { type: "Blast", val: 2 }],
+		tags: [tag("tg_arcing"), tag("tg_ordnance"), tag("tg_heat_self", 3)],
+		effect: "你可在该武器<b>射程</b>内任何地方放置<b>溅射2</b>区域，代替原本的武器进行正常攻击。该区域视为<b>困难</b>和造成 4 <b>燃烧</b>的<b>危险地形</b>，直到场景结束。" },
+	{ id: "mw_ext_wonderland_cannon", name: "“仙境”神经化学加农炮", mount: "Main", type: "Cannon", source: "HA", license: "哈勃", license_level: 3,
+		damage: [{ type: "Explosive", val: "1d6+2" }], range: [{ type: "Range", val: 12 }], tags: [tag("tg_loading"), tag("tg_knockback", 1)],
+		on_hit: "目标必须进行<b>工程</b>豁免。成功则对方会<b>受损</b>直到下一回合结束。失败则直到下一回合结束前，对方在进行任意攻击前必须掷骰 1d20；结果为 5 或 5 以下的情况，攻击自动失败，其效果和伤害（若有的话）会被否决。" },
+	// 法罗斯牌照
+	{ id: "mw_ext_torrent_harpoon", name: "“激流”弹道捕鲸叉", mount: "Main", type: "Cannon", source: "IPS-N", license: "法罗斯", license_level: 2,
+		damage: [{ type: "Kinetic", val: "2d3" }], range: [{ type: "Range", val: 15 }], tags: [tag("tg_loading"), tag("tg_reliable", 2), tag("tg_knockback", 2)],
+		effect: "若此武器的<b>击退</b>致使你目标与一个物品或地形相撞，则目标将被钉在该物品上。目标<b>固定</b>直到对方用<b>快速动作</b>移除栓钉，并受到 <b>3AP 动能伤害</b>。" },
+	{ id: "mw_ext_bulkhead_auger", name: "舱壁螺钻", mount: "Heavy", type: "Rifle", source: "IPS-N", license: "法罗斯", license_level: 3,
+		damage: [{ type: "Kinetic", val: "1d6+2" }], range: [{ type: "Line", val: 15 }], tags: [tag("tg_ap"), tag("tg_knockback", 1), tag("tg_ordnance"), tag("tg_loading")],
+		effect: "在投掷攻击前，该武器对目标区域内的物品和地形造成 <b>20AP 动能伤害</b>。",
+		on_hit: "目标必须通过<b>机体</b>豁免否则<b>伏卧</b>。",
+		on_crit: "豁免失败的目标将<b>离散</b>直到他们下一回合结束。" },
+	// 镰翅蛾牌照
+	{ id: "mw_ext_screaming_rifle", name: "尖啸步枪", mount: "Main", type: "Rifle", source: "SSC", license: "镰翅蛾", license_level: 2,
+		damage: [{ type: "Explosive", val: "1d3+2" }], range: [{ type: "Range", val: 12 }], tags: [tag("tg_accurate"), tag("tg_loading"), tag("tg_heat_self", 1)],
+		on_hit: "你的目标必须通过<b>机体</b>豁免否则<b>离散</b>直到他们下一回合结束。若你的目标<b>离散</b>，该武器造成最大伤害无需掷骰。" },
+	// 羽蛇牌照
+	{ id: "mw_ext_half_life_sun_lens", name: "半衰烈日透镜", mount: "Heavy", type: "CQB", sp: 1, source: "HORUS", license: "羽蛇", license_level: 2,
+		damage: [{ type: "Energy", val: "2d3+2" }], range: [{ type: "Range", val: 8 }, { type: "Cone", val: 3 }, { type: "Threat", val: 3 }], tags: [tag("tg_heat_self", 2)],
+		effect: "该武器对自你上一回合结束以来对你造成伤害的目标额外 <b>+3 燃烧</b>。" },
+	{ id: "mw_ext_corona_outpouring", name: "日冕倾泻", mount: "Main", type: "CQB", source: "HORUS", license: "羽蛇", license_level: 3,
+		damage: [{ type: "Energy", val: 9 }], range: [{ type: "Burst", val: 3 }], tags: [tag("tg_heat_self", 6), tag("tg_limited", 1), tag("tg_unique")],
+		effect: "该武器伤害在你和目标之间每隔 1 空间距离则减少 3 伤害。",
+		on_hit: "角色必须通过<b>工程</b>豁免，否则从承受与所受伤害同等的<b>热度</b>或<b>受扰</b>直到他们下一回合结束任选其一。" },
+	// 为朝内建 / 牌照
+	{ id: "mw_ext_pt3_flare_bow", name: "PT3 耀斑弓", mount: "Main", type: "Rifle",
+		damage: [{ type: "Energy", val: "1d3/充能" }], range: [{ type: "Range", val: 10 }], tags: [tag("tg_overkill")],
+		effect: "该武器的数据取决于它有多少充能；每增加 <b>5 热度</b>，或通过<b>稳住阵脚</b>降温（二者共通；勿要单独记录），此武器就获得 1 充能（上限为 4）。初始为 1 充能，每次攻击后重置为 1 充能。充能在场景切换间持续留存，但在<b>全面维修</b>时失去。",
+		on_hit: "记入每次攻击触发的<b>杀绝</b>标签；在攻击结算后，以你初始目标为中心<b>溅射1</b>内所有角色必须通过<b>敏捷</b>豁免，否则受到等同杀绝触发次数+消耗充能的<b>燃烧</b>，成功减半。你目标在此豁免上自动失败。随后你受到等量的<b>燃烧</b>。" },
+	{ id: "mw_ext_typhoon_ion_channel", name: "台风型离子通道", mount: "Main", type: "Cannon", source: "HA", license: "为朝", license_level: 2,
+		damage: [{ type: "Energy", val: 3 }, { type: "Burn", val: 4 }], range: [{ type: "Range", val: 10 }], tags: [tag("tg_heat_self", 5), tag("tg_arcing")],
+		on_attack: "若你或你的目标正在<b>燃烧</b>，减少攻击代价的 <b>2 热度</b>，若你们二者都在<b>燃烧</b>，则减少 <b>4 热度</b>。" },
 ];
 
 // ---------------------------------------------------------------- 系统
@@ -1054,10 +1392,123 @@ const systems = [
 	{ id: "ms_ext_power_assembly_3", name: "力量总成套组 III", sp: 3, source: "IPS-N", license: "郑", license_level: 3,
 		tags: [tag("tg_full_action")],
 		effect: "当你结束对一个角色的<b>擒拿</b>，可以向任何方向将对方角色推离 5 空间并将其<b>伏卧</b>。该移动可以穿过被其他角色占据的空间，但必须在自由空间落地。所经过的所有角色必须通过<b>机体</b>豁免，否则<b>伏卧</b>。若你的目标与物品或地形碰撞，就会停止其移动，同时受到 1d6 动能伤害，并且必须通过<b>机体</b>豁免，否则<b>晕眩</b>直到对方下一回合结束。" },
+	// 米切尔牌照
+	{ id: "ms_ext_informant_vald", name: "告密者 VALD", type: "Deployable", sp: 2, source: "IPS-N", license: "米切尔", license_level: 2,
+		tags: [tag("tg_unique"), tag("tg_quick_action"), tag("tg_limited", 3)],
+		effect: p("选择一个与你邻接的自由空间与一个目标，该目标可以是你自己，也可以是<b>感应</b>内盟友角色。你将一枚诱饵导弹部署到选定空间，它会立即向你选择的方向移动 5 空间，并在此后你每回合结束时移动。在试图对你目标执行任何敌对行动前，若诱饵在该角色视线内，则对方必须通过<b>系统</b>豁免。失败则动作不会丢失，但无法再以原角色为目标，并相信诱饵是真实直到下一回合结束。") +
+			p("诱饵<b>大小1/2</b>，无法从掩护中获益，具有<b>回避12</b>、<b>电子防御8</b>和 1 HP。若受到<b>热度</b>、伤害或被交战，它就会引爆。若诱饵引爆，致使引爆的角色将被<b>锁定</b>。当场景结束、离开地图，或部署第二个诱饵时，它会在无害化停用。"),
+		deployables: [{ name: "诱饵导弹", type: "Decoy", size: 0.5, hp: 1, evasion: 12, edef: 8, detail: "无法从掩护中获益；受到热度、伤害或被交战时引爆，并使引爆者被锁定。" }] },
+	{ id: "ms_ext_curtain_aem", name: "谢幕 AEM", sp: 3, source: "IPS-N", license: "米切尔", license_level: 2,
+		tags: [tag("tg_unique"), tag("tg_quick_action"), tag("tg_limited", 2), tag("tg_heat_self", 2)],
+		effect: "消耗 1 充能部署定向辐射武器。将<b>溅射2</b>区域安置在<b>射程30</b>内；该区域内所有角色都必须进行<b>工程</b>豁免，否则受到 3 <b>热度</b>并<b>受扰</b>直到下一回合结束。成功则<b>受损</b>而非受扰。角色每场景只能通过这种方式受扰一次。" },
+	{ id: "ms_ext_swordfish_lfcm", name: "矛鱼 LFCM", sp: 4, source: "IPS-N", license: "米切尔", license_level: 3,
+		tags: [tag("tg_unique"), tag("tg_full_action"), tag("tg_limited", 1)],
+		effect: "消耗 1 充能发射一枚远程巡航导弹。将<b>溅射2</b>区域安置在<b>射程100</b>内；该区域内所有角色必须通过<b>敏捷</b>豁免，否则受到 3d6+4 AP 爆炸伤害并<b>伏卧</b>。成功则伤害减半。" },
+	// 幽灵牌照
+	{ id: "ms_ext_anti_surveillance", name: "反网监对策", sp: 2, source: "HORUS", license: "幽灵", license_level: 1,
+		tags: [tag("tg_unique")],
+		effect: "当一个敌方角色对邻近的一个盟友角色施加<b>锁定</b>时，对方必须进行<b>系统</b>豁免；若失败则<b>锁定</b>失效。" },
+	{ id: "ms_ext_needle_and_thread", name: "针与线", sp: 2, source: "HORUS", license: "幽灵", license_level: 2,
+		tags: [tag("tg_unique"), tag("tg_quick_action"), tag("tg_limited", 3)],
+		effect: "消耗 1 充能，给予<b>感应</b>内一个盟友角色 1+毅力<b>护盾</b>。当他们因任意原因失去该<b>护盾</b>时，你可向你选择的方向<b>瞬间移动</b>最多 <b>2 空间</b>。" },
+	{ id: "ms_ext_fallen_mask", name: "堕落面具之训", sp: 2, source: "HORUS", license: "幽灵", license_level: 2,
+		tags: [tag("tg_unique")], bonuses: [{ id: "hp", val: 2 }],
+		effect: "你获得 <b>+2 HP</b>。在任何轮结束时，若你因减少对盟友角色伤害，取消对他们的攻击，或引起一次失误而自身受到伤害，则恢复与你毅力等同的 <b>HP</b>。额外 HP 不会超过你的最大值。" },
+	{ id: "ms_ext_unsigned_surrender", name: "拒签投降书", sp: 3, source: "HORUS", license: "幽灵", license_level: 3,
+		tags: [tag("tg_unique"), tag("tg_quick_action"), tag("tg_heat_self", 2)],
+		effect: "在你所站的位置插上一根空洞旗杆，发誓要克服万难坚守阵地。你将<b>固定</b>直到该系统以一个<b>协定</b>停止，并对<b>击退</b>或其他非自愿移动以及<b>伏卧</b>效果<b>免疫</b>。当敌方角色进入你<b>爆发3</b>内，你可立即对他们造成 <b>2AP 能量伤害</b>并迫使他们进行<b>系统</b>豁免；失败则<b>受损</b>直到对方下一回合结束。" },
+	// 哈勃牌照
+	{ id: "ms_ext_cbnrn_sealing", name: "CBNRN 密封技术", sp: 2, source: "HA", license: "哈勃", license_level: 1,
+		tags: [tag("tg_unique")],
+		effect: "你的机甲忽略<b>危险地形</b>。以一个<b>协定</b>，你可完全密封机甲，你会<b>受损</b>但获得<b>燃烧抗性</b>直到你下一回合开始。" },
+	{ id: "ms_ext_gas_grenade_dispenser", name: "瓦斯榴弹抛洒器", sp: 2, source: "HA", license: "哈勃", license_level: 2,
+		tags: [tag("tg_unique"), tag("tg_quick_action"), tag("tg_limited", 4)],
+		effect: "以一个<b>快速动作</b>，消耗 1 充能发射一枚气溶胶生化榴弹。在<b>射程10</b>内选择一个自由空间；当一个角色首次穿过或邻近该空间时，对方受到 2 <b>燃烧</b>，并且云会被消耗掉。否则，气体云会在场景结束时消散。" },
+	{ id: "ms_ext_local_sterilization_vent", name: "局部灭菌气口", sp: 3, source: "HA", license: "哈勃", license_level: 2,
+		tags: [tag("tg_protocol"), tag("tg_unique"), tag("tg_heat_self", 2)],
+		effect: "激活该系统时你会<b>缓慢</b>。围绕你的机甲<b>爆发1</b>区域（你不受其影响）变成<b>困难地形</b>，任意进入该区域或在该区域开始回合的敌方角色都会受到 1 <b>燃烧</b>，并在对方下一个回合开始前<b>受损</b>。从该区域外对你进行的攻击会将你视为拥有<b>软性掩护</b>。在你下一回合开始时，该区域消失，你不再<b>缓慢</b>。" },
+	// 法罗斯牌照
+	{ id: "ms_ext_bloodhound_sniffer", name: "寻血猎犬 mk3.3 集群嗅探器", sp: 2, source: "IPS-N", license: "法罗斯", license_level: 1,
+		tags: [tag("tg_unique")],
+		effect: "当视线<b>感应</b>内的一个角色对你或<b>射程3</b>内的盟友角色施加<b>锁定</b>时，掷骰 <b>1d6</b>。结果为 4+则对方被<b>锁定</b>。" },
+	{ id: "ms_ext_thresher_drone", name: "长尾鲨无人机", type: "Drone", sp: 2, source: "IPS-N", license: "法罗斯", license_level: 1,
+		tags: [tag("tg_drone"), tag("tg_quick_action")],
+		effect: "以一个<b>快速动作</b>，你可以将该无人机部署到视线<b>感应</b>内的任意位置。若你如此行事，在你每回合结束后，它会释放<b>爆发1</b>脉冲。受影响区域内所有物品和地形均受到 <b>10AP 爆炸伤害</b>，角色必须通过<b>机体</b>豁免否则<b>伏卧</b>。你可用<b>快速动作</b>召回或重新部署<b>长尾鲨无人机</b>。在被召回或被摧毁前，它一直会处于部署状态直到场景结束。",
+		deployables: [{ name: "长尾鲨无人机", type: "Drone", size: 0.5, hp: 5, evasion: 10, edef: 10, detail: "标签：无人机；对所有伤害具有<b>抗性</b>。" }] },
+	{ id: "ms_ext_jump_drive", name: "跃迁驱动器", sp: 2, source: "IPS-N", license: "法罗斯", license_level: 2,
+		tags: [tag("tg_quick_action")],
+		effect: "选择一个视线<b>射程8</b>内的角色。你获得<b>亚光速抛掷</b>反应直到你下一回合结束。非自愿角色可尝试<b>工程</b>豁免来避免该效果。",
+		actions: [{ name: "亚光速抛掷", activation: "Reaction", trigger: "你选择的角色或其<b>射程3</b>内另一角色结束回合。",
+			detail: "（1 <b>热度</b>（自身））将你所选角色在任意方向移动最多 <b>4 空间</b>。该移动忽略交战与反应。只要目标在你视线内，该反应就可以在 1 轮内多次被触发。" }] },
+	{ id: "ms_ext_boarding_rail", name: "进入导轨", sp: 2, source: "IPS-N", license: "法罗斯", license_level: 3,
+		tags: [tag("tg_quick_action")],
+		effect: "激活该系统时，选择一个方向。你会处于<b>固定</b>状态直到你用<b>快速动作</b>停用它。当它处于激活状态时，任何与你邻近且与你<b>大小</b>相同或更小的盟友角色可以<b>快速动作</b>进入导轨，向选定方向发射 <b>10 空间</b>，或直到他们撞到障碍物。该移动忽略交战和反应。若他们命中另一角色，该角色必须通过<b>机体</b>豁免否则<b>伏卧</b>并受到 <b>1d6 动能伤害</b>。如果他们命中地形或物品，可以选择对其造成 <b>10 动能伤害/大小</b>。若该伤害破坏了地形，则该地形无法阻碍他们移动。" },
+	// 镰翅蛾牌照
+	{ id: "ms_ext_lens_codex", name: "透镜制造法典 v.08", type: "Tech", sp: 2, source: "SSC", license: "镰翅蛾", license_level: 1,
+		tags: [tag("tg_quick_tech"), tag("tg_invade")],
+		effect: "获得以下<b>入侵</b>选项：",
+		actions: [{ name: "空_指针", activation: "Invade", detail: "你的目标在下回合结束前的下次攻击时 <b>+1 难度</b>。若未命中或者对方在下回合时没有进行攻击，他们将在回合结束时<b>晕眩</b>直到他们下回合开始。角色只能被此效果<b>晕眩</b> 1/场景。" },
+			{ name: "栈_溢出", activation: "Invade", detail: "在你目标下回合结束时，受到 <b>1AP 能量伤害</b>，并且你可以在对方<b>射程3</b>内的每个角色（最多 6 个）向任何方向推动 <b>1 空间</b>。" }] },
+	{ id: "ms_ext_sonic_explosives", name: "声波炸药", sp: 2, source: "SSC", license: "镰翅蛾", license_level: 1,
+		tags: [tag("tg_unique"), tag("tg_limited", 2)],
+		effect: "消耗 1 充能获得以下效果之一：" +
+			p("<b>腹语手雷</b>（<i>榴弹，射程5</i>）：受影响角色必须通过<b>敏捷</b>豁免，否则榴弹会附着在他们身上。当附加的角色将<b>射程3</b>以外的所有角色视为<b>隐形</b>，并且无法在该范围之外<b>搜索</b>。他们可用<b>快速动作</b>通过<b>工程</b>检定来移除。") +
+			p("<b>女妖地雷</b>（<i>地雷，爆发2</i>）：受影响区域内的所有角色必须通过<b>机体</b>豁免否则<b>伏卧</b>。在引爆后，该地雷会产生持续的尖叫区域；该区域内的角色只要存在就会<b>离散</b>。该区域一直持续到场景结束，或直到邻近地雷的角色用一个<b>快速动作</b>通过<b>系统</b>对抗检定摧毁它。") },
+	{ id: "ms_ext_point_jet_cluster", name: "点弹射流形簇", sp: 2, source: "SSC", license: "镰翅蛾", license_level: 2,
+		tags: [tag("tg_quick_action")],
+		effect: "在<b>感应</b>内选择最多 3 个自由非相邻空间。对每个空间，选择一个方向；首次经过其中一个空间的角色将向你选择的方向推离 <b>3 空间</b>。非自愿角色可尝试<b>机体</b>豁免来避免该效果。一个既定角色每轮只能激活一个空间。" +
+			p("榴弹、可展开物品或其他<b>大小 1</b> 或更小的松散物品被投掷或部署到一个空间中，在激活或引爆前它们会以同样方式被推动（若它们被另一个角色或物品强迫终止移动则会提前激活或引爆）。一旦某空间被激活，它就会消失，并且所有空间都会在你下一回合结束时消失。") },
+	{ id: "ms_ext_insight_proto_mind", name: "“洞察”原型思维体", type: "AI", sp: 3, source: "SSC", license: "镰翅蛾", license_level: 3,
+		tags: [tag("tg_ai"), tag("tg_unique")],
+		effect: "你获得<b>宇宙之眼快速科技</b>选项。洞察并非完整的 NHP，不会进入层流。",
+		actions: [{ name: "宇宙之眼", activation: "Quick Tech", detail: "（受限 3）获得以下<b>快速科技</b>选项：" +
+			p("<b>阿尔库贝利探针</b>：选择你自身或视线<b>感应</b>内一个角色。他们<b>瞬间移动</b>到在你感应内一个盟友角色邻近的任意自由空间。非自愿角色可尝试<b>系统</b>豁免来避免该效果。") +
+			p("<b>湮没拓扑</b>：选择视线<b>感应</b>内一个<b>溅射2</b>区域。该区域内的所有角色和物品在你下一回合结束前都化为<b>无形</b>。非自愿角色可尝试<b>工程</b>豁免来避免该效果。") }] },
+	{ id: "ms_ext_judas_exploit", name: "犹大漏洞", sp: 2, source: "SSC", license: "镰翅蛾", license_level: 3,
+		tags: [tag("tg_unique"), tag("tg_limited", 2)],
+		effect: "（1/场景）当你使用<b>快速科技</b>选项对单个敌对角色进行<b>科技攻击</b>或迫使他们进行豁免，并且在命中或对方豁免失败时，你可以从该系统中消耗 1 充能，以自由动作对该角色视线<b>感应</b>内一个角色重复该动作。你可继续消耗充能来重复该动作，但一个角色只能被相同选项针对一次。" },
+	// 羽蛇牌照
+	{ id: "ms_ext_obsession_recursion", name: "痴迷.递归（T）", type: "Tech", sp: 2, source: "HORUS", license: "羽蛇", license_level: 1,
+		tags: [tag("tg_quick_tech"), tag("tg_invade")],
+		effect: "获得以下<b>入侵</b>选项：",
+		actions: [{ name: "登台", activation: "Invade", detail: "目标在远离你的移动上需要花费两倍速度（即移动 1 空间需要 2 速度）。他们可以用一个<b>快速动作</b>通过<b>系统</b>豁免来结束该效果。" },
+			{ name: "迷蒙", activation: "Invade", detail: "直到你下一回合开始，每当你的目标对你任意盟友采取动作时，你可以直线向对方移动 <b>2 空间</b>。该移动忽略交战与反应。" }] },
+	{ id: "ms_ext_radiant_plume", name: "辉耀羽流", type: "Tech", sp: 2, source: "HORUS", license: "羽蛇", license_level: 1,
+		tags: [tag("tg_quick_tech"), tag("tg_heat_self", 1), tag("tg_shield")],
+		effect: "获得以下<b>快速科技</b>选项：",
+		actions: [{ name: "燃烧光轮", activation: "Quick Tech", detail: "在视线<b>感应</b>内指定<b>溅射1</b>。任意敌对角色在该区域内对盟友角色发起攻击时受到 <b>1 热度</b>，并且敌对角色将该区域视为<b>困难地形</b>。该区域将持续到场景结束，或你将再次使用此能力。" }] },
+	{ id: "ms_ext_paladin_defrag", name: "“圣武士”碎片整理子程序", sp: 2, source: "HORUS", license: "羽蛇", license_level: 2,
+		tags: [tag("tg_unique")],
+		effect: "每当你成功<b>入侵</b>敌方角色时，获得 <b>3 护盾</b>。" },
+	{ id: "ms_ext_iridescent_holoscales", name: "虹彩全息鳞", sp: 2, source: "HORUS", license: "羽蛇", license_level: 3,
+		tags: [tag("tg_unique"), tag("tg_quick_action"), tag("tg_limited", 2)],
+		effect: "直到你下一个回合开始，在你视线内的敌对角色不直接朝向你移动的每空间就会使他们受到 <b>1 热度</b>，直接朝向你移动的每空间降低他们 <b>1 热度</b>。" },
+	// 为朝牌照
+	{ id: "ms_ext_flame_retardant_unit", name: "阻燃性单元", sp: 1, source: "HA", license: "为朝", license_level: 1,
+		tags: [tag("tg_unique"), tag("tg_limited", 2)],
+		effect: "当你<b>稳住阵脚</b>时，你可以从该系统中消耗 1 充能来清除当前影响你的所有<b>燃烧</b>。当你如此行事时，你可以<b>飞行</b>等同以此法清除<b>燃烧</b>一半的空间。该移动忽略交战与反应。" },
+	{ id: "ms_ext_ionizing_explosives", name: "电离炸药", sp: 2, source: "HA", license: "为朝", license_level: 1,
+		tags: [tag("tg_unique"), tag("tg_limited", 2)],
+		effect: "消耗 1 充能获得以下效果之一：" +
+			p("<b>偏光榴弹</b>（<i>榴弹，射程5，溅射2</i>）：受影响区域的所有角色必须通过<b>机体</b>豁免否则受到 <b>2 能量伤害</b>，并被拉到尽可能靠近溅射中心的位置。") +
+			p("<b>放电地雷</b>（<i>地雷，爆发2</i>）：在场景结束前，受影响区域会变为<b>困难地形</b>，在该区域开始回合的机甲和角色必须通过<b>工程</b>豁免否则<b>缓慢</b>直到他们回合结束。此外，每回合该区域内的角色第一次受到<b>能量伤害</b>或<b>燃烧</b>时，该区域内所有角色都会受到 <b>1AP 能量伤害</b>。") },
+	{ id: "ms_ext_em_induction_welder", name: "电磁感应焊机", sp: 2, source: "HA", license: "为朝", license_level: 2,
+		tags: [tag("tg_quick_action"), tag("tg_heat_self", 3)],
+		effect: "选择<b>射程5</b>内的间隔不超过 <b>3 空间</b>并且二者之间线路畅通的两个角色。较小角色（若二者大小相同则由你选择的角色）必须通过<b>机体</b>豁免否则被直接拉向另一个角色直至邻近。然后它们焊接在一起；它们不能再相对于彼此移动或离开邻近。若其中一个角色比另一个大，则较小角色在它们焊接时被<b>固定</b>；否则，二者在移动时都会被拉回到另一角色旁。若其中一个角色被摧毁，或他们中的任意一个角色用<b>快速动作</b>通过了<b>机体</b>豁免，则该效果就会结束。" },
+	{ id: "ms_ext_evaporative_cooling_plating", name: "蒸发冷却镀层", sp: 4, source: "HA", license: "为朝", license_level: 3,
+		tags: [tag("tg_unique"), tag("tg_danger_zone"), tag("tg_reaction")],
+		effect: "减少所有你从外部来源受到的 <b>1 热度</b>，最低为 <b>1 热度</b>。1/轮，当你处于<b>超温危域</b>时，你可用反应激活该系统，当你受到任何<b>热度</b>时，首先受到 <b>1d6 燃烧</b>，然后降低等同你当前<b>燃烧</b>的<b>热度</b>。" },
+	{ id: "ms_ext_offering_arrow", name: "祭品电箭", sp: 2, source: "HA", license: "为朝", license_level: 3,
+		tags: [tag("tg_unique"), tag("tg_heat_self", 3), tag("tg_quick_action"), tag("tg_limited", 1), tag("tg_danger_zone")],
+		effect: "该系统只有在<b>超温危域</b>才能使用。" +
+			p("消耗 1 充能并在<b>射程5</b>内选择一个角色，用电离充能标记他们。在他们下一回合结束时，他们会被一道能量箭击中。造成等同你当前<b>热度</b>的<b>燃烧</b>，忽略<b>抗性</b>或其他减免减少。然后你的目标及其邻近所有角色将受到等同你当前<b>燃烧</b>的<b>燃烧</b>。邻近物品和地形会受到 <b>10AP 能量伤害</b>。") },
 ];
 
 // ---------------------------------------------------------------- 武器改装
 const mods = [
+	{ id: "wm_ext_seek_devour_canister", name: "寻索/吞噬密罐弹", sp: 2, source: "HA", license: "哈勃", license_level: 1,
+		allowed_types: ["Launcher", "CQB", "Cannon"], allowed_sizes: ["Main", "Heavy", "Superheavy"], tags: [tag("tg_mod"), tag("tg_unique"), tag("tg_limited", 3)],
+		effect: "该模组适用于<b>主、重、超重发射器</b>、<b>CQB</b>、<b>大炮</b>。该模组不适用于范围武器。当你使用该模组所适用的武器进行攻击时，你可发射一枚空爆病毒罐而非正常攻击。在攻击目标创造一个<b>爆发1</b>区域；在攻击结算之前，该目标与该区域内所有敌方角色都会受到 2 <b>燃烧</b>，但攻击本身造成一半伤害、<b>热度</b>和<b>燃烧</b>。" },
 	{ id: "wm_ext_hypermass_mod", name: "超巨质量模组", sp: 1, source: "IPS-N", license: "卡利班", license_level: 1,
 		allowed_types: ["CQB", "Cannon", "Melee"], tags: [tag("tg_unique")], stack_tags: true,
 		added_tags: [tag("tg_overkill"), tag("tg_knockback", 1)],

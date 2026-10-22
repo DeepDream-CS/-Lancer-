@@ -35,7 +35,7 @@ const MOUNT_SLOTS = {
 	"Superheavy": [["Superheavy"]], // 扩展核心奖励「超重挂载」
 };
 const T = {
-	mount: { "Main": "主", "Aux": "副", "Flex": "灵活", "Main/Aux": "主/副", "Aux/Aux": "副/副", "Heavy": "重型", "Integrated": "内建", "Auxiliary": "副", "Superheavy": "超重型", "Ship-class": "舰载级" },
+	mount: { "Main": "主", "Aux": "副", "Flex": "灵活", "Main/Aux": "主/副", "Aux/Aux": "副/副", "Heavy": "重型", "Integrated": "内建", "Auxiliary": "副", "Superheavy": "超重型", "Ship-class": "舰载级", "Drone": "无人机" },
 	wtype: { "Melee": "近战", "CQB": "CQB", "Rifle": "步枪", "Launcher": "发射器", "Cannon": "大炮", "Nexus": "巢房", "Special": "特殊", "Spool Weapon": "卷绕武器" },
 	dmg: { "Kinetic": "动能", "Explosive": "爆炸", "Energy": "能量", "Heat": "热度", "Burn": "燃烧", "Variable": "可变" },
 	range: { "Range": "射程", "Threat": "威胁", "Blast": "溅射", "Burst": "爆发", "Line": "线形", "Cone": "锥形", "Thrown": "投掷" },
