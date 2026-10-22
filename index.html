@@ -15,6 +15,7 @@
 		<button data-act="newChar">新建</button>
 		<button data-act="toWizard" title="用引导式流程检查/修改当前角色">引导车卡</button>
 		<button data-ui="openGlossary" title="查询规则术语">术语库</button>
+		<button data-ui="openWeaponTable" title="查看全部机甲武器">武器表</button>
 		<details class="character-menu" id="characterMenu"><summary>角色管理</summary><div class="character-menu-panel">
 			<button data-act="importJson">导入角色 JSON</button>
 			<button data-act="exportAll">备份全部角色</button>
@@ -40,6 +41,11 @@
 	<label class="search-field"><span>查找术语</span><input type="search" data-ui="glossarySearch" placeholder="术语名称或说明中的关键词"></label>
 	<div class="glossary-cats"></div><p class="muted glossary-count" role="status"></p>
 	<div class="glossary-list"></div>
+</aside>
+<aside id="weaponTable" class="weapon-table" hidden aria-label="武器表">
+	<div class="glossary-top"><h2>武器表</h2><button data-ui="closeWeaponTable" aria-label="关闭武器表">✕</button></div>
+	<div class="catalog-toolbar wt-toolbar"><label class="search-field"><span>查找武器</span><input type="search" data-wt="q" placeholder="名称、效果、标签或牌照"></label><div class="wt-filters"></div><button data-ui="resetWeaponTable">重置</button><span class="muted wt-count" role="status"></span></div>
+	<div class="wt-scroll"><table class="wt-table"><thead><tr><th>武器</th><th>来源</th><th>尺寸</th><th>类型</th><th>射程</th><th>伤害</th><th>标签</th><th>SP</th><th>效果</th></tr></thead><tbody class="wt-body"></tbody></table></div>
 </aside>
 <footer class="foot">
 	中文译名修订依据：用户提供的《枪骑兵》核心规则书 v3.5（<a href="TRANSLATION-V35.md" target="_blank">修订对照表</a>）。

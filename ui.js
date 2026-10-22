@@ -267,3 +267,73 @@ document.addEventListener('click', e => {
   if (c) { glossaryState.cat = c.dataset.gcat; renderGlossary(); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('glossary')?.hidden) closeGlossary(); });
+
+// ---------- 武器表（全部机甲武器，效果直接列出，不做术语悬停） ----------
+const weaponTableState = { q: '', mount: '', type: '', src: '', avail: false };
+// 武器来源：厂商牌照 / GMS / 天赋 / 骨架内建
+function weaponOrigin(w) {
+  if (w.talent_item) return { key: 'talent', text: `天赋：${plain('talent', TALENTS[w.talent_id]) || ''}` };
+  if (!w.source) {
+    const f = D.frames.find(f => [...(f.core_system?.integrated || []), ...f.traits.flatMap(t => t.integrated || [])].includes(w.id));
+    return { key: 'integrated', text: `内建：${f ? frameName(f) : '骨架'}` };
+  }
+  if (w.source === 'GMS' && (!w.license || w.license === 'GMS')) return { key: 'GMS', text: 'GMS' };
+  return { key: w.source, text: `${w.source} · ${Z.frames[nk(w.license)] || w.license} ${['', 'I', 'II', 'III'][w.license_level] || ''}` };
+}
+function weaponEffectHtml(w) {
+  let h = '';
+  if (w.effect) h += `<p>${w.effect}</p>`;
+  if (w.on_attack) h += `<p><b>攻击时：</b>${txt(w.on_attack)}</p>`;
+  if (w.on_hit) h += `<p><b>命中时：</b>${txt(w.on_hit)}</p>`;
+  if (w.on_crit) h += `<p><b>会心一击时：</b>${txt(w.on_crit)}</p>`;
+  for (const pf of w.profiles || []) h += `<div class="wt-profile"><b>${esc(pf.name || '')}</b>：${esc([rngText(pf.range || w.range), dmgText(pf.damage || w.damage), tagsPlain(pf.tags)].filter(Boolean).join(' · '))}${pf.effect ? `<p>${pf.effect}</p>` : ''}${pf.on_hit ? `<p><b>命中时：</b>${txt(pf.on_hit)}</p>` : ''}${pf.on_crit ? `<p><b>会心一击时：</b>${txt(pf.on_crit)}</p>` : ''}${pf.on_attack ? `<p><b>攻击时：</b>${txt(pf.on_attack)}</p>` : ''}</div>`;
+  h += actsHtml(w);
+  return h || '<span class="muted">—</span>';
+}
+function weaponTableMatches(w, p) {
+  const s = weaponTableState, o = weaponOrigin(w);
+  if (s.mount && w.mount !== s.mount) return false;
+  if (s.type && w.type !== s.type) return false;
+  if (s.src === 'ext' ? !w.ext : s.src === 'core' ? w.ext : s.src && o.key !== s.src) return false;
+  if (s.avail && !(w.source ? itemAvailable(p, w) : true)) return false;
+  const q = s.q.trim().toLocaleLowerCase();
+  return !q || `${plain('item', w)} ${w.name} ${o.text} ${T.wtype[w.type] || ''} ${stripHtml(weaponEffectHtml(w))} ${tagsPlain(w.tags)}`.toLocaleLowerCase().includes(q);
+}
+function renderWeaponTable() {
+  const box = document.getElementById('weaponTable');
+  if (!box?.querySelector) return;
+  const p = P(), s = weaponTableState;
+  const mounts = ['Auxiliary', 'Main', 'Heavy', 'Superheavy', 'Ship-class'], types = [...new Set(D.weapons.map(w => w.type))];
+  const sel = (key, cur, opts) => `<label class="filter-field"><span>${{ mount: '尺寸', type: '类型', src: '来源' }[key]}</span><select data-wt="${key}">${opts.map(([v, t]) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
+  box.querySelector('.wt-filters').innerHTML =
+    sel('mount', s.mount, [['', '全部尺寸'], ...mounts.map(m => [m, T.mount[m] || m])]) +
+    sel('type', s.type, [['', '全部类型'], ...types.map(t => [t, T.wtype[t] || (t === '???' ? '特殊' : t)])]) +
+    sel('src', s.src, [['', '全部来源'], ['GMS', 'GMS（无需牌照）'], ...MAKERS.slice(1).map(m => [m, makerName(m)]), ['talent', '天赋'], ['integrated', '骨架内建'], ['core', '核心规则书'], ['ext', '扩展']]) +
+    `<label class="chk"><input type="checkbox" data-wt="avail" ${s.avail ? 'checked' : ''}>只看当前角色可用</label>`;
+  const order = ['GMS', ...MAKERS.slice(1), 'talent', 'integrated'];
+  const rows = D.weapons.filter(w => weaponTableMatches(w, p)).sort((a, b) => {
+    const oa = weaponOrigin(a), ob = weaponOrigin(b);
+    return order.indexOf(oa.key) - order.indexOf(ob.key) || oa.text.localeCompare(ob.text, 'zh') || (a.license_level || 0) - (b.license_level || 0) || mounts.indexOf(a.mount) - mounts.indexOf(b.mount);
+  });
+  box.querySelector('.wt-count').textContent = `${rows.length} / ${D.weapons.length} 件武器`;
+  box.querySelector('.wt-body').innerHTML = rows.length ? rows.map(w => {
+    const o = weaponOrigin(w), ok = !w.source || itemAvailable(p, w);
+    return `<tr class="${ok ? '' : 'locked'}"><td class="wt-name"><b>${esc(plain('item', w))}</b>${extBadge(w)}${plain('item', w) !== w.name ? `<small>${esc(w.name)}</small>` : ''}</td>
+      <td>${esc(o.text)}</td><td>${esc(T.mount[w.mount] || w.mount)}</td><td>${esc(T.wtype[w.type] || (w.type === '???' ? '特殊' : w.type))}</td>
+      <td>${esc(rngText(w.range || w.profiles?.[0]?.range)) || '—'}</td><td>${esc(dmgText(w.damage || w.profiles?.[0]?.damage)) || '—'}</td><td>${esc(tagsPlain(w.tags?.length ? w.tags : w.profiles?.[0]?.tags)) || '—'}</td><td>${w.sp || '—'}</td>
+      <td class="wt-effect">${weaponEffectHtml(w)}</td></tr>`;
+  }).join('') : '<tr><td colspan="9" class="empty-state">没有符合条件的武器。</td></tr>';
+}
+function openWeaponTable() { const box = document.getElementById('weaponTable'); if (!box) return; box.hidden = false; renderWeaponTable(); box.querySelector('[data-wt="q"]').focus(); }
+function closeWeaponTable() { const box = document.getElementById('weaponTable'); if (box) box.hidden = true; }
+document.addEventListener('input', e => { if (e.target.dataset?.wt === 'q') { weaponTableState.q = e.target.value; renderWeaponTable(); } });
+document.addEventListener('change', e => {
+  const k = e.target.dataset?.wt;
+  if (k && k !== 'q') { weaponTableState[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; renderWeaponTable(); }
+});
+document.addEventListener('click', e => {
+  if (e.target.closest?.('[data-ui="openWeaponTable"]')) openWeaponTable();
+  if (e.target.closest?.('[data-ui="closeWeaponTable"]')) closeWeaponTable();
+  if (e.target.closest?.('[data-ui="resetWeaponTable"]')) { Object.assign(weaponTableState, { q: '', mount: '', type: '', src: '', avail: false }); document.querySelector('[data-wt="q"]').value = ''; renderWeaponTable(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('weaponTable')?.hidden) closeWeaponTable(); });
