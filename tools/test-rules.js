@@ -8,7 +8,7 @@ function runtime(saved) {
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     document:{body:el(),addEventListener(){},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);},querySelectorAll(){return[];}},
     window:{scrollTo(){}},navigator:{},confirm:()=>true});
-  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','ui.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
+  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','glossary.js','ui.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
   return code=>vm.runInContext(code,ctx);
 }
 const run=runtime(); let passed=0;
@@ -70,6 +70,14 @@ test('Frame filter: maker, role, source, unlocked and search',()=>{
   run("uiState.frame={q:'',maker:'',role:'',src:'',unlocked:false}");
 });
 test('License contents list gear for ranks I-III, incl. expansion and variants',()=>assert(run("p=fixture(2);p.licenses={mf_blackbeard:1};const h=licenseContents(p,FRAMES.mf_blackbeard),g=licenseContents(p,FRAMES.mf_ext_gilgamesh);h.includes('I 级 · 已解锁')&&!h.includes('II 级 · 已解锁')&&h.includes('因帕卡伊')&&h.includes(plain('item',WEAPONS.mw_chain_axe))&&g.includes('军团巢房')&&g.includes('吉尔伽美什骨架')")));
+test('Glossary: tags merged, ambiguous words not tagged',()=>{
+  const terms=s=>run("(()=>{const G=getGlossary(),out=[];G.re.lastIndex=0;let m;const s="+JSON.stringify(s)+";while((m=G.re.exec(s))){const i=G.byIdx[m.findIndex((x,k)=>k>0&&x!==undefined)-1];if(i>=0)out.push(G.list[i].term);}return out.join()})()");
+  assert(run("getGlossary().list.length")>100);
+  assert(run("getGlossary().list.some(g=>g.term==='受限'&&g.def.includes('标签「受限X」'))"));
+  assert.equal(terms("必须通过机体豁免，否则受到 2 热度并受损；反应堆过热；受限3 系统"),"机体,豁免,热度,受损,过热,受限");
+  assert.equal(terms("安装系统需要 SP，热度上限 6"),"SP,热度上限");
+  assert(terms("无形").includes("无形")&&run("getGlossary().list.find(g=>g.term==='无形').cat")==='扩展规则');
+});
 test('Gilgamesh adds +1 limited charge',()=>assert.equal(run("p=fixture(2,'mf_ext_gilgamesh');m=p.mechs[0];p.hase.eng=2;limitedTags([{id:'tg_limited',val:3}],p,m)[0].val"),5));
 test('Iconoclast NHP outside AI cap; expansion talents have 3 ranks',()=>assert(run("p=fixture();p.talents={t_ext_iconoclast:1};m=p.mechs[0];m.systems=['ms_ext_unstable_nhp','ms_comp_con_class_assistant_unit'];itemAvailable(p,SYSTEMS.ms_ext_unstable_nhp)&&!loadoutChecks(p,m).some(c=>c[1].includes('AI'))&&D.talents.filter(t=>t.ext).every(t=>t.ranks.length===3&&Z.talents[t.name].ranks.every(r=>r.html))&&normalizePilot({talents:{t_ext_iconoclast:3,t_ext_sysop:2}},[]).talents.t_ext_iconoclast===3")));
 test('Superheavy Mounting adds a superheavy mount below 3 mounts',()=>assert(run("p=fixture(3,'mf_ext_kidd');p.coreBonuses=['cb_ext_superheavy_mounting'];m=p.mechs[0];const ms=mountsOf(p,m);ms.some(x=>x.key==='sh'&&x.type==='Superheavy')&&(p.mechs[0]=blankMech(EVEREST),!mountsOf(p,p.mechs[0]).some(x=>x.key==='sh'))")));

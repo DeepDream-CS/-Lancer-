@@ -109,6 +109,7 @@ function enhanceUI() {
   app.querySelectorAll('[data-act="delSys"]').forEach(el=>el.setAttribute('aria-label','移除系统 '+el.closest('.list-item').querySelector('.li-title').textContent));
   app.querySelectorAll('[data-act="delTrig"]').forEach(el=>el.setAttribute('aria-label',`移除触发 ${+el.dataset.arg+1}`));
   filterTalents(); filterSystems(); filterFrames();
+  highlightTerms(app);
 }
 document.addEventListener('input',e=>{
   if(e.target.dataset.ui==='talentSearch'){uiState.talentQuery=e.target.value;filterTalents();}
@@ -140,3 +141,114 @@ window.addEventListener?.('beforeprint',()=>{
   printClosed.forEach(el=>el.open=true);
 });
 window.addEventListener?.('afterprint',()=>{printClosed.forEach(el=>el.open=false);printClosed=[];});
+
+// ---------- 术语库与术语悬停说明 ----------
+// 术语 = glossary.js 的手写术语 + 全部标签（D.tags）+ 扩展规则（D.ext_rules）。
+// 首次使用时才建立（esc 等函数定义在之后载入的 app.js 里）。
+let glossaryCache = null;
+function getGlossary() {
+  if (glossaryCache) return glossaryCache;
+  if (typeof GLOSSARY_SRC === 'undefined') return (glossaryCache = { list: [], re: null, byIdx: [], cats: [] });
+  const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const list = [], patterns = [], byTerm = {};
+  const add = (entry, pats) => { const i = list.push(entry) - 1; pats.forEach(src => patterns.push({ src, i })); return entry; };
+  for (const g of GLOSSARY_SRC) {
+    if (g.stop) { patterns.push({ src: escRe(g.t), i: -1 }); continue; } // 多义词：匹配但不标记
+    byTerm[g.t] = add({ term: g.t, cat: g.cat, def: g.d, alias: g.a || [] }, g.re || [g.t, ...(g.a || [])].map(escRe));
+  }
+  // 扩展规则：替换占位说明
+  for (const r of D.ext_rules || []) {
+    const t = r.term === '变体' ? '变体骨架' : r.term;
+    if (byTerm[t]) { byTerm[t].def = r.html; byTerm[t].cat = '扩展规则'; }
+    else byTerm[t] = add({ term: t, cat: '扩展规则', def: r.html, alias: [] }, [escRe(t)]);
+  }
+  // 标签：与手写术语同名时并入说明，否则单独成条
+  const skip = /^tg_(npc_|set_|pilot_weapon|gear|no_cascade|irreducible|recharge|range|modded|exotic|archaic|personal_armor|sidearm)/;
+  for (const t of D.tags) {
+    if (skip.test(t.id) || !t.name) continue;
+    const shown = t.name.replace(/\{VAL\}/g, 'X'), key = t.name.replace(/\{VAL\}/g, '').replace(/（AP）$/, '').trim();
+    const pat = escRe(t.name).replace(/\\\{VAL\\\}/g, '\\d*');
+    const desc = esc(String(t.description || '').replace(/\{VAL\}/g, 'X'));
+    if (byTerm[key]) { byTerm[key].def += `<p class="muted">标签「${esc(shown)}」：${desc}</p>`; patterns.push({ src: pat, i: list.indexOf(byTerm[key]) }); }
+    else byTerm[key] = add({ term: shown, cat: '标签', def: desc, alias: [] }, [pat]);
+  }
+  // 长的写法优先（「热度上限」先于「热度」）
+  patterns.sort((a, b) => b.src.length - a.src.length);
+  return (glossaryCache = { list, re: new RegExp(patterns.map(p => `(${p.src})`).join('|'), 'g'), byIdx: patterns.map(p => p.i), cats: [...new Set(list.map(g => g.cat))] });
+}
+// 不在这些位置标记术语：表单控件、按钮、标题、名称等
+const TERM_SKIP = 'select,option,textarea,input,button,script,style,summary,h1,h2,h3,h4,h5,a,label,.term,.tag,.stepper,.li-title,.blk-h,.mount-h,.rank-h,.lic-head,.lic-rank-h,.mfr,.gear-label,.pick b,.eyebrow,.glossary';
+function highlightTerms(root) {
+  if (typeof document.createTreeWalker !== 'function' || !root?.querySelectorAll) return;
+  const G = getGlossary();
+  if (!G.re) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.trim() && !n.parentElement?.closest(TERM_SKIP) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const node of nodes) {
+    const text = node.nodeValue;
+    G.re.lastIndex = 0;
+    let m, last = 0, frag = null;
+    while ((m = G.re.exec(text))) {
+      const idx = G.byIdx[m.findIndex((x, k) => k > 0 && x !== undefined) - 1];
+      if (idx < 0) continue; // 多义词，跳过
+      frag = frag || document.createDocumentFragment();
+      frag.append(text.slice(last, m.index));
+      const span = document.createElement('span');
+      span.className = 'term'; span.dataset.term = idx; span.textContent = m[0];
+      frag.append(span); last = m.index + m[0].length;
+    }
+    if (frag) { frag.append(text.slice(last)); node.replaceWith(frag); }
+  }
+}
+// 悬停说明
+function showTermTip(el) {
+  const g = getGlossary().list[+el.dataset.term];
+  if (!g) return;
+  let tip = document.getElementById('termTip');
+  if (!tip) { tip = document.createElement('div'); tip.id = 'termTip'; tip.className = 'term-tip'; tip.setAttribute('role', 'tooltip'); document.body.append(tip); }
+  tip.innerHTML = `<div class="term-tip-h"><b>${esc(g.term)}</b><span class="tag">${esc(g.cat)}</span></div><div class="term-tip-d">${g.def}</div><div class="term-tip-f">点击术语可在术语库中查看</div>`;
+  tip.hidden = false;
+  const r = el.getBoundingClientRect(), w = Math.min(340, innerWidth - 16);
+  tip.style.width = w + 'px';
+  tip.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  const h = tip.offsetHeight;
+  tip.style.top = (r.bottom + 8 + h > innerHeight - 8 ? Math.max(8, r.top - h - 8) : r.bottom + 8) + 'px';
+}
+const hideTermTip = () => { const tip = document.getElementById('termTip'); if (tip) tip.hidden = true; };
+document.addEventListener('mouseover', e => { const t = e.target.closest?.('.term'); if (t) showTermTip(t); });
+document.addEventListener('mouseout', e => { if (e.target.closest?.('.term') && !e.relatedTarget?.closest?.('.term')) hideTermTip(); });
+document.addEventListener('scroll', hideTermTip, true);
+// 术语库面板
+const glossaryState = { q: '', cat: '' };
+function renderGlossary(focus) {
+  const box = document.getElementById('glossary');
+  if (!box?.querySelector) return;
+  const G = getGlossary(), q = glossaryState.q.trim().toLocaleLowerCase();
+  const items = G.list.map((g, i) => ({ g, i })).filter(({ g }) => (!glossaryState.cat || g.cat === glossaryState.cat) &&
+    (!q || `${g.term} ${g.alias.join(' ')} ${stripHtml(g.def)}`.toLocaleLowerCase().includes(q)));
+  box.querySelector('.glossary-cats').innerHTML = ['', ...G.cats].map(c => `<button data-gcat="${esc(c)}" class="${glossaryState.cat === c ? 'on' : ''}">${esc(c || '全部')}</button>`).join('');
+  box.querySelector('.glossary-count').textContent = `${items.length} / ${G.list.length} 条`;
+  box.querySelector('.glossary-list').innerHTML = items.length ? items.map(({ g, i }) => `<div class="glossary-item" id="g-${i}"><div class="glossary-h"><b>${esc(g.term)}</b>${g.alias.length ? ` <small>${esc(g.alias.join('、'))}</small>` : ''}<span class="tag">${esc(g.cat)}</span></div><div class="glossary-d">${g.def}</div></div>`).join('') : '<p class="empty-state">没有匹配的术语。</p>';
+  if (focus != null) { const el = document.getElementById('g-' + focus); if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); } }
+}
+function openGlossary(focus) {
+  const box = document.getElementById('glossary');
+  if (!box) return;
+  const input = box.querySelector('[data-ui="glossarySearch"]');
+  if (focus != null) { glossaryState.q = ''; glossaryState.cat = ''; input.value = ''; }
+  box.hidden = false; document.body.classList.add('glossary-open');
+  renderGlossary(focus);
+  if (focus == null) input.focus();
+}
+function closeGlossary() { const box = document.getElementById('glossary'); if (box) { box.hidden = true; document.body.classList.remove('glossary-open'); } }
+document.addEventListener('input', e => { if (e.target.dataset?.ui === 'glossarySearch') { glossaryState.q = e.target.value; renderGlossary(); } });
+document.addEventListener('click', e => {
+  const t = e.target.closest?.('.term');
+  if (t && !t.closest('[data-wiz],[data-act],button,a,summary,label,select')) { hideTermTip(); openGlossary(+t.dataset.term); return; }
+  if (e.target.closest?.('[data-ui="openGlossary"]')) openGlossary();
+  if (e.target.closest?.('[data-ui="closeGlossary"]')) closeGlossary();
+  const c = e.target.closest?.('[data-gcat]');
+  if (c) { glossaryState.cat = c.dataset.gcat; renderGlossary(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('glossary')?.hidden) closeGlossary(); });

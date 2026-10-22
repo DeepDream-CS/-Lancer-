@@ -14,6 +14,7 @@
 		<select id="charSelect" title="切换角色" aria-label="切换角色"></select>
 		<button data-act="newChar">新建</button>
 		<button data-act="toWizard" title="用引导式流程检查/修改当前角色">引导车卡</button>
+		<button data-ui="openGlossary" title="查询规则术语">术语库</button>
 		<details class="character-menu" id="characterMenu"><summary>角色管理</summary><div class="character-menu-panel">
 			<button data-act="importJson">导入角色 JSON</button>
 			<button data-act="exportAll">备份全部角色</button>
@@ -34,6 +35,12 @@
 <div id="notice"></div>
 <main id="app" tabindex="-1"></main>
 <div id="modal"></div>
+<aside id="glossary" class="glossary" hidden aria-label="术语库">
+	<div class="glossary-top"><h2>术语库</h2><button data-ui="closeGlossary" aria-label="关闭术语库">✕</button></div>
+	<label class="search-field"><span>查找术语</span><input type="search" data-ui="glossarySearch" placeholder="术语名称或说明中的关键词"></label>
+	<div class="glossary-cats"></div><p class="muted glossary-count" role="status"></p>
+	<div class="glossary-list"></div>
+</aside>
 <footer class="foot">
 	中文译名修订依据：用户提供的《枪骑兵》核心规则书 v3.5（<a href="TRANSLATION-V35.md" target="_blank">修订对照表</a>）。
 	规则文本：<a href="https://reno-lam.github.io/Lancer-Free-Version/" target="_blank">Lancer 免费版繁中规则站</a>；数值数据：<a href="https://github.com/massif-press/lancer-data" target="_blank">massif-press/lancer-data</a>（COMP/CON 开源数据）。角色存在浏览器本地（localStorage），换电脑请用导出 JSON。
@@ -43,6 +50,7 @@
 <script src="wizard.js"></script>
 <script src="cardexport.js"></script>
 <script src="rules.js"></script>
+<script src="glossary.js"></script>
 <script src="ui.js"></script>
 <script src="app.js"></script>
 </body>
