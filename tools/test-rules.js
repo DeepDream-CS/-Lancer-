@@ -79,7 +79,13 @@ test('Glossary: tags merged, ambiguous words not tagged',()=>{
   // 字面意义不标记（自检发现的误标）
   assert.equal(terms("强化你的飞行系统，用于快速换位"),"飞行");
   assert.equal(terms("当你强化一个盟友角色时"),"强化");
-  assert.equal(terms("侍从级NHP，压抑恐惧和其他强烈反应"),"");
+  assert.equal(terms("侍从级NHP，压抑恐惧和其他强烈反应"),"NHP");
+  assert.equal(terms("层流、崩溃、级联、Cascade"),"层流,层流,层流,层流");
+  assert.equal(terms("COMP/CON、NHP、开机"),"伙伴/礼宾单元,NHP,开机");
+  assert.equal(terms("XNHPY"),"");
+  assert(run("getGlossary().list.some(g=>g.term==='层流'&&g.alias.includes('崩溃')&&g.def.includes('1d20'))"));
+  assert(run("getGlossary().list.find(g=>g.term==='超限').def.includes('仅全面维修重置次数')"));
+  assert(run("!getGlossary().list.find(g=>g.term==='AI').def.includes('协定把控制权交给AI或收回')"));
   assert.equal(terms("超过热度上限时"),"热度上限");
   assert.equal(terms("兰开斯特是最可靠、做工最好的机甲；其独特造型；无限宽广"),"");
   assert.equal(terms("该武器获得可靠2、不准，独特"),"可靠X,不准X,独特");

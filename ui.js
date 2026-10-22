@@ -179,7 +179,8 @@ function getGlossary() {
     const desc = esc(String(t.description || '').replace(/\{VAL\}/g, 'X'));
     const own = byTerm[key];
     if (own) {
-      own.def += `<p class="muted">标签「${esc(shown)}」：${desc}</p>`;
+      // Reviewed definitions may replace an obsolete tag summary instead of contradicting it.
+      if (!GLOSSARY_SRC.find(g => g.t === key)?.tagOverride) own.def += `<p class="muted">标签「${esc(shown)}」：${desc}</p>`;
       // 手写术语有自己的上下文规则时，只补上「名称+数字」的写法，不再加入宽松的字面匹配
       const extra = GLOSSARY_SRC.find(g => g.t === key)?.re ? (hasVal ? pats.slice(0, 1) : []) : pats;
       extra.forEach(src => patterns.push({ src, i: list.indexOf(own) }));
