@@ -11,7 +11,7 @@ const FRAMES = by(D.frames), WEAPONS = by(D.weapons), SYSTEMS = by(D.systems), M
 const CBS = by(D.core_bonuses), TALENTS = by(D.talents), GEAR = by(D.pilot_gear), SKILLS = by(D.skills);
 const BGS = by(D.backgrounds), TAGS = by(D.tags);
 const FRAME_BY_NAME = Object.fromEntries(D.frames.map(f => [nk(f.name).toLowerCase(), f]));
-const MAKERS = ["GMS", "IPS-N", "SSC", "HORUS", "HA"];
+const MAKERS = D.manufacturers.map(m => m.id);
 const MAKER_COLOR = Object.fromEntries(D.manufacturers.map(m => [m.id, m.color]));
 const EVEREST = "mf_standard_pattern_i_everest";
 
@@ -932,3 +932,4 @@ document.addEventListener("drop", e => {
 });
 
 render();
+

@@ -212,6 +212,7 @@ function mergeExpansion(d) {
 	const X = fixText(require("./calibrate-text").walk(require(path.join(ROOT, "source/expansions/all-expansions.js"))));
 	const strip = s => String(s || "").replace(/<[^>]+>/g, "").trim();
 	const mark = o => ({ ...o, ext: true, pack: X.PACK });
+	for (const m of X.manufacturers || []) { d.manufacturers.push(m); d.zh.makers[m.id] = m.name; }
 	for (const f of X.frames) {
 		const { zh_name, ...frame } = f;
 		const row = mark({ license_level: 2, license_id: f.variant_of || f.id, ...frame });
@@ -250,3 +251,4 @@ const out = "// 自动生成，请勿手改。来源：massif-press/lancer-data 
 fs.writeFileSync(path.join(ROOT, "data.js"), out);
 console.log("data.js written,", (out.length / 1024).toFixed(0), "KB");
 console.log("zh coverage:", Object.fromEntries(Object.entries(zh).map(([k, v]) => [k, Object.keys(v).length])));
+
