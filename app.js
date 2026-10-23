@@ -680,12 +680,12 @@ function render() {
 	badge.textContent = cs.length ? `⚠ ${cs.length} 项待处理` : "✓ 基础检查通过";
 	badge.title = cs.map(c => c[1]).join("\n");
 	const y = window.scrollY;
-	const inWiz = p.wizard != null;
+	const inWiz = p.wizard != null && tab !== "battle";
 	document.body.classList.toggle("in-wiz", inWiz);
 	document.getElementById("modal").innerHTML = chooser ? renderChooser(chooser) : "";
 	document.getElementById("notice").innerHTML = notice ? `<div class="notice ${notice.kind}"><div>${notice.html}</div><button data-act="dismissNotice" title="关闭">✕</button></div>` : "";
-	document.getElementById("app").innerHTML = inWiz ? renderWizard(p) : pageIntro(p) +
-		(tab === "pilot" ? renderPilot(p) : tab === "progress" ? renderProgress(p) : tab === "mech" ? renderMech(p) : renderSheet(p));
+	document.getElementById("app").innerHTML = inWiz ? renderWizard(p) : (tab === "battle" ? "" : pageIntro(p)) +
+		(tab === "battle" ? BattleMap.render() : tab === "pilot" ? renderPilot(p) : tab === "progress" ? renderProgress(p) : tab === "mech" ? renderMech(p) : renderSheet(p));
 	window.scrollTo(0, y);
 	if (!inWiz && tab === "sheet") renderCardPreviews(p);
 	save();
