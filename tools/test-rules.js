@@ -46,7 +46,7 @@ test('Cancel frame switch preserves weapons and frame',()=>assert(run(`p=fixture
 test('Confirmed frame switch resets mounts and keeps systems',()=>assert(run(`m.systems=['ms_manipulators'];m.overpower='m0|0';confirm=()=>true;changeFrame(m,'mf_nelson')&&m.frame==='mf_nelson'&&Object.keys(m.loadout).length===0&&m.systems[0]==='ms_manipulators'&&m.overpower===''`)));
 test('Storage failure preserves in-memory character and shows failure',()=>assert(run(`const oldSet=localStorage.setItem;localStorage.setItem=()=>{throw Error('QuotaExceededError');};const before=JSON.stringify(db),saved=save();localStorage.setItem=oldSet;!saved&&JSON.stringify(db)===before&&document.getElementById('saveStatus').textContent.includes('保存失败')`)));
 // ---------- 扩展内容（source/expansions/all-expansions.js） ----------
-test('Expansion content merged and marked',()=>assert.equal(run("['frames','talents','backgrounds','core_bonuses','pilot_gear','weapons','systems','mods'].map(k=>D[k].filter(x=>x.ext).length).join()"),'38,11,5,1,1,41,71,3'));
+test('Expansion content merged and marked',()=>assert.equal(run("['frames','talents','backgrounds','core_bonuses','pilot_gear','weapons','systems','mods'].map(k=>D[k].filter(x=>x.ext).length).join()"),'39,11,5,1,1,44,74,3'));
 test('Variant frame follows base license II',()=>assert(run("p=fixture(2);!frameAvailable(p,FRAMES.mf_ext_empakaai)&&(p.licenses={mf_blackbeard:2},frameAvailable(p,FRAMES.mf_ext_empakaai))&&!frameAvailable(p,FRAMES.mf_ext_stortebeker)")));
 test('Everest variants free at LL0',()=>assert(run("p=fixture();frameAvailable(p,FRAMES.mf_ext_chomolungma)&&frameAvailable(p,FRAMES.mf_ext_sagarmatha)")));
 test('Variants have no license of their own',()=>assert(run("!licenseFrames().some(f=>f.variant_of)&&licenseFrames().some(f=>f.id==='mf_ext_gilgamesh')&&!('mf_ext_lycan' in normalizePilot({licenses:{mf_ext_lycan:2,mf_manticore:2}},[]).licenses)")));
@@ -111,4 +111,9 @@ test('Superheavy Mounting must link the heavy mount when present',()=>{
   assert(run("m.loadout.sh.link='m1';!loadoutChecks(p,m).some(c=>c[1].includes('额外挂载点无效'))&&equippedWeapons(p,m).some(e=>e.w.id==='mw_ext_tempest_charged_blade')"));
 });
 test('Expansion background triggers resolve for wizard',()=>assert.equal(run("p=fixture();p.background='pbg_ext_noble_heir';bgSuggestedSkills(p).length"),4));
+
+
+test('Wodeng license unlocks each rank',()=>assert(run("p=fixture(3);p.licenses={mf_ext_wodeng:1};!frameAvailable(p,FRAMES.mf_ext_wodeng)&&itemAvailable(p,WEAPONS.mw_ext_wodeng_gpmg)&&itemAvailable(p,SYSTEMS.ms_ext_wodeng_turret_mount)&&!itemAvailable(p,WEAPONS.mw_ext_wodeng_sticky_launcher)&&(p.licenses.mf_ext_wodeng=2,frameAvailable(p,FRAMES.mf_ext_wodeng)&&itemAvailable(p,WEAPONS.mw_ext_wodeng_sticky_launcher)&&itemAvailable(p,SYSTEMS.ms_ext_wodeng_giant_bag)&&!itemAvailable(p,WEAPONS.mw_ext_wodeng_mk12))&&(p.licenses.mf_ext_wodeng=3,itemAvailable(p,WEAPONS.mw_ext_wodeng_mk12)&&itemAvailable(p,SYSTEMS.ms_ext_wodeng_counterfire))")));
+test('Wodeng mounts, modes and attached gun',()=>assert(run("FRAMES.mf_ext_wodeng.mounts.join()==='Flex,Main,Heavy'&&FRAMES.mf_ext_wodeng.stats.size===2&&WEAPONS.mw_ext_wodeng_gpmg.profiles[1].damage[0].val==='1d6'&&WEAPONS.mw_ext_wodeng_mk12.mount==='Superheavy'&&WEAPONS.mw_ext_wodeng_mk12.profiles[1].tags.some(t=>t.id==='tg_reliable'&&t.val===4)&&SYSTEMS.ms_ext_wodeng_turret_mount.effect.includes('2d3')&&!D.weapons.some(w=>w.name==='挂载 HMG')")));
+
 console.log(passed+' regression checks passed.');
