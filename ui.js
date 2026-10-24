@@ -10,12 +10,12 @@ function frameMatches(f, p) {
   if (s.src === 'core' && f.ext) return false;
   if (s.src === 'ext' && !f.ext) return false;
   if (s.src === 'variant' && !f.variant_of) return false;
-  if (s.src === 'license' && (!f.ext || f.variant_of)) return false;
+  if (s.src === 'license' && (!f.ext || f.variant_of || f.no_license)) return false;
   if (s.unlocked && !frameAvailable(p, f)) return false;
   const q = s.q.trim().toLocaleLowerCase();
   if (!q) return true;
   const text = [frameName(f), f.name, f.variant_of ? frameName(FRAMES[f.variant_of]) : '', ...f.mechtype.map(r => T.role[r] || r),
-    ...f.traits.map(t => t.name), f.core_system?.name, f.core_system?.active_name].join(' ').toLocaleLowerCase();
+    ...f.traits.map(t => t.name), f.core_system?.name, f.core_system?.active_name, f.pack, f.source].join(' ').toLocaleLowerCase();
   return text.includes(q);
 }
 const frameFilterActive = () => { const s = uiState.frame; return !!(s.q.trim() || s.maker || s.role || s.src || s.unlocked); };
@@ -31,6 +31,7 @@ function frameToolbar() {
 }
 function filterFrames() {
   const p = P(), m = M();
+  if(document.querySelector('.frame-catalog')) { updateFrameCatalog(); document.querySelectorAll('[data-ui="resetFrames"]').forEach(el=>el.disabled=!frameFilterActive()); return; }
   let shown = 0, total = D.frames.length;
   // 机甲页：重建骨架选单，当前骨架始终保留
   const select = document.querySelector('select[data-k="mech.frame"]');
@@ -127,7 +128,7 @@ document.addEventListener('click',e=>{
   const action=e.target.closest('[data-ui]')?.dataset.ui;
   if(action==='resetTalents') {uiState.talentQuery='';uiState.selectedTalents=false;render();document.querySelector('[data-ui="talentSearch"]')?.focus();}
   if(action==='disableGM'){db.ignoreLimits=false;render();}
-  if(action==='resetFrames'){uiState.frame={q:'',maker:'',role:'',src:'',unlocked:false};render();document.querySelector('[data-ui="frameSearch"]')?.focus();}
+  if(action==='resetFrames'){uiState.frame={q:'',maker:'',role:'',src:'',unlocked:false};const root=document.querySelector('.frame-catalog');if(root){root.querySelectorAll('[data-ui]').forEach(el=>{if(el.tagName==='INPUT'){if(el.type==='checkbox')el.checked=false;else el.value='';}if(el.tagName==='SELECT')el.value='';});filterFrames();}else render();document.querySelector('[data-ui="frameSearch"]')?.focus();}
   const menu=document.getElementById('characterMenu');
   if(menu && (!e.target.closest('.character-menu') || e.target.closest('button'))) menu.open=false;
 });

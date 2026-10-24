@@ -251,7 +251,7 @@ function drawMechCard(p, m) {
 
 	// 骨架特征（最多 4 条）
 	title(g, "骨架特征", "Frame Traits", 36, 241);
-	const traits = f ? f.traits : [];
+	const traits = f ? mechTraits(m) : [];
 	for (let i = 0; i < 4; i++) {
 		const x = i % 2 ? 472 : 34, y = 251 + Math.floor(i / 2) * 50, w = 420, h = 44;
 		bar(g, x, y, w, h);

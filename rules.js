@@ -1,5 +1,34 @@
 "use strict";
 // Core-book character-building helpers. No combat-state/conditional bonuses are applied here.
+function inheritedTrait(m) {
+  if(m.frame !== 'mf_ext_kanggeduo') return null;
+  const source=FRAMES[m.legacyFrame], index=Number(m.legacyTrait);
+  if(!source || source.required_core_bonus || m.legacyTrait==='' || !Number.isInteger(index)) return null;
+  const trait=source.traits[index];
+  return trait ? {...trait, name:`${trait.name}（遗产：${frameName(source)}）`, inherited_from:source.id} : null;
+}
+function mechTraits(m) {
+  const extra=inheritedTrait(m);
+  return [...(FRAMES[m.frame]?.traits || []), ...(extra?[extra]:[])];
+}
+function createKanggeduo(p, original) {
+  if((!hasCB(p,'cb_ext_kanggeduo_chassis')&&!db.ignoreLimits) || !original || FRAMES[original.frame]?.required_core_bonus) return null;
+  const backup=blankMech('mf_ext_kanggeduo');
+  backup.name=`${original.name} · 康格多备用机`;
+  backup.legacyFrame=original.frame;
+  for(const k of ['prototypeType','prototypeDamage','prototypeOptics','prototypeSmart','prototypeReactor']) if(original[k]) backup[k]=original[k];
+  p.mechs.push(backup);p.activeMech=p.mechs.length-1;
+  return backup;
+}
+function kanggeduoSetup(p,m) {
+  if(m.frame!=='mf_ext_kanggeduo') return hasCB(p,'cb_ext_kanggeduo_chassis') ? '<p><button data-act="addKanggeduo">配置康格多备用机</button></p>' : '';
+  const ids=[...new Set([...p.mechs.filter(x=>!FRAMES[x.frame]?.required_core_bonus).map(x=>x.frame),m.legacyFrame])].filter(id=>FRAMES[id]&&!FRAMES[id].required_core_bonus);
+  const source=FRAMES[m.legacyFrame];
+  return `<section class="fc-note"><b>康格多备用配置 · 遗产</b><p>首次部署时选择原始机甲的一个特征，直到下次全面维修前保持该选择。武器与系统单独配置；部署、原机甲被毁及超限重置按核心奖励在战斗中结算。</p>
+    <label>原始骨架 <select data-k="mech.legacyFrame"><option value="">— 选择原始机甲 —</option>${ids.map(id=>opt(id,esc(frameName(FRAMES[id])),id===m.legacyFrame)).join('')}</select></label>
+    <label>继承特征 <select data-k="mech.legacyTrait"><option value="">— 选择一个特征 —</option>${(source?.traits||[]).map((t,i)=>opt(String(i),esc(t.name),String(i)===String(m.legacyTrait))).join('')}</select></label>
+    <p class="muted">部署时自带 1 CP。继承特征的规则全文会列在下方，并随角色卡保存和导出。</p></section>`;
+}
 function talentEquipment(p, field) {
   const ids = [];
   for (const [id, rank] of Object.entries(p.talents)) {
@@ -15,7 +44,7 @@ function buildBonuses(p, m) {
   const sources = [
     ...new Set(p.coreBonuses.map(id => CBS[id]).filter(Boolean)),
     ...new Set(m.systems.map(id => SYSTEMS[id]).filter(Boolean)),
-    ...(f?.traits || []),
+    ...mechTraits(m),
     ...Object.entries(p.talents).flatMap(([id, rank]) => (TALENTS[id]?.ranks || []).slice(0, rank)),
   ];
   return sources.flatMap(s => (s.bonuses || []).map(b=>({...b,coreBonus:!!CBS[s.id]})));
@@ -114,6 +143,7 @@ function creationChecks(p) {
 function loadoutChecks(p, m) {
   const out = [], prefix = `机甲「${m.name}」：`, mounts = mountsOf(p,m), links = linkedMounts(p,m);
   const error = text => out.push(['err',prefix + text]);
+  if(m.frame==='mf_ext_kanggeduo'&&!inheritedTrait(m)) out.push(['warn',prefix+'康格多尚未选择原始机甲的遗产特征']);
   const occupiedLinks = new Set();
   for (const mt of mounts) {
     const st = m.loadout[mt.key] || {slots:[],link:''};

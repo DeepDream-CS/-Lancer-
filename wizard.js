@@ -186,26 +186,12 @@ const WIZ_STEPS = [
 		},
 		body: p => {
 			const m = M();
-			const avail = D.frames.filter(f => frameAvailable(p, f));
-			const card = f => {
-				const s = f.stats, ok = frameAvailable(p, f);
-				return `<div class="pick frame ${f.id === m.frame ? "on" : ""} ${ok ? "" : "locked"}" data-frame-card="${f.id}" ${ok ? `data-wiz="frame" data-arg="${f.id}"` : ""}>
-					<b>${esc(frameName(f))}${extBadge(f)} <small>${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")}${f.variant_of ? " · " + esc(variantNote(f)) : ""}</small></b>
-					<span>HP ${s.hp} · 装甲 ${s.armor} · 回避 ${s.evasion} · 电子防御 ${s.edef} · 速度 ${s.speed} · SP ${s.sp} · 大小 ${s.size === 0.5 ? "½" : s.size}</span>
-					<span>挂载点：${f.mounts.map(x => T.mount[x]).join("、")}</span>
-					<span>特征：${f.traits.map(t => esc(t.name)).join("、")}</span>
-					${ok ? "" : `<span class="muted">需要 ${esc(frameName(FRAMES[f.variant_of] || f))} 牌照 II</span>`}
-				</div>`;
-			};
-			const f = FRAMES[m.frame];
+
 			return `
 			<p><b>骨架</b>是机甲的基础，决定它的大小、基本数值、<b>挂载点</b>（能装几件什么尺寸的武器）、<b>SP</b>（能装多少系统），以及独有的<b>特征</b>和每任务通常只能用一次的<b>核心系统</b>。</p>
-			${tip(p.ll ? "下面列出你牌照 II 级以上的骨架，以及所有人都能用的埃弗勒斯。" : "LL0 只能使用 GMS 的埃弗勒斯——一部没有短板的万用机甲。升级后拿到牌照 II，就能换开其他骨架。")}
+			${tip(p.ll ? "目录包含所有骨架；打开「只看可用」可筛出已解锁的选择。点卡片可以先看规则，点击「使用这部骨架」才会换装。" : "LL0 可使用 GMS 埃弗勒斯及已收录的 GMS 变体。其他骨架可以先浏览规则；升级取得对应牌照 II 后解锁。")}
 			<div class="row"><label>机甲名称</label><input type="text" data-k="mech.name" value="${esc(m.name === "新机甲" ? "" : m.name)}" placeholder="例如：雷神"></div>
-			${frameToolbar()}
-			<div class="pick-grid">${avail.map(card).join("")}</div>
-			${f ? `<div class="card"><h3>${esc(zhOf("frame", f))} 的特征与核心系统</h3>${mechParts(p).info.replace(/^[\s\S]*?<h4>骨架特征<\/h4>/, "<div>")}</div>` : ""}
-			${avail.length < D.frames.length ? det("lockedFrames", `查看尚未解锁的骨架（${D.frames.length - avail.length} 部）`, `<div class="pick-grid">${D.frames.filter(x => !frameAvailable(p, x)).map(card).join("")}</div>`) : ""}`;
+			${frameCatalog(p)}`;
 		},
 	},
 	{

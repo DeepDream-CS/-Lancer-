@@ -8,7 +8,7 @@ function runtime(saved) {
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     document:{body:el(),addEventListener(){},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);},querySelectorAll(){return[];}},
     window:{scrollTo(){}},navigator:{},confirm:()=>true});
-  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','glossary.js','ui.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
+  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','glossary.js','ui.js','frame-catalog.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
   return code=>vm.runInContext(code,ctx);
 }
 const run=runtime(); let passed=0;
@@ -46,7 +46,7 @@ test('Cancel frame switch preserves weapons and frame',()=>assert(run(`p=fixture
 test('Confirmed frame switch resets mounts and keeps systems',()=>assert(run(`m.systems=['ms_manipulators'];m.overpower='m0|0';confirm=()=>true;changeFrame(m,'mf_nelson')&&m.frame==='mf_nelson'&&Object.keys(m.loadout).length===0&&m.systems[0]==='ms_manipulators'&&m.overpower===''`)));
 test('Storage failure preserves in-memory character and shows failure',()=>assert(run(`const oldSet=localStorage.setItem;localStorage.setItem=()=>{throw Error('QuotaExceededError');};const before=JSON.stringify(db),saved=save();localStorage.setItem=oldSet;!saved&&JSON.stringify(db)===before&&document.getElementById('saveStatus').textContent.includes('保存失败')`)));
 // ---------- 扩展内容（source/expansions/all-expansions.js） ----------
-test('Expansion content merged and marked',()=>assert.equal(run("['frames','talents','backgrounds','core_bonuses','pilot_gear','weapons','systems','mods'].map(k=>D[k].filter(x=>x.ext).length).join()"),'55,17,5,7,1,70,115,6'));
+test('Expansion content merged and marked',()=>assert.equal(run("['frames','talents','backgrounds','core_bonuses','pilot_gear','weapons','systems','mods'].map(k=>D[k].filter(x=>x.ext).length).join()"),'68,21,5,16,1,87,148,7'));
 test('Variant frame follows base license II',()=>assert(run("p=fixture(2);!frameAvailable(p,FRAMES.mf_ext_empakaai)&&(p.licenses={mf_blackbeard:2},frameAvailable(p,FRAMES.mf_ext_empakaai))&&!frameAvailable(p,FRAMES.mf_ext_stortebeker)")));
 test('Everest variants free at LL0',()=>assert(run("p=fixture();frameAvailable(p,FRAMES.mf_ext_chomolungma)&&frameAvailable(p,FRAMES.mf_ext_sagarmatha)")));
 test('Variants have no license of their own',()=>assert(run("!licenseFrames().some(f=>f.variant_of)&&licenseFrames().some(f=>f.id==='mf_ext_gilgamesh')&&!('mf_ext_lycan' in normalizePilot({licenses:{mf_ext_lycan:2,mf_manticore:2}},[]).licenses)")));
@@ -103,6 +103,14 @@ test('Pharos license gates frame and gear',()=>assert(run("p=fixture(3);p.licens
 test('Sicklewing license gates frame and gear',()=>assert(run("p=fixture(3);p.licenses={mf_ext_sicklewing:2};frameAvailable(p,FRAMES.mf_ext_sicklewing)&&itemAvailable(p,WEAPONS.mw_ext_screaming_rifle)&&!itemAvailable(p,SYSTEMS.ms_ext_judas_exploit)&&mechStats(p,blankMech('mf_ext_sicklewing')).sensor===10")));
 test('Feathered Serpent license gates frame and gear',()=>assert(run("p=fixture(3);p.licenses={mf_ext_feathered_serpent:2};frameAvailable(p,FRAMES.mf_ext_feathered_serpent)&&itemAvailable(p,WEAPONS.mw_ext_half_life_sun_lens)&&!itemAvailable(p,WEAPONS.mw_ext_corona_outpouring)&&mechStats(p,blankMech('mf_ext_feathered_serpent')).sensor===10")));
 test('Tametomo license and integrated flare bow',()=>assert(run("p=fixture(3);p.licenses={mf_ext_tametomo:2};frameAvailable(p,FRAMES.mf_ext_tametomo)&&itemAvailable(p,WEAPONS.mw_ext_typhoon_ion_channel)&&!itemAvailable(p,SYSTEMS.ms_ext_offering_arrow)&&!WEAPONS.mw_ext_pt3_flare_bow.source&&mechStats(p,blankMech('mf_ext_tametomo')).heatcap===10")));
+test('New variants follow base licenses (Nemo, Red Admiral, Banshee Vine, Grant)',()=>assert(run("p=fixture(3);p.licenses={mf_nelson:2,mf_ext_atlas:2,mf_goblin:2,mf_sherman:2};['mf_ext_nemo','mf_ext_red_admiral','mf_ext_banshee_vine','mf_ext_grant'].every(id=>frameAvailable(p,FRAMES[id])&&!licenseFrames().includes(FRAMES[id]))&&!WEAPONS.mw_ext_maelstrom_drill_extended.source")));
+test('PI-OF maker and Woodsman repair cap bonus',()=>assert(run("p=fixture(3);const wm=blankMech();const wrc=mechStats(p,wm).repcap;p.coreBonuses=['cb_piof_woodsman'];MAKERS.includes('PI-OF')&&D.core_bonuses.filter(c=>c.source==='PI-OF').length===6&&mechStats(p,wm).repcap===wrc+1")));
+test('PI-OF frames gate gear and unlock core bonuses at 3 license ranks',()=>assert(run("p=fixture(3);p.licenses={mf_piof_basil:2,mf_piof_coriander:1};frameAvailable(p,FRAMES.mf_piof_basil)&&!frameAvailable(p,FRAMES.mf_piof_coriander)&&itemAvailable(p,WEAPONS.mw_piof_scatter_bow)&&itemAvailable(p,WEAPONS.mw_piof_micro_mass_driver)&&!itemAvailable(p,MODS.wm_piof_fragmentation_rounds)&&cbEligible(p,CBS.cb_piof_woodsman)")));
+test('Fennel and Lemongrass licenses gate frames and gear',()=>assert(run("p=fixture(3);p.licenses={mf_piof_fennel:2,mf_piof_lemongrass:1};frameAvailable(p,FRAMES.mf_piof_fennel)&&!frameAvailable(p,FRAMES.mf_piof_lemongrass)&&itemAvailable(p,SYSTEMS.ms_piof_viper_drone)&&itemAvailable(p,WEAPONS.mw_piof_dazzle)&&!itemAvailable(p,SYSTEMS.ms_piof_parvati_nhp)&&mechStats(p,blankMech('mf_piof_lemongrass')).size===0.5")));
+test('Pepper and Rosemary licenses gate frames and gear',()=>assert(run("p=fixture(3);p.licenses={mf_piof_pepper:2,mf_piof_rosemary:1};frameAvailable(p,FRAMES.mf_piof_pepper)&&!frameAvailable(p,FRAMES.mf_piof_rosemary)&&itemAvailable(p,WEAPONS.mw_piof_plasma_caster)&&itemAvailable(p,WEAPONS.mw_piof_furnace_hammer)&&!itemAvailable(p,WEAPONS.mw_piof_geomorph_wrecking_ball)&&mechStats(p,blankMech('mf_piof_pepper')).speed===8")));
+test('Mint and Star Anise licenses gate frames and gear',()=>assert(run("p=fixture(3);p.licenses={mf_piof_mint:2,mf_piof_star_anise:1};frameAvailable(p,FRAMES.mf_piof_mint)&&!frameAvailable(p,FRAMES.mf_piof_star_anise)&&itemAvailable(p,WEAPONS.mw_piof_tt8_alpine_carbine)&&itemAvailable(p,SYSTEMS.ms_piof_cargo_walker)&&!itemAvailable(p,SYSTEMS.ms_piof_skadi_nhp)&&mechStats(p,blankMech('mf_piof_star_anise')).repcap>=8")));
+test('Bricklayer adds deployable HP; Sapper II grants Demolitions Toolkit',()=>assert(run("p=fixture(3);p.talents={t_ext_bricklayer:1,t_ext_sapper:1};const bm=blankMech();const r1=staticBonus(p,bm,'deployable_hp')===5&&!itemAvailable(p,SYSTEMS.ms_ext_demolitions_toolkit);p.talents.t_ext_sapper=2;r1&&itemAvailable(p,SYSTEMS.ms_ext_demolitions_toolkit)")));
+test('All data ids are unique (talents, frames, gear, core bonuses)',()=>assert.equal(run("['frames','talents','core_bonuses','weapons','systems','mods','pilot_gear','backgrounds'].flatMap(k=>{const ids=D[k].map(x=>x.id);return ids.filter((x,i)=>ids.indexOf(x)!==i)}).join()"),''));
 test('Gilgamesh adds +1 limited charge',()=>assert.equal(run("p=fixture(2,'mf_ext_gilgamesh');m=p.mechs[0];p.hase.eng=2;limitedTags([{id:'tg_limited',val:3}],p,m)[0].val"),5));
 test('Iconoclast NHP outside AI cap; expansion talents have 3 ranks',()=>assert(run("p=fixture();p.talents={t_ext_iconoclast:1};m=p.mechs[0];m.systems=['ms_ext_unstable_nhp','ms_comp_con_class_assistant_unit'];itemAvailable(p,SYSTEMS.ms_ext_unstable_nhp)&&!loadoutChecks(p,m).some(c=>c[1].includes('AI'))&&D.talents.filter(t=>t.ext).every(t=>t.ranks.length===3&&Z.talents[t.name].ranks.every(r=>r.html))&&normalizePilot({talents:{t_ext_iconoclast:3,t_ext_sysop:2}},[]).talents.t_ext_iconoclast===3")));
 test('Superheavy Mounting adds a superheavy mount below 3 mounts',()=>assert(run("p=fixture(3,'mf_ext_kidd');p.coreBonuses=['cb_ext_superheavy_mounting'];m=p.mechs[0];const ms=mountsOf(p,m);ms.some(x=>x.key==='sh'&&x.type==='Superheavy')&&(p.mechs[0]=blankMech(EVEREST),!mountsOf(p,p.mechs[0]).some(x=>x.key==='sh'))")));
@@ -116,7 +124,57 @@ test('Expansion background triggers resolve for wizard',()=>assert.equal(run("p=
 test('Wodeng license unlocks each rank',()=>assert(run("p=fixture(3);p.licenses={mf_ext_wodeng:1};!frameAvailable(p,FRAMES.mf_ext_wodeng)&&itemAvailable(p,WEAPONS.mw_ext_wodeng_gpmg)&&itemAvailable(p,SYSTEMS.ms_ext_wodeng_turret_mount)&&!itemAvailable(p,WEAPONS.mw_ext_wodeng_sticky_launcher)&&(p.licenses.mf_ext_wodeng=2,frameAvailable(p,FRAMES.mf_ext_wodeng)&&itemAvailable(p,WEAPONS.mw_ext_wodeng_sticky_launcher)&&itemAvailable(p,SYSTEMS.ms_ext_wodeng_giant_bag)&&!itemAvailable(p,WEAPONS.mw_ext_wodeng_mk12))&&(p.licenses.mf_ext_wodeng=3,itemAvailable(p,WEAPONS.mw_ext_wodeng_mk12)&&itemAvailable(p,SYSTEMS.ms_ext_wodeng_counterfire))")));
 test('Wodeng mounts, modes and attached gun',()=>assert(run("FRAMES.mf_ext_wodeng.mounts.join()==='Flex,Main,Heavy'&&FRAMES.mf_ext_wodeng.stats.size===2&&WEAPONS.mw_ext_wodeng_gpmg.profiles[1].damage[0].val==='1d6'&&WEAPONS.mw_ext_wodeng_mk12.mount==='Superheavy'&&WEAPONS.mw_ext_wodeng_mk12.profiles[1].tags.some(t=>t.id==='tg_reliable'&&t.val===4)&&SYSTEMS.ms_ext_wodeng_turret_mount.effect.includes('2d3')&&!D.weapons.some(w=>w.name==='挂载 HMG')")));
 
-console.log(passed+' regression checks passed.');
+test('New GMS bonuses have no manufacturer restriction and add exactly 2 SP',()=>assert(run(`(()=>{
+  const q=fixture(3),m=q.mechs[0],before=mechStats(q,m).sp;
+  const ids=['cb_ext_enhanced_system_upgrade','cb_ext_quality_logistics','cb_ext_kanggeduo_chassis'];
+  if(!ids.every(id=>CBS[id].source==='GMS'&&cbEligible(q,CBS[id],1)))return false;
+  q.coreBonuses=['cb_ext_enhanced_system_upgrade'];if(mechStats(q,m).sp!==before+2)return false;
+  q.coreBonuses=[];return mechStats(q,m).sp===before;
+})()`)));
+test('Quality logistics preserves all four screenshot options',()=>assert(run(`(()=>{
+  const c=CBS.cb_ext_quality_logistics,s=Z.cb[c.name].html;
+  return (s.match(/<li>/g)||[]).length===4&&['1/场景','射程 3','最多三个','溅射 1','射程 20','溅射 2','2d6','敏捷','动能、爆炸或能量'].every(x=>s.includes(x));
+})()`)));
+test('Kanggeduo is gated by its core bonus, never by a license',()=>assert(run(`(()=>{
+  db.ignoreLimits=false;const q=fixture(3),f=FRAMES.mf_ext_kanggeduo;
+  q.licenses[f.id]=3;if(frameAvailable(q,f)||licenseFrames().includes(f))return false;
+  q.coreBonuses=['cb_ext_kanggeduo_chassis'];if(!frameAvailable(q,f)||!frameAccess(q,f).includes('核心奖励'))return false;
+  q.coreBonuses=[];return !frameAvailable(q,f);
+})()`)));
+test('Reserve configuration preserves original equipment and shares pilot bonuses',()=>assert(run(`(()=>{
+  const q=fixture(6),original=q.mechs[0];q.hase={hull:2,agi:2,sys:2,eng:2};
+  q.coreBonuses=['cb_ext_kanggeduo_chassis','cb_ext_enhanced_system_upgrade'];q.talents={t_engineer:1};
+  original.loadout.m0={slots:[{w:'mw_assault_rifle'}],link:''};original.systems=['ms_personalizations'];
+  const before=JSON.stringify(original),b=createKanggeduo(q,original),s=mechStats(q,b);
+  return JSON.stringify(original)===before&&q.mechs.length===2&&q.activeMech===1&&b.legacyFrame===original.frame&&b.legacyTrait===''&&equippedWeapons(q,b).length===0&&b.systems.length===0&&s.hp===13&&s.sp===10&&s.heatcap===7&&s.structure===4&&s.stress===4&&integratedOf(FRAMES[b.frame],q,b).some(w=>w.id==='mw_prototype_1');
+})()`)));
+test('Legacy carries only the chosen trait and survives import/export',()=>assert(run(`(()=>{
+  const q=fixture(3),b=blankMech('mf_ext_kanggeduo');q.coreBonuses=['cb_ext_kanggeduo_chassis'];q.mechs.push(b);
+  b.legacyFrame=EVEREST;b.legacyTrait='0';
+  if(mechTraits(b).length!==3||!inheritedTrait(b).name.includes('先制')||!sheetText(q).includes('先制（遗产：埃弗勒斯）'))return false;
+  const restored=normalizePilot(JSON.parse(JSON.stringify(q)),[]).mechs[1];
+  return restored.legacyFrame===EVEREST&&restored.legacyTrait==='0'&&inheritedTrait(restored).description===FRAMES[EVEREST].traits[0].description;
+})()`)));
+test('Legacy respects trait bonuses without inheriting core gear and rejects malformed saves',()=>assert(run(`(()=>{
+  const q=fixture(3),b=blankMech('mf_ext_kanggeduo');q.mechs=[b];
+  const bonusFrame=D.frames.find(f=>!f.required_core_bonus&&f.traits.some(t=>t.bonuses?.some(b=>b.id==='limited_bonus')));
+  b.legacyFrame=bonusFrame.id;b.legacyTrait=String(bonusFrame.traits.findIndex(t=>t.bonuses?.some(b=>b.id==='limited_bonus')));
+  if(staticBonus(q,b,'limited_bonus')!==bonusFrame.traits[+b.legacyTrait].bonuses.find(x=>x.id==='limited_bonus').val)return false;
+  const weaponFrame=FRAMES.mf_ext_caliban;
+  b.legacyFrame=weaponFrame.id;b.legacyTrait='0';
+  if(integratedOf(FRAMES[b.frame],q,b).some(x=>weaponFrame.core_system.integrated.includes(x.id)))return false;
+  b.legacyFrame=b.frame;b.legacyTrait='0';if(inheritedTrait(b))return false;
+  b.legacyFrame=EVEREST;b.legacyTrait='999';return normalizePilot(q,[]).mechs[0].legacyTrait==='';
+})()`)));
+test('Reserve preview shows its bonus and Efficient instead of invented license',()=>assert(run(`(()=>{
+  p=fixture(3);const f=FRAMES.mf_ext_kanggeduo,s=framePreviewHtml(p,f);
+  return s.includes('康格多底盘核心奖励与部署规则')&&!s.includes('查看这张牌照的 I / II / III')&&s.includes('高效 · 场景结束时返还 1 CP')&&s.includes('需要对应核心奖励');
+})()`)));
+test('Catalog creates a reserve without replacing the active build',()=>assert(run(`(()=>{
+  p=fixture(3);p.coreBonuses=['cb_ext_kanggeduo_chassis'];const original=JSON.stringify(p.mechs[0]);
+  return useCatalogFrame('mf_ext_kanggeduo')&&p.mechs.length===2&&JSON.stringify(p.mechs[0])===original&&M().frame==='mf_ext_kanggeduo';
+})()`)));
+
 
 test('C&H Charioteer license and core bonus eligibility',()=>assert(run("p=fixture(3);p.licenses={mf_ch_charioteer:1};!frameAvailable(p,FRAMES.mf_ch_charioteer)&&itemAvailable(p,WEAPONS.mw_ch_tether)&&!itemAvailable(p,SYSTEMS.ms_ch_skates)&&(p.licenses.mf_ch_charioteer=2,frameAvailable(p,FRAMES.mf_ch_charioteer)&&itemAvailable(p,SYSTEMS.ms_ch_fold_carbine))&&(p.licenses.mf_ch_charioteer=3,itemAvailable(p,SYSTEMS.ms_ch_hound)&&cbEligible(p,CBS.cb_ch_environment,1))")));
 
@@ -133,3 +191,7 @@ test('Retiarius license ranks and interference mod restrictions',()=>assert(run(
 
 test('Pemada and Sagittarius license ranks and integrated bow',()=>assert(run("p=fixture(6);p.licenses={mf_ch_pemada:1,mf_ch_sagittarius:1};!frameAvailable(p,FRAMES.mf_ch_pemada)&&!frameAvailable(p,FRAMES.mf_ch_sagittarius)&&itemAvailable(p,MODS.wm_ch_adaptive_weight)&&itemAvailable(p,SYSTEMS.ms_ch_holo_bombs)&&(p.licenses.mf_ch_pemada=2,p.licenses.mf_ch_sagittarius=2,frameAvailable(p,FRAMES.mf_ch_pemada)&&frameAvailable(p,FRAMES.mf_ch_sagittarius)&&itemAvailable(p,WEAPONS.mw_ch_smart_blade)&&itemAvailable(p,SYSTEMS.ms_ch_nightjar))&&(p.licenses.mf_ch_pemada=3,p.licenses.mf_ch_sagittarius=3,itemAvailable(p,SYSTEMS.ms_ch_arcturus)&&itemAvailable(p,SYSTEMS.ms_ch_echo_mirage))&&integratedOf(FRAMES.mf_ch_sagittarius,p).some(w=>w.id==='mw_ch_blackjack')")));
 
+test('Every core bonus has a visible description',()=>assert(run("D.core_bonuses.every(c=>{const z=Z.cb[nk(c.name)];return z ? typeof z.html==='string'&&z.html.replace(/<[^>]*>/g,'').trim().length>0 : !!c.effect;})")));
+
+
+console.log(passed+' regression checks passed.');

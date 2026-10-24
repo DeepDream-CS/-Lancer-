@@ -226,7 +226,7 @@ function mergeExpansion(d) {
 	}
 	for (const t of X.talents) {
 		d.talents.push(mark({ id: t.id, name: t.name, terse: t.terse, ...(t.incomplete ? { incomplete: true } : {}), description: strip(t.desc),
-			ranks: t.ranks.map(r => ({ name: r.name, description: strip(r.html), ...(r.special_equipment ? { special_equipment: r.special_equipment } : {}) })) }));
+			ranks: t.ranks.map(r => ({ name: r.name, description: strip(r.html), ...(r.special_equipment ? { special_equipment: r.special_equipment } : {}), ...(r.bonuses ? { bonuses: r.bonuses } : {}) })) }));
 		d.zh.talents[t.name] = { name: t.name, desc: t.desc, ranks: t.ranks.map(r => ({ name: r.name, html: r.html })) };
 	}
 	for (const b of X.backgrounds) {
@@ -236,7 +236,7 @@ function mergeExpansion(d) {
 	for (const c of X.core_bonuses) {
 		const { html, ...cb } = c;
 		d.core_bonuses.push(mark(cb));
-		d.zh.cb[c.name] = { name: c.name, html };
+		d.zh.cb[c.name] = { name: c.name, html: html || `<p>${c.effect || ""}</p>` };
 	}
 	for (const g of X.pilot_gear) { d.pilot_gear.push(mark(g)); d.zh.gear[g.name] = { name: g.name }; }
 	for (const k of ["weapons", "systems", "mods"]) for (const it of X[k] || []) d[k].push(mark({ ...it, zh_name: it.name }));
@@ -251,4 +251,5 @@ const out = "// 自动生成，请勿手改。来源：massif-press/lancer-data 
 fs.writeFileSync(path.join(ROOT, "data.js"), out);
 console.log("data.js written,", (out.length / 1024).toFixed(0), "KB");
 console.log("zh coverage:", Object.fromEntries(Object.entries(zh).map(([k, v]) => [k, Object.keys(v).length])));
+
 

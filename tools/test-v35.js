@@ -2,6 +2,9 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),crypto=r
 const {spec,translator}=require('./core-v35');const c={window:{}};vm.runInNewContext(fs.readFileSync('data.js','utf8'),c);const full=c.window.LANCER_DATA,nk=s=>s.replace(/’/g,"'");let n=0;
 // 扩展内容（ext:true，见 source/expansions）由 test-rules.js 检查；以下断言只针对核心规则书数据。
 function stripExt(d){const core={...d,zh:{...d.zh}},ext=k=>d[k].filter(x=>x.ext);
+  const coreMakerIds=new Set(JSON.parse(fs.readFileSync('source/lancer-data/manufacturers.json','utf8')).map(m=>m.id));
+  core.manufacturers=d.manufacturers.filter(m=>coreMakerIds.has(m.id));
+  core.zh.makers=Object.fromEntries(Object.entries(d.zh.makers).filter(([id])=>coreMakerIds.has(id)));
   for(const k of ['frames','weapons','systems','mods','core_bonuses','talents','pilot_gear','skills','backgrounds'])core[k]=d[k].filter(x=>!x.ext);
   for(const [kind,map,key] of [['frames','frames',x=>x.name],['talents','talents',x=>x.name],['backgrounds','bg',x=>x.name.toLowerCase()],['core_bonuses','cb',x=>x.name],['pilot_gear','gear',x=>x.name]]){
     core.zh[map]={...d.zh[map]};ext(kind).forEach(x=>delete core.zh[map][key(x)]);

@@ -100,7 +100,7 @@ function blankPilot() {
 	};
 }
 function blankMech(frame = EVEREST) {
-	return { name: "新机甲", frame, retrofit: -1, stabilized: "", overpower: "", loadout: {}, systems: [], notes: "" };
+	return { name: "新机甲", frame, retrofit: -1, stabilized: "", overpower: "", loadout: {}, systems: [], notes: "", legacyFrame:"", legacyTrait:"" };
 }
 function load() {
 	try {
@@ -142,8 +142,8 @@ function itemAvailable(p, it) {
 	return licenseRank(p, it.license) >= (it.license_level || 0);
 }
 // 变体骨架（扩展）沿用标准骨架的牌照：标准骨架牌照 II 即可使用；埃弗勒斯的变体人人可用
-const frameAvailable = (p, f) => db.ignoreLimits || [f.id, f.variant_of].includes(EVEREST) || (p.licenses[f.variant_of || f.id] || 0) >= 2;
-function licenseFrames() { return D.frames.filter(f => !f.variant_of); } // 读档时（load）就会用到，须是函数声明
+const frameAvailable = (p, f) => db.ignoreLimits || (f.required_core_bonus ? p.coreBonuses.includes(f.required_core_bonus) : [f.id, f.variant_of].includes(EVEREST) || (p.licenses[f.variant_of || f.id] || 0) >= 2);
+function licenseFrames() { return D.frames.filter(f => !f.variant_of && !f.no_license); } // 读档时（load）就会用到，须是函数声明
 const frameName = f => zhOf("frame", f) || f.name;
 const variantNote = f => (f.variant_of ? `${frameName(FRAMES[f.variant_of])}变体` : "");
 // 扩展骨架用到变体、高效、无形等扩展规则时，附带说明
@@ -175,7 +175,7 @@ function mountsOf(p, m) {
 }
 function integratedOf(f, p, m = p.mechs.find(m => m.frame === f?.id) || {}) {
 	if (!f) return [];
-	const ids = [...(f.core_system.integrated || []), ...f.traits.flatMap(t => t.integrated || []), ...talentEquipment(p, "integrated").map(x => x.id)];
+	const ids = [...(f.core_system.integrated || []), ...mechTraits({...m,frame:f.id}).flatMap(t => t.integrated || []), ...talentEquipment(p, "integrated").map(x => x.id)];
 	return [...new Set(ids)].map(id => WEAPONS[id] || SYSTEMS[id]).filter(Boolean).map(x => x.mount ? configuredWeapon(x, m) : x);
 }
 const slotState = (m, key) => (m.loadout[key] = m.loadout[key] || { slots: [], link: "" });
@@ -207,7 +207,7 @@ function mechStats(p, m) {
 		equippedWeapons(p, m).reduce((a, e) => a + (e.w.sp || 0) + (e.mod ? e.mod.sp || 0 : 0), 0);
 	return {
 		size, structure: s.structure, stress: s.stress,
-		hp: s.hp + (f.no_grit_hp ? 0 : L.grit) + h.hull * 2 + bonus("hp"), // 帝王蝶「风暴盾」：HP 不因毅力提高
+		hp: s.hp + (f.no_grit_hp || (inheritedTrait(m)?.inherited_from==='mf_ext_emperor' && FRAMES[m.legacyFrame].traits[Number(m.legacyTrait)]?.name==='风暴盾') ? 0 : L.grit) + h.hull * 2 + bonus("hp"), // 风暴盾（包括遗产）不以毅力提高 HP
 		armor: Math.min(4, s.armor + bonus("armor")),
 		evasion: s.evasion + h.agi + bonus("evasion"),
 		speed: s.speed + Math.floor(h.agi / 2) + bonus("speed"),
@@ -259,7 +259,7 @@ function checks(p) {
 		const f = FRAMES[m.frame];
 		const tag = `机甲「${m.name || mi + 1}」`;
 		if (!f) return out.push(["err", `${tag} 未选择骨架`]);
-		if (!frameAvailable(p, f)) out.push(["err", `${tag} 的骨架 ${f.name} 需要该牌照 2 级`]);
+		if (!frameAvailable(p, f)) out.push(["err", `${tag} 的骨架 ${f.name} ${f.required_core_bonus?`需要核心奖励「${CBS[f.required_core_bonus].name}」`:'需要该牌照 2 级'}`]);
 		out.push(...loadoutChecks(p, m));
 		const st = mechStats(p, m);
 		if (st.spUsed > st.sp) out.push(["err", `${tag} SP 超出：${st.spUsed}/${st.sp}`]);
@@ -520,10 +520,6 @@ function mechParts(p) {
 		${stat((st.tech >= 0 ? "+" : "") + st.tech, "科技攻击")}${stat("+" + st.attack, "攻击加值")}${stat("+" + st.limited, "受限加成")}${stat(st.sp, "SP")}
 	</div>`;
 
-	const traits = f.traits.map(t => `<div class="blk"><div class="blk-h">${esc(t.name)}</div><p>${t.description}</p>${actsHtml(t)}</div>`).join("");
-	const cs = f.core_system;
-	const coreActs = actsHtml(cs);
-	const core = `<div class="blk"><div class="blk-h">核心系统：${esc(cs.name)}</div>${cs.passive_name ? `<p><b>${esc(cs.passive_name)}（被动）</b>：${cs.passive_effect || ""}</p>` : ""}<p><b>${esc(cs.active_name || "")}</b> <span class="muted">${esc(ACT[cs.activation] || cs.activation || "")}，消耗1 CP</span>：${cs.active_effect || ""}</p>${coreActs}</div>`;
 
 	// 挂载点
 	const mounts = mountsOf(p, m);
@@ -567,17 +563,14 @@ function mechParts(p) {
 
 	return {
 	tabs: mechTabs,
-	info: `<div class="card">
-		<h3>机甲</h3>
-		<div class="row"><label>名称</label><input type="text" data-k="mech.name" value="${esc(m.name)}"></div>
-		<div class="row"><label>骨架</label>${frameSel}</div>
-		${frameToolbar()}
-		<div class="muted">${esc(f.source)} · ${f.mechtype.map(r => T.role[r] || r).join("/")} · 挂载点：${f.mounts.map(x => T.mount[x]).join("、")}</div>
-		${f.ext ? `<div class="muted">${extBadge(f)} ${f.variant_of ? `${esc(variantNote(f))}：取得${esc(frameName(FRAMES[f.variant_of]))}牌照 II 后，可代替标准骨架使用（两者互斥）；装备沿用该牌照。` : "授权骨架：牌照 I–III 解锁其骨架与装备。"}${f.maker_note ? esc("（" + f.maker_note + "）") : ""}</div>` : ""}
-		${det("fdesc", "骨架介绍", `<p>${f.description}</p>`)}
-		<h4>骨架特征</h4><div class="desc">${traits}${core}</div>
-		${extRulesNote(f)}
-	</div>`,
+	info: `<div class="card mech-frame-card">
+        <div class="fc-current-heading"><div><p class="fc-kicker">当前骨架</p>${frameIdentity(f)}</div><button data-ui="browseFrames">浏览 / 更换骨架</button></div>
+        <div class="row"><label>机甲名称</label><input type="text" data-k="mech.name" value="${esc(m.name)}"></div>
+        <p class="fc-access">${esc(frameAccess(p,f))}</p>
+        <div class="fc-mounts">${f.mounts.map(x=>`<span>${T.mount[x]}挂载点</span>`).join('')}</div>
+        ${f.ext ? `<p class="muted">${extBadge(f)} ${f.required_core_bonus?'核心奖励提供的备用骨架，不占用独立牌照。':f.variant_of ? esc(frameVariantDescription(f)) : "授权骨架：牌照 I–III 解锁其骨架与装备。"}${f.maker_note ? esc("（" + f.maker_note + "）") : ""}</p>` : ""}
+        ${kanggeduoSetup(p,m)}<div class="desc">${frameRulesHtml(f,'current',m)}</div>
+    </div>`,
 	stats: `<div class="card">
 		<h3>数值 <span class="muted">已计入常驻数值加成；条件效果见规则说明</span></h3>
 		${statsHtml}
@@ -597,7 +590,7 @@ function mechParts(p) {
 }
 function renderMech(p) {
 	const x = mechParts(p);
-	return x.only || x.tabs + `<div class="grid">${x.info}${x.stats}${x.weapons}${x.systems}</div>`;
+	return x.only || x.tabs + (frameBrowse.open ? frameCatalog(p,true) : "") + `<div class="grid mech-overview">${x.info}<div class="mech-side">${x.stats}${x.weapons}${x.systems}</div></div>`;
 }
 
 // ---------- 页面：角色卡 ----------
@@ -632,7 +625,7 @@ function sheetText(p) {
 		lines.push(`HP ${st.hp}｜装甲 ${st.armor}｜结构 ${st.structure}｜压力 ${st.stress}｜热度上限 ${st.heatcap}｜维修上限 ${st.repcap}`);
 		lines.push(`回避 ${st.evasion}｜电子防御 ${st.edef}｜速度 ${st.speed}｜大小 ${st.size === 0.5 ? "½" : st.size}｜感应 ${st.sensor}｜豁免目标 ${st.save}`);
 		lines.push(`科技攻击 ${st.tech >= 0 ? "+" : ""}${st.tech}｜攻击加值 +${st.attack}｜SP ${st.spUsed}/${st.sp}`);
-		lines.push(`特征：${f.traits.map(t => t.name).join("、")}｜核心系统：${f.core_system.name}`);
+		lines.push(`特征：${mechTraits(m).map(t => t.name).join("、")}｜核心系统：${f.core_system.name}`);
 		lines.push("武器：");
 		integratedOf(f, p, m).forEach(w => { const pr = w.mount ? effectiveProfile(w, w.profiles?.[0] || w, null, p, m) : null; lines.push(`  · [内建] ${plain("item", w)}${pr ? `　${rngText(pr.range)}　${dmgText(pr.damage)}　${tagsPlain(pr.tags)}　${buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})}` : ""}`); });
 		equippedWeapons(p, m).forEach(e => {
@@ -642,7 +635,7 @@ function sheetText(p) {
 		lines.push(`系统：${m.systems.map(id => SYSTEMS[id] ? `${plain("item", SYSTEMS[id])}(${SYSTEMS[id].sp || 0} SP；${tagsPlain(limitedTags(SYSTEMS[id].tags,p,m))})` : "").filter(Boolean).join("、") || "—"}`);
 		if (m.notes) lines.push(`备注：${m.notes}`);
 		lines.push("规则详述（条件效果按场上情况结算）：");
-		for (const t of f.traits) lines.push(`${t.name}：${stripHtml(t.description)} ${stripHtml(actsHtml(t))}`);
+		for (const t of mechTraits(m)) lines.push(`${t.name}：${stripHtml(t.description)} ${stripHtml(actsHtml(t))}`);
 		const core = f.core_system;
 		lines.push(`${core.name}：${stripHtml(core.active_effect)} ${stripHtml(core.passive_effect)} ${stripHtml(actsHtml(core))}`);
 		for (const w of integratedOf(f,p,m)) lines.push(`${plain("item",w)}：${stripHtml(w.mount ? weaponInfo(w,null,p,m) : (w.effect||'')+actsHtml(w))}`);
@@ -710,7 +703,7 @@ function bind(el) {
 		const m = M();
 		const key = k.slice(5);
 		if (key === "frame" && m.frame !== el.value) { if(!changeFrame(m,el.value)) el.value=m.frame; }
-		else m[key] = el.value;
+		else { m[key] = el.value; if(key==='legacyFrame') m.legacyTrait=''; }
 	} else setPath(p, k, el.value);
 }
 document.addEventListener("input", e => {
@@ -777,6 +770,7 @@ document.addEventListener("click", e => {
 		case "tal": { const v = clamp((p.talents[arg] || 0) + d, 0, TALENTS[arg] ? TALENTS[arg].ranks.length : 0); if (v) p.talents[arg] = v; else delete p.talents[arg]; migratePilot(p); break; }
 		case "cb": p.coreBonuses = hasCB(p, arg) ? p.coreBonuses.filter(x => x !== arg) : [...p.coreBonuses, arg]; break;
 		case "pickMech": p.activeMech = +arg; break;
+		case "addKanggeduo": createKanggeduo(p,m); break;
 		case "addMech": {
 			const best = D.frames.find(f => f.id !== EVEREST && (p.licenses[f.id] || 0) >= 2);
 			p.mechs.push(blankMech(best ? best.id : EVEREST)); p.activeMech = p.mechs.length - 1; break;
@@ -868,6 +862,8 @@ function normalizePilot(raw, warn) {
 		m.retrofit = int(rm.retrofit, -1, 9, -1);
 		m.stabilized = str(rm.stabilized);
 		m.overpower = str(rm.overpower);
+		m.legacyFrame = FRAMES[rm.legacyFrame] && !FRAMES[rm.legacyFrame].required_core_bonus ? rm.legacyFrame : '';
+		m.legacyTrait = m.legacyFrame && rm.legacyTrait !== '' && rm.legacyTrait != null && Number.isInteger(Number(rm.legacyTrait)) && FRAMES[m.legacyFrame].traits[Number(rm.legacyTrait)] ? String(Number(rm.legacyTrait)) : '';
 		for (const k of ["prototypeType","prototypeDamage","prototypeOptics","prototypeSmart","prototypeReactor"]) m[k] = str(rm[k]);
 		m.systems = (Array.isArray(rm.systems) ? rm.systems : []).filter(id => SYSTEMS[id] || (drop("系统", id), false));
 		if (rm.loadout && typeof rm.loadout === "object") for (const [key, st] of Object.entries(rm.loadout)) {
