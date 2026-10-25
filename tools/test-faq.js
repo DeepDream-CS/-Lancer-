@@ -1,0 +1,51 @@
+const fs = require('fs'), vm = require('vm'), assert = require('assert/strict'), path = require('path'), crypto = require('crypto');
+const root = path.join(__dirname,'..'), read = f => fs.readFileSync(path.join(root,f),'utf8');
+const upstream = JSON.parse(read('source/faq/upstream.json'));
+const context = {window:{addEventListener(){}},document:{readyState:'loading',addEventListener(){}}};
+vm.createContext(context);
+vm.runInContext(read('faq-data.js'),context);
+vm.runInContext(read('faq.js'),context);
+const data = context.window.LANCER_FAQ, view = context.window.LANCER_FAQ_VIEW;
+const slug = s => crypto.createHmac('sha512','abc').update(s).digest('hex').slice(0,6);
+assert.equal(data.entries.length,184); assert.equal(data.sections.length,113);
+assert.equal((read('source/faq/upstream.html').match(/<h3\b/g)||[]).length,data.entries.length);
+assert.equal(new Set(data.entries.map(e=>e.id)).size,184);
+assert.equal(new Set([...data.sections,...data.entries].map(e=>e.id)).size,297);
+for (const [i,e] of data.entries.entries()) {
+  const original=upstream.entries[i];
+  assert.equal(e.id,slug(original.question)); assert.equal(e.section,original.section);
+  assert.equal(e.enQuestion,original.question);
+  assert.equal(e.enAnswer,original.answer.replace(/<wot:[^>]+>/g,'').trim());
+  assert.match(e.question,/[\u4e00-\u9fff]/); assert.match(e.answer,/[\u4e00-\u9fff]/);
+  assert.ok(!/TODO|待译|待翻译|<wot:|undefined|�/.test(e.question+e.answer));
+  assert.equal(e.sources.length,(original.answer.match(/<wot:/g)||[]).length);
+  for(const url of e.sources)assert.match(url,/^https:\/\/discord\.com\/channels\/426286410496999425\/\d+\/\d+$/);
+  assert.ok(data.sections.some(s=>s.id===e.section));
+  assert.equal(view.filter({q:e.id})[0].id,e.id);
+  assert.ok(view.markdown(e.answer).includes('<p>') || view.markdown(e.answer).includes('<ul>'));
+}
+for (const [i,s] of data.sections.entries()) {assert.equal(s.id,slug(upstream.sections[i].title));assert.match(s.title,/[\u4e00-\u9fff]/);}
+assert.equal(data.entries.reduce((n,e)=>n+e.sources.length,0),120);
+assert.equal(data.contributors.length,12);
+assert.equal(view.filter({q:'https://lancer-faq.netlify.app/#078833'})[0].id,'6ff693');
+assert.equal(view.filter({q:'#faq-f85ba9'})[0].id,'f85ba9');
+assert.ok(view.filter({q:'地雷'}).some(e=>e.id==='f85ba9'));
+assert.ok(view.filter({q:'PARALLEL PROJECTORS'}).some(e=>e.id==='4858d0'));
+assert.ok(view.filter({q:'过热 热度'}).some(e=>e.id==='0d62c0'));
+assert.equal(view.filter({q:'肯定不存在的词xyz987'}).length,0);
+assert.ok(view.filter({kind:'errata'}).length>10);
+assert.ok(view.filter({kind:'errata'}).every(e=>e.errata));
+assert.ok(view.filter({kind:'ruling'}).every(e=>e.sources.length));
+assert.ok(view.filter({section:'078833'}).every(e=>e.section==='078833'));
+assert.equal(view.filter({section:'078833',q:'地雷'}).length,0);
+assert.ok(!view.markdown('<img src=x onerror=alert(1)>').includes('<img'));
+assert.ok(!view.markdown('<script>bad()</script>').includes('<script>'));
+assert.match(view.markdown('- 第一项\n- 第二项'),/^<ul><li>/);
+assert.match(view.markdown('导语\n- 第一项\n- 第二项\n\n结语'),/^<p>导语<\/p><ul><li>第一项<\/li><li>第二项<\/li><\/ul><p>结语<\/p>$/);
+assert.match(view.markdown('1. 第一项\n2. 第二项'),/^<ol><li>/);
+assert.match(view.markdown('**重点**'),/<strong>重点<\/strong>/);
+const html=read('index.html');
+for(const file of ['faq.css','faq-data.js','faq.js']) { assert.ok(html.includes(file));assert.ok(fs.existsSync(path.join(root,file))); }
+assert.ok(html.indexOf('faq-data.js')<html.indexOf('src="faq.js"'));
+assert.ok(!/localStorage|\bfetch\(/.test(read('faq.js').replace(/\/\/[^\n]*/g,'')));
+console.log('PASS: all 184 translated questions, 113 sections, 120 citations, stable links, bilingual search, filters, safe rendering and offline assets.');

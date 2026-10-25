@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lancer 简易车卡器</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="faq.css">
 </head>
 <body>
 <a class="skip-link" href="#app">跳到编辑区域</a>
@@ -16,6 +17,7 @@
 		<button data-act="toWizard" title="用引导式流程检查/修改当前角色">引导车卡</button>
 		<button data-ui="openGlossary" title="查询规则术语">术语库</button>
 		<button data-ui="openWeaponTable" title="查看全部机甲武器">武器表</button>
+		<button data-ui="openFAQ" title="查阅中文规则问答与勘误" aria-haspopup="dialog">规则 FAQ</button>
 		<details class="character-menu" id="characterMenu"><summary>角色管理</summary><div class="character-menu-panel">
 			<button data-act="importJson">导入角色 JSON</button>
 			<button data-act="exportAll">备份全部角色</button>
@@ -58,6 +60,8 @@
 <script src="rules.js"></script>
 <script src="glossary.js"></script>
 <script src="ui.js"></script>
+<script src="faq-data.js"></script>
+<script src="faq.js"></script>
 <script src="frame-catalog.js"></script><link rel="stylesheet" href="frame-catalog.css">
 <script src="battlemap.js"></script><script src="app.js"></script><link rel="stylesheet" href="battlemap.css">
 </body>
