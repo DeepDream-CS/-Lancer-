@@ -446,7 +446,7 @@ function renderProgress(p) {
 }
 
 // ---------- 页面：机甲 ----------
-function itemOptions(p, list, cur, filter) {
+function itemOptions(p, list, cur, filter, m = M()) {
 	const groups = {};
 	list.filter(filter).forEach(it => {
 		const ok = itemAvailable(p, it) || it.id === cur;
@@ -454,7 +454,10 @@ function itemOptions(p, list, cur, filter) {
 		const g = (it.source ? `${it.source}${it.license && it.license !== "GMS" ? " · " + (Z.frames[nk(it.license)] || it.license) + " " + it.license_level : ""}` : "天赋") + (it.ext ? " · 扩展" : "");
 		(groups[g] = groups[g] || []).push(it);
 	});
-	return Object.entries(groups).map(([g, items]) => `<optgroup label="${esc(g)}">${items.map(it => opt(it.id, esc(plain("item", it)) + (it.sp ? ` [${it.sp}SP]` : ""), it.id === cur)).join("")}</optgroup>`).join("");
+	return Object.entries(groups).map(([g, items]) => `<optgroup label="${esc(g)}">${items.map(it => {
+		const limited = MODS[it.id] && limitedTags(it.tags, p, m).find(t => t.id === "tg_limited");
+		return opt(it.id, esc(plain("item", it)) + (it.sp ? ` [${it.sp}SP]` : "") + (limited ? ` [${esc(tagText(limited))}]` : ""), it.id === cur);
+	}).join("")}</optgroup>`).join("");
 }
 const ACT = { "Quick": "快速动作", "Full": "完整动作", "Reaction": "反应", "Protocol": "协定", "Free": "自由动作", "Quick Tech": "快速科技", "Full Tech": "完整科技", "Invade": "入侵", "Deployable": "可展开", "Drone": "无人机", "Mine": "地雷", "cover": "掩体", "Rocket": "火箭", "Object": "物件", "Decoy": "诱饵", "Bomb": "炸弹" };
 const freqText = f => String(f || "").replace(/(\d+)\s*\/\s*round/i, "每轮$1次").replace(/(\d+)\s*\/\s*turn/i, "每回合$1次").replace(/(\d+)\s*\/\s*scene/i, "每场景$1次").replace(/unlimited/i, "无限");
@@ -481,6 +484,10 @@ function actsHtml(o) {
 	}
 	return h;
 }
+function weaponModSummary(mod, p, m) {
+	const meta = [`${mod.sp || 0} SP`, tagsPlain(limitedTags(mod.tags, p, m))].filter(Boolean).join("；");
+	return `模块：${plain("item", mod)}（${meta}）`;
+}
 function weaponInfo(w, mod, p = P(), m = M()) {
 	const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
 	const meta = [`${T.mount[w.mount] || w.mount}${T.wtype[w.type] || w.type}`, rngText(prof.range), dmgText(prof.damage)].filter(Boolean).join(" · ");
@@ -493,7 +500,8 @@ function weaponInfo(w, mod, p = P(), m = M()) {
 	if (w.profiles) detail += w.profiles.map(raw => { const pf = effectiveProfile(w, raw, mod, p, m); return `<div class="blk"><div class="blk-h">${esc(pf.name)}</div><div>${rngText(pf.range)} · ${dmgText(pf.damage)} ${tagsHtml(pf.tags)}</div>${pf.effect ? `<p>${pf.effect}</p>` : ""}${pf.on_hit ? `<p><b>命中时：</b>${txt(pf.on_hit)}</p>` : ""}${pf.on_crit ? `<p><b>会心一击时：</b>${txt(pf.on_crit)}</p>` : ""}${pf.on_attack ? `<p><b>攻击时：</b>${txt(pf.on_attack)}</p>` : ""}${actsHtml(pf)}</div>`; }).join("");
 	detail += actsHtml(w);
 	if (mod) detail += `<div class="blk"><div class="blk-h">模块：${esc(plain("item", mod))} (${mod.sp}SP)</div><p>${mod.effect || ""}</p>${actsHtml(mod)}</div>`;
-	return `<div class="wstat">${esc(meta)} ${tagsHtml(prof.tags || w.tags)}</div>` + det("w" + w.id + (mod ? mod.id : ""), "武器效果", detail);
+	const modMeta = mod ? `<div class="wstat weapon-mod-meta"><span class="muted">模块：${esc(plain("item", mod))} · ${mod.sp || 0} SP</span> ${tagsHtml(limitedTags(mod.tags, p, m))}</div>` : "";
+	return `<div class="wstat">${esc(meta)} ${tagsHtml(prof.tags || w.tags)}</div>` + modMeta + det("w" + w.id + (mod ? mod.id : ""), "武器效果", detail);
 }
 // 骨架选单的选项；filter 用于骨架筛选器（当前骨架始终保留，避免选单把它换掉）
 function frameOptions(p, m, filter = () => true) {
@@ -536,8 +544,8 @@ function mechParts(p) {
 			const w = WEAPONS[s.w];
 			const mods = w && !mt.noMods && !w.no_mods ? D.mods.filter(md => canModify(w, md, mt)) : [];
 			let html = `<div class="slot"><select data-act="slotW" data-arg="${mt.key}|${i}"><option value="">— 空 —</option>${itemOptions(p, D.weapons, s.w, x => acc.includes(x.mount))}</select>
-				${mods.length ? `<select data-act="slotMod" data-arg="${mt.key}|${i}"><option value="">— 无模块 —</option>${itemOptions(p, mods, s.mod, () => true)}</select>` : "<span></span>"}</div>`;
-			if (w) html += weaponInfo(w, s.mod && MODS[s.mod]) + `<p class="muted">${esc(buildWeaponNote(p, m, {w, mount:mt, i}))}</p>`;
+				${mods.length ? `<select data-act="slotMod" data-arg="${mt.key}|${i}"><option value="">— 无模块 —</option>${itemOptions(p, mods, s.mod, () => true, m)}</select>` : "<span></span>"}</div>`;
+			if (w) html += weaponInfo(w, s.mod && MODS[s.mod], p, m) + `<p class="muted">${esc(buildWeaponNote(p, m, {w, mount:mt, i}))}</p>`;
 			if (w && w.mount === "Superheavy") {
 				const others = superheavyLinkTargets(mounts, mt).filter(o => (!linkedBy[o.key] || linkedBy[o.key] === mt.key) && WEAPONS[m.loadout[o.key]?.slots?.[0]?.w]?.mount !== "Superheavy");
 				html += `<div class="row"><span class="muted">超重型武器需同时占用另一个挂载点${mt.type === "Superheavy" && others.some(o => o.type === "Heavy") ? "（超重挂载：必须是重型挂载点）" : ""}：</span><select data-act="link" data-arg="${mt.key}"><option value="">— 选择 —</option>${others.map(o => opt(o.key, `${T.mount[o.type]}挂载点`, sst.link === o.key)).join("")}</select></div>`;
@@ -630,7 +638,7 @@ function sheetText(p) {
 		integratedOf(f, p, m).forEach(w => { const pr = w.mount ? effectiveProfile(w, w.profiles?.[0] || w, null, p, m) : null; lines.push(`  · [内建] ${plain("item", w)}${pr ? `　${rngText(pr.range)}　${dmgText(pr.damage)}　${tagsPlain(pr.tags)}　${buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})}` : ""}`); });
 		equippedWeapons(p, m).forEach(e => {
 			const prof = effectiveProfile(e.w, e.w.profiles ? e.w.profiles[0] : e.w, e.mod, p, m);
-			lines.push(`  · [${T.mount[e.mount.type]}] ${plain("item", e.w)}　${T.mount[e.w.mount]}${T.wtype[e.w.type] || ""}　${rngText(prof.range)}　${dmgText(prof.damage)}${tagsPlain(prof.tags) ? "　" + tagsPlain(prof.tags) : ""}${e.mod ? "　模块：" + plain("item", e.mod) : ""}${m.stabilized === e.mount.key ? "　(+1准度)" : ""}${buildWeaponNote(p, m, e) ? "　" + buildWeaponNote(p, m, e) : ""}`);
+			lines.push(`  · [${T.mount[e.mount.type]}] ${plain("item", e.w)}　${T.mount[e.w.mount]}${T.wtype[e.w.type] || ""}　${rngText(prof.range)}　${dmgText(prof.damage)}${tagsPlain(prof.tags) ? "　" + tagsPlain(prof.tags) : ""}${e.mod ? "　" + weaponModSummary(e.mod, p, m) : ""}${m.stabilized === e.mount.key ? "　(+1准度)" : ""}${buildWeaponNote(p, m, e) ? "　" + buildWeaponNote(p, m, e) : ""}`);
 		});
 		lines.push(`系统：${m.systems.map(id => SYSTEMS[id] ? `${plain("item", SYSTEMS[id])}(${SYSTEMS[id].sp || 0} SP；${tagsPlain(limitedTags(SYSTEMS[id].tags,p,m))})` : "").filter(Boolean).join("、") || "—"}`);
 		if (m.notes) lines.push(`备注：${m.notes}`);

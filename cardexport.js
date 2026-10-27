@@ -206,8 +206,10 @@ function weaponRows(p, m) {
 	const rows = [];
 	const add = (w, mountName, mod, note = '') => {
 		const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
-		const eff = [stripHtml(w.effect), w.on_hit ? "命中：" + stripHtml(txt(w.on_hit)) : "", w.on_crit ? "会心一击：" + stripHtml(txt(w.on_crit)) : "", w.on_attack ? "攻击时：" + stripHtml(txt(w.on_attack)) : "", mod ? `模块「${plain("item", mod)}」：${stripHtml(mod.effect)}` : ""].filter(Boolean).join(" ");
-		rows.push([plain("item", w), mountName + " / " + (T.mount[w.mount] || w.mount) + (T.wtype[w.type] || w.type || ""), rngText(prof.range), dmgText(prof.damage), tagsPlain(prof.tags || w.tags), [note, eff].filter(Boolean).join(' ') ]);
+		const eff = [mod ? `${weaponModSummary(mod, p, m)}：${stripHtml(mod.effect)}` : "", stripHtml(w.effect), w.on_hit ? "命中：" + stripHtml(txt(w.on_hit)) : "", w.on_crit ? "会心一击：" + stripHtml(txt(w.on_crit)) : "", w.on_attack ? "攻击时：" + stripHtml(txt(w.on_attack)) : ""].filter(Boolean).join(" ");
+		const modLimited = mod && limitedTags(mod.tags, p, m).find(t => t.id === "tg_limited");
+		const tagSummary = [modLimited ? `模块${tagText(modLimited)}` : "", tagsPlain(prof.tags || w.tags)].filter(Boolean).join("；");
+		rows.push([plain("item", w), mountName + " / " + (T.mount[w.mount] || w.mount) + (T.wtype[w.type] || w.type || ""), rngText(prof.range), dmgText(prof.damage), tagSummary, [note, eff].filter(Boolean).join(' ') ]);
 	};
 	integratedOf(f, p, m).filter(w => w.mount).forEach(w => add(w, "内建", null, buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})));
 	equippedWeapons(p, m).forEach(e => add(e.w, (T.mount[e.mount.type] || e.mount.type), e.mod, buildWeaponNote(p,m,e)));

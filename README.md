@@ -74,7 +74,7 @@ node tools/test-v35.js
 | 命令 | 作用 |
 |---|---|
 | `node tools/build-data.js` | 合并数值、规则站译文、自译、v3.5 修订与扩展内容，生成 `data.js`（不要手改 data.js） |
-| `node tools/test-rules.js` | 89 项回归检查：车卡规则、全部骨架与装备渲染、扩展机制、筛选器、术语匹配、武器表 |
+| `node tools/test-rules.js` | 90 项回归检查：车卡规则、全部骨架与装备渲染、扩展机制、筛选器、术语匹配、武器表 |
 | `node tools/test-v35.js` | 核心数据的 v3.5 译名、数值结构、稳定 ID 与旧术语残留（扩展条目会先剔除） |
 | `node tools/extract-en.js` | 从 lancer-data 抽出界面会显示的英文到 `source/i18n/en/` |
 | `node tools/i18n-missing.js [文件名] [条数]` | 列出还没翻译的条目 |
