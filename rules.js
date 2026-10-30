@@ -171,6 +171,7 @@ function loadoutChecks(p, m) {
   if (new Set(families).size < families.length) error('同一天赋提供的装备不能重复安装或同时安装多个等级');
   if (hasCB(p,'cb_auto_stabilizing_hardpoints') && !mounts.some(mt=>mt.key===m.stabilized && !links.has(mt.key) && mt.type!=='Integrated')) error('请为自稳定承力点选择一个可用的普通挂载点');
   if (hasCB(p,'cb_mount_retrofitting') && !mounts.some(mt=>mt.retro)) error('请指定挂载点改装的目标');
+  if (hasCB(p,'cb_kkca_signature_move') && !(m.systems.includes(m.signature) && SYSTEMS[m.signature])) error('请为招牌动作指定一个已安装的系统');
   if (hasCB(p,'cb_overpower_caliber') && !eq.some(e=>`${e.mount.key}|${e.i}`===m.overpower && e.mount.type!=='Integrated' && !e.w.no_core_bonus)) error('请为超功率口径指定一件可用武器');
   if (p.talents.t_engineer >= 2) {
     const count = [m.prototypeOptics,m.prototypeSmart,m.prototypeReactor].filter(x=>x==='yes').length;

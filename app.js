@@ -100,7 +100,7 @@ function blankPilot() {
 	};
 }
 function blankMech(frame = EVEREST) {
-	return { name: "新机甲", frame, retrofit: -1, stabilized: "", overpower: "", loadout: {}, systems: [], notes: "", legacyFrame:"", legacyTrait:"" };
+	return { name: "新机甲", frame, retrofit: -1, stabilized: "", overpower: "", signature: "", loadout: {}, systems: [], notes: "", legacyFrame:"", legacyTrait:"" };
 }
 function load() {
 	try {
@@ -161,6 +161,10 @@ function cbEligible(p, cb, extra = 0) {
 	return makerLicenseTotal(p, cb.source) >= 3 * taken;
 }
 const hasCB = (p, id) => p.coreBonuses.includes(id);
+// K/KCA「私人家教」：额外 2 级天赋
+function talentBudget(p) { return LV(p.ll).talents + (p.coreBonuses.includes("cb_kkca_private_tutor") ? 2 : 0); }
+// K/KCA「招牌动作」：指定系统 SP 成本 -2（最低 0）
+function signatureDiscount(p, m) { return hasCB(p, "cb_kkca_signature_move") && m.systems.includes(m.signature) && SYSTEMS[m.signature] ? Math.min(2, SYSTEMS[m.signature].sp || 0) : 0; }
 const isUnique = it => (it.tags || []).some(t => t.id === "tg_unique");
 
 function mountsOf(p, m) {
@@ -203,7 +207,7 @@ function mechStats(p, m) {
 	const bonus = id => staticBonus(p, m, id);
 	let size = s.size;
 	if (bonus("size")) size = size < 1 ? 1 : Math.min(3, size + 1);
-	const spUsed = m.systems.reduce((a, id) => a + (SYSTEMS[id] ? SYSTEMS[id].sp || 0 : 0), 0) +
+	const spUsed = m.systems.reduce((a, id) => a + (SYSTEMS[id] ? SYSTEMS[id].sp || 0 : 0), 0) - signatureDiscount(p, m) +
 		equippedWeapons(p, m).reduce((a, e) => a + (e.w.sp || 0) + (e.mod ? e.mod.sp || 0 : 0), 0);
 	return {
 		size, structure: s.structure, stress: s.stress,
@@ -246,7 +250,7 @@ function checks(p) {
 	const hs = Object.values(p.hase).reduce((a, b) => a + b, 0);
 	if (hs !== L.skills) out.push(["warn", `机甲技能点数 ${hs}，应为 ${L.skills}`]);
 	const tr = Object.values(p.talents).reduce((a, b) => a + b, 0);
-	if (tr !== L.talents) out.push(["warn", `天赋等级合计 ${tr}，应为 ${L.talents}`]);
+	if (tr !== talentBudget(p)) out.push(["warn", `天赋等级合计 ${tr}，应为 ${talentBudget(p)}`]);
 	const lr = Object.values(p.licenses).reduce((a, b) => a + b, 0);
 	if (lr !== L.licenses) out.push([lr > L.licenses ? "err" : "warn", `牌照等级合计 ${lr}，应为 ${L.licenses}`]);
 	if (p.coreBonuses.length !== L.cbs) out.push([p.coreBonuses.length > L.cbs ? "err" : "warn", `核心奖励 ${p.coreBonuses.length} 个，应为 ${L.cbs} 个`]);
@@ -427,7 +431,7 @@ function progressParts(p) {
 		}).join("")}`).join("")}
 	</div>`,
 	talents: `<div class="card wide">
-		<h3>天赋 Talents ${counter(tr, L.talents)}</h3>
+		<h3>天赋 Talents ${counter(tr, talentBudget(p))}</h3>
 		<p class="muted">LL0 有三个一级天赋；每升一级可让一个天赋升一级，或取得一个新的一级天赋。</p>
 		${talentToolbar()}
 		${D.talents.map((t, i) => {
@@ -590,6 +594,7 @@ function mechParts(p) {
 	</div>`,
 	systems: `<div class="card">
 		<h3>系统 <span class="muted">剩余 ${st.sp - st.spUsed} SP</span></h3>
+		${hasCB(p, "cb_kkca_signature_move") ? `<div class="row"><span class="muted">招牌动作（核心奖励）指定系统，SP −2：</span><select data-k="mech.signature"><option value="">—</option>${[...new Set(m.systems)].filter(id => SYSTEMS[id]).map(id => opt(id, `${esc(plain("item", SYSTEMS[id]))} [${SYSTEMS[id].sp || 0}SP]`, m.signature === id)).join("")}</select></div>` : ""}
 		${sysHtml || '<p class="muted">尚未安装系统</p>'}
 		<div class="system-picker"><label class="search-field"><span>添加系统</span><input type="search" data-ui="systemSearch" value="${esc(uiState.systemQuery)}" placeholder="搜索系统名称或效果"></label><p class="muted" id="systemSearchCount" role="status"></p><div class="row"><select id="sysAdd" aria-label="选择要安装的系统" style="flex:1"><option value="">— 选择系统 —</option>${itemOptions(p, D.systems, "", s => !(isUnique(s) && m.systems.includes(s.id)))}</select><button data-act="addSys" class="primary" disabled>安装</button></div></div>
 		<h4>备注</h4><textarea data-k="mech.notes">${esc(m.notes)}</textarea>
@@ -870,6 +875,7 @@ function normalizePilot(raw, warn) {
 		m.retrofit = int(rm.retrofit, -1, 9, -1);
 		m.stabilized = str(rm.stabilized);
 		m.overpower = str(rm.overpower);
+		m.signature = str(rm.signature);
 		m.legacyFrame = FRAMES[rm.legacyFrame] && !FRAMES[rm.legacyFrame].required_core_bonus ? rm.legacyFrame : '';
 		m.legacyTrait = m.legacyFrame && rm.legacyTrait !== '' && rm.legacyTrait != null && Number.isInteger(Number(rm.legacyTrait)) && FRAMES[m.legacyFrame].traits[Number(rm.legacyTrait)] ? String(Number(rm.legacyTrait)) : '';
 		for (const k of ["prototypeType","prototypeDamage","prototypeOptics","prototypeSmart","prototypeReactor"]) m[k] = str(rm[k]);

@@ -132,11 +132,11 @@ const WIZ_STEPS = [
 		id: "talents", title: "天赋",
 		check: p => {
 			const L = LV(p.ll), s = sumOf(p.talents);
-			return [...(s === L.talents ? [] : [`天赋等级合计应为 ${L.talents}（现在 ${s}）`]), ...creationChecks(p).filter(c=>c[1].includes("天赋")).map(c=>c[1])];
+			return [...(s === talentBudget(p) ? [] : [`天赋等级合计应为 ${talentBudget(p)}（现在 ${s}）`]), ...creationChecks(p).filter(c=>c[1].includes("天赋")).map(c=>c[1])];
 		},
 		body: p => `
 			<p><b>天赋</b>是驾驶员独特的技巧，让你在某种武器、系统或打法上特别出色。每个天赋分 I、II、III 三级，必须依次取得。</p>
-			${tip(`LL0 选 <b>三个一级天赋</b>；之后每级可以让一个天赋升一级，或取得一个新的一级天赋。你共有 <b>${LV(p.ll).talents}</b> 级可分配。`)}
+			${tip(`LL0 选 <b>三个一级天赋</b>；之后每级可以让一个天赋升一级，或取得一个新的一级天赋。你共有 <b>${talentBudget(p)}</b> 级可分配${hasCB(p, "cb_kkca_private_tutor") ? "（含核心奖励「私人家教」+2）" : ""}。`)}
 			${tip("不知道选什么？先看每个天赋下面的一句话简介，挑和你想玩的机甲风格相符的（例如用大炮选「攻城专家」、想飞选「王牌」、当队长选「领袖」），点「天赋详情」看完整效果。", "muted")}
 			${progressParts(p).talents}`,
 	},
