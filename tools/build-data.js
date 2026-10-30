@@ -240,6 +240,9 @@ function mergeExpansion(d) {
 	}
 	for (const g of X.pilot_gear) { d.pilot_gear.push(mark(g)); d.zh.gear[g.name] = { name: g.name }; }
 	for (const k of ["weapons", "systems", "mods"]) for (const it of X[k] || []) d[k].push(mark({ ...it, zh_name: it.name }));
+ const professional = fixText(require('./calibrate-text').walk(require(path.join(ROOT, 'source/expansions/professional-licenses.js'))));
+ d.professional_licenses = professional.professional_licenses.map(x=>({...x,ext:true,pack:professional.PACK}));
+ for(const k of ['weapons','systems','mods']) for(const it of professional[k]) d[k].push({...it,zh_name:it.name,ext:true,pack:professional.PACK});
 	d.ext_rules = X.rules; // 变体骨架、新标签、新状态的规则说明
 	console.log("expansion merged:", ["frames", "talents", "backgrounds", "core_bonuses", "pilot_gear", "weapons", "systems", "mods"].map(k => `${k} ${(X[k] || []).length}`).join("，"));
 	return d;

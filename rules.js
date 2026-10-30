@@ -59,9 +59,9 @@ function slotAccepts(mount, index, slots) {
 }
 function canModify(w, mod, mount) {
   return !mount.noMods && !w.no_mods &&
-    (!mod.allowed_types?.length || mod.allowed_types.includes(w.type)) &&
+    (!mod.allowed_types?.length || (w.types||[w.type]).some(t=>mod.allowed_types.includes(t))) &&
     (!mod.allowed_sizes?.length || mod.allowed_sizes.includes(w.mount)) &&
-    !(mod.restricted_types || []).includes(w.type) && !(mod.restricted_sizes || []).includes(w.mount);
+    !(w.types||[w.type]).some(t=>(mod.restricted_types||[]).includes(t)) && !(mod.restricted_sizes || []).includes(w.mount);
 }
 // 超重型武器可另占的挂载点。扩展核心奖励「超重挂载」的超重型挂载点：机甲有重型挂载点时，必须占用它。
 function superheavyLinkTargets(mounts, mt) {
@@ -83,7 +83,8 @@ function limitedTags(tags, p, m) {
   const bonus = Math.floor(p.hase.eng / 2) + staticBonus(p, m, 'limited_bonus');
   return (tags || []).map(t => t.id === 'tg_limited' && bonus ? { ...t, val: Number.isFinite(+t.val) ? +t.val + bonus : `${t.val}+${bonus}` } : t);
 }
-function configuredWeapon(w, m) {
+function configuredWeapon(w, m, slot) {
+  if(w.select_profile) { const pf=w.profiles[int(slot?.profile,0,w.profiles.length-1)]; return {...w,...pf,id:w.id,name:w.name,profiles:w.profiles,selected_profile:pf.name}; }
   if (!w.id.startsWith('mw_prototype_')) return w;
   const type = ['Melee','CQB','Rifle','Cannon','Launcher','Nexus'].includes(m.prototypeType) ? m.prototypeType : 'Rifle';
   const damage = ['Kinetic','Explosive','Energy'].includes(m.prototypeDamage) ? m.prototypeDamage : 'Kinetic';
@@ -91,13 +92,13 @@ function configuredWeapon(w, m) {
     damage: w.damage.map(d => ({...d, type: damage})), tags: [...w.tags, ...(w.talent_rank >= 2 && m.prototypeSmart === 'yes' ? [{id:'tg_smart'}] : [])] };
 }
 function effectiveProfile(w, profile, mod, p, m) {
-  const base = profile || w;
+  const base = w.select_profile ? w : (profile || w);
   const range = (base.range || w.range || []).map(r => {
     let value = Number(r.val);
     if (!Number.isFinite(value) || w.no_bonus || w.no_bonuses) return {...r};
     for (const b of buildBonuses(p, m).filter(b => b.id === 'range')) {
       if (w.no_core_bonus && b.coreBonus) continue;
-      if (b.weapon_types?.length && !b.weapon_types.includes(w.type)) continue;
+      if (b.weapon_types?.length && !(w.types||[w.type]).some(t=>b.weapon_types.includes(t))) continue;
       if (b.weapon_sizes?.length && !b.weapon_sizes.includes(w.mount)) continue;
       if (b.range_types?.length && !b.range_types.includes(r.type)) continue;
       if (b.damage_types?.length && !(base.damage || []).some(d => b.damage_types.includes(d.type))) continue;
@@ -122,6 +123,7 @@ function effectiveProfile(w, profile, mod, p, m) {
 }
 function buildWeaponNote(p, m, entry) {
   const notes = [];
+  if (entry.w.selected_profile) notes.push('打印数据：' + entry.w.selected_profile);
   if (hasCB(p, 'cb_auto_stabilizing_hardpoints') && m.stabilized === entry.mount.key) notes.push('+1准度');
   if (hasCB(p, 'cb_overpower_caliber') && m.overpower === `${entry.mount.key}|${entry.i}`) notes.push('超功率口径：每轮一次，命中时+1d6额外伤害');
   if (m.frame === 'mf_deaths_head' && entry.w.type !== 'Melee') notes.push('远程攻击检定+1');
@@ -159,11 +161,13 @@ function loadoutChecks(p, m) {
       if (!w || !slotAccepts(mt,i,st.slots).includes(w.mount)) error(`挂载点 ${mt.key} 的武器尺寸或槽位组合不合法`);
       if (w && !itemAvailable(p,w)) error(`${plain('item',w)} 未解锁或属于内建装备`);
       if (sl.mod && (!MODS[sl.mod] || !w || !canModify(w,MODS[sl.mod],mt))) error('武器模块不适用于该武器或内建挂载点');
+      if(sl.mod2 && (w?.max_mods!==2 || !MODS[sl.mod2] || !canModify(w,MODS[sl.mod2],mt))) error('第二模组仅可安装到支持双模组的武器，且必须符合模组限制');
+      if(sl.mod && sl.mod===sl.mod2) error('同一把武器不能重复安装同一模组');
     }
   }
   for (const [key,st] of Object.entries(m.loadout)) if (!mounts.some(mt=>mt.key===key) && st.slots?.some(s=>s.w)) error(`挂载点 ${key} 已不存在，请移除残留装备或重新选择骨架`);
   const eq = equippedWeapons(p,m);
-  const all = [...eq.map(e=>e.w),...eq.map(e=>e.mod).filter(Boolean),...m.systems.map(id=>SYSTEMS[id]).filter(Boolean)];
+  const all = [...eq.map(e=>e.w),...eq.flatMap(e=>e.mods || (e.mod?[e.mod]:[])),...m.systems.map(id=>SYSTEMS[id]).filter(Boolean)];
   const ai = all.filter(x=>(x.tags||[]).some(t=>t.id==='tg_ai')).length;
   if (ai > 1 + staticBonus(p,m,'ai_cap')) error(`AI 数量超限（${ai}/${1 + staticBonus(p,m,'ai_cap')}，含武器模块）`);
   for (const id of m.systems) if (SYSTEMS[id] && !itemAvailable(p,SYSTEMS[id])) error(`${plain('item',SYSTEMS[id])} 未解锁或已由天赋内建提供`);
@@ -177,6 +181,7 @@ function loadoutChecks(p, m) {
     const count = [m.prototypeOptics,m.prototypeSmart,m.prototypeReactor].filter(x=>x==='yes').length;
     if (count !== 2) error('工程师原型武器须选择两项调整');
   }
+  out.push(...professionalLoadoutChecks(p,m));
   return out;
 }
 function migratePilot(p, warn = []) {

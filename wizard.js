@@ -143,15 +143,15 @@ const WIZ_STEPS = [
 	{
 		id: "licenses", title: "牌照", show: p => p.ll > 0,
 		check: p => {
-			const L = LV(p.ll), s = sumOf(p.licenses);
-			return s === L.licenses ? [] : [`牌照等级合计应为 ${L.licenses}（现在 ${s}）`];
+			const budget=LV(p.ll).licenses+(p.extraLicenseRanks||0), spent=sumOf(p.licenses)+(p.professionalLicenses||[]).reduce((n,x)=>n+x.rank-x.rewardRanks,0);
+			return [...(spent===budget?[]:[`牌照等级合计应为 ${budget}（现在 ${spent}）`]),...professionalChecks(p).map(x=>x[1])];
 		},
 		body: p => `
 			<p><b>牌照</b>决定你能用哪些机甲和装备。每一部授权骨架都有自己的牌照，分 I、II、III 级，必须依次取得：</p>
 			<ul class="wiz-list"><li><b>I 级</b>：解锁这牌照的第一批武器和系统。</li><li><b>II 级</b>：解锁<b>骨架本身</b>和更多装备。</li><li><b>III 级</b>：解锁最强的装备。</li></ul>
 			${tip(`你每有 1 级 LL 就有 1 牌照等级，共 <b>${LV(p.ll).licenses}</b> 级。GMS（埃弗勒斯和 GMS 装备）永远免费可用。`)}
 			${tip("装备可以混搭：解锁后，任何牌照的武器和系统都能装在任何骨架上。想开某部骨架，就把它的牌照升到 II。同一厂商的牌照合计每满 3 级，才能选该厂商的一个核心奖励。", "muted")}
-			${progressParts(p).licenses}`,
+			${progressParts(p).licenses}${progressParts(p).professionals}`,
 	},
 	{
 		id: "cbs", title: "核心奖励", show: p => LV(p.ll).cbs > 0,

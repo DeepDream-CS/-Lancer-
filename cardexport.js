@@ -156,12 +156,11 @@ async function drawPilotCard(p) {
 
 	// 牌照：每一级占一格
 	title(g, "许可证", "Licenses", 585, 433);
-	const lic = [];
-	for (let r = 1; r <= 3; r++) Object.entries(p.licenses).forEach(([id, rank]) => { if (rank >= r && FRAMES[id]) lic.push(`${FRAMES[id].source} ${zhOf("frame", FRAMES[id]) || FRAMES[id].name} ${roman(r)}`); });
-	for (let i = 0; i < 12; i++) {
-		const y = 444 + i * 34.3;
-		bar(g, 582, y, 311, 26);
-		if (lic[i]) fill(g, lic[i], 582, y, 311, 26);
+	const lic = pilotLicenseLines(p), licRows=Math.max(12,lic.length), licHeight=411.6/licRows;
+	for (let i = 0; i < licRows; i++) {
+		const y = 444 + i * licHeight;
+		bar(g, 582, y, 311, Math.min(26,licHeight-2));
+		if (lic[i]) fill(g, lic[i], 582, y, 311, Math.min(26,licHeight-2), {size:Math.min(14,licHeight*0.65),min:Math.min(9,licHeight*0.55)});
 		else text(g, "LL" + (i + 1), 586, y + 19, 16, { bold: true, color: C_HINT });
 	}
 
@@ -219,7 +218,7 @@ function systemRows(m, p) {
 	return [...m.systems.map(id => SYSTEMS[id]).filter(Boolean), ...integratedOf(FRAMES[m.frame],p,m).filter(s=>!s.mount)].map(s => {
 		const acts = asList(s.actions).map(a => `${a.name ? a.name + "：" : ""}${stripHtml(a.detail)}`);
 		const deps = asList(s.deployables).map(d => `${d.name}：${stripHtml(d.detail)}`);
-		return [plain("item", s), s.sp || 0, tagsPlain(limitedTags(s.tags,p,m)), [stripHtml(s.effect), ...acts, ...deps].filter(Boolean).join(" ")];
+		return [plain("item", s), s.sp || 0, tagsPlain(limitedTags(s.tags,p,m)), [stripHtml(s.effect), professionalSystemSummary(s,m,p), ...acts, ...deps].filter(Boolean).join(" ")];
 	});
 }
 
@@ -368,3 +367,9 @@ document.addEventListener("click", async e => {
 	const cards = await cardsFor(P(), b.dataset.card);
 	cards.forEach(([cv, name], i) => setTimeout(() => downloadCanvas(cv, name), i * 400));
 });
+
+function pilotLicenseLines(p) {
+ const lines=[];
+ for(let r=1;r<=3;r++) Object.entries(p.licenses).forEach(([id,rank])=>{if(rank>=r&&FRAMES[id])lines.push(`${FRAMES[id].source} ${zhOf("frame",FRAMES[id])||FRAMES[id].name} ${roman(r)}`);});
+ return lines.concat((p.professionalLicenses||[]).map(x=>`${x.source} ${x.name} ${roman(x.rank)}（专业${x.rewardRanks?"，奖励 "+x.rewardRanks+"级":""}）`));
+}
