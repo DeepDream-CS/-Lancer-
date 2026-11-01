@@ -370,7 +370,7 @@ pre.sheet { overflow-wrap:anywhere; }
 .term-tip-d p { margin: 4px 0; }
 .term-tip-f { margin-top: 6px; font-size: 11px; color: var(--muted); }
 /* 术语库面板 */
-.glossary { position: fixed; top: 0; right: 0; bottom: 0; z-index: 900; width: min(440px, 100vw); display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -8px 0 24px rgba(0,0,0,.4); }
+.glossary { position: fixed; top: 0; right: 0; bottom: 0; z-index: 910; width: min(440px, 100vw); display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -8px 0 24px rgba(0,0,0,.4); }
 .glossary[hidden] { display: none; }
 .glossary-top { display: flex; justify-content: space-between; align-items: center; }
 .glossary-top h2 { margin: 0; font-size: 18px; }

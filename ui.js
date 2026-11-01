@@ -196,12 +196,14 @@ function getGlossary() {
   return (glossaryCache = { list, re: new RegExp(patterns.map(p => `(${p.src})`).join('|'), 'g'), byIdx: patterns.map(p => p.i), cats: [...new Set(list.map(g => g.cat))] });
 }
 // 不在这些位置标记术语：表单控件、按钮、标题、名称等
-const TERM_SKIP = 'select,option,textarea,input,button,script,style,summary,h1,h2,h3,h4,h5,a,label,.term,.tag,.stepper,.li-title,.blk-h,.mount-h,.rank-h,.lic-head,.lic-rank-h,.mfr,.gear-label,.pick b,.eyebrow,.glossary';
+const TERM_SKIP = 'select,option,textarea,input,button,script,style,summary,h1,h2,h3,h4,h5,a,label,.term,.tag,.stepper,.li-title,.blk-h,.mount-h,.rank-h,.lic-head,.lic-rank-h,.mfr,.gear-label,.pick b,.eyebrow,.glossary,.wt-name';
+// 动作、可展开物标题里的说明部分（「快速动作」「可展开 · 大小1 · 10 HP」）仍要标记，名称不标
+const termSkipped = el => { const sk = el?.closest(TERM_SKIP); return !!sk && !(sk.matches('.blk-h') && el.closest('.blk-h > .muted') && !sk.parentElement?.closest(TERM_SKIP)); };
 function highlightTerms(root) {
   if (typeof document.createTreeWalker !== 'function' || !root?.querySelectorAll) return;
   const G = getGlossary();
   if (!G.re) return;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.trim() && !n.parentElement?.closest(TERM_SKIP) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.trim() && !termSkipped(n.parentElement) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
   const nodes = [];
   while (walker.nextNode()) nodes.push(walker.currentNode);
   for (const node of nodes) {
@@ -327,6 +329,7 @@ function renderWeaponTable() {
       <td>${esc(rngText(w.range || w.profiles?.[0]?.range)) || '—'}</td><td>${esc(dmgText(w.damage || w.profiles?.[0]?.damage)) || '—'}</td><td>${esc(tagsPlain(w.tags?.length ? w.tags : w.profiles?.[0]?.tags)) || '—'}</td><td>${w.sp || '—'}</td>
       <td class="wt-effect">${weaponEffectHtml(w)}</td></tr>`;
   }).join('') : '<tr><td colspan="9" class="empty-state">没有符合条件的武器。</td></tr>';
+  highlightTerms(box.querySelector('.wt-body'));
 }
 function openWeaponTable() { const box = document.getElementById('weaponTable'); if (!box) return; box.hidden = false; renderWeaponTable(); box.querySelector('[data-wt="q"]').focus(); }
 function closeWeaponTable() { const box = document.getElementById('weaponTable'); if (box) box.hidden = true; }

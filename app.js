@@ -386,6 +386,12 @@ function renderPilot(p) {
 
 // ---------- 页面：等级成长 ----------
 // 牌照各级解锁的骨架与装备（升级前也能查看后续等级给什么）
+// 悬停说明：很多装备没有 effect，规则写在命中效果、多模式、动作或可展开物里
+const hoverPlain = h => String(h || "").replace(/<br\s*\/?>|<\/?(p|li|div)\b[^>]*>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
+function itemHoverText(it) {
+	if (WEAPONS[it.id]) return hoverPlain(`${[rngText(it.range), dmgText(it.damage), tagsPlain(it.tags)].filter(Boolean).join(" · ")}<br>${weaponEffectHtml(it).replace('<span class="muted">—</span>', "")}`);
+	return hoverPlain(`${tagsPlain(it.tags)}<br>${it.effect || ""}${actsHtml(it)}`);
+}
 const licenseOf = it => (it.license && it.license !== "GMS" ? FRAME_BY_NAME[nk(it.license).toLowerCase()] : null);
 function licenseContents(p, f) {
 	const rank = p.licenses[f.id] || 0;
@@ -394,7 +400,7 @@ function licenseContents(p, f) {
 	const variants = D.frames.filter(v => v.variant_of === f.id);
 	return [1, 2, 3].map(lv => {
 		const list = items.filter(it => (it.license_level || 0) === lv).map(it =>
-			`<li title="${esc(stripHtml(it.effect || ""))}">${esc(plain("item", it))} <span class="muted">${esc(kind(it))}${it.sp ? ` · ${it.sp} SP` : ""}</span></li>`);
+			`<li title="${esc(itemHoverText(it))}">${esc(plain("item", it))} <span class="muted">${esc(kind(it))}${it.sp ? ` · ${it.sp} SP` : ""}</span></li>`);
 		if (lv === 2) list.unshift(`<li><b>${esc(frameName(f))}骨架</b>${variants.length ? ` <span class="muted">（也可改用变体：${variants.map(v => esc(frameName(v))).join("、")}）</span>` : ""}</li>`);
 		return `<div class="lic-rank ${rank >= lv ? "have" : ""}"><div class="lic-rank-h">${["", "I", "II", "III"][lv]} 级${rank >= lv ? " · 已解锁" : ""}</div><ul>${list.join("") || '<li class="muted">—</li>'}</ul></div>`;
 	}).join("");

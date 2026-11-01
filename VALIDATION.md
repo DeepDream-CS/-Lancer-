@@ -78,3 +78,9 @@ node tools/test-rules.js
 - JSON 格式为本项目格式；没有新增 COMP/CON 存档互导或扩展 LCP 支持。
 
 新增代码在 `rules.js`；回归检查在 `tools/test-rules.js`；统一术语入口在 `tools/calibrate-text.js`。重新构建不会覆盖这轮自译修正。
+
+## 后续说明（2026-11-02）
+
+- 本记录针对 2026-10-21 的核心数据。之后加入的扩展骨架、专业牌照和新厂商，分别在 `EXPANSION-TRANSLATION-REVIEW.md`、`PROFESSIONAL-LICENSES.md` 和 README 的「扩展内容」中说明。
+- 「⑤ 战斗地图」只是 GM 记录位置、地形和状态的工具，不自动结算规则效果，上面的功能边界仍然适用。
+- 当前检查：`test-rules.js` 120 项、`test-v35.js` 475 项译名与数据检查、`test-expansion-copy.js`、`test-mod-display.js`、`test-faq.js` 均通过。`test-v35.js` 的 `stripExt()` 现在同时剔除 `professional_licenses`。
