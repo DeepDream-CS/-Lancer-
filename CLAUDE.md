@@ -76,7 +76,7 @@ node tools/i18n-missing.js          # 自译缺项
 ```
 
 - test-v35 用数值结构摘要锁住核心数据；扩展内容和新增的顶层字段（如 `ext_rules`、`professional_licenses`）要在 `stripExt()` 里剔除，不要改基线。
-- 测试在 vm 里跑全部脚本，没有真实 DOM；会碰 DOM 的函数要先判断（如 `enhanceUI` 检查 `app.querySelector`）。测试代码里的变量名不要和全局名（`m`、`a` 等）冲突。
+- 测试在 vm 里跑全部脚本，没有真实 DOM；会碰 DOM 的函数要先判断（如 `enhanceUI` 检查 `app.querySelector`）。测试代码里的变量名不要和全局名（`m`、`a` 等）冲突。 battlemap.js 也在测试里载入（`BattleMap.footprint` 有占格检查）；faq.js 不载入。
 - 机甲 SP、豁免目标等会加上毅力，测试数值时用不受毅力影响的项（如感应、热度上限）。
 
 ## 编辑注意

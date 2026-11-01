@@ -7,8 +7,8 @@ function runtime(saved) {
   const ctx = vm.createContext({console, setTimeout, clearTimeout, Blob, URL,
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     document:{body:el(),addEventListener(){},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);},querySelectorAll(){return[];}},
-    window:{scrollTo(){}},navigator:{},confirm:()=>true});
-  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','glossary.js','ui.js','frame-catalog.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
+    window:{scrollTo(){},addEventListener(){}},navigator:{},confirm:()=>true});
+  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','glossary.js','ui.js','frame-catalog.js','battlemap.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
   return code=>vm.runInContext(code,ctx);
 }
 const run=runtime(); let passed=0;
@@ -71,6 +71,7 @@ test('Frame filter: maker, role, source, unlocked and search',()=>{
 });
 test('License contents list gear for ranks I-III, incl. expansion and variants',()=>assert(run("p=fixture(2);p.licenses={mf_blackbeard:1};const h=licenseContents(p,FRAMES.mf_blackbeard),g=licenseContents(p,FRAMES.mf_ext_gilgamesh);h.includes('I 级 · 已解锁')&&!h.includes('II 级 · 已解锁')&&h.includes('因帕卡伊')&&h.includes(plain('item',WEAPONS.mw_chain_axe))&&g.includes('军团巢房')&&g.includes('吉尔伽美什骨架')")));
 test('License contents hover text covers gear without an effect field',()=>assert(run("[...D.weapons,...D.systems,...D.mods].filter(it=>it.source&&licenseOf(it)).every(it=>itemHoverText(it).trim())&&itemHoverText(WEAPONS.mw_chain_axe).includes('会心一击时')&&itemHoverText(SYSTEMS.ms_reinforced_cabling).includes('拖倒')&&itemHoverText(WEAPONS.mw_assault_cannon).includes('\\n旋转')&&!itemHoverText(WEAPONS.mw_chain_axe).includes('—')")));
+test('Battle map footprints: size 1/2 = 1 hex, 2 = 3, 3 = 7 (centre + ring), 4 = 12, all connected',()=>assert(run(`{const F=(size,q,r)=>BattleMap.footprint({size,q,r}),D2=BattleMap.dist;[3,4].every(q=>['½','1','2','3','4'].map(z=>new Set(F(z,q,5).map(c=>c.q+','+c.r)).size).join()==='1,1,3,7,12')&&[3,4].every(q=>{const c=F('3',q,5);return c.some(x=>x.q===q&&x.r===5)&&c.every(x=>D2(x,{q,r:5})<=1);})&&[3,4].every(q=>['2','4'].every(z=>{const c=F(z,q,5);return c.some(x=>x.q===q&&x.r===5)&&c.every(x=>c.some(y=>y!==x&&D2(x,y)===1));}))}`)));
 test('Glossary: tags merged, ambiguous words not tagged',()=>{
   const terms=s=>run("(()=>{const G=getGlossary(),out=[];G.re.lastIndex=0;let m;const s="+JSON.stringify(s)+";while((m=G.re.exec(s))){const i=G.byIdx[m.findIndex((x,k)=>k>0&&x!==undefined)-1];if(i>=0)out.push(G.list[i].term);}return out.join()})()");
   assert(run("getGlossary().list.length")>100);
