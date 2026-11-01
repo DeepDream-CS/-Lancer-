@@ -77,11 +77,13 @@ function filterTalents() {
   document.querySelectorAll('[data-talent-count]').forEach(el=>el.textContent=`显示 ${count} / ${rows.length} 项`);
   document.querySelectorAll('[data-talent-empty]').forEach(el=>el.hidden=count>0);
 }
+// 系统搜索文字：名称、厂商、类型（如「可展开」）、标签（如「可展开」「受限」「独特」）与效果
+const systemSearchText=s=>`${plain('item',s)} ${s.name} ${s.source} ${T.stype[s.type]||s.type||''} ${(s.tags||[]).map(tagText).join(' ')} ${stripHtml(s.effect)}`.toLocaleLowerCase();
 function filterSystems() {
   const select=document.getElementById('sysAdd');
   if(!select?.options) return;
   const current=select.value, q=uiState.systemQuery.trim().toLocaleLowerCase(), p=P(), m=M();
-  const available=s=>!(isUnique(s)&&m.systems.includes(s.id)) && (!q || `${plain('item',s)} ${s.name} ${s.source} ${stripHtml(s.effect)}`.toLocaleLowerCase().includes(q));
+  const available=s=>!(isUnique(s)&&m.systems.includes(s.id)) && (!q || systemSearchText(s).includes(q));
   select.innerHTML='<option value="">— 选择系统 —</option>'+itemOptions(p,D.systems,'',available);
   if([...select.options].some(o=>o.value===current)) select.value=current;
   const count=select.options.length-1;

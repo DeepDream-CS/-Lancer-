@@ -604,7 +604,7 @@ function mechParts(p) {
 		<h3>系统 <span class="muted">剩余 ${st.sp - st.spUsed} SP</span></h3>
 		${hasCB(p, "cb_kkca_signature_move") ? `<div class="row"><span class="muted">招牌动作（核心奖励）指定系统，SP −2：</span><select data-k="mech.signature"><option value="">—</option>${[...new Set(m.systems)].filter(id => SYSTEMS[id]).map(id => opt(id, `${esc(plain("item", SYSTEMS[id]))} [${SYSTEMS[id].sp || 0}SP]`, m.signature === id)).join("")}</select></div>` : ""}
 		${sysHtml || '<p class="muted">尚未安装系统</p>'}
-		<div class="system-picker"><label class="search-field"><span>添加系统</span><input type="search" data-ui="systemSearch" value="${esc(uiState.systemQuery)}" placeholder="搜索系统名称或效果"></label><p class="muted" id="systemSearchCount" role="status"></p><div class="row"><select id="sysAdd" aria-label="选择要安装的系统" style="flex:1"><option value="">— 选择系统 —</option>${itemOptions(p, D.systems, "", s => !(isUnique(s) && m.systems.includes(s.id)))}</select><button data-act="addSys" class="primary" disabled>安装</button></div></div>
+		<div class="system-picker"><label class="search-field"><span>添加系统</span><input type="search" data-ui="systemSearch" value="${esc(uiState.systemQuery)}" placeholder="搜索系统名称、标签或效果"></label><p class="muted" id="systemSearchCount" role="status"></p><div class="row"><select id="sysAdd" aria-label="选择要安装的系统" style="flex:1"><option value="">— 选择系统 —</option>${itemOptions(p, D.systems, "", s => !(isUnique(s) && m.systems.includes(s.id)))}</select><button data-act="addSys" class="primary" disabled>安装</button></div></div>
 		<h4>备注</h4><textarea data-k="mech.notes">${esc(m.notes)}</textarea>
 	</div>`,
 	};
