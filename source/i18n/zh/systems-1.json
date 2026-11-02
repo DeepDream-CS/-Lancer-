@@ -30,7 +30,7 @@
  "ms_stable_structure.zh_name": "稳定结构",
  "ms_stable_structure.effect": "你为避免伏卧或击退而进行的豁免得到+1准度。",
  "ms_turret_drones.zh_name": "无人炮塔",
- "ms_turret_drones.effect": "消耗一发来部署一部无人炮塔，它会附着在感应范围内且在视线范围内的任何物件或表面上。获得「炮塔攻击」反应，每部已部署的无人炮塔可使用一次。无人炮塔无法召回，并在场景结束时失效。",
+ "ms_turret_drones.effect": "以快速动作消耗1充能，在视线感应内的物品或表面上部署一架炮塔无人机。你获得炮塔攻击反应，每部署一架炮塔可额外使用一次该反应。炮塔无人机无法回收，并在场景结束时停止运作。",
  "ms_turret_drones.deployables.0.name": "无人炮塔",
  "ms_turret_drones.deployables.0.detail": "获得「炮塔攻击」反应，每部已部署的无人炮塔可使用一次。无人炮塔无法召回，并在场景结束时失效。",
  "ms_turret_drones.deployables.0.actions.0.name": "炮塔攻击",

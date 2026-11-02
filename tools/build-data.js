@@ -62,7 +62,7 @@ function render(e) {
 const i18nZh = f => JSON.parse(fs.readFileSync(path.join(ROOT, "source/i18n/zh", f + ".json"), "utf8"));
 const zhW = i18nZh("weapons-2"), zhS = i18nZh("systems-2");
 const p_ = s => `<p>${s}</p>`;
-const AMMO_I = "<ul><li><b>重击弹</b>（1发）：这攻击得到<b>击退1</b>并造成<b>爆炸</b>伤害。</li><li><b>电击弹</b>（1发）：这攻击造成<b>能量</b>伤害。选择这次攻击的一个目标，无论命中与否，与其邻接的角色受到1点AP能量伤害。</li><li><b>磁轨弹</b>（1发）：这攻击得到<b>抛射</b>并造成<b>动能</b>伤害。</li></ul>";
+const AMMO_I = "<ul><li><b>重击弹</b>（1充能）：这攻击得到<b>击退1</b>并造成<b>爆炸</b>伤害。</li><li><b>电击弹</b>（1充能）：这攻击造成<b>能量</b>伤害。选择这次攻击的一个目标，无论命中与否，与其邻接的角色受到1点AP能量伤害。</li><li><b>磁轨弹</b>（1充能）：这攻击得到<b>抛射</b>并造成<b>动能</b>伤害。</li></ul>";
 const BLOCK_FILLS = {
 	"Prototype Weapon": { meta: "主 特殊武器 · 威胁1 或 射程10 · 1d6+2 自选伤害类型 · 受限 1d6+2、杀绝", html: p_(zhW["mw_prototype_1.effect"]) },
 	"Last Argument of Kings": { meta: "完整科技", html: p_("对感应范围内且在视线范围内的一个目标进行<b>科技攻击</b>。成功的话，你植入一个病毒，引发目标反应炉的小型熔解：目标立即受到等同其当前<b>热度</b>的<b>燃烧</b>。如果这动作使目标过热，它会在目标重置热度之前结算。") },
@@ -70,7 +70,7 @@ const BLOCK_FILLS = {
 	"Servant-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_1.effect"]) },
 	"Student-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_2.effect"]) },
 	"Englihtenment-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_3.effect"]) },
-	"Ammo Case": { meta: "受限6、每回合1次", html: p_("每回合一次，当你以<b>主远距武器</b>攻击时，你可以按所列消耗来消耗发数，为该攻击套用以下其中一种效果：") + AMMO_I },
+	"Ammo Case": { meta: "0 SP、受限6、每回合1次", html: p_("每回合一次，当你以<b>主远程武器</b>攻击时，你可以消耗所列数量的<b>充能</b>，为该攻击套用以下其中一种效果：") + AMMO_I },
 };
 
 // 规则站漏译的天赋等级名

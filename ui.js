@@ -78,7 +78,7 @@ function filterTalents() {
   document.querySelectorAll('[data-talent-empty]').forEach(el=>el.hidden=count>0);
 }
 // 系统搜索文字：名称、厂商、类型（如「可展开」）、标签（如「可展开」「受限」「独特」）与效果
-const systemSearchText=s=>`${plain('item',s)} ${s.name} ${s.source} ${T.stype[s.type]||s.type||''} ${(s.tags||[]).map(tagText).join(' ')} ${stripHtml(s.effect)}`.toLocaleLowerCase();
+const systemSearchText=s=>`${plain('item',s)} ${s.name} ${s.source} ${T.stype[s.type]||s.type||''} ${systemTags(s).map(tagText).join(' ')} ${stripHtml(s.effect)}`.toLocaleLowerCase();
 function filterSystems() {
   const select=document.getElementById('sysAdd');
   if(!select?.options) return;

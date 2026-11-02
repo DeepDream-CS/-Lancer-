@@ -390,7 +390,7 @@ function renderPilot(p) {
 const hoverPlain = h => String(h || "").replace(/<br\s*\/?>|<\/?(p|li|div)\b[^>]*>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
 function itemHoverText(it) {
 	if (WEAPONS[it.id]) return hoverPlain(`${[rngText(it.range), dmgText(it.damage), tagsPlain(it.tags)].filter(Boolean).join(" · ")}<br>${weaponEffectHtml(it).replace('<span class="muted">—</span>', "")}`);
-	return hoverPlain(`${tagsPlain(it.tags)}<br>${it.effect || ""}${actsHtml(it)}`);
+	return hoverPlain(`${tagsPlain(SYSTEMS[it.id] ? systemTags(it) : it.tags)}<br>${it.effect || ""}${actsHtml(it)}`);
 }
 const licenseOf = it => (it.license && it.license !== "GMS" ? FRAME_BY_NAME[nk(it.license).toLowerCase()] : null);
 function licenseContents(p, f) {
@@ -404,6 +404,35 @@ function licenseContents(p, f) {
 		if (lv === 2) list.unshift(`<li><b>${esc(frameName(f))}骨架</b>${variants.length ? ` <span class="muted">（也可改用变体：${variants.map(v => esc(frameName(v))).join("、")}）</span>` : ""}</li>`);
 		return `<div class="lic-rank ${rank >= lv ? "have" : ""}"><div class="lic-rank-h">${["", "I", "II", "III"][lv]} 级${rank >= lv ? " · 已解锁" : ""}</div><ul>${list.join("") || '<li class="muted">—</li>'}</ul></div>`;
 	}).join("");
+}
+const BUILD_RESET_GROUPS = {
+	talents: {name:"天赋", keys:["talents"]},
+	licenses: {name:"普通牌照", keys:["licenses"]},
+	core: {name:"核心奖励", keys:["coreBonuses"]},
+	hase: {name:"机甲技能", keys:["hase"]},
+	all: {name:"全部构筑点数", keys:["talents","licenses","coreBonuses","hase"]},
+};
+let buildResetUndo = null;
+function resetBuildPoints(p, scope) {
+	const group = BUILD_RESET_GROUPS[scope];
+	if (!group) return false;
+	if (!confirm(`清空「${p.name}」的${group.name}？\n角色等级、身份资料、机甲和装备会保留。专业牌照及额外奖励额度保留。\n重配前的选择可用“撤销上次重置”恢复；未满足牌照或天赋条件的装备会提示检查。`)) return false;
+	const before = Object.fromEntries(group.keys.map(k=>[k,JSON.parse(JSON.stringify(p[k]))]));
+	const defaults = {talents:{},licenses:{},coreBonuses:[],hase:{hull:0,agi:0,sys:0,eng:0}};
+	for (const k of group.keys) p[k] = defaults[k];
+	buildResetUndo = {pilotId:p.id,name:group.name,before};
+	return true;
+}
+function undoBuildReset(p) {
+	if (!buildResetUndo || buildResetUndo.pilotId !== p.id) return false;
+	if (!confirm(`恢复上次重置前的${buildResetUndo.name}？这会覆盖重置后对这些项目的调整。`)) return false;
+	for (const [k,v] of Object.entries(buildResetUndo.before)) p[k] = JSON.parse(JSON.stringify(v));
+	buildResetUndo = null;
+	return true;
+}
+function buildResetPanel(p) {
+	return `<div class="card wide"><h3>重配构筑</h3><p class="muted">规则允许每次提升 LL 时，重分配一个天赋的全部等级、一个牌照的全部等级，或替换一个核心奖励。下方批量清空方便重做构筑；超出升级重分配范围时，请与 GM 商定。</p>
+	<div class="row">${Object.entries(BUILD_RESET_GROUPS).map(([id,g])=>`<button data-act="resetBuild" data-arg="${id}" class="${id==='all'?'danger':''}">清空${g.name}</button>`).join('')}<button data-act="undoBuildReset" ${buildResetUndo?.pilotId===p.id?'':'disabled'}>撤销上次重置</button></div><p class="muted">专业牌照与额外奖励额度保留。撤销仅在当前页面会话中有效；重配前也可先导出角色备份。</p></div>`;
 }
 function progressParts(p) {
 	const L = LV(p.ll);
@@ -457,7 +486,7 @@ function progressParts(p) {
 }
 function renderProgress(p) {
 	const x = progressParts(p);
-	return `<div class="grid">${x.hase}${x.levels}${x.licenses}${x.professionals}${x.cbs}${x.talents}</div>`;
+	return `<div class="grid">${buildResetPanel(p)}${x.hase}${x.levels}${x.licenses}${x.professionals}${x.cbs}${x.talents}</div>`;
 }
 
 // ---------- 页面：机甲 ----------
@@ -485,17 +514,38 @@ const statVal = v => {
 };
 // 个别数据把单个动作写成对象而不是数组，这里统一成数组
 const asList = v => (Array.isArray(v) ? v : v && typeof v === "object" ? [v] : []);
+function droneDeployment(s) {
+	const tags=s.tags||[];
+	if(tags.some(t=>t.id==='tg_full_action')) return 'Full';
+	if(tags.some(t=>t.id==='tg_quick_action')) return 'Quick';
+	const drone=asList(s.deployables).find(d=>d.type==='Drone');
+	return drone?.activation || s.activation || asList(s.actions).find(a=>/部署|Deploy/i.test(a.name||''))?.activation || 'Quick';
+}
+// Display missing deployment metadata without changing the upstream numerical data.
+function systemTags(s,p,m) {
+	let tags=[...(s.tags||[])];
+	if(s.id==='ms_roller_directed_payload_charges') tags=tags.filter(t=>t.id!=='tg_grenade'); // Grenade applies to one mode, not its mine.
+	if(s.type==='Drone'||tags.some(t=>t.id==='tg_drone')||asList(s.deployables).some(d=>d.type==='Drone')) {
+		if(!tags.some(t=>t.id==='tg_drone')) tags.push({id:'tg_drone'});
+		const activation={Quick:'tg_quick_action',Full:'tg_full_action',Free:'tg_free_action',Protocol:'tg_protocol'}[droneDeployment(s)];
+		if(activation&&!tags.some(t=>t.id===activation)) tags.push({id:activation});
+	}
+	return p&&m ? limitedTags(tags,p,m) : tags;
+}
+function integratedSystemInfo(s,p,m) {
+	return `<div class="wstat">${s.sp||0} SP ${tagsHtml(systemTags(s,p,m))}</div><div class="desc">${s.effect||''}${actsHtml(s)}</div>`;
+}
 function actsHtml(o) {
   let h = "";
-  if (o.ammo) h += o.ammo.map(a => `<div class="blk"><b>${esc(a.name)}（${a.cost || 1}发）</b><p>${a.detail || ""}</p></div>`).join("");
+  if (o.ammo) h += o.ammo.map(a => `<div class="blk"><b>${esc(a.name)}（${a.cost || 1}充能）</b><p>${a.detail || ""}</p></div>`).join("");
 	for (const k of ["actions", "active_actions", "passive_actions"]) for (const a of asList(o[k])) {
 		if (!a.detail && !a.name) continue;
 		const meta = [ACT[a.activation] || a.activation, freqText(a.frequency)].filter(x => x && x !== "None").join("，");
 		h += `<div class="blk"><div class="blk-h">${esc(a.name || "")} <span class="muted">${esc(meta)}</span></div>${a.trigger ? `<p><b>触发：</b>${a.trigger}</p>` : ""}<p>${a.detail || ""}</p></div>`;
 	}
 	for (const k of ["deployables", "active_deployables"]) for (const d of asList(o[k])) {
-		const st = [d.size != null ? "大小" + (d.size === 0.5 ? "½" : d.size) : "", d.hp != null ? (Number(statVal(d.hp)) + (STAT_CTX[d.type === "Drone" ? "drone_hp" : "deployable_hp"] || 0)) + " HP" : "", d.armor ? "装甲" + statVal(d.armor) : "", d.evasion != null ? "回避" + statVal(d.evasion) : "", d.edef != null ? "电子防御" + statVal(d.edef) : ""].filter(Boolean).join(" · ");
-		h += `<div class="blk"><div class="blk-h">${esc(d.name || "")} <span class="muted">${esc(ACT[d.type] || d.type || "")}${st ? " · " + esc(st) : ""}</span></div><p>${d.detail || ""}</p>${actsHtml(d)}</div>`;
+		const st = [d.type==='Drone' ? `${ACT[d.activation||droneDeployment(o)]||d.activation||droneDeployment(o)}部署` : '', rngText(d.range), d.size != null ? "大小" + (d.size === 0.5 ? "½" : d.size) : "", d.hp != null ? (Number(statVal(d.hp)) + (STAT_CTX[d.type === "Drone" ? "drone_hp" : "deployable_hp"] || 0)) + " HP" : "", d.armor ? "装甲" + statVal(d.armor) : "", d.evasion != null ? "回避" + statVal(d.evasion) : "", d.edef != null ? "电子防御" + statVal(d.edef) : ""].filter(Boolean).join(" · ");
+		h += `<div class="blk"><div class="blk-h">${esc(d.name || "")} <span class="muted">${esc(ACT[d.type] || d.type || "")}${st ? " · " + esc(st) : ""}</span> ${tagsHtml(d.tags)}</div><p>${d.detail || ""}</p>${actsHtml(d)}</div>`;
 	}
 	return h;
 }
@@ -572,7 +622,7 @@ function mechParts(p) {
 		}).join("");
 		return `<div class="mount"><div class="mount-h"><span>${title}</span>${stab}</div>${slots}</div>`;
 	}).join("");
-	const integ = integratedOf(f, p, m).map(w => `<div class="mount"><div class="mount-h">内建：${esc(plain("item", w))}</div>${w.mount ? weaponInfo(w) : `<div class="desc">${w.effect || ""}${actsHtml(w)}</div>`}</div>`).join("");
+	const integ = integratedOf(f, p, m).map(w => `<div class="mount"><div class="mount-h">内建：${esc(plain("item", w))}</div>${w.mount ? weaponInfo(w,null,p,m) : integratedSystemInfo(w,p,m)}</div>`).join("");
 	const retro = hasCB(p, "cb_mount_retrofitting") ? `<div class="row"><span class="muted">挂载点改装（核心奖励）：把哪个挂载点换成主/副？</span><select data-act="retro"><option value="-1">—</option>${f.mounts.map((t, i) => opt(i, `${i + 1}. ${T.mount[t]}挂载点`, m.retrofit === i)).join("")}</select></div>` : "";
 	const overpower = hasCB(p, "cb_overpower_caliber") ? `<div class="row"><span class="muted">超功率口径（核心奖励）指定武器：</span><select data-k="mech.overpower"><option value="">—</option>${equippedWeapons(p, m).filter(e => e.mount.type !== "Integrated" && !e.w.no_core_bonus).map(e => opt(`${e.mount.key}|${e.i}`, `${T.mount[e.mount.type]} ${e.mount.key}/${e.i + 1} · ${esc(plain("item", e.w))}`, m.overpower === `${e.mount.key}|${e.i}`)).join("")}</select></div>` : "";
 
@@ -583,7 +633,7 @@ function mechParts(p) {
 		const z = Z.gms[s.name];
 		const lock = !itemAvailable(p, s);
 		return `<div class="list-item ${lock ? "locked" : ""}"><div class="li-head"><span class="li-title">${label("item", s)} <small>${s.sp || 0} SP</small>${extBadge(s)}</span><button data-act="delSys" data-arg="${i}" class="danger">✕</button></div>
-			<div class="wstat">${s.type ? (T.stype[s.type] || s.type) + " " : ""}${tagsHtml(limitedTags(s.tags, p, m))}</div>${professionalSystemSetup(p,m,s)}${det("s" + id + i, "系统效果", (s.effect ? `<p>${s.effect}</p>` : "") + actsHtml(s) || (z && z.html) || "")}</div>`;
+			<div class="wstat">${s.type&&s.type!=='Drone' ? (T.stype[s.type]||s.type)+' ' : ''}${tagsHtml(systemTags(s, p, m))}</div>${professionalSystemSetup(p,m,s)}${det("s" + id + i, "系统效果", (s.effect ? `<p>${s.effect}</p>` : "") + actsHtml(s) || (z && z.html) || "")}</div>`;
 	}).join("");
 	const spPct = Math.min(100, (st.spUsed / st.sp) * 100);
 
@@ -655,18 +705,18 @@ function sheetText(p) {
 		lines.push(`科技攻击 ${st.tech >= 0 ? "+" : ""}${st.tech}｜攻击加值 +${st.attack}｜SP ${st.spUsed}/${st.sp}`);
 		lines.push(`特征：${mechTraits(m).map(t => t.name).join("、")}｜核心系统：${f.core_system.name}`);
 		lines.push("武器：");
-		integratedOf(f, p, m).forEach(w => { const pr = w.mount ? effectiveProfile(w, w.profiles?.[0] || w, null, p, m) : null; lines.push(`  · [内建] ${plain("item", w)}${pr ? `　${rngText(pr.range)}　${dmgText(pr.damage)}　${tagsPlain(pr.tags)}　${buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})}` : ""}`); });
+		integratedOf(f, p, m).forEach(w => { const pr = w.mount ? effectiveProfile(w, w.profiles?.[0] || w, null, p, m) : null; lines.push(`  · [内建] ${plain("item", w)}${pr ? `　${rngText(pr.range)}　${dmgText(pr.damage)}　${tagsPlain(pr.tags)}　${buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})}` : `　${w.sp||0} SP　${tagsPlain(systemTags(w,p,m))}`}`); });
 		equippedWeapons(p, m).forEach(e => {
 			const prof = effectiveProfile(e.w, e.w.profiles ? e.w.profiles[0] : e.w, e.mod, p, m);
 			lines.push(`  · [${T.mount[e.mount.type]}] ${plain("item", e.w)}　${T.mount[e.w.mount]}${T.wtype[e.w.type] || ""}　${rngText(prof.range)}　${dmgText(prof.damage)}${tagsPlain(prof.tags) ? "　" + tagsPlain(prof.tags) : ""}${e.mod ? "　" + weaponModSummary(e.mod, p, m) : ""}${m.stabilized === e.mount.key ? "　(+1准度)" : ""}${buildWeaponNote(p, m, e) ? "　" + buildWeaponNote(p, m, e) : ""}`);
 		});
-		lines.push(`系统：${m.systems.map(id => SYSTEMS[id] ? `${plain("item", SYSTEMS[id])}(${SYSTEMS[id].sp || 0} SP；${tagsPlain(limitedTags(SYSTEMS[id].tags,p,m))})` : "").filter(Boolean).join("、") || "—"}`);
+		lines.push(`系统：${m.systems.map(id => SYSTEMS[id] ? `${plain("item", SYSTEMS[id])}(${SYSTEMS[id].sp || 0} SP；${tagsPlain(systemTags(SYSTEMS[id],p,m))})` : "").filter(Boolean).join("、") || "—"}`);
 		if (m.notes) lines.push(`备注：${m.notes}`);
 		lines.push("规则详述（条件效果按场上情况结算）：");
 		for (const t of mechTraits(m)) lines.push(`${t.name}：${stripHtml(t.description)} ${stripHtml(actsHtml(t))}`);
 		const core = f.core_system;
 		lines.push(`${core.name}：${stripHtml(core.active_effect)} ${stripHtml(core.passive_effect)} ${stripHtml(actsHtml(core))}`);
-		for (const w of integratedOf(f,p,m)) lines.push(`${plain("item",w)}：${stripHtml(w.mount ? weaponInfo(w,null,p,m) : (w.effect||'')+actsHtml(w))}`);
+		for (const w of integratedOf(f,p,m)) lines.push(`${plain("item",w)}：${stripHtml(w.mount ? weaponInfo(w,null,p,m) : integratedSystemInfo(w,p,m))}`);
 		for (const e of equippedWeapons(p,m)) lines.push(`${plain("item",e.w)}：${stripHtml(weaponInfo(e.w,e.mod,p,m))} ${buildWeaponNote(p,m,e)}`);
 		for (const id of m.systems) { const s = SYSTEMS[id]; if(s) lines.push(`${plain("item",s)}：${stripHtml(s.effect)} ${stripHtml(actsHtml(s))} ${professionalSystemSummary(s,m,p)}`); }
 	});
@@ -795,6 +845,8 @@ document.addEventListener("click", e => {
 			if (!db.pilots.length) db.pilots.push(blankPilot());
 			db.current = db.pilots[0].id; break;
 		case "ll": p.ll = clamp(p.ll + d, 0, 12); break;
+		case "resetBuild": if(!resetBuildPoints(p,arg)) return; break;
+		case "undoBuildReset": if(!undoBuildReset(p)) return; break;
 		case "hase": p.hase[arg] = clamp(p.hase[arg] + d, 0, 6); break;
 		case "trig": p.triggers[arg].val = clamp(+p.triggers[arg].val + 2 * d, 2, 6); break;
 		case "addTrig": p.triggers.push({ id: "", custom: "", val: 2 }); break;
