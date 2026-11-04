@@ -3,7 +3,7 @@ const root=path.join(__dirname,'..'),storage=new Map();
 const el=()=>({innerHTML:'',classList:{toggle(){},add(){},remove(){}},querySelectorAll(){return[];},value:'',style:{}});
 const elements=new Map();
 const ctx=vm.createContext({console,setTimeout,clearTimeout,URL,Blob,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{body:el(),addEventListener(){},querySelectorAll(){return[];},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);}},window:{scrollTo(){},addEventListener(){}},navigator:{},confirm:()=>true});
-for(const file of ['data.js','wizard.js','cardexport.js','rules.js','glossary.js','ui.js','frame-catalog.js','battlemap.js','app.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx,{filename:file});
+for(const file of ['assets/js/data.js','assets/js/wizard.js','assets/js/cardexport.js','assets/js/rules.js','assets/js/glossary.js','assets/js/ui.js','assets/js/frame-catalog.js','assets/js/battlemap.js','assets/js/app.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx,{filename:file});
 const run=code=>vm.runInContext(code,ctx);let passed=0;
 function test(name,fn){fn();console.log('PASS',name);passed++;}
 run("var fixPilot=blankPilot();fixPilot.ll=6;fixPilot.hase.eng=2;fixPilot.mechs=[blankMech('mf_barbarossa')];db={pilots:[fixPilot],current:fixPilot.id,ignoreLimits:false};var fixMech=fixPilot.mechs[0];");

@@ -1,4 +1,4 @@
-// 生成 data.js：合并 COMP/CON 的 lancer-data（数值）与规则站的繁中翻译（文本）
+// 生成 assets/js/data.js：合并 COMP/CON 的 lancer-data（数值）与规则站的繁中翻译（文本）
 // 用法：node tools/build-data.js
 const fs = require("fs");
 const path = require("path");
@@ -168,7 +168,7 @@ const data = {
 	tags: ld("tags"),
 	zh,
 };
-// 武器/系统/改装的背景描述界面上不显示，去掉以减小体积
+// 核心背景描述由 assets/js/equipment-lore.js 单独保存；规则数据不重复携带英文原文。
 for (const k of ["weapons", "systems", "mods"]) data[k] = drop(data[k], ["description"]);
 
 // ---------- 合并自译中文（source/i18n/zh，键为「id.字段路径」） ----------
@@ -251,8 +251,10 @@ function mergeExpansion(d) {
 // 兜底：整份数据再过一遍图标替换（含 HTML 里残留的实体）
 const calibrated = mergeExpansion(require('./core-v35').apply(require('./calibrate-text').walk(data)));
 const out = "// 自动生成，请勿手改。来源：massif-press/lancer-data + reno-lam.github.io/Lancer-Free-Version\nwindow.LANCER_DATA = " + deIcon(JSON.stringify(calibrated)) + ";\n";
-fs.writeFileSync(path.join(ROOT, "data.js"), out);
-console.log("data.js written,", (out.length / 1024).toFixed(0), "KB");
+fs.mkdirSync(path.join(ROOT, "assets/js"), { recursive: true });
+fs.writeFileSync(path.join(ROOT, "assets/js/data.js"), out);
+console.log("assets/js/data.js written,", (out.length / 1024).toFixed(0), "KB");
 console.log("zh coverage:", Object.fromEntries(Object.entries(zh).map(([k, v]) => [k, Object.keys(v).length])));
+require('./build-equipment-lore')(ROOT);
 
 

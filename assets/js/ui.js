@@ -294,6 +294,7 @@ function weaponEffectHtml(w) {
   if (w.on_crit) h += `<p><b>会心一击时：</b>${txt(w.on_crit)}</p>`;
   for (const pf of w.profiles || []) h += `<div class="wt-profile"><b>${esc(pf.name || '')}</b>：${esc([rngText(pf.range || w.range), dmgText(pf.damage || w.damage), tagsPlain(pf.tags)].filter(Boolean).join(' · '))}${pf.effect ? `<p>${pf.effect}</p>` : ''}${pf.on_hit ? `<p><b>命中时：</b>${txt(pf.on_hit)}</p>` : ''}${pf.on_crit ? `<p><b>会心一击时：</b>${txt(pf.on_crit)}</p>` : ''}${pf.on_attack ? `<p><b>攻击时：</b>${txt(pf.on_attack)}</p>` : ''}</div>`;
   h += actsHtml(w);
+  h += equipmentLoreHtml(w);
   return h || '<span class="muted">—</span>';
 }
 function weaponTableMatches(w, p) {

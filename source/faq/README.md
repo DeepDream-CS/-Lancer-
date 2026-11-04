@@ -1,9 +1,13 @@
 # LANCER 规则 FAQ 与勘误：中文译本
 
-本目录保留 aritsune/lancer-faq 的英文源文、中文逐条译文、贡献者名单及 GPL-3.0 许可。中文改编日期：2026-10-25。译文与原文一并提供，保持原项目许可；见 LICENSE。
+[项目说明](../../README.md) · [文档目录](../../docs/README.md) · [FAQ 使用说明](../../docs/FAQ-TRANSLATION.md)
 
-- 原站：https://lancer-faq.netlify.app/
-- 上游：https://github.com/aritsune/lancer-faq
+维护说明更新：2026-11-04；此日期不表示上游快照已更新。命令从项目根目录执行。
+
+本目录保留 aritsune/lancer-faq 的英文源文、中文逐条译文、贡献者名单及 GPL-3.0 许可。中文改编日期：2026-10-25。译文与原文一并提供，保持原项目许可；见 [LICENSE](LICENSE)。
+
+- 原站：[LANCER Rules FAQ & Errata](https://lancer-faq.netlify.app/)
+- 上游：[aritsune/lancer-faq](https://github.com/aritsune/lancer-faq)
 - 固定版本：3e5fd612a2308fe28f1f937620d1efd2f4bcf5ae
 - 184 条问答，113 个目录项（其中 NPC 通用规则、NPC 职业为分组标题）。
 - 问题与章节 ID 沿用上游标题的 HMAC-SHA512 前六位，已与下载的在线页面逐项核对。
@@ -16,6 +20,13 @@
 
 `upstream.md`、`upstream.json` 为英文快照；`zh-01.json` 至 `zh-03.json` 按稳定 ID 保存完整问答译文；`sections-zh.json` 保存完整章节译名。`contributors.txt`、`LICENSE` 来自上游。
 
-运行 `node tools/build-faq.js` 生成 `faq-data.js`，无需联网、无需安装依赖。运行 `node tools/test-faq.js` 检查覆盖率、链接、搜索与渲染。`tools/prepare-faq.js` 用于从保留的 Markdown 与 HTML 快照重新提取英文索引。
+运行 `node tools/build-faq.js` 生成 `assets/js/faq-data.js`，无需联网、无需安装依赖。运行 `node tools/test-faq.js` 检查覆盖率、链接、搜索与渲染。`tools/prepare-faq.js` 用于从保留的 Markdown 与 HTML 快照重新提取英文索引。
 
 下次更新需先核对上游变更，再翻译新增或修改的问题；不要仅替换上游数据或将未译文本充作中文。
+
+
+## 原文与项目说明的边界
+
+`upstream.md` 是用于重建索引的第三方英文原文快照，本轮项目文档整理不改写其内容、上游相对资源引用或版权信息。原站排版和资源应在上游站点查看；本项目网页使用生成的本地数据展示问答，不直接渲染这份 Markdown。
+
+文档位置调整不改变稳定问答 ID 和 `assets/js/faq-data.js` 的位置。提交 FAQ 更新时，应同时检查源快照、中文译文、生成结果及许可；不能只更新页面说明后声称已同步上游。

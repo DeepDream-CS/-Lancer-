@@ -1,0 +1,50 @@
+const assert=require('assert/strict'),fs=require('fs'),path=require('path');
+const {chromium}=require('C:/Users/jacky/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {pathToFileURL}=require('url');const root=path.join(__dirname,'..');
+(async()=>{
+ const browser=await chromium.launch({channel:'msedge',headless:true,timeout:15000});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));await page.route(/^https?:/,r=>r.abort());
+  await page.goto(pathToFileURL(path.join(root,'index.html')).href,{timeout:20000});
+  await page.evaluate(()=>{chooser=null;render();});
+  const before=await page.evaluate(()=>JSON.stringify(db));
+  await page.getByRole('button',{name:'系统库',exact:true}).click();
+  const panel=page.locator('#systemLibrary'),search=panel.getByRole('searchbox');
+  assert.equal(await panel.isVisible(),true);
+  assert.equal(await panel.locator('.sl-body > tr').count(),await page.evaluate(()=>D.systems.length+D.mods.length));
+  const check=async(q,id)=>{await search.fill(q);assert(await panel.locator('tbody').innerText().then(x=>x.includes(id)),q);};
+  await check('高射炮','高射炮发射器');await check('Flak Launcher','高射炮发射器');await check('近迫或撞击引信','高射炮发射器');
+  await panel.locator('summary').filter({hasText:'风味文本'}).click();
+  await panel.screenshot({path:path.join(root,'system-library-preview.png')});
+  await panel.getByRole('button',{name:'重置',exact:true}).click();
+  await panel.locator('[data-sl="type"]').selectOption('Drone');
+  assert(await page.evaluate(()=>systemLibraryItems().filter(x=>systemLibraryMatches(x,P())).every(x=>systemLibraryTypes(x).includes('Drone'))));
+  assert((await panel.locator('.sl-body > tr').count())>0);
+  await panel.locator('[data-sl="src"]').selectOption('core');
+  assert(await page.evaluate(()=>systemLibraryItems().filter(x=>systemLibraryMatches(x,P())).every(x=>!x.ext)));
+  await panel.locator('[data-sl="activation"]').selectOption('Quick');
+  assert(await page.evaluate(()=>systemLibraryItems().filter(x=>systemLibraryMatches(x,P())).every(x=>systemLibraryActivations(x).includes('Quick'))));
+  await panel.locator('[data-sl="sp"]').selectOption('2');
+  assert(await page.evaluate(()=>systemLibraryItems().filter(x=>systemLibraryMatches(x,P())).every(x=>x.sp===2)));
+  await panel.getByRole('button',{name:'重置',exact:true}).click();
+  await panel.locator('[data-sl="avail"]').check();
+  assert(await page.evaluate(()=>systemLibraryItems().filter(x=>systemLibraryMatches(x,P())).every(x=>systemLibraryAvailable(x,P()))));
+  await panel.getByRole('button',{name:'重置',exact:true}).click();
+  await panel.locator('[data-sl="kind"]').selectOption('mods');
+  assert.equal(await panel.locator('.sl-body > tr').count(),await page.evaluate(()=>D.mods.length));
+  await search.fill('这个系统不存在测试空结果');assert.match(await panel.locator('tbody').innerText(),/没有符合条件/);
+  await panel.getByRole('button',{name:'重置',exact:true}).click();
+  assert.equal(await search.inputValue(),'');
+  assert.equal(await panel.locator('.sl-body > tr').count(),await page.evaluate(()=>D.systems.length+D.mods.length));
+  await search.press('Escape');assert.equal(await panel.isHidden(),true);
+  await page.getByRole('button',{name:'系统库',exact:true}).click();await panel.getByRole('button',{name:'关闭系统库'}).click();assert.equal(await panel.isHidden(),true);
+  await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'系统库',exact:true}).click();
+  assert.equal(await panel.getByRole('searchbox').isVisible(),true);assert.equal(await panel.getByRole('button',{name:'关闭系统库'}).isVisible(),true);
+  await panel.getByRole('button',{name:'关闭系统库'}).click();
+  assert.equal(await page.evaluate(()=>JSON.stringify(db)),before);
+  assert.deepEqual(errors,[]);
+  console.log('PASS browser: all systems and mods; Chinese/English/lore search; type/source/action/SP/availability filters; reset, empty results, close and unchanged character data');
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
+

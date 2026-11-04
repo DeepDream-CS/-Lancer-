@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lancer 简易车卡器</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="faq.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/faq.css">
 </head>
 <body>
 <a class="skip-link" href="#app">跳到编辑区域</a>
@@ -17,6 +17,7 @@
 		<button data-act="toWizard" title="用引导式流程检查/修改当前角色">引导车卡</button>
 		<button data-ui="openGlossary" title="查询规则术语">术语库</button>
 		<button data-ui="openWeaponTable" title="查看全部机甲武器">武器表</button>
+		<button data-ui="openSystemLibrary" title="查找全部机甲系统与武器改装">系统库</button>
 		<button data-ui="openFAQ" title="查阅中文规则问答与勘误" aria-haspopup="dialog">规则 FAQ</button>
 		<details class="character-menu" id="characterMenu"><summary>角色管理</summary><div class="character-menu-panel">
 			<button data-act="importJson">导入角色 JSON</button>
@@ -49,20 +50,29 @@
 	<div class="catalog-toolbar wt-toolbar"><label class="search-field"><span>查找武器</span><input type="search" data-wt="q" placeholder="名称、效果、标签或牌照"></label><div class="wt-filters"></div><button data-ui="resetWeaponTable">重置</button><span class="muted wt-count" role="status"></span></div>
 	<div class="wt-scroll"><table class="wt-table"><thead><tr><th>武器</th><th>来源</th><th>尺寸</th><th>类型</th><th>射程</th><th>伤害</th><th>标签</th><th>SP</th><th>效果</th></tr></thead><tbody class="wt-body"></tbody></table></div>
 </aside>
+<aside id="systemLibrary" class="weapon-table system-library" hidden aria-label="系统库">
+	<div class="glossary-top"><h2>系统库</h2><button data-ui="closeSystemLibrary" aria-label="关闭系统库">✕</button></div>
+	<div class="catalog-toolbar wt-toolbar"><label class="search-field"><span>查找系统</span><input type="search" data-sl="q" placeholder="名称、效果、标签、牌照或风味文本"></label><div class="sl-filters"></div><button data-ui="resetSystemLibrary">重置</button><span class="muted sl-count" role="status"></span></div>
+	<p class="muted">显示基础数据；工程、核心奖励等加成后的数值请查看机甲配装。</p>
+	<div class="wt-scroll"><table class="wt-table"><thead><tr><th>系统／改装</th><th>来源</th><th>类型</th><th>基础 SP</th><th>基础标签</th><th>效果与风味文本</th></tr></thead><tbody class="sl-body"></tbody></table></div>
+</aside>
 <footer class="foot">
-	中文译名修订依据：用户提供的《枪骑兵》核心规则书 v3.5（<a href="TRANSLATION-V35.md" target="_blank">修订对照表</a>）。
-	规则文本：<a href="https://reno-lam.github.io/Lancer-Free-Version/" target="_blank">Lancer 免费版繁中规则站</a>；数值数据：<a href="https://github.com/massif-press/lancer-data" target="_blank">massif-press/lancer-data</a>（COMP/CON 开源数据）。角色存在浏览器本地（localStorage），换电脑请用导出 JSON。
+	中文译名修订依据：用户提供的《枪骑兵》核心规则书 v3.5（<a href="docs/TRANSLATION-V35.md" target="_blank">修订对照表</a>）。
+	规则文本：<a href="https://reno-lam.github.io/Lancer-Free-Version/" target="_blank">Lancer 免费版繁中规则站</a>；数值数据：<a href="https://github.com/massif-press/lancer-data" target="_blank">massif-press/lancer-data</a>（COMP/CON 开源数据）。<a href="docs/EQUIPMENT-LORE-AUDIT.md" target="_blank">风味文本缺项清单</a>。角色存在浏览器本地（localStorage），换电脑请用导出 JSON。
 </footer>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
-<script src="data.js"></script>
-<script src="wizard.js"></script>
-<script src="cardexport.js"></script>
-<script src="rules.js"></script>
-<script src="glossary.js"></script>
-<script src="ui.js"></script>
-<script src="faq-data.js"></script>
-<script src="faq.js"></script>
-<script src="frame-catalog.js"></script><link rel="stylesheet" href="frame-catalog.css">
-<script src="battlemap.js"></script><script src="app.js"></script><link rel="stylesheet" href="battlemap.css">
+<script src="assets/js/data.js"></script>
+<script src="assets/js/equipment-lore.js"></script>
+<script src="assets/js/wizard.js"></script>
+<script src="assets/js/cardexport.js"></script>
+<script src="assets/js/rules.js"></script>
+<script src="assets/js/glossary.js"></script>
+<script src="assets/js/ui.js"></script>
+<link rel="stylesheet" href="assets/css/system-library.css"><script src="assets/js/system-library.js"></script>
+<script src="assets/js/faq-data.js"></script>
+<script src="assets/js/faq.js"></script>
+<script src="assets/js/frame-catalog.js"></script><link rel="stylesheet" href="assets/css/frame-catalog.css">
+<script src="assets/js/battlemap.js"></script><script src="assets/js/app.js"></script><link rel="stylesheet" href="assets/css/battlemap.css">
 </body>
 </html>
+

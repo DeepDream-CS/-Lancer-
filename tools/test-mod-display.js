@@ -11,7 +11,7 @@ const ctx = vm.createContext({
   document: { body: el(), addEventListener() {}, querySelectorAll() { return []; }, getElementById(id) { if (!elements.has(id)) elements.set(id, el()); return elements.get(id); } },
   window: { scrollTo() {} }, navigator: {}, confirm: () => true,
 });
-for (const file of ['data.js', 'wizard.js', 'cardexport.js', 'rules.js', 'glossary.js', 'ui.js', 'frame-catalog.js', 'app.js']) {
+for (const file of ['assets/js/data.js', 'assets/js/wizard.js', 'assets/js/cardexport.js', 'assets/js/rules.js', 'assets/js/glossary.js', 'assets/js/ui.js', 'assets/js/frame-catalog.js', 'assets/js/app.js']) {
   vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), ctx, { filename: file });
 }
 const run = code => vm.runInContext(code, ctx);

@@ -1,6 +1,10 @@
 # 专业牌照
 
-入口：自定义编辑器的“点数与牌照”页，或引导车卡的“牌照”步骤。
+[文档目录](README.md) · [项目说明](../README.md)
+
+维护更新：2026-11-04。文中原核对日期及当时结果保留；源码路径和命令均相对于项目根目录。
+
+入口：自定义编辑器的“等级成长”页，或引导车卡的“牌照”步骤。
 
 ## 已收录
 
@@ -36,3 +40,10 @@
 数据源：`source/expansions/professional-licenses.js`。原图：`source/expansions/references/professional/`。
 
 重新生成：`node tools/build-data.js`。规则与兼容检查：`node tools/test-rules.js`。
+
+
+## 查询与核验补充（2026-11-04）
+
+专业牌照武器可在武器表查询，系统和武器改装可在系统库查询；来源及「当前可用」筛选按当前角色判断。查询面板展示基础数据，不会自动安装或交换装备。工程等加成后的受限次数在实际配装与导出中查看。
+
+独立 Git 仓库或历史工作副本不属于正式数据来源；继续修改本项目的 `source/expansions/professional-licenses.js`。完整截图仍在 `source/expansions/references/professional/`，移动说明文档不影响其位置。涉及模块或风味展示时，除规则检查外，补跑 `node tools/test-mod-display.js`、`node tools/test-equipment-lore.js`；系统库交互使用 `node tools/test-system-library.js` 检查。

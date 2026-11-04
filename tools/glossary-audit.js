@@ -5,13 +5,13 @@ const root = path.join(__dirname, "..");
 const el = () => ({ innerHTML: "", classList: { toggle() {}, add() {}, remove() {} }, querySelectorAll() { return []; }, value: "", style: {} });
 const elements = new Map();
 const ctx = vm.createContext({ console, window: { scrollTo() {} }, document: { body: el(), addEventListener() {}, getElementById(id) { if (!elements.has(id)) elements.set(id, el()); return elements.get(id); }, querySelectorAll() { return []; } }, localStorage: { getItem() { return null; }, setItem() {} }, navigator: {}, confirm: () => true, setTimeout, clearTimeout, URL, Blob });
-for (const f of ["data.js", "wizard.js", "cardexport.js", "rules.js", "glossary.js", "ui.js", "app.js"]) vm.runInContext(fs.readFileSync(path.join(root, f), "utf8"), ctx, { filename: f });
+for (const f of ["assets/js/data.js", "assets/js/wizard.js", "assets/js/cardexport.js", "assets/js/rules.js", "assets/js/glossary.js", "assets/js/ui.js", "assets/js/app.js"]) vm.runInContext(fs.readFileSync(path.join(root, f), "utf8"), ctx, { filename: f });
 const run = code => vm.runInContext(code, ctx);
 // 语料：数据里的全部字符串（去 HTML），以及界面脚本里的中文字符串
 const texts = [];
 const walk = v => { if (typeof v === "string") texts.push(v); else if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === "object") Object.values(v).forEach(walk); };
 walk(run("({...D, tags: undefined, rules: undefined})"));
-for (const f of ["wizard.js", "app.js", "ui.js"]) for (const m of fs.readFileSync(path.join(root, f), "utf8").matchAll(/[`"']([^`"'\n]*[一-鿿][^`"'\n]*)[`"']/g)) texts.push(m[1]);
+for (const f of ["assets/js/wizard.js", "assets/js/app.js", "assets/js/ui.js"]) for (const m of fs.readFileSync(path.join(root, f), "utf8").matchAll(/[`"']([^`"'\n]*[一-鿿][^`"'\n]*)[`"']/g)) texts.push(m[1]);
 const plain = texts.map(t => t.replace(/<br\s*\/?>/g, "\n").replace(/<\/(p|li|div|td|th|h\d)>/g, "\n").replace(/<[^>]+>/g, "").replace(/&gt;/g, ">").replace(/&lt;/g, "<")).flatMap(t => t.split("\n")).filter(t => /[一-鿿]/.test(t));
 const G = run("getGlossary()");
 const hits = {};

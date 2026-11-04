@@ -1,0 +1,20 @@
+const fs=require('fs'),vm=require('vm'),path=require('path'),assert=require('assert/strict');
+const root=path.join(__dirname,'..');
+const existing=fs.readFileSync(path.join(root,'tools/test-rules.js'),'utf8');
+const harness=existing.slice(0,existing.indexOf('const run=runtime();')).replace("'assets/js/data.js','assets/js/wizard.js'","'assets/js/data.js','assets/js/equipment-lore.js','assets/js/wizard.js'");
+const mod={exports:{}};new Function('require','__dirname','module',harness+';module.exports=runtime;')(require,__dirname,mod);
+const run=mod.exports();
+run("var lp=blankPilot();lp.ll=6;lp.licenses={mf_barbarossa:3};lp.mechs=[blankMech('mf_barbarossa')];lp.mechs[0].systems=['ms_flak_launcher'];db={pilots:[lp],current:lp.id,ignoreLimits:false}");
+assert.match(run('renderMech(lp)'),/风味文本/);
+assert.match(run('renderMech(lp)'),/近迫或撞击引信/);
+assert.match(run("weaponInfo(WEAPONS.mw_chain_axe,null,lp,lp.mechs[0])"),/伐木工具/);
+assert.match(run("weaponEffectHtml(WEAPONS.mw_chain_axe)"),/伐木工具/);
+assert.match(run("equipmentLoreHtml(SYSTEMS.ms_autoloader_drone)"),/多肢体/);
+assert.equal(run("equipmentLoreHtml({id:'not-an-item'})"),'');
+assert.match(run("equipmentLoreHtml({id:'test',description:'<script>unsafe</script>'})"),/unsafe/);
+assert.doesNotMatch(run("equipmentLoreHtml({id:'test',description:'<script>unsafe</script>'})"),/<script>/);
+const c={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/js/equipment-lore.js'),'utf8'),c);
+const data={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/js/data.js'),'utf8'),data);
+const all=data.window.LANCER_DATA;const ids=new Set(['weapons','systems','mods'].flatMap(k=>all[k].map(x=>x.id)));
+for(const [id,v] of Object.entries(c.window.LANCER_LORE.items)){assert(ids.has(id),id);assert(v.text.trim(),id);assert(['zh','en'].includes(v.lang),id);}
+console.log('PASS lore on equipped systems, weapons and weapon table; source references, escaping and item identity');

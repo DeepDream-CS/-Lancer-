@@ -12,7 +12,7 @@ fs.mkdirSync(cnDir, { recursive: true });
 for (const f of fs.readdirSync(twDir)) {
 	fs.writeFileSync(path.join(cnDir, f), conv(fs.readFileSync(path.join(twDir, f), "utf8")));
 }
-for (const f of ["app.js", "index.html", "tools/build-data.js"]) {
+for (const f of ["assets/js/app.js", "index.html", "tools/build-data.js"]) {
 	const p = path.join(ROOT, f);
 	fs.writeFileSync(p, conv(fs.readFileSync(p, "utf8")));
 }

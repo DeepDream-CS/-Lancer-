@@ -8,7 +8,8 @@ const replacements = [
 ];
 function calibrate(text) {
   for (const [from,to] of replacements) text=text.replaceAll(from,to);
-  text=text.replace(/重击(?!弹)/g,'会心一击');
+  // 「重击弹」「重击炮」（塔瓦 Heavy Blaster）是装备名，不是会心一击
+  text=text.replace(/重击(?![弹炮])/g,'会心一击');
   // Blast is an area template; Explosive is a damage type.
   text=text.replace(/爆炸(?=\s*\d)/g,'溅射').replaceAll('爆炸、直线、爆发和锥形','溅射、直线、爆发和锥形');
   return text;

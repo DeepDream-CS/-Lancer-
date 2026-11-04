@@ -3,8 +3,8 @@ const root = path.join(__dirname,'..'), read = f => fs.readFileSync(path.join(ro
 const upstream = JSON.parse(read('source/faq/upstream.json'));
 const context = {window:{addEventListener(){}},document:{readyState:'loading',addEventListener(){}}};
 vm.createContext(context);
-vm.runInContext(read('faq-data.js'),context);
-vm.runInContext(read('faq.js'),context);
+vm.runInContext(read('assets/js/faq-data.js'),context);
+vm.runInContext(read('assets/js/faq.js'),context);
 const data = context.window.LANCER_FAQ, view = context.window.LANCER_FAQ_VIEW;
 const slug = s => crypto.createHmac('sha512','abc').update(s).digest('hex').slice(0,6);
 assert.equal(data.entries.length,184); assert.equal(data.sections.length,113);
@@ -45,7 +45,7 @@ assert.match(view.markdown('导语\n- 第一项\n- 第二项\n\n结语'),/^<p>�
 assert.match(view.markdown('1. 第一项\n2. 第二项'),/^<ol><li>/);
 assert.match(view.markdown('**重点**'),/<strong>重点<\/strong>/);
 const html=read('index.html');
-for(const file of ['faq.css','faq-data.js','faq.js']) { assert.ok(html.includes(file));assert.ok(fs.existsSync(path.join(root,file))); }
-assert.ok(html.indexOf('faq-data.js')<html.indexOf('src="faq.js"'));
-assert.ok(!/localStorage|\bfetch\(/.test(read('faq.js').replace(/\/\/[^\n]*/g,'')));
+for(const file of ['assets/css/faq.css','assets/js/faq-data.js','assets/js/faq.js']) { assert.ok(html.includes(file));assert.ok(fs.existsSync(path.join(root,file))); }
+assert.ok(html.indexOf('assets/js/faq-data.js')<html.indexOf('src="assets/js/faq.js"'));
+assert.ok(!/localStorage|\bfetch\(/.test(read('assets/js/faq.js').replace(/\/\/[^\n]*/g,'')));
 console.log('PASS: all 184 translated questions, 113 sections, 120 citations, stable links, bilingual search, filters, safe rendering and offline assets.');

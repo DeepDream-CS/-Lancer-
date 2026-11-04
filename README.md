@@ -4,6 +4,24 @@
 
 术语以《枪骑兵》核心规则书 v3.5 中文版为准，并收录了《所有扩展.pdf》、专业牌照及后续补充截图中的扩展内容。
 
+## 项目目录
+
+- `index.html`：打开车卡器的入口。
+- `assets/js/`：网页脚本及生成数据；保持 `index.html` 中的加载顺序。
+- `assets/css/`：网页样式。
+- `docs/`：规则校准、翻译、功能与核对记录，见 [文档目录](docs/README.md)。
+- `source/`：原始资料、中文译文与扩展数据。
+- `tools/`：数据生成、本地预览与检查工具。
+- `CLAUDE.md`：开发约定。
+
+修改数据后请运行生成工具；不要用历史工作副本覆盖当前项目。角色与地图存档保存在浏览器，整理文件不会迁移这些存档。
+
+## 当前收录（2026-11-04）
+
+当前生成数据含 103 个骨架、198 件武器、303 个系统、17 个武器改装、50 项天赋和 51 项核心奖励。数量包含变体、天赋及内建条目，不代表每个角色都能安装或选择。
+
+装备风味文本已覆盖 477 项中文条目；41 项尚未可靠匹配独立段落，详见[缺项清单](docs/EQUIPMENT-LORE-AUDIT.md)。这些是当前资料的覆盖情况，不表示原书一定没有对应内容。
+
 ## 使用
 
 ### 建卡方式
@@ -18,7 +36,7 @@
 
 - **规则检查**：右上角显示待处理项目（点数、牌照、SP、挂载点、AI 数量、核心奖励指定项等）。
 - **牌照内容**：等级成长页每个牌照都可展开「牌照内容」，查看 I、II、III 级分别解锁的骨架、变体骨架、武器、系统与改装，已解锁的等级会高亮。
-- **专业牌照**：在牌照页单独取得，每张牌照只解锁自己的装备，不解锁骨架。规则与配装支持见 [PROFESSIONAL-LICENSES.md](PROFESSIONAL-LICENSES.md)。
+- **专业牌照**：在牌照页单独取得，每张牌照只解锁自己的装备，不解锁骨架。规则与配装支持见 [PROFESSIONAL-LICENSES.md](docs/PROFESSIONAL-LICENSES.md)。
 - **天赋查找**：按中文、英文名称或效果关键词搜索，可只看已选。
 - **骨架目录与筛选**：机甲页「浏览骨架」与引导式「选择骨架」可以按名称、特征搜索，按厂商、定位、来源（核心 / 扩展 / 变体）筛选，或只看可用的骨架；先预览，确认后才改变配装。
 - **系统搜索**：安装系统时可按名称、标签（如「可展开」「受限」「无人机」）或效果搜索。
@@ -30,7 +48,8 @@
 
 - **术语库**：顶部「术语库」按钮打开，约 130 条手写规则术语，另自动并入全部标签说明与扩展规则，可搜索、按分类查看。页面正文中的术语会高亮（包括装备卡的动作、可展开物数值行），鼠标悬停显示含义，点击跳到术语库对应条目。等级成长页「牌照内容」里的装备悬停显示完整效果（含命中效果、多模式、动作与可展开物）。多义词（如「强化」「反应」「结构」「锁定」）只在规则意义下标记。
 - **武器表**：顶部「武器表」按钮打开，列出全部 198 件机甲武器（含扩展、专业牌照、天赋武器与骨架内建武器）的来源牌照、尺寸、类型、射程、伤害、标签、SP 和完整效果。可搜索，按尺寸、类型、来源筛选，或只看当前角色可用的武器；效果与标签里的术语同样可悬停查看。
-- **规则 FAQ**：顶部「规则 FAQ」按钮打开 LANCER Rules FAQ & Errata 的完整中文译本（184 条问答），支持中英文搜索、章节与来源筛选、英文对照。详见 [FAQ-TRANSLATION.md](FAQ-TRANSLATION.md)。
+- **系统库**：顶部「系统库」查询 303 个系统和 17 个武器改装，支持中英文名称、效果、标签、牌照与风味文本搜索；可按类别、类型、来源、动作、SP 和当前可用内容筛选。库内显示基础 SP、基础标签和基础受限次数；工程、核心奖励等加成请看机甲配装。查询不会安装装备或更改角色。
+- **规则 FAQ**：顶部「规则 FAQ」按钮打开 LANCER Rules FAQ & Errata 的完整中文译本（184 条问答），支持中英文搜索、章节与来源筛选、英文对照。详见 [FAQ-TRANSLATION.md](docs/FAQ-TRANSLATION.md)。
 - **⑤ 战斗地图**：GM 本机使用的六角格地图，可涂地形、标注、画线测距、放置单位并记录 HP、装甲和状态。大小 2、3、4 的单位按规则占 3、7、12 格（大小 4 规则书未画图，按常见的截角三角）。地图单独保存在浏览器，可导入导出备份，与角色存档互不影响。
 
 ### 保存、导入与导出
@@ -57,7 +76,7 @@
   - **K/KCA（哈尔根/卡西米尔定制装配）**：骨架祖母绿弯刀、妙源剑、提泽纳剑、斩裂剑；核心奖励定制军备、卓越誓言、私人家教（天赋上限 +2 已计入）、招牌动作（指定系统 SP −2 已计入）、锦标赛强化。
 - **变体骨架**（骨架选单中排在标准骨架下方；沿用标准骨架的牌照，该牌照 II 级即可使用，与标准骨架互斥）：因帕卡伊（黑胡子）、蒲公英（兰开斯特）、内莫与纳尔逊飞翼型（纳尔逊）、施托特贝克（雷利）、红门兰（黑巫蛾）、夹竹桃蛾与切夜蛾（鬼面蛾）、晶眼蝶与柔剑（蚬蝶；PDF 误写为「蜘蝶」）、总督蝶（金斑蝶）、游骑兵（凤蝶）、百臂巨人（炎魔）、树绳妖（哥布林）、奇美拉（九头蛇）、狼人（蝎尾狮）、金盏花（牛头怪）、成吉思 MK1「行星杀手」（成吉思）、库图佐夫（拿破仑）、哈布斯堡与萨拉丁“恐惧刽子手”（萨拉丁）、万寿菊与格兰特（谢尔曼）、恩奇都（德川）、珠穆朗玛与萨加玛塔（埃弗勒斯，人人可用），以及布莱（基德）、赤蛱蝶与鸟翼蝶（阿特拉斯蛾）、火蜥蜴（狗头人）、史泰钦（米切尔）、加杰修罗（卡莉丝塔）。
 - **GMS 核心奖励与装备**：增强系统升级、高品质后勤、康格多底盘、超重挂载（挂载点少于 3 个时获得超重型挂载点；有重型挂载点时必须占用它）；“暴风”充能刃、“飓风”集群投射器、武备冗余。
-- **专业牌照**：IPS-N、SSC、HORUS、HA、C&H 各三张，共 15 张，详见 [PROFESSIONAL-LICENSES.md](PROFESSIONAL-LICENSES.md)。
+- **专业牌照**：IPS-N、SSC、HORUS、HA、C&H 各三张，共 15 张，详见 [PROFESSIONAL-LICENSES.md](docs/PROFESSIONAL-LICENSES.md)。
 - **背景**：贵族后嗣、第二顺位者、连队扈从、潘克拉蒂、幼鹿（「随机」仍只掷规则书的 20 个背景）。
 - **驾驶员装备**：个人动能屏障（装甲栏）。
 - **扩展规则**：变体骨架、新标签「高效」、新状态「无形」，收录在术语库，并在用到它们的骨架下方显示「扩展规则说明」。
@@ -67,14 +86,15 @@
 - **数值**：`source/lancer-data/`，来自 COMP/CON 开源数据 [massif-press/lancer-data](https://github.com/massif-press/lancer-data)（核心规则书内容）。
 - **中文（规则站）**：`source/tw/` 为 [Lancer 免费版繁中规则站](https://reno-lam.github.io/Lancer-Free-Version/) 原文，`source/cn/` 为其简体版。
 - **中文（自译）**：规则站没有的部分（授权骨架、武器与系统效果、动作、可展开物、武器改装、标签说明等）放在 `source/i18n/zh/`。
-- **v3.5 译名修订**：`source/core-v35-overrides.json`，对照表见 [TRANSLATION-V35.md](TRANSLATION-V35.md)。
+- **v3.5 译名修订**：`source/core-v35-overrides.json`，对照表见 [TRANSLATION-V35.md](docs/TRANSLATION-V35.md)。
 - **扩展内容**：`source/expansions/all-expansions.js`（原文即中文）；专业牌照在 `source/expansions/professional-licenses.js`。
 - **规则 FAQ**：`source/faq/`，来自 [aritsune/lancer-faq](https://github.com/aritsune/lancer-faq)（GPL-3.0），说明见 `source/faq/README.md`。
-- **术语库**：手写术语在 `glossary.js`。
+- **术语库**：手写术语在 `assets/js/glossary.js`。
+- **装备风味文本**：`source/lore/zh.json` 保存中文、出处和页码；生成 `assets/js/equipment-lore.js`，缺项清单输出到 `docs/EQUIPMENT-LORE-AUDIT.md`。详见[维护说明](source/lore/README.md)。
 
 ## 开发
 
-修改数据或翻译后，重新生成 `data.js` 并运行检查：
+修改数据或翻译后，重新生成 `assets/js/data.js` 并运行检查：
 
 ```bash
 node tools/build-data.js
@@ -85,22 +105,37 @@ node tools/test-expansion-copy.js
 
 | 命令 | 作用 |
 |---|---|
-| `node tools/build-data.js` | 合并数值、规则站译文、自译、v3.5 修订、扩展与专业牌照，生成 `data.js`（不要手改 data.js） |
-| `node tools/test-rules.js` | 122 项回归检查：车卡规则、全部骨架与装备渲染、扩展机制、核心奖励、筛选与搜索、术语匹配、武器表 |
+| `node tools/build-data.js` | 合并规则与译文生成 `assets/js/data.js`，随后生成 `assets/js/equipment-lore.js` 和风味文本核对表；不要手改生成文件 |
+| `node tools/test-rules.js` | 123 项回归检查：车卡规则、全部骨架与装备渲染、扩展机制、核心奖励、筛选与搜索、术语匹配、武器表 |
 | `node tools/test-v35.js` | 核心数据的 v3.5 译名、数值结构、稳定 ID 与旧术语残留（扩展与专业牌照会先剔除） |
 | `node tools/test-expansion-copy.js` | 扩展文案的原文校正与牌照引用 |
 | `node tools/test-mod-display.js` | 武器改装的显示与计算 |
-| `node tools/build-faq.js` / `test-faq.js` | 生成并检查规则 FAQ（`faq-data.js`） |
+| `node tools/test-core-corrections.js` | 弹药库、末日晷、定向推进炸药、无人机动作与重分配操作 |
+| `node tools/build-equipment-lore.js` | 基于当前 assets/js/data.js 单独生成装备风味文本与 docs 中的核对表 |
+| `node tools/test-equipment-lore.js` | 装备风味文本展示、出处、条目匹配与转义 |
+| `node tools/test-system-library.js` | 在浏览器中检查系统库搜索、筛选、关闭与角色数据不变 |
+| `node tools/build-faq.js` / `test-faq.js` | 生成并检查规则 FAQ（`assets/js/faq-data.js`） |
 | `node tools/extract-en.js` | 从 lancer-data 抽出界面会显示的英文到 `source/i18n/en/` |
 | `node tools/i18n-missing.js [文件名] [条数]` | 列出还没翻译的条目 |
 | `node tools/glossary-audit.js [术语] [条数]` | 列出术语在全部文字中的命中与上下文，检查有没有字面意义的误标 |
 
+除系统库浏览器检查外，上述数据与规则检查可直接用 Node.js 运行。`tools/test-system-library.js` 当前使用本机已安装的 Playwright 和 Edge，脚本中的依赖路径需按检查环境调整；运行会在项目根目录写入 `system-library-preview.png`。这些是开发检查所需工具，普通使用车卡器无需安装。
+
+GitHub Pages 使用仓库中的静态成品；修改数据源后应先生成并检查，再一并提交数据源、生成文件和相关文档。文档移动也要包含旧路径删除与新路径文件。发布后角色不会随仓库同步，仍保存在各自浏览器里。
+
 开发约定、文件结构与扩展内容的写法见 [CLAUDE.md](CLAUDE.md)。其他记录：
 
-- [VALIDATION.md](VALIDATION.md)：规则与译文校准
-- [TRANSLATION-V35.md](TRANSLATION-V35.md)：v3.5 译名对照
-- [GLOSSARY-REVISION.md](GLOSSARY-REVISION.md)：术语库修订
-- [EXPANSION-TRANSLATION-REVIEW.md](EXPANSION-TRANSLATION-REVIEW.md)：扩展文案核对
-- [PROFESSIONAL-LICENSES.md](PROFESSIONAL-LICENSES.md)：专业牌照
-- [FAQ-TRANSLATION.md](FAQ-TRANSLATION.md)：规则 FAQ 中文译本
-- [UI-UX.md](UI-UX.md)：界面改进
+- [VALIDATION.md](docs/VALIDATION.md)：规则与译文校准
+- [TRANSLATION-V35.md](docs/TRANSLATION-V35.md)：v3.5 译名对照
+- [GLOSSARY-REVISION.md](docs/GLOSSARY-REVISION.md)：术语库修订
+- [EXPANSION-TRANSLATION-REVIEW.md](docs/EXPANSION-TRANSLATION-REVIEW.md)：扩展文案核对
+- [PROFESSIONAL-LICENSES.md](docs/PROFESSIONAL-LICENSES.md)：专业牌照
+- [FAQ-TRANSLATION.md](docs/FAQ-TRANSLATION.md)：规则 FAQ 中文译本
+- [UI-UX.md](docs/UI-UX.md)：界面改进
+- [EQUIPMENT-LORE-AUDIT.md](docs/EQUIPMENT-LORE-AUDIT.md)：风味文本覆盖与缺项
+
+## 资源目录整理（2026-11-04）
+
+网页脚本和样式已分别集中到 `assets/js/`、`assets/css/`。仍从根目录 `index.html` 打开，或从根目录运行 `node tools/serve.js`；无需安装、打包或联网。生成工具也直接写入新目录，不会在根目录重新产生旧 JS 文件。页面使用相对路径，兼容 GitHub Pages 的仓库子路径。
+
+本次保持存档键和页面入口不变。推送时应同时包含根目录旧资源删除、assets 中的新资源、页面、工具及文档修改。

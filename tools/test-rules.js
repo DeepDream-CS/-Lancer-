@@ -8,7 +8,7 @@ function runtime(saved) {
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     document:{body:el(),addEventListener(){},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);},querySelectorAll(){return[];}},
     window:{scrollTo(){},addEventListener(){}},navigator:{},confirm:()=>true});
-  for(const file of ['data.js','wizard.js','cardexport.js','rules.js','glossary.js','ui.js','frame-catalog.js','battlemap.js','app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
+  for(const file of ['assets/js/data.js','assets/js/wizard.js','assets/js/cardexport.js','assets/js/rules.js','assets/js/glossary.js','assets/js/ui.js','assets/js/frame-catalog.js','assets/js/battlemap.js','assets/js/app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
   return code=>vm.runInContext(code,ctx);
 }
 const run=runtime(); let passed=0;
@@ -233,5 +233,6 @@ test('All professional catalogs, systems and modular loadouts render',()=>assert
 test('Wizard license step includes professionals and uses the shared paid-rank budget',()=>assert(run(`{p=fixture(3);addCatalogProfessional(p,'pl_ha_superfire');addCatalogProfessional(p,'pl_ha_workshop');const step=WIZ_STEPS.find(x=>x.id==='licenses');step.check(p).length===0&&step.body(p).includes('专业牌照目录')&&pilotLicenseLines(p).some(x=>x.includes('铸造车间'))}`)));
 test('Weapon pod preserves the modular rifle printed profile through exchange and import',()=>assert(run(`{p=fixture(6);m=p.mechs[0];addCatalogProfessional(p,'pl_ha_workshop');m.systems=['ms_pl_weapon_pod'];m.podMode='Main';m.podWeapon1='mw_pl_modular_rifle';m.podProfile1=1;const mt=mountsOf(p,m).find(x=>x.type==='Main');m.loadout[mt.key]={slots:[{w:'mw_assault_rifle'}],link:''};swapPodWeapons(p,m,mt.key);const first=equippedWeapons(p,m)[0].w.selected_profile==='DMR';swapPodWeapons(p,m,mt.key);const q=normalizePilot(JSON.parse(JSON.stringify(p)),[]);first&&m.podProfile1===1&&q.mechs[0].podProfile1===1}`)));
 test('Confirmed linear-field and Mitra wording is present',()=>assert(run(`WEAPONS.mw_pl_kinetic_driver.profiles[1].on_hit.includes('每有 1 点装甲')&&SYSTEMS.ms_pl_mitra.actions[0].detail.includes('任选两项')`)));
+test('Tawa Heavy Blaster keeps its name instead of the crit term',()=>assert.equal(run(`plain('item',WEAPONS.mw_pl_heavy_blaster)`),'重击炮'));
 
 console.log(passed+' regression checks passed.');

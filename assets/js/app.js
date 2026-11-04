@@ -533,7 +533,7 @@ function systemTags(s,p,m) {
 	return p&&m ? limitedTags(tags,p,m) : tags;
 }
 function integratedSystemInfo(s,p,m) {
-	return `<div class="wstat">${s.sp||0} SP ${tagsHtml(systemTags(s,p,m))}</div><div class="desc">${s.effect||''}${actsHtml(s)}</div>`;
+	return `<div class="wstat">${s.sp||0} SP ${tagsHtml(systemTags(s,p,m))}</div><div class="desc">${s.effect||''}${actsHtml(s)}</div>${equipmentLoreHtml(s)}`;
 }
 function actsHtml(o) {
   let h = "";
@@ -553,6 +553,14 @@ function weaponModSummary(mod, p, m) {
 	const meta = [`${mod.sp || 0} SP`, tagsPlain(limitedTags(mod.tags, p, m))].filter(Boolean).join("；");
 	return `模块：${plain("item", mod)}（${meta}）`;
 }
+function equipmentLoreHtml(it, title='风味文本') {
+	if(it.parts?.length) return it.parts.map(part=>equipmentLoreHtml(part,'改装风味文本：'+plain('item',part))).join('');
+	const lore=window.LANCER_LORE?.items?.[it.id] || (it.description ? {text:it.description,lang:/[\u4e00-\u9fff]/.test(it.description)?'zh':'en'} : null);
+	if(!lore?.text) return '';
+	const text=lore.text.replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'');
+	const attribution=lore.source ? `<p class="muted">来源：${esc(lore.source)}${lore.pages?.length?' · PDF 第 '+lore.pages.join('、')+' 页':''}</p>` : '';
+	return det('lore-'+it.id, title+(lore.lang==='en'?'（英文原文，待译）':''),`<div class="desc equipment-lore">${text.split(/\n+/).filter(Boolean).map(s=>`<p>${esc(s)}</p>`).join('')}${attribution}</div>`);
+}
 function weaponInfo(w, mod, p = P(), m = M()) {
 	const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
 	const meta = [`${T.mount[w.mount] || w.mount}${T.wtype[w.type] || w.type}`, rngText(prof.range), dmgText(prof.damage)].filter(Boolean).join(" · ");
@@ -566,7 +574,7 @@ function weaponInfo(w, mod, p = P(), m = M()) {
 	detail += actsHtml(w);
 	if (mod) detail += `<div class="blk"><div class="blk-h">模块：${esc(plain("item", mod))} (${mod.sp}SP)</div><p>${mod.effect || ""}</p>${actsHtml(mod)}</div>`;
 	const modMeta = mod ? `<div class="wstat weapon-mod-meta"><span class="muted">模块：${esc(plain("item", mod))} · ${mod.sp || 0} SP</span> ${tagsHtml(limitedTags(mod.tags, p, m))}</div>` : "";
-	return `<div class="wstat">${esc(meta)} ${tagsHtml(prof.tags || w.tags)}</div>` + modMeta + det("w" + w.id + (mod ? mod.id : ""), "武器效果", detail);
+	return `<div class="wstat">${esc(meta)} ${tagsHtml(prof.tags || w.tags)}</div>` + modMeta + det("w" + w.id + (mod ? mod.id : ""), "武器效果", detail) + equipmentLoreHtml(w) + (mod ? equipmentLoreHtml(mod,'改装风味文本') : '');
 }
 // 骨架选单的选项；filter 用于骨架筛选器（当前骨架始终保留，避免选单把它换掉）
 function frameOptions(p, m, filter = () => true) {
@@ -633,7 +641,7 @@ function mechParts(p) {
 		const z = Z.gms[s.name];
 		const lock = !itemAvailable(p, s);
 		return `<div class="list-item ${lock ? "locked" : ""}"><div class="li-head"><span class="li-title">${label("item", s)} <small>${s.sp || 0} SP</small>${extBadge(s)}</span><button data-act="delSys" data-arg="${i}" class="danger">✕</button></div>
-			<div class="wstat">${s.type&&s.type!=='Drone' ? (T.stype[s.type]||s.type)+' ' : ''}${tagsHtml(systemTags(s, p, m))}</div>${professionalSystemSetup(p,m,s)}${det("s" + id + i, "系统效果", (s.effect ? `<p>${s.effect}</p>` : "") + actsHtml(s) || (z && z.html) || "")}</div>`;
+			<div class="wstat">${s.type&&s.type!=='Drone' ? (T.stype[s.type]||s.type)+' ' : ''}${tagsHtml(systemTags(s, p, m))}</div>${professionalSystemSetup(p,m,s)}${det("s" + id + i, "系统效果", (s.effect ? `<p>${s.effect}</p>` : "") + actsHtml(s) || (z && z.html) || "")}${equipmentLoreHtml(s)}</div>`;
 	}).join("");
 	const spPct = Math.min(100, (st.spUsed / st.sp) * 100);
 
@@ -1068,7 +1076,7 @@ function professionalChecks(p) {
 }
 function professionalGearHtml(def,p) {
  const items=[...D.weapons,...D.systems,...D.mods].filter(x=>x.professional_license===def.id);
- return `<p><i>${esc(def.description||'')}</i></p><p><a href="${esc(def.reference_image||'')}" target="_blank" rel="noopener">查看原始牌照资料（含背景描述）</a></p>`+items.map(it=>`<div class="list-item"><b>${esc(plain('item',it))}</b> ${it.sp!=null?it.sp+' SP':''}${tagsHtml(it.tags)}<div>${WEAPONS[it.id]?weaponInfo(it,null,p,M()):(it.effect||'')+actsHtml(it)}</div></div>`).join('');
+ return `<p><i>${esc(def.description||'')}</i></p><p><a href="${esc(def.reference_image||'')}" target="_blank" rel="noopener">查看原始牌照资料（含背景描述）</a></p>`+items.map(it=>`<div class="list-item"><b>${esc(plain('item',it))}</b> ${it.sp!=null?it.sp+' SP':''}${tagsHtml(it.tags)}<div>${WEAPONS[it.id]?weaponInfo(it,null,p,M()):(it.effect||'')+actsHtml(it)+equipmentLoreHtml(it)}</div></div>`).join('');
 }
 function professionalPanel(p) {
  const list=p.professionalLicenses||[];
@@ -1152,3 +1160,4 @@ function professionalSystemSummary(s,m,p) {
  if(s.id==='ms_pl_sentry_drone') {const e=sentryWeapons(p,m).find(e=>e.mount.key+'|'+e.i===m.sentryWeapon);return `哨兵部署武器：${e?plain('item',e.w):'部署时选择'}。`;}
  return '';
 }
+

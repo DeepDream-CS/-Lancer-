@@ -1,5 +1,5 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),crypto=require('crypto');
-const {spec,translator}=require('./core-v35');const c={window:{}};vm.runInNewContext(fs.readFileSync('data.js','utf8'),c);const full=c.window.LANCER_DATA,nk=s=>s.replace(/’/g,"'");let n=0;
+const {spec,translator}=require('./core-v35');const c={window:{}};vm.runInNewContext(fs.readFileSync('assets/js/data.js','utf8'),c);const full=c.window.LANCER_DATA,nk=s=>s.replace(/’/g,"'");let n=0;
 // 扩展内容（ext:true，见 source/expansions）由 test-rules.js 检查；以下断言只针对核心规则书数据。
 function stripExt(d){const core={...d,zh:{...d.zh}},ext=k=>d[k].filter(x=>x.ext);
   const coreMakerIds=new Set(JSON.parse(fs.readFileSync('source/lancer-data/manufacturers.json','utf8')).map(m=>m.id));

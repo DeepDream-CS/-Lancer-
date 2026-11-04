@@ -1,5 +1,9 @@
 # 核心规则书 v3.5 中文修订（2026-10-21）
 
+[文档目录](README.md) · [项目说明](../README.md)
+
+维护更新：2026-11-04。文中原核对日期及当时结果保留；源码路径和命令均相对于项目根目录。
+
 依据用户提供的《枪骑兵》核心规则书v3.5.pdf（408页）。以下页码均为 PDF 物理页码，从封面起算。此次是车卡相关译名及共用术语修订，不是对408页全文的重新翻译或逐句校对。
 
 ## 已落实
@@ -307,12 +311,19 @@
 
 ## 骨架与标签字段
 
-完整逐字段列表见 [source/core-v35-overrides.json](source/core-v35-overrides.json) 的 fields。每项记录稳定ID、字段路径、译文和PDF页码。
+完整逐字段列表见 [source/core-v35-overrides.json](../source/core-v35-overrides.json) 的 fields。每项记录稳定ID、字段路径、译文和PDF页码。
 
 ## 后续维护
 
-修改 source/core-v35-overrides.json 后运行 node tools/build-data.js，再运行两组测试。tools/core-v35.js只改显示字符串；通用术语和长名称引用采用一次替换，并保护新名称避免重复替换。短而含义宽泛的名称只作定点修改，避免误改无关叙述。
+修改 `source/core-v35-overrides.json` 后运行 `node tools/build-data.js`，再运行 `node tools/test-v35.js` 与 `node tools/test-rules.js`；涉及扩展文案时补跑 `node tools/test-expansion-copy.js`。`tools/core-v35.js` 只改显示字符串；通用术语和长名称引用采用一次替换，并保护新名称避免重复替换。短而含义宽泛的名称只作定点修改，避免误改无关叙述。
 
 ## 补充修正（2026-10-28）
 
 - 金斑蝶（Monarch）的骨架介绍和两条特征（复仇者发射井、追踪荷载）原本仍写旧名「帝王蝶」，已在 `source/i18n/zh/frames-ssc.json` 中改为「金斑蝶」，共 10 处。扩展骨架「帝王蝶」是另一台骨架，不受影响。`test-rules.js` 有检查防止旧名回到金斑蝶数据中。
+
+
+## 当前维护范围（2026-11-04）
+
+本表保留核心规则 v3.5 的译名和依据页；扩展核对见[扩展翻译记录](EXPANSION-TRANSLATION-REVIEW.md)，手写释义见[术语修订](GLOSSARY-REVISION.md)，装备背景段落见[风味文本核对表](EQUIPMENT-LORE-AUDIT.md)。名称覆盖、规则释义和风味翻译分别维护，不能仅凭名称已统一就认为全文已逐句审定。
+
+当前生成器同时输出独立风味数据；不要直接修改 `assets/js/data.js`、`assets/js/equipment-lore.js` 或自动生成的核对表。正式说明已移至 `docs/`，本表链接到源文件时使用相对上一级的路径。

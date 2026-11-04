@@ -1,0 +1,9 @@
+.system-library .wt-table td { white-space: normal; }
+.system-library .wt-table td:nth-child(4) { white-space: nowrap; }
+.system-library .wt-table td:nth-child(2) { min-width: 150px; }
+.system-library .wt-table td:nth-child(3), .system-library .wt-table td:nth-child(5) { min-width: 110px; }
+.system-library .wt-effect { width: 48%; min-width: 320px; }
+.system-library .sl-filters { display: contents; }
+.system-library .wt-table tr.locked { opacity: 1; }
+.system-library .wt-table tr.locked .wt-name { color: var(--muted); }
+@media(max-width:700px) { .system-library .wt-effect { min-width: 250px; } }
