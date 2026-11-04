@@ -1076,7 +1076,7 @@ function professionalChecks(p) {
 }
 function professionalGearHtml(def,p) {
  const items=[...D.weapons,...D.systems,...D.mods].filter(x=>x.professional_license===def.id);
- return `<p><i>${esc(def.description||'')}</i></p><p><a href="${esc(def.reference_image||'')}" target="_blank" rel="noopener">查看原始牌照资料（含背景描述）</a></p>`+items.map(it=>`<div class="list-item"><b>${esc(plain('item',it))}</b> ${it.sp!=null?it.sp+' SP':''}${tagsHtml(it.tags)}<div>${WEAPONS[it.id]?weaponInfo(it,null,p,M()):(it.effect||'')+actsHtml(it)+equipmentLoreHtml(it)}</div></div>`).join('');
+ return `<p><i>${esc(def.description||'')}</i></p>${def.reference_image?`<p><a href="${esc(def.reference_image)}" target="_blank" rel="noopener">查看原始牌照资料（含背景描述）</a></p>`:""}`+items.map(it=>`<div class="list-item"><b>${esc(plain('item',it))}</b> ${it.sp!=null?it.sp+' SP':''}${tagsHtml(it.tags)}<div>${WEAPONS[it.id]?weaponInfo(it,null,p,M()):(it.effect||'')+actsHtml(it)+equipmentLoreHtml(it)}</div></div>`).join('');
 }
 function professionalPanel(p) {
  const list=p.professionalLicenses||[];

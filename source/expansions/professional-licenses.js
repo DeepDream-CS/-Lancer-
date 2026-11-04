@@ -60,4 +60,189 @@ const mods=[
  gear('wm_pl_underslung','下挂式冲击器','pl_ips_vanguard',{sp:3,allowed_sizes:['Main','Heavy'],tags:[tag('tg_unique'),tag('tg_mod')],effect:'选择一把主武器或重武器。使用该武器攻击时可改用以下数据。其他任何适用于武器的改造（包括核心奖励）均不适用于此模组。即使该数据需要重新装填，仍可继续使用原本的武器攻击。'+block('下挂式冲击器','副武器发射器，AP，装填；射程 3；5 爆炸伤害','命中：目标必须通过机体豁免否则离散直到他们下一回合结束。当向物品、掩体、地形和环境开火时，该武器自动对最多 3 个邻近大小 1 区域造成 20 AP 爆炸伤害。'),profiles:[profile('下挂式冲击器','Launcher',[r('Range',3)],[d('Explosive',5)],[tag('tg_ap'),tag('tg_loading')],{mount:'Auxiliary',no_bonuses:true})]}),
  gear('wm_pl_optimized','最优化工程','pl_ha_workshop',{sp:2,restricted_types:['Melee'],tags:[tag('tg_mod'),tag('tg_limited',2)],effect:'选择一把远程武器。<b>1/轮</b>，可以消耗 1 充能重新掷该武器的攻击骰，但必须接受第二个结果。可消耗 1 充能在休息期间免费修复该武器。'})
 ];
+
+professional_licenses.push(...[{"id":"pl_piof_pioneer","name":"拓荒者","source":"PI-OF","rank":1,"description":"拓荒者是顶峰实业猎户座派系面向殖民地先遣队与边境驻军提供的通用工程牌照，采用公司现有的殖民地建设设备，为不同规格的底盘提供野外作业和维护能力。牌照中的液压工具与便携作业设施经过军用改装，适用于临时工事修筑、障碍清除及缺乏后勤支援条件下的装备抢修。对同时承担建设与防卫任务的殖民地部队而言，这套设备可以减少专用工程载具的配备需求，并继续使用当地已有的工业维修设施。"},{"id":"pl_piof_miner","name":"星际矿工","source":"PI-OF","rank":2,"description":"星际矿工是拓荒者系列的重型工程扩展，其技术源自顶峰实业长期供应小行星矿场和卫星露天采掘区的破岩设备。猎户座派系保留了这些设备在高负荷作业中的机械结构，并针对机甲近距离交战重新设计了挂载接口与控制系统。冲击掘进钻能够用于破坏装甲和加固工事，配套推进器则允许驾驶员穿越原本无法通行的地形。该牌照主要面向承担攻坚与通路开辟任务的单位；在缺少工程支援时，持牌机甲也可直接参与矿区和地下设施的抢通作业。","prerequisites":["pl_piof_pioneer"]},{"id":"pl_piof_eden","name":"伊甸先锋","source":"PI-OF","rank":3,"description":"伊甸先锋牌照由顶峰实业的殖民地环境改造部门提供技术支持，最初用于装备在大型施工设施抵达前开展作业的先遣单位。其地貌重塑阵列与便携天候塔允许驾驶员在有限区域内整治地形、调节作业环境，为后续人员建立落脚点。猎户座派系将这套设备引入军事用途后，扩大了系统的现场控制权限，使其能够用于临时阵地构筑、进攻路线整理及局部战场环境干预。相较于公司的常规地球化设备，伊甸先锋更注重快速部署，适合需要频繁转移作业位置的小规模编队。","prerequisites":["pl_piof_miner"]}]);
+weapons.push(gear("mw_pl_piof_rivet","「垦荒者」液压铆钉枪","pl_piof_pioneer",{"id":"mw_pl_piof_rivet","name":"「垦荒者」液压铆钉枪","mount":"Main","type":"CQB","range":[{"type":"Range","val":5}],"damage":[{"type":"Kinetic","val":"1d6+2"}],"tags":[{"id":"tg_loading"}],"on_hit":"若目标邻近硬性掩护、障碍物或墙面，目标必须通过机体豁免，否则被钉在该处并固定。固定持续到目标自己用快速动作拔出铆钉、目标不再与该处邻接，或该处被摧毁。只有目标自己能拔出铆钉；已被铆钉固定的角色不会再次被固定。","effect":"该武器对物品和地形造成双倍伤害。"}));
+systems.push(gear("ms_pl_piof_workbench","「拓荒工位」野外作业台","pl_piof_pioneer",{"id":"ms_pl_piof_workbench","name":"「拓荒工位」野外作业台","sp":2,"tags":[{"id":"tg_unique"},{"id":"tg_deployable"},{"id":"tg_quick_action"},{"id":"tg_limited","val":1}],"effect":"以快速动作消耗 1 充能，在邻近自由空间部署作业台，可当作硬性掩护，持续到场景结束。邻近作业台的角色可以用快速动作花费 1 修理，修复自己一件被摧毁的武器或系统；每个角色每场景 1 次。","deployables":[{"name":"拓荒工位","type":"Deployable","size":1,"hp":10,"evasion":5,"detail":"标签：可展开；可作为硬性掩护，持续到场景结束。"}],"actions":[{"name":"部署拓荒工位","activation":"Quick","detail":"消耗 1 充能，在邻近自由空间部署。"}]}));
+weapons.push(gear("mw_pl_piof_drill","TT.5 冲击掘进钻","pl_piof_miner",{"id":"mw_pl_piof_drill","name":"TT.5 冲击掘进钻","mount":"Heavy","type":"Melee","range":[{"type":"Threat","val":1}],"damage":[{"type":"Kinetic","val":"1d6+4"}],"tags":[{"id":"tg_ap"}],"on_hit":"目标必须通过机体豁免，否则被击退 2 并伏卧；若因此撞上障碍物或地形，额外受到 1d6 动能伤害。","effect":"该武器对物品和地形造成 20 AP 动能伤害。"}));
+systems.push(gear("ms_pl_piof_tunnel","「矿道」掘进推进器","pl_piof_miner",{"id":"ms_pl_piof_tunnel","name":"「矿道」掘进推进器","sp":3,"tags":[{"id":"tg_unique"},{"id":"tg_protocol"}],"effect":"激活时受到等同你的大小 +1 的热度（大小 ½ 视为 1）：大小 ½、1 为 2，大小 2 为 3，大小 3 为 4。直到你的回合结束，你可以将移动路径上的地形和障碍物视为困难地形穿过。自愿移动时离开的每个空间（按你的占格计算）都变为困难地形，持续到场景结束。被挖穿的地形和障碍物不再阻挡移动或视线，也不再提供掩护。飞行时不能激活；不能挖穿地图边界或 GM 认定无法破坏的结构。","actions":[{"name":"掘进","activation":"Protocol","detail":"支付大小 +1 热度（大小 ½ 视为 1），获得上述掘进效果直到你的回合结束。"}]}));
+systems.push(gear("ms_pl_piof_terraform","地貌重塑阵列","pl_piof_eden",{"id":"ms_pl_piof_terraform","name":"地貌重塑阵列","sp":4,"tags":[{"id":"tg_unique"},{"id":"tg_full_action"},{"id":"tg_limited","val":1}],"effect":"消耗 1 充能，选择视线感应内最多 3 个互不重叠的爆发 1 区域，各自选择一项，持续到场景结束：<p><b>隆起：</b>区域变为高 2 的硬性掩护地形，区域内角色被推到最近的自由空间。</p><p><b>沉陷：</b>区域变为困难地形，区域内角色必须通过敏捷豁免，否则伏卧。</p><p><b>平整：</b>移除区域内所有地形与掩体，物品不受影响。</p>","actions":[{"name":"重塑地貌","activation":"Full","detail":"消耗 1 充能，选择最多三个互不重叠的爆发 1 区域，分别选择隆起、沉陷或平整。"}]}));
+systems.push(gear("ms_pl_piof_weather","天候塔","pl_piof_eden",{"id":"ms_pl_piof_weather","name":"天候塔","sp":3,"tags":[{"id":"tg_unique"},{"id":"tg_deployable"},{"id":"tg_quick_action"}],"effect":"以快速动作在视线射程 5 内部署天候塔，产生持续到场景结束的爆发 3 天候区。部署时选择模式，之后可以快速动作切换：<p><b>冷凝：</b>你和盟友在区域内结束回合时清除 2 热度。</p><p><b>沙暴：</b>区域内所有角色获得软性掩护。</p><p><b>雷暴：</b>只要攻击者或目标至少一方在区域内，敌对角色进行的科技攻击 +1 难度。飞行角色在区域内开始回合或进入区域时，必须通过敏捷豁免，否则立即降落（视为不受伤害的坠落），且直到其下一回合结束前不能飞行。</p>","deployables":[{"name":"天候塔","type":"Deployable","size":1,"hp":10,"evasion":5,"detail":"标签：可展开；爆发 3 天候区，持续到场景结束。"}],"actions":[{"name":"部署天候塔","activation":"Quick","detail":"在视线射程 5 内部署并选择模式。"},{"name":"切换天候","activation":"Quick","detail":"切换冷凝、沙暴或雷暴模式。"}]}));
+
+// K/KCA 专业牌照：用户确认的自定义规则及风味文本。
+professional_licenses.push(...[
+  {
+    "id": "pl_kkca_squire",
+    "name": "侍从",
+    "source": "K/KCA",
+    "rank": 1,
+    "description": "侍从是哈尔根／卡西米尔定制装配面向初次参加锦标赛的驾驶员提供的基础专业牌照，包含一套适用于多种底盘的决斗武器与纹章展示设备。“誓约”短剑采用工作室的标准制式，便于骑手在不同机体上保持熟悉的操控手感；配套纹章旗则兼作近距离战术信标，为同队骑手提供姿态修正与威胁预警。持牌者可以提交自己的家族纹章或所属团体标识，由工作室完成相应的外观定制。"
+  },
+  {
+    "id": "pl_kkca_knight",
+    "name": "骑士",
+    "source": "K/KCA",
+    "rank": 2,
+    "prerequisites": [
+      "pl_kkca_squire"
+    ],
+    "description": "骑士牌照提供给在伊斯帕萨拉尔锦标赛中取得认可战绩的侍从牌照持有者，其装备针对公开比武中的正面交锋设计。重骑枪沿用当地骑士赛事的冲击武器结构，在一次全力冲刺中释放足以破坏自身的载荷；配套决斗协议负责向参赛机体及场地系统广播挑战，持续标记交战双方。随着持牌驾驶员进入军事与安保领域，这套原本用于竞技场的装备也开始用于突击任务，以迅速迫使选定目标投入近距离交战。"
+  },
+  {
+    "id": "pl_kkca_lord",
+    "name": "领主",
+    "source": "K/KCA",
+    "rank": 3,
+    "prerequisites": [
+      "pl_kkca_knight"
+    ],
+    "description": "领主是 K/KCA 为率领扈从与骑士编队的资深驾驶员保留的定制专业牌照，采用邀请授予的方式，由工作室根据持有者的惯用底盘、家族纹章和编队战法分别调校。守护铠将紧急机动与护盾发生器联动，用于掩护遭受致命打击的同伴；凯旋号角则接入编队通讯与状态监控系统，协助友军在突破敌方阵线后恢复行动并继续进攻。每套装备交付时均附有工作室创始人签署的证书，其调校记录也将随持有者的服役经历持续更新。"
+  }
+]);
+weapons.push(gear("mw_pl_kkca_oath","「誓约」决斗短剑","pl_kkca_squire",{
+  "mount": "Auxiliary",
+  "type": "Melee",
+  "tags": [
+    {
+      "id": "tg_accurate"
+    }
+  ],
+  "range": [
+    {
+      "type": "Threat",
+      "val": 1
+    }
+  ],
+  "damage": [
+    {
+      "type": "Kinetic",
+      "val": "1d3+2"
+    }
+  ],
+  "effect": "获得招架反击反应。",
+  "actions": [
+    {
+      "name": "招架反击",
+      "activation": "Reaction",
+      "frequency": "1/round",
+      "trigger": "威胁 1 内的一个敌对角色对你进行的近战攻击未命中。",
+      "detail": "条件：与决斗短剑装在同一挂载点上的另一件武器是近战武器。效果：你用那件近战武器攻击触发攻击的角色。"
+    }
+  ]
+}));
+systems.push(gear("ms_pl_kkca_banner","「家徽」纹章旗","pl_kkca_squire",{
+  "sp": 2,
+  "tags": [
+    {
+      "id": "tg_unique"
+    },
+    {
+      "id": "tg_deployable"
+    },
+    {
+      "id": "tg_quick_action"
+    }
+  ],
+  "effect": "以快速动作在邻近自由空间插下纹章旗，持续到场景结束；同一时间只能有一面纹章旗。旗帜爆发 2 内的盟友角色，在对抗伏卧、强制移动和晕眩的检定与豁免中 +1 准度。每场景一次，当区域内一个盟友角色失去结构时，其余区域内盟友角色的下一次攻击 +1 准度。",
+  "deployables": [
+    {
+      "name": "家徽纹章旗",
+      "type": "Deployable",
+      "size": 0.5,
+      "hp": 5,
+      "evasion": 5,
+      "detail": "标签：可展开；爆发 2，持续到场景结束。同一时间只能有一面。"
+    }
+  ],
+  "actions": [
+    {
+      "name": "部署纹章旗",
+      "activation": "Quick",
+      "detail": "在邻近自由空间插下纹章旗。"
+    }
+  ]
+}));
+weapons.push(gear("mw_pl_kkca_joust","「比武」重骑枪","pl_kkca_knight",{
+  "mount": "Heavy",
+  "type": "Melee",
+  "tags": [
+    {
+      "id": "tg_knockback",
+      "val": 2
+    }
+  ],
+  "range": [
+    {
+      "type": "Threat",
+      "val": 2
+    }
+  ],
+  "damage": [
+    {
+      "type": "Kinetic",
+      "val": "1d6+3"
+    }
+  ],
+  "effect": "<b>骑枪冲刺：</b>1/场景，当你进行标准移动或推进时，你可以作为这次移动的一部分进行骑枪冲刺：在这次移动中已直线移动至少 4 空间后，用该武器攻击威胁内的一个角色，不需要额外动作。该攻击获得 AP 且 +1 准度；命中时造成 +1d6 额外伤害，并使目标伏卧。<p>攻击结算后，你可以继续完成这次移动，剩余移动忽略该目标的交战与反应。</p><p>若骑枪冲刺命中，骑枪碎裂：该武器被摧毁，直到你下一次全面维修前都不能使用或修复。</p><p>骑枪碎裂前，该武器可以照常用交火或弹幕攻击。</p>"
+}));
+systems.push(gear("ms_pl_kkca_challenge","「宣战」决斗协议","pl_kkca_knight",{
+  "sp": 2,
+  "tags": [
+    {
+      "id": "tg_unique"
+    },
+    {
+      "id": "tg_quick_action"
+    }
+  ],
+  "effect": "以快速动作选择视线感应内一个敌对角色作为你的对手，持续到场景结束、任一方被摧毁，或你选择新的对手。你对对手的攻击 +1 准度，对其他角色的攻击 +1 难度；对手攻击你以外的角色时 +1 难度。",
+  "actions": [
+    {
+      "name": "宣战",
+      "activation": "Quick",
+      "detail": "选择视线感应内一个敌对角色作为对手；选择新对手时结束原对手效果。"
+    }
+  ]
+}));
+systems.push(gear("ms_pl_kkca_guard","「代誓」守护铠","pl_kkca_lord",{
+  "sp": 3,
+  "tags": [
+    {
+      "id": "tg_unique"
+    },
+    {
+      "id": "tg_overshield"
+    }
+  ],
+  "effect": "获得代誓反应。",
+  "actions": [
+    {
+      "name": "代誓",
+      "activation": "Reaction",
+      "frequency": "1/scene",
+      "trigger": "视线射程 5 内一个盟友角色受到会使其 HP 降至 0 的伤害。",
+      "detail": "按顺序处理：①你立即移动到该盟友邻近的一个自由空间，最多 5 空间，忽略交战与反应。②你获得 4＋毅力的护盾。③你代替该盟友承受这次伤害及其所有效果，即使你通常不是有效目标。若该盟友邻近没有可到达的自由空间，你不能使用该反应。"
+    }
+  ]
+}));
+systems.push(gear("ms_pl_kkca_triumph","「凯旋」号角","pl_kkca_lord",{
+  "sp": 2,
+  "tags": [
+    {
+      "id": "tg_unique"
+    },
+    {
+      "id": "tg_limited",
+      "val": 2
+    }
+  ],
+  "effect": "当你在本回合摧毁一个敌对角色或使其失去结构后，可以用自由动作消耗 1 充能：感应内所有盟友角色各自清除 1 个非自身造成的状态，并且下一次攻击 +1 准度。",
+  "actions": [
+    {
+      "name": "凯旋",
+      "activation": "Free",
+      "detail": "本回合摧毁一个敌对角色或使其失去结构后，消耗 1 充能：感应内所有盟友角色各自清除 1 个非自身造成的状态，并且下一次攻击 +1 准度。"
+    }
+  ]
+}));
 module.exports={PACK:'专业牌照（用户截图）',professional_licenses,weapons,systems,mods};
