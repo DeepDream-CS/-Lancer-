@@ -270,6 +270,8 @@ details > summary { padding:6px 0; font-size:13px; }
 .empty-state { padding:24px 12px; text-align:center; color:var(--muted); border:1px dashed var(--line); border-radius:8px; }
 .system-picker { padding:14px; border:1px solid var(--line); border-radius:8px; margin-top:16px; background:#171c24; }
 .gm-banner { display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:18px; padding:12px 16px; background:#332a1c; border:1px solid #745932; border-radius:8px; color:#f9d59f; }
+.gm-banner-message { flex:1 1 260px; min-width:0; }
+.gm-banner > button { flex:0 0 auto; }
 .export-card { height:100%; }
 .export-card .row { margin-top:18px; }
 .correction-links { margin-top:16px; padding-top:12px; border-top:1px solid var(--line); }

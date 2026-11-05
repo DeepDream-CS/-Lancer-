@@ -61,7 +61,7 @@ function pageIntro(p) {
     sheet: ['角色卡与备份','把角色卡带到游戏桌，也为下一次编辑保留备份。']
   }[tab];
   const level=LV(p.ll), spent=Object.values(p.talents).reduce((n,r)=>n+r,0);
-  return `<section class="page-intro"><div><p class="eyebrow">${esc(p.callsign || p.name || '新驾驶员')} · LL${p.ll}</p><h1>${content[0]}</h1><p>${content[1]}</p></div><div class="resource-summary"><span>毅力 <b>+${level.grit}</b></span><span>天赋 <b>${spent}/${level.talents}</b></span><span>机甲 <b>${p.mechs.length}</b></span></div></section>${db.ignoreLimits ? '<div class="gm-banner" role="status">GM 模式已开启：可选未解锁的装备与骨架。<button data-ui="disableGM">恢复牌照限制</button></div>' : ''}`;
+  return `<section class="page-intro"><div><p class="eyebrow">${esc(p.callsign || p.name || '新驾驶员')} · LL${p.ll}</p><h1>${content[0]}</h1><p>${content[1]}</p></div><div class="resource-summary"><span>毅力 <b>+${level.grit}</b></span><span>天赋 <b>${spent}/${level.talents}</b></span><span>机甲 <b>${p.mechs.length}</b></span></div></section>${db.ignoreLimits ? '<div class="gm-banner" role="status"><span class="gm-banner-message">GM 模式已开启：可选未解锁的装备与骨架。</span><button data-ui="disableGM">恢复牌照限制</button></div>' : ''}`;
 }
 function talentToolbar() {
   return `<div class="catalog-toolbar"><label class="search-field"><span>查找天赋</span><input type="search" data-ui="talentSearch" value="${esc(uiState.talentQuery)}" placeholder="中文、英文名称或效果关键词"></label><label class="chk"><input type="checkbox" data-ui="selectedTalents" ${uiState.selectedTalents?'checked':''}>只看已选</label><button data-ui="resetTalents">重置筛选</button><span class="muted" data-talent-count role="status"></span></div><p class="empty-state" data-talent-empty hidden>没有匹配的天赋，试试其他关键词或重置筛选。</p>`;
