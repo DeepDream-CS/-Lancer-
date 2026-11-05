@@ -1,0 +1,32 @@
+#damageReference { color: #e6e9ef; background: #171b23; border: 1px solid #444c5d; border-radius: 14px; padding: 0; width: min(1120px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); box-shadow: 0 20px 80px #0009; }
+#damageReference::backdrop { background: #000b; }
+#damageReference[open] { display: flex; flex-direction: column; }
+#damageReference .dr-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #3b4351; }
+#damageReference h2 { margin: 0; font-size: 23px; }
+#damageReference h3 { margin: 0 0 12px; font-size: 20px; color: #e9bc72; }
+#damageReference p { margin: 8px 0; }
+#damageReference .dr-header p, #damageReference .dr-source { color: #abb6c8; font-size: 13px; }
+#damageReference .dr-close { flex-shrink: 0; }
+#damageReference .dr-body { overflow-y: auto; padding: 20px 24px; line-height: 1.75; }
+#damageReference .dr-links { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+#damageReference .dr-links a { color: #e9bc72; border: 1px solid #55505a; border-radius: 6px; padding: 5px 12px; text-decoration: none; }
+#damageReference .dr-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+#damageReference section { scroll-margin-top: 12px; min-width: 0; }
+#damageReference .dr-note { padding: 14px 18px; background: #222a37; border-radius: 8px; }
+#damageReference .dr-danger { color: #ffb0a5; }
+#damageReference table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+#damageReference caption { text-align: left; font-weight: bold; padding: 8px 0; }
+#damageReference th, #damageReference td { padding: 12px; border: 1px solid #3b4351; vertical-align: top; }
+#damageReference thead { background: #2c3442; }
+#damageReference th[scope=row] { white-space: nowrap; width: 72px; color: #efc886; }
+#damageReference ul { padding-left: 20px; margin: 8px 0; }
+#damageReference li + li { margin-top: 8px; }
+#damageReference .dr-critical { background: #422a30; }
+#damageReference :focus-visible { outline: 2px solid #efc886; outline-offset: 3px; }
+@media (max-width: 760px) {
+  #damageReference { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  #damageReference .dr-columns { grid-template-columns: 1fr; }
+  #damageReference .dr-header, #damageReference .dr-body { padding: 14px; }
+  #damageReference h2 { font-size: 19px; }
+  #damageReference th, #damageReference td { padding: 9px; }
+}
