@@ -244,6 +244,8 @@ function mergeExpansion(d) {
  d.professional_licenses = professional.professional_licenses.map(x=>({...x,ext:true,pack:professional.PACK}));
  for(const k of ['weapons','systems','mods']) for(const it of professional[k]) d[k].push({...it,zh_name:it.name,ext:true,pack:professional.PACK});
 	d.ext_rules = X.rules; // 变体骨架、新标签、新状态的规则说明
+	// 导出给 Foundry 时，与官方补充书重复的扩展条目要改用官方 id（与 Foundry 内容包一致）
+	d.fvtt_map = Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync(path.join(ROOT, "source/fvtt/official-map.json"), "utf8"))).filter(([k]) => !k.startsWith("_")));
 	console.log("expansion merged:", ["frames", "talents", "backgrounds", "core_bonuses", "pilot_gear", "weapons", "systems", "mods"].map(k => `${k} ${(X[k] || []).length}`).join("，"));
 	return d;
 }

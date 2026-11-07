@@ -158,7 +158,9 @@ const shMounts = sh.mechs[0].loadouts[0].mounts;
 ok(shMounts[2].slots[0].weapon?.id === "mw_cyclone_pulse_rifle" && shMounts[0].lock === true && shMounts[0].slots.every(s => !s.weapon) && shMounts[1].lock === false, "超重型武器占用的挂载点标为锁定（受身）：" + JSON.stringify(shMounts));
 
 // ---- 4. 角色卡页面有导出按钮
-ok(fs.readFileSync(path.join(ROOT, "assets/js/app.js"), "utf8").includes('data-act="exportFoundry"'), "角色卡页应有「导出到 Foundry」按钮");
+const appJs = fs.readFileSync(path.join(ROOT, "assets/js/app.js"), "utf8");
+ok(appJs.includes('data-act="exportFoundry"'), "角色卡页应有「导出到 Foundry」按钮");
+ok(appJs.includes('case "exportFoundry": exportFoundryJson(p); return;'), "「导出到 Foundry」按钮应调用 exportFoundryJson");
 ok(fs.readFileSync(path.join(ROOT, "index.html"), "utf8").includes('<script src="assets/js/app.js"></script><script src="assets/js/foundry-export.js"></script>'), "index.html 应在 app.js 之后载入 foundry-export.js");
 
 console.log(`test-foundry-export：${checks} 项检查，${failures ? failures + " 项失败" : "全部通过"}（骨架 ${frameIds.length} 个）`);

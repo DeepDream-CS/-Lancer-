@@ -747,6 +747,7 @@ function renderSheet(p) {
 	</div>
 	<div class="card export-card noprint"><h3>分享与上桌</h3><p class="muted">发给 GM 或队友，或打印一份带到游戏桌。</p><div class="row"><button data-card="all" class="primary">下载全部图片</button><button data-act="copySheet">复制文字角色卡</button><button data-act="print">打印</button></div><details><summary>单独下载一张卡</summary><div class="row"><button data-card="pilot">驾驶员卡 PNG</button><button data-card="mech">当前机甲卡 PNG</button></div></details></div>
 	<div class="card export-card noprint"><h3>备份与继续编辑</h3><p class="muted">JSON 保留完整配置，可在其他浏览器导入后继续编辑。</p><div class="row"><button data-act="exportJson" class="primary">备份当前角色</button><button data-act="exportAll">备份全部角色</button><button data-act="importJson">导入 JSON</button></div></div>
+	<div class="card export-card noprint"><h3>导出到 Foundry</h3><p class="muted">生成 COMP/CON 格式的驾驶员 JSON，在 Foundry LANCER 驾驶员表的 &lt;RM-4://同步&gt; 页「文件导入」中选择。需先在 Foundry 导入车卡器的中文内容包；第二改装、武器舱等车卡器专用配置会写进机甲备注。</p><div class="row"><button data-act="exportFoundry" class="primary">导出到 Foundry</button></div></div>
 	<div class="card wide noprint"><h3>图片预览 <span class="muted">点击图片也可单独下载 PNG</span></h3><p class="muted">图片为固定版式摘要，长文会省略。完整配置请保留 JSON，详细规则见下方文字角色卡。</p><div id="cardPreview" class="card-preview">生成中…</div></div>
 	<div class="card wide"><details class="text-sheet" data-open-id="sheet-text" ${openSet.has('sheet-text')?'open':''}><summary>文字角色卡与完整规则详述</summary><pre class="sheet" id="sheetText">${esc(sheetText(p))}</pre></details></div>
 	</div>`;
@@ -899,6 +900,7 @@ document.addEventListener("click", e => {
 			a.click(); return;
 		}
 		case "importJson": document.getElementById("importFile").click(); return;
+		case "exportFoundry": exportFoundryJson(p); return;
 		default: return;
 	}
 	render();
