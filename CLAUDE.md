@@ -15,7 +15,7 @@
 | 文件 | 作用 |
 |---|---|
 | `assets/js/`、`assets/css/` | 网页资源统一收纳；生成器、测试与页面均引用此处，根目录不保留重复资源 |
-| `index.html` | 页面骨架；脚本顺序：`assets/js/data.js → assets/js/equipment-lore.js → assets/js/wizard.js → assets/js/cardexport.js → assets/js/rules.js → assets/js/glossary.js → assets/js/ui.js → assets/js/system-library.js → assets/js/faq-data.js → assets/js/faq.js → assets/js/frame-catalog.js → assets/js/battlemap.js → assets/js/app.js` |
+| `index.html` | 页面骨架；脚本顺序：`assets/js/data.js → assets/js/equipment-lore.js → assets/js/wizard.js → assets/js/cardexport.js → assets/js/rules.js → assets/js/glossary.js → assets/js/ui.js → assets/js/system-library.js → assets/js/faq-data.js → assets/js/faq.js → assets/js/frame-catalog.js → assets/js/battlemap.js → assets/js/app.js → assets/js/foundry-export.js` |
 | `assets/js/data.js` | **生成文件，不要手改**。由 `tools/build-data.js` 生成 |
 | `assets/js/equipment-lore.js` | **生成文件，不要手改**。风味文本独立数据，由 `tools/build-equipment-lore.js` 生成 |
 | `assets/js/system-library.js` / `assets/css/system-library.css` | 只读系统与武器改装查询，搜索、筛选、规则及风味文本展示 |
@@ -30,6 +30,7 @@
 | `assets/js/battlemap.js` / `assets/css/battlemap.css` | GM 本机六角格战斗地图，存档与角色独立 |
 | `assets/js/glossary.js` | 手写术语（`GLOSSARY_SRC`）；标签说明与扩展规则在运行时并入 |
 | `assets/js/cardexport.js` | 角色卡图片（canvas）与文字卡 |
+| `assets/js/foundry-export.js` | 导出到 Foundry：角色转为 COMP/CON v2 驾驶员 JSON（Foundry 驾驶员表「文件导入」），扩展条目按 `D.fvtt_map` 改用官方 id |
 | `assets/css/style.css` | 主样式 |
 | `source/lancer-data/` | COMP/CON 开源数值数据（核心规则书） |
 | `source/cn/`、`source/tw/` | 规则站简体 / 繁体原文 |
@@ -86,6 +87,11 @@ node tools/test-system-library.js   # 系统库浏览器检查（需本机 Playw
 node tools/i18n-missing.js          # 自译缺项
 node tools/build-lcp.js             # Foundry 核心包与扩展包（dist/fvtt/）及核对表 docs/FVTT-LCP-*.md
 node tools/test-lcp.js              # Foundry 内容包的枚举、引用、映射检查
+node tools/build-fvtt-module.js     # Foundry 界面中文模组 lancer-cn（dist/fvtt/lancer-cn/、.zip）
+node tools/test-fvtt-module.js      # 模组译文、清单、写死英文翻译、骨架插图钩子检查
+node tools/test-foundry-export.js   # 导出到 Foundry 的驾驶员 JSON：结构与所有条目 id 都能在 Foundry 中找到
+node tools/scan-fvtt-labels.js ../foundryvtt-lancer [--write]  # 扫描系统模板与代码中写死的英文，对照 / 更新快照
+node tools/export-official-todo.js  # 官方补充书中车卡器未收录条目的清单与待译 JSON
 ```
 
 - test-v35 用数值结构摘要锁住核心数据；扩展内容和新增的顶层字段（如 `ext_rules`、`professional_licenses`）要在 `stripExt()` 里剔除，不要改基线。
@@ -129,4 +135,6 @@ node tools/test-lcp.js              # Foundry 内容包的枚举、引用、映�
 - 扩展条目与官方补充书重复时按 `source/fvtt/official-map.json` 改用官方 id；新增扩展条目若对应官方补充书，要在映射表补上，否则会与英文版重复。
 - 新的车卡器专用字段要加进 `BUILDER_ONLY`，需要 GM 手动处理的写进 `builderNotes()`。Foundry 枚举或频率不合法会让整批导入失败，`test-lcp.js` 会检查。
 - 仍为英文的文字在 `dist/fvtt/zh-overrides*.todo.json`，补译写到 `source/fvtt/zh-overrides*.json`。
-- 骨架改成中文名后，Foundry 按英文名查插图的地方（新建条目、机甲换骨架）找不到图；覆盖已有条目时图片保留。
+- 骨架改成中文名后，Foundry 按英文名查插图的地方（新建条目、机甲换骨架）找不到图；覆盖已有条目时图片保留。界面中文模组 `lancer-cn`（源文件 `source/fvtt/module/`）用钩子按骨架 id 补图，并提供系统界面译文（语言代码 `cn`，与 foundry_chn 相同）；清单链接指向 GitHub Pages 上的 `dist/fvtt/lancer-cn/module.json`，改动后要提高 `module.json` 版本号。
+- 系统模板 / 代码里写死的英文不经语言文件，模组在显示时按词典替换（`cn-hardcoded.json`、`cn-words.json`，对照扫描快照 `hardcoded-en.json`），只改文字节点和提示属性，不碰输入框、编辑区和存档数据。系统升级后先运行 `scan-fvtt-labels.js` 看新增条目；不想翻译的调试信息写 `null`。
+- 状态与状况随核心包导出，文字取自术语库（`source/fvtt/statuses-zh.json` 对应）；模组的状态图标名要与之同名（test-lcp 检查）。专业牌照、扩展厂商无法经内容包导入，由模组的 GM 按钮「导入车卡器资料」写入合集包（`importReference`），同时把骨架牌照改为中文名。

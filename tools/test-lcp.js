@@ -107,6 +107,22 @@ function checkPack(packId) {
 	}
 	for (const k of kinds) for (const x of out[k]) walk(x, x.id, overlaidTargets.has(x.id));
 
+	// 部署物会被建成 Foundry 角色：这些数值不是非负整数会让整批导入报错（LancerActor validation errors）
+	const depInt = ["armor", "evasion", "edef", "heatcap", "save", "speed"];
+	const depWalk = (o, id) => {
+		if (Array.isArray(o)) return o.forEach(v => depWalk(v, id));
+		if (!o || typeof o !== "object") return;
+		for (const [key, v] of Object.entries(o)) {
+			if (key === "deployables" && Array.isArray(v)) for (const d of v) {
+				for (const f of depInt) if (d[f] !== undefined) ok(Number.isInteger(d[f]) && d[f] >= 0, `${label} ${id} 部署物「${d.name}」的 ${f} 必须是非负整数，实际 ${JSON.stringify(d[f])}`);
+				if (d.size !== undefined) ok(typeof d.size === "number" && d.size >= 0.5, `${label} ${id} 部署物「${d.name}」的大小不合法：${JSON.stringify(d.size)}`);
+				if (d.hp !== undefined) ok(/^\s*\d+(\s*[+*-]\s*(\d+|\{(grit|ll)\}))*\s*$/.test(String(d.hp)), `${label} ${id} 部署物「${d.name}」的 HP 不是数字或公式：${JSON.stringify(d.hp)}`);
+			}
+			if (typeof v === "object") depWalk(v, id);
+		}
+	};
+	for (const k of kinds) for (const x of out[k]) depWalk(x, x.id);
+
 	for (const f of out.frames) {
 		ok(hasText(f.name), `${f.id} 缺少名称`);
 		ok((f.mechtype || []).every(t => ENUM.mechType.includes(t)), `${f.id} 定位不合法：${f.mechtype}`);
@@ -186,6 +202,26 @@ function checkPack(packId) {
 	ok(audit.added.every(a => a.kind === "tags"), "核心包只应新增标签：" + audit.added.filter(a => a.kind !== "tags").map(a => a.id).join(", "));
 	const monarch = out.frames.find(f => f.id === "mf_monarch");
 	ok(monarch && monarch.name === "金斑蝶", "Monarch 应使用 v3.5 译名「金斑蝶」");
+	// 状态与状况：Foundry 用 id 或 icon 生成 lid 覆盖已有条目，icon / type 必须与官方一致
+	const baseStatuses = readJson(path.join(ROOT, "source/fvtt/core/statuses.json"));
+	const st = out.statuses || [];
+	ok(st.length === baseStatuses.length, `状态与状况应全部导出（${st.length} / ${baseStatuses.length}）`);
+	for (const b of baseStatuses) {
+		const s = st.find(x => x.icon === b.icon);
+		ok(s && s.type === b.type && s.exclusive === b.exclusive, `状态 ${b.name} 的 icon / type / exclusive 应与官方一致`);
+		ok(s && CJK.test(s.name) && CJK.test(s.terse) && CJK.test(s.effects) && !/[A-Za-z]{4,}/.test(s.effects.replace(/<[^>]+>/g, "")), `状态 ${b.name} 的名称、简述与说明应为中文`);
+		ok(s && ["Status", "Condition", "Effect"].includes(s.type), `状态 ${b.name} 的类型不合法`);
+	}
+	ok(st.find(s => s.icon === "stunned")?.name === "晕眩" && st.find(s => s.icon === "downandout")?.name === "昏迷", "晕眩、昏迷（Down and Out）按术语库命名");
+	const unzipped = unzip(fs.readFileSync(path.join(ROOT, "dist/fvtt", PACKS.core.lcp)));
+	ok(unzipped["statuses.json"] && JSON.parse(unzipped["statuses.json"]).length === st.length, "核心包应包含 statuses.json");
+	// 模组的状态图标名应与状态条目同名
+	const cnFlat = readJson(path.join(ROOT, "source/fvtt/module/cn-flat.json"));
+	const iconKey = { "danger-zone": "dangerzone", "shut-down": "shutdown", "lock-on": "lockon", slow: "slow" };
+	for (const s of st) {
+		const k = `lancer.statusIconsNames.${iconKey[s.icon] || s.icon}`;
+		if (k in cnFlat) ok(cnFlat[k] === s.name, `模组状态图标名 ${k}「${cnFlat[k]}」应与状态条目「${s.name}」一致`);
+	}
 	const barb = out.weapons.find(w => w.id === "mw_barbarossa_integrated");
 	ok(barb && barb.mount === "Ship-class", "巴巴罗萨内建武器应保留 Ship-class 挂载");
 	const cb = out.core_bonuses.find(c => c.id === "cb_auto_stabilizing_hardpoints");
@@ -214,8 +250,8 @@ function checkPack(packId) {
 	// 英文原文自身标签残缺（结尾 "</ul" 缺 ">"），译文补全了列表
 	const TAG_EXEMPT = new Set(["t_juggernaut|ranks[2].synergies[0].detail"]);
 	// 与车卡器用法不一致的写法 → 应改为
-	const TERMS = [[/精准/, "准度"], [/重击(?!弹)/, "会心一击"], [/维修值/, "维修"], [/闪避/, "回避"], [/生命值/, "HP"],
-		[/躲藏状态/, "匿迹状态"], [/干扰状态/, "受扰状态"], [/闪烁空间/, "瞬空"], [/免费动作/, "自由动作"], [/核心加成/, "核心奖励"]];
+	const TERMS = [[/精准/, "准度"], [/重击(?!弹)/, "会心一击"], [/维修值/, "维修"], [/(?<!猎人)闪避/, "回避（阿特拉斯蛾特性「猎人闪避」除外）"], [/生命值/, "HP"],
+		[/躲藏状态/, "匿迹状态"], [/干扰状态/, "受扰状态"], [/闪烁空间/, "瞬空"], [/免费动作/, "自由动作"], [/核心加成/, "核心奖励"], [/超量护盾/, "护盾（Overshield）"]];
 	const base = {};
 	const addBase = dir => { for (const k of CORE_KINDS) { const f = path.join(dir, k + ".json"); if (fs.existsSync(f)) for (const x of readJson(f)) base[x.id] = x; } };
 	addBase(path.join(ROOT, "source/fvtt/core"));

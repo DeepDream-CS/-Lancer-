@@ -352,7 +352,8 @@ const frames = [
 	},
 	{
 		id: "mf_ext_kutuzov", name: "Kutuzov", zh_name: "库图佐夫", variant_of: "mf_napoleon", source: "HA",
-		mechtype: ["Striker", "Support"], mounts: ["Main/Aux"],
+		// 定位按官方补充书数据（OWS mf_kutuzov），用户 2026-11-07 确认；PDF 转录为打击/支援
+		mechtype: ["Defender", "Support"], mounts: ["Main/Aux"],
 		stats: stats({ size: 0.5, armor: 2, hp: 6, evasion: 8, edef: 10, heatcap: 8, repcap: 3, sensor_range: 5, tech_attack: 0, save: 11, speed: 4, sp: 7 }),
 		description: p("继拿破仑成功展示了众多先进的瞬移和静滞技术后，哈里逊兵工厂立即批准了一系列后续研发计划，以扩大这些系统在各种后续底盘和模块升级包中的应用。这些后续计划最早的产品之一，即为库图佐夫——该底盘按照兵工厂海军指挥部的要求，作为登舰作战的力量倍增器，利用拿破仑令人难以置信的自持能力，将其转化为一种紧凑灵活的投射防御平台，非常适合与海军陆战队或底盘小队一起参与近距离战斗。") +
 			p("与更具标志性的萨拉丁不同，库图佐夫并不适合前线作战，其生存能力指标明显低于拿破仑本身。然而，它能够迅速投射闪现屏障、相位态波形和「固着」场，在训练演习和反海盗行动中，其对来袭火力的抗击能力已经得到证明。同时，库图佐夫与伊斯坎达尔-CC 等底盘在新马德拉萨（New Madrassa）作为囚押安全和镇暴单位进行低强度防御行动的次数也日渐增加。"),
@@ -456,7 +457,8 @@ const frames = [
 	{
 		id: "mf_ext_sagarmatha", name: "Sagarmatha", zh_name: "萨加玛塔", variant_of: "mf_standard_pattern_i_everest", source: "GMS",
 		maker_note: "大小 2 的旧型 GMS 底盘，LL0 起任何角色都可自由使用，与埃弗勒斯不互斥",
-		mechtype: ["Striker"], mounts: ["Main", "Flex", "Heavy"],
+		// 定位按官方补充书数据（Wallflower mf_sagarmatha），用户 2026-11-07 确认；PDF 转录为打击
+		mechtype: ["Defender"], mounts: ["Main", "Flex", "Heavy"],
 		stats: stats({ size: 2, armor: 1, hp: 8, evasion: 8, edef: 8, heatcap: 6, repcap: 4, sensor_range: 10, tech_attack: 0, save: 10, speed: 4, sp: 6 }),
 		description: p("萨加玛塔是比埃弗勒斯还要古老的型号，出于必要性而非设计的原因，显得更加笨重粗壮。从现代制造标准的角度来看，它常被认为有些过时。尽管如此，萨加玛塔在边境殖民地、男爵领和信天翁中仍有一些用途。"),
 		traits: [
@@ -587,7 +589,8 @@ const frames = [
 	{
 		id: "mf_ext_emperor", name: "帝王蝶", zh_name: "帝王蝶", source: "SSC", no_grit_hp: true,
 		mechtype: ["Support", "Artillery"], mounts: ["Main"],
-		stats: stats({ size: 1, armor: 0, hp: 2, evasion: 10, edef: 8, heatcap: 5, repcap: 2, sensor_range: 15, tech_attack: 1, save: 11, speed: 5, sp: 5 }),
+		// SP 按官方补充书数据（KTB mf_emperor）为 7，用户 2026-11-07 确认；PDF 转录为 5
+		stats: stats({ size: 1, armor: 0, hp: 2, evasion: 10, edef: 8, heatcap: 5, repcap: 2, sensor_range: 15, tech_attack: 1, save: 11, speed: 5, sp: 7 }),
 		description: p("<i>“奇材集团无所不能。有些门还没有向我们敞开——‘问题’呈现出无尽的分支路径；而‘门’便是二重像。开与关。该问题的严重之处在于其无限宽广的可能性之中——对于修补匠和爱好者来说，这是台无用的骨架，随着时间的推移，他们会对僵化而令人绝望的体系所定义的道德规范感到烦恼。</i>") +
 			p("<i>而奇材集团则专注于解决方案：不存在所谓的问题，只有一扇门，问题是：我们是打开它，还是必须砸开它？</i>") +
 			p("<i>为了帝皇，我们不得不把门砸开。过程不雅，但门外的内容更值得一窥：融合主观性，诱导型格式塔显现，H-NHP 本体论桥接，叠加边界防御透镜——看看这破门槌给我们带来了什么，然后告诉我，你是愿意解决问题，还是撞门而进。</i>") +
@@ -1311,7 +1314,9 @@ const weapons = [
 const systems = [
 	// 天赋给予
 	{ id: "ms_ext_unstable_nhp", name: "不稳定 NHP", type: "AI", talent_item: true, talent_id: "t_ext_iconoclast", talent_rank: 1, sp: 0,
-		tags: [tag("tg_unique"), tag("tg_ai")], bonuses: [{ id: "ai_cap", val: 1 }], license: "GMS", license_level: 0,
+		// 标签按官方补充书数据（Dustgrave ms_iconoclast）：独特、1/轮，不带 AI 标签，因此不计入 AI 上限，也不再需要 ai_cap +1。
+		// 用户 2026-11-07 确认；PDF 转录为 独特、AI 并以 ai_cap +1 抵消
+		tags: [tag("tg_unique"), tag("tg_round", 1)], license: "GMS", license_level: 0,
 		effect: "你的机甲获得 AI 标签；不过该 NHP 不计入你一次可安装的 AI 总数。你无法通过<b>协定</b>将机甲交给不稳定 NHP 控制，但它可以进入<b>崩溃</b>。你的机甲获得<b>模因火花</b>。",
 		actions: [{ name: "模因火花", activation: "Quick", frequency: "1/round", detail: "对<b>射程3</b>内的一个角色造成 1 AP 能量伤害。你的机甲上每有一个 NHP（包括这个），火花就造成 +1 伤害。「NHP」是指赋予你机甲 AI 标签、同时可以崩溃或被允许崩溃的系统。" }] },
 	// 吉尔伽美什牌照

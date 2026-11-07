@@ -1,0 +1,329 @@
+{
+	"mw_brutus_wrecker": {
+		"name": "Brutus’s Wrecker",
+		"on_crit": "Target is knocked Prone.",
+		"description": "The signature weapon of the former perpetual champion of Crater Pit. Since Brutus’s defeat in glorious combat, someone else now wields this massive tungsten ball on a reinforced chain. Ultimately a primitive weapon, this wrecker makes up for its lack of elegance with sheer brutality."
+	},
+	"mw_brutus_shield": {
+		"name": "Brutus’s Shield",
+		"actions[0].detail": "As a protocol, you may raise this Shield to gain 4+Grit Overshield until the start of your next turn, at which point you lose all Overshield. You are Slowed while you have this Overshield. <br>You may not use this Protocol two turns in a row.",
+		"description": "The signature weapon of the former perpetual champion of Crater Pit. Since Brutus’s defeat in glorious combat, someone else now wields this relatively advanced slab shield. Incorporating surprisingly complex Harrison Armory technology, this shield can project a localized force field of significant strength."
+	},
+	"mw_blast_pick": {
+		"name": "Blast Pick",
+		"profiles[0].name": "Regular Swing",
+		"profiles[1].name": "Explosive Swing",
+		"effect": "Before making an attack, you may declare that you unload this weapon. If you do, the attack deals 2d6+6 Explosive damage and it gains Knockback 2. Otherwise, this weapon does not unload.",
+		"description": "Originally used in IPS-N mining operations, this particular pick eventually found its way to the Garfields in Port Conroy, a popular fusion pasta restaurant. Used as a prominent piece of decoration in the restaurant, this aged mining implement yet packs some serious punch. The blast picks operates via an integrated explosive charge which can be triggered manually to enhance the force of the swing and resulting impact exponentially."
+	},
+	"mw_shock_baton": {
+		"name": "Shock Baton",
+		"on_crit": "Your target must succeed on a Systems save or become Jammed until the end of their next turn. On a success, they become Impaired for the same duration. Each character can only be affected this way 1/Scene.",
+		"description": "The shock baton is a relatively recent development in the field of mech-to-mech “less-lethal” weaponry. A popular choice for law enforcement seeking to disable frames instead of destroying them, allowing their pilots to be taken alive."
+	},
+	"mw_reaper_assault_cannon": {
+		"name": "Reaper Assault Cannon",
+		"profiles[0].name": "Standard",
+		"profiles[1].name": "Superheavy",
+		"effect": "You may fire this weapon as if it were a Superheavy weapon. If you do, it gains Reliable 5 and it deals 4d3+2 Kinetic damage instead of its standard damage.",
+		"description": "IPS-N’s latest foray into the field of autocannons, the Reaper represents the middle ground between a regular assault cannon and the ubiquitous Leviathan. Capable of laying down a harrowing hail of bullets, the Reaper lacks the typical assault cannon “spin up” feature, relying instead on yet more barrels and two rotary assemblies to achieve a superior rate of fire. Handed out to select IPS-N-licensed printers, this latest model is still in the test stages."
+	},
+	"mw_xc_br_battle_rifle": {
+		"name": "XC-BR Battle Rifle",
+		"description": "The GMS MC-AR assault rifle currently in use throughout Union’s forces and beyond is a time-tested and reliable design. Rather than attempting to replace it outright, CentComm's Defense Logistics Committee has put out a call for a supplementary standardized battle rifle system that can operate alongside the MC-AR in mixed fireteams, or as a primary weapon system for engaging heavily armored opposition at longer ranges than the MC-TR thermal rifle. The XC-BR uses an advanced caseless electrochemical propellant design capable of firing larger-caliber, armor-defeating rounds while minimizing recoil along with an integrated dynamic targeting system, though the weapon is still plagued by intermittent heat issues that can adversely affect performance.</p>",
+		"effect": "You may attack characters with the Lock On condition using this weapon as though it is Range 15.",
+		"on_crit": "Your target gains Lock On."
+	},
+	"mw_xc_dpm_predator_nexus": {
+		"name": "XC-DPM Predator Nexus",
+		"description": "<p>One of GMS’s most advanced nexus weapons currently undergoing field-testing, the XC-DPM Predator project is the direct descendant of the earlier MC-DHK Hunter-Killer program, itself a joint venture between the Advanced Projects Special Research Agency and GMS engineers. The Predator nexus benefits from a comprehensive targeting and autonomy upgrade, incorporating MD+ “Muse Drive” smart weapon design. This system’s heuristics, though declared Turing-Null, display startlingly advanced target acquisition capabilities even when confronted with active countermeasures that might otherwise confound traditional smart weapon platforms.</p>",
+		"effect": "Attacks with this weapon ignore Invisible."
+	},
+	"mw_shrapnel_cannon": {
+		"name": "Shrapnel Cannon",
+		"description": "Clearing the cramped corridors and hallways of spaceships requires weaponry capable of engaging threats at all angles, even around corners or behind cover. A simple and brutally effective weapon, the shrapnel cannon fires explosive shells lined with a metal/polymer composite that erupts into deadly shards upon detonation. The composite's elasticity is sufficient to enable these shards to ricochet off hard surfaces without compromising terminal ballistics, enabling wide-coverage indirect fire across spaces where traditional CQB weapons can't reach without exposing the operator in turn.",
+		"on_hit": "This weapon creates a Cone 5 area originating from the target, oriented away from them in a direction of your choice and tracing line of sight from that target. All units in this area must pass an Agility save or take 1d6 kinetic damage."
+	},
+	"mw_electrohydraulic_claw": {
+		"name": "Electrohydraulic Claw",
+		"description": "A chassis-scale, weaponized version of the iconic search-and-rescue tool, IPS-N's electrohydraulic cutter/spreader claw is even more powerful than its utilitarian cousin. While the claw's reinforced cutting blades serve as an adequate, if clumsy, weapon on their own, their true potential lies in their ability to literally pry chassis apart when suitably braced, capable of shearing through even reinforced armor composites. The ability to easily bypass sealed doors and airlocks (or create alternate openings during breaching actions) lends the weapon additional versatility.",
+		"effect": "1/round, you may activate the claws as a quick action when you hit a character with this weapon to automatically grapple them. Targets grappled this way must pass a Hull save or become Shredded until the end of their next turn.<br><br>This weapon deals 10 AP kinetic damage to objects, cover, and the environment. Additionally, you gain +1 Accuracy to all non-combat mech skill checks to pry heavy objects open or apart (e.g., sealed airlocks, jammed cockpits, vault doors, cargo containers, etc); this effect does not stack."
+	},
+	"mw_fusion_torch": {
+		"name": "Fusion Torch",
+		"description": "The FS-90 \"Rockhammer\" directed high-output mining beam is a heavy industrial energy cutter used to carve apart starship-grade hulls and toughened asteroids for mineral extraction, channeling a focused beam of superheated energy capable of effortlessly melting through even reinforced bulkheads. Repurposed by IPS-N as an offensive chassis-mounted weapon system, the fusion torch works just as well against enemy armor, and its effectiveness as a breaching tool is second to none. Operators often refer to the glowing slag deposits which frequently adorn their frames as \"war paint.\"",
+		"on_attack": "This weapon automatically deals 30 AP energy damage to objects, cover, and terrain within its area, leaving behind clouds of molten debris in their place that linger until the end of your next turn. Characters other than you that begin their turn in these clouds or who enter them for the first time in a round take 1d6 energy damage. As long as you are at least partially within a cloud, you gain soft cover."
+	},
+	"mw_exo_plasma_maul": {
+		"name": "Plasma Maul",
+		"effect": "This weapon does not need to be reloaded on a miss.",
+		"description": "Popular among colonial militias, the plasma maul is a heavy but simple device. High-density magnetic plasma capacitors have a wide range of applications, from power storage through to construction and defense. In the case of the plasma maul, they are mounted in rows along a reinforced haft and set to discharge on contact, making this a devastating closequarters weapon limited only by its need to recharge between strikes. Early models featured ejectable capacitor banks, but contemporary versions are designed to draw power directly from a chassis’ reactor."
+	},
+	"mw_exo_sting_heavy_anti_armor_rifle": {
+		"name": "“Sting” Heavy Anti-Armor Rifle",
+		"on_attack": "If you consume LOCK ON, your attack ignores cover.",
+		"on_hit": "Create a Line 5 path from (but not including) your target, continuing in the same direction as the attack. Characters in this path take 5 Kinetic Damage.",
+		"description": "An obsolete chassis-grade anti-materiel/ anti-armor rifle dating back to the Hercynian Crisis, this particular design has not been in distribution for hundreds of years but finds continued use among contemporary Hercynian forces. Bulkier and more cumbersome than the current GMS T-3 anti-materiel rifle, this particular model lacks many of the refinements incorporated into later models and is meant to be employed with a dedicated spotter to provide targeting data. All the same, its heavy, highvelocity rounds remain extremely effective at defeating both armor and static defenses at extreme range."
+	},
+	"mw_exo_steelpunch_heavy_needlebeam": {
+		"name": "“Steelpunch” Heavy Needlebeam",
+		"effect": "This weapon deals +1d6 bonus damage against targets with at least 1 Armor.",
+		"description": "The “steelpunch”, as it’s affectionately known, is a twin-beam directed-energy weapon developed by HUC engineers for use against the heavily reinforced hulls of remnant chassis and other hardened targets. The earliest models were derived from Second Committee–era mineral surveying lasers. An initial beam flash-vaporizes the target’s outer layer and the plasma bloom is instantly analyzed for material density and structural composition, following which the needlebeam fires a focused, highintensity pulsed beam tuned to defeat heavy armor. Performance against softer targets is significantly reduced, however, as excessive material ablation disrupts the secondary beam before an optimal effect can be achieved."
+	},
+	"mw_exo_brood_siblings_molt": {
+		"name": "Brood-Sibling’s Molt",
+		"effect": "1/round, this weapon deals +1d6 bonus damage to characters that are SHREDDED or STUNNED.",
+		"description": "Goodbye, old [friend/love]"
+	},
+	"ms_cockpit_integrated_stim_pump": {
+		"name": "Cockpit-Integrated Stim Pump",
+		"effect": "As a protocol, you may expend a charge to pick any number of the following stims and apply their effects. Roll 1d6 for each stim chosen: if any two dice show the same result, you immediately become Stunned until the end of your current turn instead of applying the effects. All effects from this system last until the start of your next turn.",
+		"actions[0].name": "Agitron",
+		"actions[0].detail": "<ul><li>You become Impaired.</li><li>You gain Immunity to Shredded.</li><li>Your Melee attacks gain Knockback 1 and deal +2 bonus damage.</li></ul>",
+		"actions[1].name": "Enduritran",
+		"actions[1].detail": "<ul><li>You become Jammed.</li><li>You gain Immunity to Impaired.</li><li>You gain +2 Armor. This may bring you above 4 Armor.</li></ul>",
+		"actions[2].name": "Edge",
+		"actions[2].detail": "<ul><li>You become Slowed.</li><li>You gain Immunity to Jammed.</li><li>Your next attack this turn gains +1 Accuracy.</li></ul>",
+		"actions[3].name": "Nerve Boosters",
+		"actions[3].detail": "<ul><li>You become Shredded.</li><li>You gain Immunity to Slowed.</li><li>You gain +1 Speed and ignore Engagement and your movements do not trigger Reactions.</li></ul>",
+		"description": "Powerful stim pumps are directly wired into the cockpit and intravenously administer the pilot with a potent slew of drugs. While they can enhance a pilot’s combat ability to superhuman levels, users should be keenly aware of the substances’ various side effects. While the apparatus is theoretically capable of mixing and administering complex drug cocktails this should be done with extreme caution, as the wrong mixtures or doses may lead to sudden cardiac arrest, requiring resuscitation of the pilot via in-built defibrillators and an injection of “adrenadron” to purge their system."
+	},
+	"ms_mesmertrance_dampener": {
+		"name": "MesmerTrance Dampener",
+		"effect": "1/Scene as a reaction when you are targeted by a tech attack, you may give that attack +1 Difficulty. Additionally, you gain Immunity to the MesmerTrance environmental hazard.",
+		"description": "Handed to you by the Talons, the MesmerTrance dampener supposedly stops the highly advanced and aggressive “MesmerTrance” virus from affecting your mech. As a side effect, it also provides limited protection against other, less sophisticated attacks on your mech’s systems."
+	},
+	"ms_spaceborn_1": {
+		"name": "Spaceborn EVA",
+		"effect": "All of your mechs that you build come with built-in EVA capabilities, meaning you suffer no penalties when operating underwater or in zero-g environments.",
+		"actions[0].detail": "You can shunt power into this component to fly 3 spaces and take Heat equal to your mech’s Size + 1, although you must land at the end of this movement or fall.",
+		"description": "Gained from the <i>Spaceborn: Rank I</i> pilot talent."
+	},
+	"ms_adjutant_class_compcon": {
+		"name": "ADJUTANT-Class Comp/Con",
+		"effect": "<p>Your mech gains the AI tag and Active Assist.</p><p>Additionally, you may load one talent rank you qualify for but do not have onto this system’s ontologic bridge. You gain access to that talent while piloting your mech. If this system is destroyed, neither this talent nor any systems or mech capabilities it grants can be used until it’s repaired. You may choose a different talent rank whenever you take a Full Repair.</p><p>This system isn’t a full NHP and cannot enter cascade.</p>",
+		"description": "<p>A major cornerstone of GMS's advanced technology initiative is the planned development of a next-generation companion/concierge system to replace the standard EPIPHANY-Class C/C currently in use by Union pilots. For reasons both practical as well as ethical, widespread dissemination of chassis-compatible C/C systems is currently being pushed by Union CentComm over military NHP design, and the ADJUTANT is the latest model to be approved for limited field trials following First Contact Accords compliance evaluation. Utilizing a new-model ontologic bridge framework, ADJUTANT allows for the use of selected simulant/reflex architectures to be uploaded to an engrammatic matrix for compatible pilot integration along both first- and second-tier neural processes. Long-term effects of repeated engrammatic synthesis are currently unknown, but early feedback is promising with test pilots reporting minimal difficulty expressing previously unheld aptitudes.</p>",
+		"actions[0].name": "Active Assist",
+		"actions[0].detail": "1/scene, you may take a quick action of your choice. This action cannot be an attack or force any saves."
+	},
+	"ms_pattern_c_advanced_charges": {
+		"name": "Pattern-C Advanced Charges",
+		"effect": "Expend a charge from this system for one of the following effects:",
+		"description": "<p>GMS’s latest intelligent munition system is a self-contained, multi-mode weapon designed to be easily deployable from a variety of chassis. Boasting advanced decision-making capabilities, each drone-tier charge is capable of independent target selection and interception, maintaining regular pilot-in-the-loop protocols to ensure optimal detonation parameters.</p>",
+		"actions[0].name": "Smart Grenade",
+		"actions[0].detail": "All hostile characters within the affected area must pass a Systems save or take 1d6 energy damage and gain Lock On. On a success, they gain Lock On only.",
+		"deployables[0].name": "Lurker Mine",
+		"deployables[0].detail": "This mine does not detonate as normal. Instead, gain the Selective Detonation reaction, which can be performed once per deployed lurker mine.",
+		"deployables[0].actions[0].name": "Selective Detonation",
+		"deployables[0].actions[0].detail": "The mine detonates and affected characters must pass an Agility save or take 2d6 explosive damage. On a success, they take half damage.",
+		"deployables[0].actions[0].trigger": "A character enters the lurker mine’s space or an adjacent space, or begins their turn there."
+	},
+	"ms_miniaturized_linac_coherent_beam_cannon": {
+		"name": "Miniaturized LinAc Coherent Beam Cannon",
+		"effect": "Your mech gains an additional Core System that can be used 1/mission.",
+		"description": "<p>Cressidium’s self-imposed isolation has led to a number of divergent technological advances over the centuries, among them the pursuit of more compact lance weapon development as opposed to further exploration and refinement of naval long-cycle weaponry. Weapons engineers looked to miniaturization, incorporating chemical and exotic-metal batteries and rapid-charge fire-cycling systems suitable for use on smaller and smaller platforms, ultimately including mechanized chassis. This example, reverse-engineered from combat data gathered by Union pilots during an engagement against Vestan Sovereignty special forces, appears to be a descendant of old linear accelerator coherent beam cannon designs – weapons now considered out of date by contemporary naval standards but which are nonetheless exceedingly lethal when employed at this scale.</p>",
+		"actions[0].name": "LinAc CBC",
+		"actions[0].detail": "Activate this devastating charged particle cannon, firing it in a Line 30 path. All sources of cover, terrain, objects, and deployables smaller than Size 5 in this area are boiled away instantly, and then all characters within the area must pass an Agility save or take 14 energy damage. On a success, they take half damage. This damage can’t be reduced in any way. Characters with 7 HP or less, only 1 Structure remaining, and no Immunity to damage are instead instantly and automatically destroyed, annihilated utterly and leaving no wreck behind.<br>You can take no other actions on the same turn you activate this particle cannon except for your standard move or Boost, and the stress of firing it causes you to become Stunned until the start of your next turn."
+	},
+	"ms_quickfoam_charges": {
+		"name": "Quickfoam Charges",
+		"description": "A common piece of equipment aboard commercial and military spacefaring vessels alike, \"quickfoam\" is a self-curing polymer foam laced with whitewash utility nanites that rapidly expands and hardens even in null-atmosphere conditions, used to seal hull breaches and sustain compromised systems. While not considered part of a standard combat loadout, marine pilots often make use of deployable airburst cannisters full of the substance to effect in-field emergency repairs or to set improvised snare traps in chokepoints and access corridors.",
+		"actions[0].name": "Patch Grenade",
+		"actions[0].detail": "You throw a grenade, targeting a character within Range 5. When used on an allied character, you Bolster the target and they may clear one hostile condition. When used on a hostile character, they become Impaired and Slowed until the end of their next turn.",
+		"deployables[0].name": "Sealant Mine",
+		"deployables[0].detail": "Deploy a sealant mine which establishes a Burst 1 area. This mine detonates when a character moves adjacent to or over it. All allied characters (including yourself) within the affected area gain Grit+4 Overshield and clear all burn. All hostile characters in the affected area become Immobilized by quick-curing foam sealant, which hardens in place. They remain Immobilized until the hardened foam takes enough damage to break; it counts as an object with 10 HP and Evasion 5."
+	},
+	"ms_champions_favor": {
+		"name": "Champion's Favor",
+		"effect": "At the start of your turn, gain 1 Overshield.",
+		"description": "These mech-scale golden laurels granted to pankration mechani champions house a small but sophisticated shield generator. The shield provides both protection and a distinctively colored visual shimmer, referred to as a champion's “aura” or “halo”."
+	},
+	"ms_entangled_co-consciousness_rig": {
+		"name": "Entangled Co-Consciousness Rig",
+		"effect": "<p>Your mech gains the AI tag and Champions, Guide My Hands. This system is not an NHP and cannot enter cascade.</p><p>Additionally, if a hostile character or a structure damage check would cause you to become Stunned, you may instead turn control of your mech over to its Entangled Co-Consciousness Rig. If you do, you do not become Stunned, but you cannot pick the controls back up or turn over control to any other AI on your next turn.</p>",
+		"description": "<p>House Montmorency carried one of the most impressive win streaks ever seen under the glittering skies of Ispahsalar into the Kreoss, and scored victory after victory until an elite team of Sand-men gave their lives to extract the secret of their exceptional performance.</p><p>Neurolink interfaces fitted with custom paracausal entanglement systems connected each of House Montmorency's pilots together, allowing them to draw on each other’s expertise and even subconscious reactions to gain an edge in combat. Once the mystery was revealed, rules committees were encouraged to find against the use of these systems in the House Games. Other competitions followed suit, and the minor house’s dominance finally came to an end.</p>",
+		"actions[0].name": "Champions, Guide My Hands",
+		"actions[0].detail": "1/scene, when you make an attack, you may choose not to roll, instead treating your attack as if you had rolled a 10 on the d20. If this attack hits, it automatically becomes a critical hit.",
+		"actions[0].description": "<p>“Sometimes I see them when I dream. Don’t tell anyone, will you? It’s like they’re with me somehow, even after I jack out. I know it’s not how the link works. It’s more like... echoes, memories, only they’re of things you never did, places you never were, battles you never fought.”</p><p>“Maybe somewhere out there, one of them dreams of the golden fields – running through them and dancing and laughing like we used to, back before we were called to fight.”</p><p>–Lady Karida, to her sister Zuleika</p>"
+	},
+	"ms_exo_kinesthetic_suit_upgrade": {
+		"name": "Kinesthetic Suit Upgrade",
+		"effect": "You gain the Spatial Awareness reaction",
+		"description": "<p><em>&ldquo;I chose life.&rdquo;<br>&ldquo;Listen, the fact is that you didn&rsquo;t. How many times must we go through this? Let the record show, the culprit is noncompliant and remorseless. Their actions are in breach of contract; hereby, SSC retains the rights and authority to apply all punitive actions as it sees fit&rdquo;<br>&ldquo;I chose life&rdquo;<br>&ldquo;You did not. That is a fact. Please take this one away. They will face decommissioning in the morning for the crimes of early termination of in-field biological SSC assets. The subject has noted they were compelled by another&rsquo;s intent; record this for later investigation by the incoming extrastellar security assets.&rdquo;<br>&ldquo;I choose life!&rdquo;<br>&ldquo;Yes, and tomorrow chose death.&rdquo;<br> &ndash; an excerpt of the interrogation of the singer </em></p> <p>A cybernetic apparatus anchored via spinal tap, the kinesthetic suit upgrade is a full neurological surrogate. Upon installation the apparatus anchors into the spinal cord, lacing machine and biology and allowing the user to relinquish cognitive allotments, related to the maintenance of biological homeostasis. It acts as a twin temporal processor that grants the user the ability to focus excess cognition on a great range of tasks. In recent years SSC has explored the enhancement of kinesthetic awareness, specifically for spaceborne mech pilots.</p>",
+		"actions[0].name": "Spatial Awareness",
+		"actions[0].trigger": "A character ends a movement adjacent to you.",
+		"actions[0].detail": "You may Boost, ignoring reactions and engagement. After doing so, attacks against you receive +1 Difficulty until the end of your next turn."
+	},
+	"ms_exo_emi_theater": {
+		"name": "Emi Theater",
+		"effect": "Choose a destroyed mech in line of sight. It is immediately restored as an allied Grunt NPC with 5 Overshield and afterwards takes all Heat as energy damage. The target loses any other templates it had previously but retains all other features, including regaining all destroyed weapons and systems. The target gains its own turn each round starting this round, and can otherwise perform all the actions available to a normal NPC. At the end of the scene, the target is destroyed and becomes a wreck.",
+		"description": "<p><em>&ldquo;An army of the dead. Let H0RUS feed on this, leak the history across the omninet, see what bites &ndash; Oni will no longer selfishly covet their secrets.&rdquo;&nbsp;<br>&ndash; An Arushan Constellar Bureaucrat </em></p> <p>The &ldquo;spirit theater&rdquo;, as it is often referred to, was discovered in [REDACTED], as was the pilot called Oni, who was formerly thought to have vanished on deployment. After recovery, Oni was determined to be functionally defunct and was discarded. It was determined, however, that their mech components shared no identifiable ancestry with known Union technologies. Field tests implied the Emi Theater&rsquo;s purpose was to employ necromantic ambush tactics in mass warfare entanglements; however, discernible records of it&rsquo;s use from Oni&rsquo;s mech were [REDACTED]. First employed in the Asset Rebellion in Kibo&rsquo;s 14th operational chrono-chain, the system has proven most effective when used in sequence with adjunct orbital kinetic-kill bombardments. The system projects a wide area para-resonant subjectivity wave that can reanimate functionally destroyed non-biological masses, enabling them to be used and disposed of one last time. While not widely adopted across the Constellar, the Emi Theater has seen use in the more illicit operations undertaken by SSC&rsquo;s Constellar Midnights.</p>"
+	},
+	"ms_exo_upgraded_network_array": {
+		"name": "Upgraded Network Array",
+		"effect": "1/scene, choose an allied character. Until the end of your next turn, you may use their Systems in place of your own for the purposes of checks and saves, and make tech actions using their Sensors, drawing line of sight from their position.",
+		"description": "<p><em>&ldquo;This is the place? You sure Pettenouk said it was here?&rdquo;</em></p> <p><em>&ldquo;Yes, I&rsquo;m sure. By the way, switch over to atmospheric level two. As you know, the air here on Kibo is noxious to us. Without proper adjustments, you&rsquo;ll enter a coma in hours... Shou! Dammit, someone get Shou, he&rsquo;s gone and passed out. Pack it up team, we&rsquo;ll start again tomorrow.&rdquo;</em></p> <p><em>&ldquo;Bass Harbor, ma&rsquo;am, I&rsquo;m catching several bodies approaching our position from the foothills to the northeast.&rdquo;</em></p> <p><em>&ldquo;Ah, I&rsquo;m reading it, got you loud and clear. Damn, I love doing these missions for those SSC toads. They always spare no expense and the network arrays are like having God&rsquo;s eyes. Topside Lighthouse, we got company.&rdquo;</em></p>"
+	},
+	"ms_exo_mist_feathers": {
+		"name": "Mist Feathers",
+		"effect": "<p>1/scene, when activated, you gain the following effects until the end of your next turn:</p> <ul> <li>Your mech is considered hovering</li> <li>You may Boost as a free action, 1/turn.</li> <li>When Invisible or benefiting from cover at the end of your turn, you may choose to become Hidden without taking an action</li> </ul>",
+		"description": "<p><em>&ldquo;Have you ever wondered how the mist flies? ... Hmm, fine. Well I do, I do every day. I envy it. It bends endlessly with joins of vapor effervescent and naked. I&rsquo;m not dreaming &ndash; stop, don&rsquo;t be like Grandmother &ndash; her hands were always so pressed and firm. You see&ndash; I want to fly &ndash; fly so high that the mist becomes jealous. Think of it, what if I could bring you too? Things would be better for the both of us. Better than tilling these lands day in and out, laughed at by the mist. I promise one day I&rsquo;ll grow mist feathers and be the queen of the Kimawense Range. Are you even paying attention? I said I&rsquo;ll be the Queen!------huh? You know I can hear you walking up behind me, right? Quit fooling around, these hills need tilling. Didn't you hear me!? I know you&rsquo;re there... Give it a rest, it&rsquo;s cree---pe---&rdquo;</em><br><em>&ldquo;</em><em>Scarlet soil, sowed in crimson hues.&rdquo;</em></p> <p>Extensions effervescent and endless. The Mist Feather is a specialty licensed float apparatus specifically designed for thin atmospheres. The flight system &ndash; if you can call it that &ndash; is not simple aeronautic manipulation. Designed by the illustrious artisan Ololade Omatanwa, the Mist Feathers in fact do not fly; instead, they induce forced molecular bonds between trillions upon trillions of atmospheric particulates. This bonding process instead pulls rather than propels the user forward as with each molecular bond the user is tugged a millionth of an inch. When powered by cold-core reactors the Mist Feather&rsquo;s output is exponentially multiplied, enabling mechs to hover indefinitely in non-vacuum environments.</p>"
+	},
+	"ms_exo_snapdragon_launcher": {
+		"name": "Snapdragon Anti-Chassis Guided Missile Launcher",
+		"effect": "<p>1/mission, the \"Snapdragon\" anti-chassis guided missile launcher can be used to make a ranged attack with the following profile:</p><p>Heavy Launcher, Reliable 4, Seeking <br> Range 15, 2d6 + 2 Explosive Damage</p>",
+		"description": "<ol> <li>Check all safety locks.</li> <li>Extend launch tube. Missile door should open automatically (if door fails to open, launcher will not fire).</li> <li>Activate rangefinder, acquire target. Wait for positive tone and visual confirmation that target has been acquired (TGT OK).</li> <li>Check backblast area. Minimum safe distance 100 meters. WARNING: backblast poses serious injury risk to unprotected personnel.</li> <li>Fire.</li> </ol>"
+	},
+	"ms_exo_cynosure": {
+		"name": "Cynosure",
+		"actions[0].name": "Celestial Ordering",
+		"actions[0].detail": "Every character on the battlefield involuntarily moves 1 space in a direction of your choice, ignoring engagement and without provoking reactions. They must all move in the same direction.",
+		"actions[1].name": "Unblinking Pursuit",
+		"actions[1].detail": "A hostile character within line of sight and SENSORS must succeed on a SYSTEMS save or be mesmerized. Choose another visible character. Any voluntary movement the mesmerized character makes must be toward the chosen character by the most direct route possible. This effect ends when the mesmerized character starts or ends their turn adjacent to any other character, otherwise it lasts until the end of combat.",
+		"description": "This program talks, quietly, of revenge, of the ordering of things, of a march of blades lifted high against the sun."
+	},
+	"ms_exo_opportunity": {
+		"name": "Opportunity",
+		"actions[0].name": "Knock",
+		"actions[0].detail": "<p>Opportunity lends their extraordinary processing power and their precise (if exacting) aid, optimizing an ally&rsquo;s systems to a more &ldquo;organized&rdquo; state.</p> <p>Choose an allied mech character within line of sight and SENSORS to benefit from Opportunity&rsquo;s optimization. They gain immunity to heat from other characters, +1 Accuracy on all SYSTEMS checks and saves, and attackers gain +1 Difficulty on tech attacks against them.</p> <p>This effect ends immediately when you take this action again, or when the affected character &ldquo;makes a mess of things&rdquo; by taking an attack roll, forcing a save, or taking any other action that would affect a hostile character.</p>"
+	},
+	"ms_exo_markeys_fusebox": {
+		"name": "Markey’s Fusebox",
+		"deployables[0].name": "Markey’s Fusebox",
+		"deployables[0].detail": "Expend a charge to set an explosive charge in a free adjacent space. It arms at the end of the round; once armed, it explodes if it takes any damage or heat. Characters within Burst 3 must succeed on an AGILITY save or take 2d6 Explosive damage and be pushed out of the affected area, or as far as possible. On a success, they are still pushed but take half damage."
+	},
+	"ms_exo_carapace_cladding": {
+		"name": "Carapace Cladding",
+		"actions[0].detail": "Immediately clear all Burn from your mech.",
+		"effect": "Expend a charge to immediately clear all Burn from your mech. Additionally, whenever you BRACE you may also expend a charge to reduce all Burn dealt by the attack to 0.",
+		"description": "While sufficient for personal armor, Egregorian chitin on its own is not robust enough to withstand attacks from heavier weapons, nor can it easily be gathered in sufficient quantities to fully outfit a chassis. Regardless, many rangers still utilize carapace-based secondary defensive enhancements anchored over critical systems as an additional layer of ablative protection, most notably against incendiary or caustic/corrosive munitions that might otherwise resist conventional suppression."
+	},
+	"ms_exo_fragment_beggar_one": {
+		"name": "Fragment of Beggar One",
+		"effect": "<p>1/scene, you may take one of the following Full Tech actions:</p>",
+		"actions[0].name": "Whisper of Cascade",
+		"actions[0].detail": "Choose a hostile character within SENSORS. They must either immediately attack a different character or object of your choice within their RANGE and line of sight with a single weapon as a reaction, or become JAMMED until the end of their next turn.",
+		"actions[1].name": "A Razor Called Qualia",
+		"actions[1].detail": "<p>Choose a hostile character within SENSORS. Until the end of their next turn:</p> <ul> <li>They must use their standard move to move toward you by the most direct route possible</li> <li>As long as you are within the RANGE and line of sight of their attacks, they consider you the only valid target for attacks.</li> </ul>.",
+		"description": "This artifact, recovered following the termination of Beggar One (provisionally designated /obj/00001), displays a number of unusual properties. Though tangible and presumed to be chemically stable, its monocrystalline composition does not correspond to any known element and emits a steady, measurable level of gamma radiation through an unknown process. Deep magnetic resonance scans indicate the presence of significant quantities of compressed data stored within the object, though it shows no signs of self-directed intelligence at any quantifiable level. Its exact purpose, if it has one, has yet to be determined."
+	},
+	"mw_bounder_class_comp_con": {
+		"name": "BOUNDER-Class Comp/Con",
+		"effect": "This Mod does not work with Blast, Burst, Line, or Cone weapons. 1/round you may choose one of the following:<ul><li>When you miss an attack with this weapon, you may reroll that attack against a different target, tracing Range and line of sight from the original target's location.</li><li>You may bank your shot around corners and off of the environment to hit distant targets. Choose a piece of terrain or object Size 1 or larger within the weapon's Range and line of sight. When you make your attack, you may trace Range and line of sight from that location instead.</li><li>When you roll a 20 on a die for this attack (sometimes called a \"natural 20\"), you may riccochet the shot to strike a critical area on the target. The attack's damage can't be reduced in any way, and on hit the target is knocked Prone.</li></ul><br><br>This system isn't a full NHP and cannot enter cascade.",
+		"description": "Originally planned as part of the \"Campbell\" license package, which ultimately lost to the Caliban during selection trials, the BOUNDER-class comp/con nonetheless represents one of IPS-N's latest developments in next-generation smart weapons design. The Campbell program was intended to facilitate successful boarding actions through indirect targeting solutions, minimizing the risk of incoming retaliatory fire, and although the Campbell was ultimately never adopted, BOUNDER remains available as a self-contained license for requisition.<br><br>BOUNDER is a joint hardware/software package suitable for most mainline armaments, designed to maximize surface reflectivity and projectile/waveform cohesion through a combination of specialized ammunition, variable electromagnetic lensing, and adjustable firing profiles. Thanks to the system's advanced ballistic calculation capabilities, users are able accurately chart oblique firing solutions across hard surfaces in realtime with acceptable accuracy.<br><br>Lessons learned from the infamous UNCLE-class comp/con have resulted in a much more stable and user-friendly experience, though some pilots with experience of both systems claim they find UNCLE's idiosyncrasies more endearing than BOUNDER's polished, but less eccentric, personality."
+	},
+	"cb_order_of_leander": {
+		"name": "Order of Leander",
+		"effect": "1/scene, you may add +1 Accuracy to any attack, check, or save made by you or an allied character within Range 10, adding an additional +1 Accuracy for each structure damage you have; allied characters who receive this bonus also gain Grit+4 Overshield. If you take structure damage during the scene after this ability is expended, you may use it a second time.<br><br>This core bonus counts as a piece of Exotic Gear.",
+		"description": "The Order of Leander is a Leandric States Alliance commendation given to those who have shown \"exemplary character, courage, and determination under great adversity.\" While primarily a military citation, precedent exists for it to be awarded to civilians as well, with a number of noteworthy historical figures having earned it for efforts during natural disasters, search-and-rescue missions, and medical crises. In Cressidium's settled history, no one from any other world has ever earned this award, but whether you come from beyond the stars or not, for your service in defense of both the LSA as well as Cressidium you have earned the right to wear it with pride."
+	},
+	"ms_madrigal_precision_rifle": {
+		"name": "Madrigal Precision Rifle",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p>"
+	},
+	"ms_madrigal_shoulder_launcher": {
+		"name": "Madrigal Shoulder Launcher",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p>"
+	},
+	"ms_madrigal_boarding_shotgun": {
+		"name": "Madrigal Boarding Shotgun",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p>"
+	},
+	"ms_madrigal_power_crusher": {
+		"name": "Madrigal Power Crusher",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p><p><b>On Hit</b>: Target becomes Immobilized and Impaired until the end of its next turn.</p><p>This weapon automatically hits Terrain and deals 10 AP Kinetic damage.</p>"
+	},
+	"ms_madrigal_railgun": {
+		"name": "Madrigal Railgun",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p>"
+	},
+	"ms_madrigal_disruptor_grenades": {
+		"name": "Madrigal Disruptor Grenade",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p><p>If your pilot is on foot, you gain the Disruptor Grenade quick action.</p>",
+		"actions[0].name": "Disruptor Grenade",
+		"actions[0].detail": "Expend a charge to throw a disruptor grenade within Range 5. Characters within Blast 1 become Slowed and Impaired until the end of their next turn."
+	},
+	"ms_madrigal_jump_system": {
+		"name": "Madrigal Jump System",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p><p>If your pilot is on foot you may Fly when you Boost. You must end this movement on solid ground or begin falling.</p>"
+	},
+	"ms_madrigal_thermal_visor": {
+		"name": "Madrigal Thermal Visor",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p><p>If your pilot is on foot your attacks ignore Cover.</p>"
+	},
+	"ms_madrigal_active_camo": {
+		"name": "Madrigal Active Camo",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p><p>If your pilot is on foot, ranged attacks originating from beyond Range 3 treat you as having Hard Cover.</p>"
+	},
+	"ms_madrigal_personal_shield": {
+		"name": "Madrigal Personal Shield",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p><p>If your pilot is on foot, you gain the Shielded reaction.</p>",
+		"actions[0].name": "Shielded",
+		"actions[0].trigger": "You take damage.",
+		"actions[0].detail": "You may expend a charge to gain Resistance to that damage."
+	},
+	"ms_madrigal_shock_field": {
+		"name": "Madrigal Shock Field",
+		"effect": "<p><b>Requirement</b>: Weapons and Gear with “Madrigal” in the name may only be equipped if the Pilot is wearing the “Madrigal Boarding Carapace”.</p><p>If your pilot is on foot, you gain the Shock Field quick action.</p>",
+		"actions[0].name": "Shock Field",
+		"actions[0].detail": "You may deal 3 Energy damage to all characters adjacent to you and end all Grapples affecting you."
+	},
+	"ms_madrigal_boarding_carapace_armor": {
+		"name": "Madrigal Boarding Carapace",
+		"effect": "<p>If a pilot takes the Madrigal Boarding Carapace they can’t take any pilot weapons or Gear that don’t have “Madrigal” in the name. Madrigal weapons and Gear may only be equipped by pilots wearing the Madrigal Boarding Carapace.</p><p>While wearing the carapace, you may only Dismount or Eject before your mech has acted for the turn (excluding protocols).</p><p>If you aren’t in your mech and it is being controlled by another person or an AI, it may only perform a single quick action and standard movement on each of its turns. It may perform protocols and reactions as normal. When your mech Braces during this time it also loses its remaining quick action. These effects last until you retake control as a protocol.</p><p>The Madrigal Boarding Carapace counts as one of the two Exotic Gear systems you may have installed at a time, but Madrigal weapons and Gear do not.</p>",
+		"description": "The Madrigal line of personal protection hardsuits, manufactured by Cyprian Industries, represents some of the best void-capable combat suits available. Designed for carrying out and defending against boarding actions, the Madrigal system is modular and can be adjusted to tackle varied tactical situations. While inferior to heavier, dedicated boarding hardsuits and mechs such as the IPS-N Caliban and the Harrison Armory Kutuzov, the Madrigal yet boasts an impressive degree of personal protection without sacrificing mobility or agility. Compact enough to be worn in a mech’s cockpit, the Madrigal is slowly but steadily encroaching on the pilot hardsuits market. Its superior protection, armaments, and auxiliary systems make it an attractive choice for lancers everywhere."
+	},
+	"pg_monofilament_rapier": {
+		"name": "Monofilament Rapier",
+		"description": "A field-supported monofilament blade of Smith-Shimano design capable of slicing through armor, shielding, and other weapons with ease. These swords are banned in formal duels, but remain the weapon of choice for those who value efficiency above decorum."
+	},
+	"pg_hardlight_knives": {
+		"name": "The Wolf's Blades",
+		"description": "These strangely weighted hardlight knives were stolen from a feared pirate. Without proper training, they are as dangerous to their user as to their target."
+	},
+	"pg_blue_blood": {
+		"name": "The Blue Blood of Pangloss",
+		"description": "A legendary medicinal liquid created by the Order Xenoglossia. The Blue Blood of Pangloss grants precognitive visions to its users, an ability that Augurs spend a lifetime learning to use to its full potential. Extended use causes sterility, and a strange blue tint to the lips, tongue, and extremities. The Blue Blood of Pangloss is impossible to reproduce without access to specific Begi flora and the secret distillation techniques of the Xenoglossary. Unless a PC has both of these, it can only ever be acquired as a limited-use reserve (at extraordinary cost). Those who steal or abuse the Blue Blood often find themselves the targets of the Stygos Grammaton.",
+		"actions[0].name": "Imbibe Blue Blood",
+		"actions[0].detail": "Expend a charge to gain strange and unpredictable insights into the future. These visions grant you +1 Accuracy on all skill checks for the rest of this scene when acting on the information they reveal, and may have additional effects at GM discretion."
+	},
+	"pg_Psionic_Piston": {
+		"name": "Psionic Piston",
+		"effect": "</i></p><p>1/mission, when you make eye contact with a character in arm’s reach you may telepathically converse and share your consciousness with them in complete clarity, conveying your rational and emotional subjectivity. This device effectively becomes a bridge between minds without the assistance of conventional comms-based neural laces. This effect persists as long as any characters linked remain close to each other.</p><p>When you use this device, roll a d20. If you roll 5 or lower, gain a personality quirk for the remainder of the mission, determined by you and your GM, as memories of the tool’s previous user flood your mind.</p>",
+		"description": "<i><p>“Carry me, please carry me – your soul and mind, oh so delightfully fine. Twice I’ve filled your bowl so we shall dine. Carry me, please carry me – my soul and mind.” [LISTEN]. Walk the path with me and see our footsteps blend. [WALK]. The creases in your grandmother’s hand – so folded and neat, pressed and firm. [CLINCH]. Oh so she plowed those lands, diligent and stern. [SWING]. Woman with graceful purpose, look what we’ve done. [PEER]. Scarlet soil, sowed in crimson hues. [RELEASE].”</p><p>– a song and suggestion from one mind to another</i></p><p>The psionic piston is a vibrant octagonal jewel worn just above the glabella and embedded in the wearer’s frontal lobe. A tool for oversight and understanding created by a consortium of long-buried minds with silent intent. Few pistons exist today. Fewer still continue to bridge minds. Those that do, do so without witness. Instruments with no mother nor father any longer they seek partnership with the willing and ambitious. Do them a favor and carve on yourself a pocket for their presence.</p>"
+	},
+	"ms_exo_anti_armor_signature_weapon": {
+		"name": "Anti-Armor Signature Weapon",
+		"effect": "If a pilot takes an Anti-Armor Signature Weapon on a mission, they can’t take any other pilot weapons."
+	},
+	"ms_exo_bahadurs_reserve": {
+		"name": "Bahadur's Reserve",
+		"effect": "Expend a charge for the following effect:<ul><li><b>Molotov Cocktail</b> (Grenade, Range 5, Blast 1): Affected characters must pass an Agility save or take 2 Burn.</li></ul>",
+		"description": "A remarkably potent spirit distilled by Mir Bahadur, this moonshine is served to discerning customers and traded for favors within Evergreen's informal barter networks. It goes down surprisingly smooth with notes of vanilla and spices and is responsible for a truly impressive number of hangovers and bad decisions. While piloting under the influence is highly inadvisable, a bottle of good alcohol can be a boon to morale as well as a valuable trade commodity. Bahadur’s homebrew can even serve as a disinfectant or crude (if effective) anesthetic, and it is high enough proof to run a biofuel generator or even be repurposed into a makeshift incendiary device in a pinch.",
+		"actions[0].name": "Molotov Cocktail",
+		"actions[0].detail": "Throw a molotov within Range 5. Affected characters within a Blast 1 must pass an Agility save or take 2 Burn."
+	},
+	"ms_exo_hercynian_rations": {
+		"name": "Hercynian Rations",
+		"description": "HUC rations rely heavily on fish, either smoked or tinned in spiced oil; dried mushrooms which can be reconstituted with water; sealed packs of flatbread or crackers; pickled macroalgae; dried fruits; rice; oats; and tea and freeze-dried coffee. In some ways, these rations are familiar to anyone who's ever subsisted on military fare. In others, they're a reminder of just how far from home you are."
+	},
+	"ms_exo_locus": {
+		"name": "Locus",
+		"description": "<p>For those humans attempting to cultivate an affinity for Witness, the learning process can be frustrating at times. Over the centuries, a variety of tools and techniques have been developed to assist with this. One of these techniques involves the consumption of a native species of psychedelic fungus, either dried or brewed as tea. This substance, commonly called locus, induces feelings of opennness, euphoria, enhanced empathy, and altered sensory perceptions including mild hallucinations and synaesthesia. Locus is not habit-forming nor does it have any harmful long-term effects, though some users experience headaches and fatigue after use. That said, overdosing can lead to bouts of “empathic overload”, dissociation, and more severe hallucinatory episodes.</p><p>In humans, ingestion of locus induces a state of enhanced affinity for Witness, though it does not necessarily grant a deeper understanding of its use. The effects last from three to six hours depending on the strength of the dose, the user’s metabolism, and other factors. Locus also has a variety of other therapeutic uses.</p>"
+	},
+	"ms_exo_light_carapace_armor": {
+		"name": "Light Carapace Hardsuit",
+		"effect": "The multiple ablative layers of treated chitin make carapace hardsuits especially effective at dispersing the effects of energy weapons, and as a result all such armor has Resistance to energy damage.",
+		"description": "<p>While Hercynian society is far from primitive, the HUC lacks the advanced industrial manufacturing base required to easily fabricate the large quantities of composite materials needed for modern armor. As a result, the personal combat armor worn by rangers and other combatants is typically made from interlocking and overlapping layers of molted Egregorian carapace, donated by willing volunteers. Distinctly insectile in appearance, treatment allows the carapace to be molded into a variety of shapes and styles suitable for numerous occupational specialties ranging from long-range reconnaissance to heavy assault. While many examples of carapace armor are unpowered, ranger pilots and special forces units use carapace hardsuits created by marrying the plates to various strength-amplification exoskeletons and fitting them with upgraded power sources, interface systems, and environmental seals.</p><p>Acquiring a carapace hardsuit isn't a simple matter. Such suits don’t tend to be available for sale in currency or barter, instead being either handed down from pilot to pilot or custom-made according to a number of formal traditions. These traditions include seeking permission from a willing Egregorian donor to use their carapace and the personal participation of the wearer in the crafting, a process that can take weeks depending on the complexity of the suit. Should a PC manage to obtain one of these hardsuits, you may represent it with the following stats.</p>"
+	},
+	"ms_exo_assault_carapace_armor": {
+		"name": "Assault Carapace Hardsuit",
+		"effect": "The multiple ablative layers of treated chitin make carapace hardsuits especially effective at dispersing the effects of energy weapons, and as a result all such armor has Resistance to energy damage.",
+		"description": "<p>While Hercynian society is far from primitive, the HUC lacks the advanced industrial manufacturing base required to easily fabricate the large quantities of composite materials needed for modern armor. As a result, the personal combat armor worn by rangers and other combatants is typically made from interlocking and overlapping layers of molted Egregorian carapace, donated by willing volunteers. Distinctly insectile in appearance, treatment allows the carapace to be molded into a variety of shapes and styles suitable for numerous occupational specialties ranging from long-range reconnaissance to heavy assault. While many examples of carapace armor are unpowered, ranger pilots and special forces units use carapace hardsuits created by marrying the plates to various strength-amplification exoskeletons and fitting them with upgraded power sources, interface systems, and environmental seals.</p><p>Acquiring a carapace hardsuit isn't a simple matter. Such suits don’t tend to be available for sale in currency or barter, instead being either handed down from pilot to pilot or custom-made according to a number of formal traditions. These traditions include seeking permission from a willing Egregorian donor to use their carapace and the personal participation of the wearer in the crafting, a process that can take weeks depending on the complexity of the suit. Should a PC manage to obtain one of these hardsuits, you may represent it with the following stats.</p>"
+	},
+	"ms_exo_heavy_carapace_armor": {
+		"name": "Heavy Carapace Hardsuit",
+		"effect": "The multiple ablative layers of treated chitin make carapace hardsuits especially effective at dispersing the effects of energy weapons, and as a result all such armor has Resistance to energy damage.",
+		"description": "<p>While Hercynian society is far from primitive, the HUC lacks the advanced industrial manufacturing base required to easily fabricate the large quantities of composite materials needed for modern armor. As a result, the personal combat armor worn by rangers and other combatants is typically made from interlocking and overlapping layers of molted Egregorian carapace, donated by willing volunteers. Distinctly insectile in appearance, treatment allows the carapace to be molded into a variety of shapes and styles suitable for numerous occupational specialties ranging from long-range reconnaissance to heavy assault. While many examples of carapace armor are unpowered, ranger pilots and special forces units use carapace hardsuits created by marrying the plates to various strength-amplification exoskeletons and fitting them with upgraded power sources, interface systems, and environmental seals.</p><p>Acquiring a carapace hardsuit isn't a simple matter. Such suits don’t tend to be available for sale in currency or barter, instead being either handed down from pilot to pilot or custom-made according to a number of formal traditions. These traditions include seeking permission from a willing Egregorian donor to use their carapace and the personal participation of the wearer in the crafting, a process that can take weeks depending on the complexity of the suit. Should a PC manage to obtain one of these hardsuits, you may represent it with the following stats.</p>"
+	}
+}

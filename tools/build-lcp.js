@@ -263,8 +263,33 @@ function build(packId = "ext") {
 			}
 		}
 	}
+	// Foundry 把部署物建成角色：装甲、回避、电子防御、热度上限、豁免、速度必须是非负整数，大小至少 1/2，
+	// 只有 HP 可以写公式（{grit}、{ll}）。不合规的值（如「与部署者相同」的 {evasion}、空字符串）
+	// 删掉让 Foundry 用默认值，并在说明里提示 GM 手动修改。
+	const DEP_INT = { armor: "装甲", evasion: "回避", edef: "电子防御", heatcap: "热度上限", save: "豁免", speed: "速度" };
+	const DEP_REF = { "{evasion}": "与部署者的回避相同", "{edef}": "与部署者的电子防御相同", "{armor}": "与部署者的装甲相同", "{speed}": "与部署者的速度相同", "{save}": "与部署者的豁免相同" };
+	function fixDeployableStats(d, where) {
+		const notes = [];
+		const num = v => (typeof v === "string" && /^\s*\d+(\.\d+)?\s*$/.test(v) ? Number(v) : v);
+		for (const [f, zh] of Object.entries(DEP_INT)) {
+			if (d[f] === undefined || d[f] === null) continue;
+			const v = num(d[f]);
+			if (Number.isInteger(v) && v >= 0) { d[f] = v; continue; }
+			const raw = String(d[f]).trim();
+			if (raw) notes.push(`${zh}${DEP_REF[raw] || `为「${raw}」`}`);
+			audit.fixes.push(`${where} 部署物「${d.name}」${f}「${d[f]}」不是整数，改用 Foundry 默认值`);
+			delete d[f];
+		}
+		if (d.size !== undefined) {
+			const v = num(d.size);
+			if (typeof v === "number" && v >= 0.5) d.size = v;
+			else { audit.fixes.push(`${where} 部署物「${d.name}」大小「${d.size}」不合法，改用 Foundry 默认值`); delete d.size; }
+		}
+		if (d.hp !== undefined && !String(d.hp).trim()) { audit.fixes.push(`${where} 部署物「${d.name}」HP 为空，改用 Foundry 默认值`); delete d.hp; }
+		if (notes.length) d.detail = `${d.detail || ""}<p>【车卡器说明】${notes.join("，")}；Foundry 中先显示默认值，请在部署物上手动改成部署者的数值。</p>`;
+	}
 	function fixDeployables(list, where) {
-		for (const d of list || []) { fixActions(d.actions, where + " 部署物"); for (const f of TEXT_FIELDS) if (d[f]) d[f] = html(d[f]); }
+		for (const d of list || []) { fixActions(d.actions, where + " 部署物"); fixDeployableStats(d, where); for (const f of TEXT_FIELDS) if (d[f]) d[f] = html(d[f]); }
 	}
 	function finalize(item, kind) {
 		for (const k of BUILDER_ONLY) delete item[k];
@@ -508,6 +533,9 @@ function build(packId = "ext") {
 	}
 	if (!isCore) for (const id of Object.keys(MAP)) if (!KINDS.some(k => D[k].some(y => y.id === id && y.ext))) audit.mapErrors.push(`映射表中的 ${id} 不在车卡器扩展数据里`);
 
+	// 状态与状况（核心包）：以 Foundry 的 statuses.json 为底，名称与说明换成车卡器术语库的中文
+	if (isCore) out.statuses = buildStatuses(audit);
+
 	// 手工补译
 	const byId = new Map(kinds.flatMap(k => out[k].map(item => [item.id, item])));
 	for (const [id, fields] of Object.entries(OVERRIDES)) {
@@ -528,7 +556,8 @@ function build(packId = "ext") {
 			const at = `${p}.${k}`.replace(/^\./, "");
 			if (typeof v === "string") {
 				const t = strip(v).trim();
-				if (k === "name" ? (!CJK.test(t) && /[A-Za-z]{3,}/.test(t)) : (TEXT_FIELDS.includes(k) && EN.test(t)))
+				// 名称：不含汉字且有英文单词；全大写的短代号（如用户资料中的「DMR」）不算
+				if (k === "name" ? (!CJK.test(t) && /[A-Za-z]{3,}/.test(t) && !/^[A-Z0-9][A-Z0-9 \/.+-]{0,7}$/.test(t)) : (TEXT_FIELDS.includes(k) && EN.test(t)))
 					audit.english.push({ id, path: at, text: t, raw: v });
 			} else if (typeof v === "object") scan(v, at, id);
 		}
@@ -553,6 +582,31 @@ function build(packId = "ext") {
 	for (const k of kinds) for (const item of out[k]) collectDeps(item, item.id);
 
 	return { D, out, audit, untouched, packs, packId, P };
+}
+
+// ---- 状态与状况：Foundry 按 id（没有 id 时按 icon）生成 lid 并覆盖已有条目，所以保留官方的 icon / type / exclusive
+function loadGlossary() {
+	const ctx = {};
+	vm.createContext(ctx);
+	// glossary.js 是浏览器脚本，顶层 const 在 vm 中取不到，改成 var
+	vm.runInContext(fs.readFileSync(path.join(ROOT, "assets/js/glossary.js"), "utf8").replace(/^const /gm, "var "), ctx);
+	return ctx.GLOSSARY_SRC;
+}
+function buildStatuses(audit) {
+	const base = JSON.parse(fs.readFileSync(path.join(FVTT, "core", "statuses.json"), "utf8"));
+	const map = JSON.parse(fs.readFileSync(path.join(FVTT, "statuses-zh.json"), "utf8"));
+	const glossary = loadGlossary();
+	const out = [];
+	for (const s of base) {
+		const m = map[s.icon];
+		if (!m) { audit.mapErrors.push(`状态 ${s.name}（${s.icon}）没有对应的中文`); out.push(clone(s)); continue; }
+		const g = glossary.filter(x => x.t === m.term);
+		if (g.length !== 1) { audit.mapErrors.push(`状态 ${s.name}：术语库中「${m.term}」有 ${g.length} 条`); out.push(clone(s)); continue; }
+		const effects = g[0].d.replace(/<p class="muted">([\s\S]*?)<\/p>/g, "<p><i>$1</i></p>");
+		out.push({ ...clone(s), name: m.term, terse: m.terse, effects });
+	}
+	for (const icon of Object.keys(map)) if (!icon.startsWith("_") && !base.some(s => s.icon === icon)) audit.mapErrors.push(`statuses-zh.json 的 ${icon} 不在 Foundry 的状态数据中`);
+	return out;
 }
 
 // ---- 极简 zip 写入（deflate），JSZip 可读
@@ -586,6 +640,7 @@ function zip(files) {
 function lcpFiles(out, P = PACKS.ext) {
 	const files = [["lcp_manifest.json", JSON.stringify(P.manifest, null, 2)]];
 	for (const k of P.kinds) if (out[k]?.length) files.push([`${k}.json`, JSON.stringify(out[k], null, 2)]);
+	if (out.statuses?.length) files.push(["statuses.json", JSON.stringify(out.statuses, null, 2)]);
 	return files;
 }
 
@@ -595,7 +650,7 @@ function auditMarkdown({ out, audit, untouched, packs, packId, P }) {
 	const cell = v => String(typeof v === "string" ? v : JSON.stringify(v)).replace(/\|/g, "\\|").replace(/\n/g, " ");
 	L.push(`# Foundry LCP 导出核对表：${isCore ? "核心规则书" : "扩展内容"}`, "", "由 `node tools/build-lcp.js` 生成，请勿手改。", "");
 	L.push(`内容包：${P.manifest.name} ${P.manifest.version}`, "");
-	L.push("| 类别 | 条目数 |", "|---|---|", ...P.kinds.map(k => `| ${k} | ${out[k].length} |`), "");
+	L.push("| 类别 | 条目数 |", "|---|---|", ...P.kinds.map(k => `| ${k} | ${out[k].length} |`), ...(out.statuses ? [`| statuses | ${out.statuses.length} |`] : []), "");
 	L.push(`- 覆盖官方条目：${audit.overlaid.length}`, `- 新增条目：${audit.added.length}`, `- 写入的车卡器说明：${audit.notes} 条`, `- 补译：${audit.overrides} 处`, "");
 	L.push("官方数据版本：" + packs.map(p => `${p.name} ${p.version}`).join("，"), "");
 	if (audit.mapErrors.length) L.push("## 映射错误", "", ...audit.mapErrors.map(s => `- ${s}`), "");
@@ -649,5 +704,5 @@ if (require.main === module) {
 	for (const id of arg ? [arg] : Object.keys(PACKS)) writePack(id);
 }
 
-module.exports = { build, zip, lcpFiles, ENUM, KINDS, CORE_KINDS, PACKS, MANIFEST, freqOk };
+module.exports = { build, zip, lcpFiles, loadOfficial, ENUM, KINDS, CORE_KINDS, TEXT_FIELDS, PACKS, MANIFEST, freqOk };
 

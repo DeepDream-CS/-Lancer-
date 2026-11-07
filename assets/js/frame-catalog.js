@@ -24,7 +24,7 @@ function frameRulesHtml(f, prefix='frame', m=null) {
     <h4>核心系统 <small>${cs.efficient?'高效 · 场景结束时返还 1 CP':'每任务通常可启动一次'}</small></h4><article class="fc-core"><h5>${esc(cs.name)}</h5>
     ${cs.passive_name?`<div class="fc-core-part"><span class="fc-kicker">被动</span><b>${esc(cs.passive_name)}</b><p>${cs.passive_effect||''}</p></div>`:''}
     <div class="fc-core-part"><span class="fc-kicker">${esc(ACT[cs.activation]||cs.activation||'主动')} · 1 CP</span><b>${esc(cs.active_name||cs.name)}</b><p>${cs.active_effect||''}</p></div>${actsHtml(cs)}</article>
-    ${extRulesNote(f)}${det(prefix+'-lore-'+f.id,'设定与骨架介绍',`<div class="fc-lore">${f.description||'暂无介绍。'}</div>`)}</section>`;
+    ${extRulesNote(f)}${officialSupplementHtml(f)}${det(prefix+'-lore-'+f.id,'设定与骨架介绍',`<div class="fc-lore">${f.description||'暂无介绍。'}</div>`)}</section>`;
 }
 function frameCatalogList(p) {
   const m=M(), list=D.frames.filter(f=>frameMatches(f,p));

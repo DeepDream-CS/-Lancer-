@@ -16,9 +16,10 @@
 | [规则 FAQ 翻译](FAQ-TRANSLATION.md) | 184 条快照问答的使用、来源和验证 |
 | [界面与交互改进](UI-UX.md) | 按日期记录布局、查询、地图与配置交互更新 |
 | [风味文本覆盖与缺项](EQUIPMENT-LORE-AUDIT.md) | 自动生成的当前覆盖情况及未匹配清单 |
-| [Foundry 内容包](FVTT-LCP.md) | 导出 Foundry VTT LANCER 系统可导入的核心规则书与扩展内容包、导入顺序与手动处理的规则 |
+| [Foundry 内容包](FVTT-LCP.md) | 导出 Foundry VTT LANCER 系统可导入的核心规则书与扩展内容包、界面中文模组 lancer-cn、导入顺序与手动处理的规则、从车卡器导出驾驶员到 Foundry |
 | [Foundry 核心包核对表](FVTT-LCP-CORE-AUDIT.md) | 自动生成：核心条目覆盖情况、仍为英文的文字 |
 | [Foundry 扩展包核对表](FVTT-LCP-AUDIT.md) | 自动生成：覆盖的官方条目、数值差异、仍为英文的文字 |
+| [官方补充书未收录条目](FVTT-OFFICIAL-UNCOVERED.md) | 自动生成：Foundry 官方补充书中车卡器没有中文的 58 个条目，待译文字导出到 `dist/fvtt/zh-official.todo.json` |
 
 ## 数据维护入口
 

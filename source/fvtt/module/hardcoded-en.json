@@ -1,0 +1,2296 @@
+{
+  "(Optional) Manually adjust numeric stats for any special customizations you want to apply. For NPCs, you would do this by editing the actor's NPC Class item. For PC mechs, you can do this by editing their Frame item from the mech's Inventory.": [
+    "public/templates/window/lancerHelp.hbs:11"
+  ],
+  "+{x} ACCURACY": [
+    "src/module/helpers/item.ts:221"
+  ],
+  ", and other information about how to use the system.": [
+    "src/module/config.ts:19"
+  ],
+  "// ACTIVE": [
+    "public/templates/item/frame.hbs:86"
+  ],
+  "// Bonuses": [
+    "src/module/helpers/item.ts:298"
+  ],
+  "// CORE SYSTEM": [
+    "public/templates/item/frame.hbs:56"
+  ],
+  "// PASSIVE": [
+    "public/templates/item/frame.hbs:73"
+  ],
+  "// RANK {x}": [
+    "public/templates/item/talent.hbs:17"
+  ],
+  "// TALENT :: {x} {x} //": [
+    "public/templates/chat/talent-card.hbs:1"
+  ],
+  "// {x} TECH{x} //": [
+    "src/module/helpers/npc.ts:328"
+  ],
+  "//RANK {x}": [
+    "public/templates/item/license.hbs:13"
+  ],
+  "A {x} can't be stabilized!": [
+    "src/module/actor/struss-util.ts:18"
+  ],
+  "ACCURACY": [
+    "public/templates/item/npc_feature.hbs:135",
+    "public/templates/item/npc_feature.hbs:180"
+  ],
+  "ACTION ID": [
+    "public/templates/window/action_editor.hbs:4"
+  ],
+  "ACTION NAME": [
+    "public/templates/window/action_editor.hbs:3"
+  ],
+  "ACTIONS": [
+    "public/templates/item/core_bonus.hbs:21",
+    "public/templates/item/mech_system.hbs:44",
+    "public/templates/item/organization.hbs:21",
+    "public/templates/item/pilot_armor.hbs:28",
+    "public/templates/item/pilot_gear.hbs:34",
+    "public/templates/item/pilot_weapon.hbs:42",
+    "public/templates/item/talent.hbs:56"
+  ],
+  "ACTIVATE": [
+    "src/module/helpers/item.ts:1179"
+  ],
+  "ACTIVATIONS": [
+    "public/templates/item/npc_class.hbs:45"
+  ],
+  "ACTIVE": [
+    "src/module/helpers/loadout.ts:375"
+  ],
+  "ADDED ACTIONS": [
+    "public/templates/item/weapon_mod.hbs:23"
+  ],
+  "ADDED DAMAGE": [
+    "public/templates/item/weapon_mod.hbs:24",
+    "src/module/helpers/item.ts:809"
+  ],
+  "ADDED DEPLOYABLES": [
+    "public/templates/item/weapon_mod.hbs:31"
+  ],
+  "ADDED RANGE": [
+    "public/templates/item/weapon_mod.hbs:25",
+    "src/module/helpers/item.ts:801"
+  ],
+  "ADDED TAGS": [
+    "public/templates/item/weapon_mod.hbs:26",
+    "src/module/helpers/item.ts:819"
+  ],
+  "AGI": [
+    "public/templates/item/npc_class.hbs:34"
+  ],
+  "ARMOR": [
+    "public/templates/item/frame.hbs:25",
+    "public/templates/item/npc_class.hbs:37",
+    "src/module/actor/pilot-sheet.ts:361"
+  ],
+  "ASYNC not handled yet": [
+    "src/module/helpers/refs.ts:86"
+  ],
+  "ATTACK BONUS": [
+    "public/templates/item/npc_feature.hbs:134",
+    "public/templates/item/npc_feature.hbs:178"
+  ],
+  "AUTHOR": [
+    "src/module/apps/lcp-manager/LCPTable.svelte:5"
+  ],
+  "AUX/AUX": [
+    "public/templates/item/frame.hbs:34"
+  ],
+  "AVAILABLE": [
+    "src/module/apps/lcp-manager/LCPTable.svelte:7"
+  ],
+  "AVAILABLE WEAPON MOUNTS": [
+    "public/templates/item/frame.hbs:32"
+  ],
+  "Accuracy": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:21"
+  ],
+  "Accuracy and Difficulty": [
+    "src/module/apps/acc_diff/data.svelte.ts:434"
+  ],
+  "Accurate (+1)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:338",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:70"
+  ],
+  "Action Editing": [
+    "src/module/apps/action-editor.ts:13"
+  ],
+  "Activation flow drop on hotbar was missing an action path": [
+    "src/module/flows/hotbar.ts:290"
+  ],
+  "Activation flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:286"
+  ],
+  "Add a base damage type": [
+    "src/module/apps/damage/DamageHUD.svelte:23",
+    "src/module/apps/damage/DamageHUD.svelte:264"
+  ],
+  "Add a bonus damage type": [
+    "src/module/apps/damage/DamageHUD.svelte:282",
+    "src/module/apps/damage/DamageHUD.svelte:51"
+  ],
+  "Add a bonus damage type for only this target": [
+    "src/module/apps/damage/DamageTarget.svelte:21",
+    "src/module/apps/damage/DamageTarget.svelte:25",
+    "src/module/apps/damage/DamageTarget.svelte:46",
+    "src/module/apps/damage/DamageTarget.svelte:51",
+    "src/module/apps/damage/DamageTarget.svelte:63",
+    "src/module/apps/damage/DamageTarget.svelte:67",
+    "src/module/apps/damage/DamageTarget.svelte:80",
+    "src/module/apps/damage/DamageTarget.svelte:84"
+  ],
+  "Add global accuracy": [
+    "src/module/apps/acc_diff/AccDiffInput.svelte:3",
+    "src/module/apps/acc_diff/AccDiffInput.svelte:9"
+  ],
+  "Add global difficulty": [
+    "src/module/apps/acc_diff/AccDiffInput.svelte:21",
+    "src/module/apps/acc_diff/AccDiffInput.svelte:25"
+  ],
+  "Add new base damage type": [
+    "src/module/apps/damage/DamageHUD.svelte:18",
+    "src/module/apps/damage/DamageHUD.svelte:263"
+  ],
+  "Agility": [
+    "public/templates/chat/scan-card.hbs:19",
+    "public/templates/journal/scan-entry.hbs:21"
+  ],
+  "Agility - {x}": [
+    "src/module/flows/hotbar.ts:167"
+  ],
+  "Allowed Sizes": [
+    "public/templates/item/weapon_mod.hbs:41"
+  ],
+  "Allowed Types": [
+    "public/templates/item/weapon_mod.hbs:42"
+  ],
+  "Apply damage": [
+    "src/module/helpers/chat.ts:175"
+  ],
+  "Are you sure you want to fully repair the {x} \"{x}\"?": [
+    "src/module/flows/full-repair.ts:38"
+  ],
+  "Armor": [
+    "public/templates/chat/scan-card.hbs:44",
+    "public/templates/journal/scan-entry.hbs:58",
+    "src/module/apps/inventory.ts:94"
+  ],
+  "Armor Piercing": [
+    "src/module/helpers/chat.ts:148"
+  ],
+  "Armor Piercing (AP)": [
+    "src/module/apps/damage/DamageHUD.svelte:304",
+    "src/module/apps/damage/DamageHUD.svelte:69",
+    "src/module/apps/damage/DamageTarget.svelte:101"
+  ],
+  "Assault (1)": [
+    "src/module/tours/lancer-tour.ts:274"
+  ],
+  "Attack Bonus": [
+    "src/module/helpers/chat.ts:11"
+  ],
+  "Attack bonus": [
+    "src/module/apps/components/MiniProfile.svelte:12",
+    "src/module/apps/components/MiniProfile.svelte:5"
+  ],
+  "Attack flow drop on hotbar was not from a weapon": [
+    "src/module/flows/hotbar.ts:187"
+  ],
+  "Attack flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:179"
+  ],
+  "Author": [
+    "public/templates/lcp/lcp-manager.hbs:76"
+  ],
+  "Available and Installed Content": [
+    "src/module/apps/lcp-manager/LCPTable.svelte:1"
+  ],
+  "BASE ACTIONS": [
+    "public/templates/item/mech_weapon.hbs:102"
+  ],
+  "BASE FEATURE": [
+    "public/templates/item/npc_feature.hbs:23"
+  ],
+  "BASE FEATURES": [
+    "public/templates/item/npc_class.hbs:41",
+    "public/templates/item/npc_template.hbs:6"
+  ],
+  "BASIC ATTACK": [
+    "public/templates/actor/pilot.hbs:250"
+  ],
+  "BONUS": [
+    "public/templates/chat/damage-card.hbs:27",
+    "public/templates/chat/damage-card.hbs:43",
+    "src/module/helpers/chat.ts:126"
+  ],
+  "BURN :: ENG": [
+    "src/module/flows/burn.ts:79"
+  ],
+  "BURN CLEARED!": [
+    "src/module/flows/burn.ts:95"
+  ],
+  "Bad uuid:": [
+    "src/module/helpers/commons.ts:538"
+  ],
+  "Bandana": [
+    "src/module/tours/lancer-tour.ts:313"
+  ],
+  "Base Damage": [
+    "src/module/apps/damage/DamageHUD.svelte:7"
+  ],
+  "Basic Attack - {x}": [
+    "src/module/flows/hotbar.ts:126"
+  ],
+  "Basic Workflows": [
+    "public/templates/window/lancerHelp.hbs:1"
+  ],
+  "Basic flow drop on hotbar was not from an actor": [
+    "src/module/flows/hotbar.ts:82"
+  ],
+  "BasicAttackFlow": [
+    "src/module/flows/attack.ts:76"
+  ],
+  "Bond power flow drop on hotbar was missing a power index": [
+    "src/module/flows/hotbar.ts:267"
+  ],
+  "Bond power flow drop on hotbar was not from a bond power item": [
+    "src/module/flows/hotbar.ts:263"
+  ],
+  "Bond power flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:258"
+  ],
+  "Bonus": [
+    "src/module/apps/damage/DamageTarget.svelte:3"
+  ],
+  "Bonus Damage": [
+    "src/module/apps/damage/DamageHUD.svelte:14"
+  ],
+  "Bonus Editing": [
+    "src/module/apps/bonus-editor.ts:28"
+  ],
+  "Bonus restrictions have no effect": [
+    "src/module/effects/converter.ts:502"
+  ],
+  "Boon XP from another PC.": [
+    "public/templates/actor/pilot.hbs:90"
+  ],
+  "Browse": [
+    "public/templates/actor/pilot.hbs:44",
+    "src/module/apps/lcp-manager/LCPSelector.svelte:2"
+  ],
+  "Bug reports and enhancement suggestions": [
+    "public/templates/window/lancerHelp.hbs:22"
+  ],
+  "Bulkhead": [
+    "src/module/tours/lancer-tour.ts:314"
+  ],
+  "Burn flow requires the actor to have a token in the scene": [
+    "src/module/flows/burn.ts:56"
+  ],
+  "CASCADE": [
+    "src/module/flows/cascade.ts:95"
+  ],
+  "CASCADE CHECK": [
+    "src/module/flows/structure.ts:484"
+  ],
+  "CHANGELOG": [
+    "src/module/config.ts:18"
+  ],
+  "CHARGED": [
+    "src/module/helpers/refs.ts:260"
+  ],
+  "CLASS": [
+    "public/templates/item/npc_feature.hbs:18"
+  ],
+  "CONSUMABLE": [
+    "public/templates/item/reserve.hbs:13"
+  ],
+  "CORE": [
+    "src/module/helpers/loadout.ts:318"
+  ],
+  "CORE ACTIVATION :: {x}": [
+    "src/module/item/lancer-item.ts:664"
+  ],
+  "COST": [
+    "public/templates/window/action_editor.hbs:11"
+  ],
+  "COUNTERS": [
+    "src/module/actor/pilot-sheet.ts:323",
+    "src/module/helpers/item.ts:1360"
+  ],
+  "CURRENT": [
+    "src/module/apps/lcp-manager/LCPTable.svelte:5"
+  ],
+  "Callsign": [
+    "src/module/tours/lancer-tour.ts:339"
+  ],
+  "Cancel": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:120",
+    "src/module/apps/damage/DamageHUD.svelte:54",
+    "src/module/apps/struct_stress/StructStressHUD.svelte:18",
+    "src/module/flows/stabilize.ts:64",
+    "src/module/helpers/commons.ts:896"
+  ],
+  "Cannot Be Reduced": [
+    "src/module/helpers/chat.ts:152"
+  ],
+  "Cannot Create Actors": [
+    "src/module/actor/import.ts:1015",
+    "src/module/actor/import.ts:238"
+  ],
+  "Cannot Migrate This World": [
+    "src/module/world_migration.ts:65"
+  ],
+  "Cannot be Reduced": [
+    "src/module/apps/damage/DamageHUD.svelte:314",
+    "src/module/apps/damage/DamageHUD.svelte:76"
+  ],
+  "Cannot create WeaponRangeTemplate. Canvas is not ready": [
+    "src/module/canvas/weapon-range-template.ts:118"
+  ],
+  "Cannot fire a weapon on a non-piloted mech!": [
+    "src/module/flows/attack.ts:208"
+  ],
+  "Cannot use a system on a non-piloted mech!": [
+    "src/module/flows/attack.ts:243",
+    "src/module/flows/tech.ts:160"
+  ],
+  "Cannot use a talent without an active mech!": [
+    "src/module/flows/tech.ts:176"
+  ],
+  "Catastrophe": [
+    "src/module/tours/lancer-tour.ts:315"
+  ],
+  "Chat flow drop on hotbar was missing required data": [
+    "src/module/flows/hotbar.ts:233"
+  ],
+  "Chat flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:229"
+  ],
+  "Check out the project wiki for": [
+    "src/module/config.ts:18"
+  ],
+  "Clear All": [
+    "src/module/apps/automation-settings.ts:51"
+  ],
+  "Clear Ally Condition": [
+    "public/templates/window/promptStabilize.hbs:16"
+  ],
+  "Clear Burn": [
+    "public/templates/window/promptStabilize.hbs:12"
+  ],
+  "Clear Compendium Data": [
+    "src/module/apps/lcp-manager/LCPTable.svelte:107",
+    "src/module/apps/lcp-manager/LCPTable.svelte:209",
+    "src/module/apps/lcp-manager/LCPTable.svelte:51"
+  ],
+  "Clear Compendiums": [
+    "public/templates/lcp/lcp-manager.hbs:153",
+    "src/module/apps/lcp-manager/LCPManager.svelte:157"
+  ],
+  "Clear LANCER Compendium Data": [
+    "public/templates/lcp/lcp-manager.hbs:84"
+  ],
+  "Clear Own Condition": [
+    "public/templates/window/promptStabilize.hbs:14"
+  ],
+  "Clearing all LANCER Compendium data. Please wait.": [
+    "src/module/comp-builder.ts:281"
+  ],
+  "Close": [
+    "src/module/actor/import.ts:1022",
+    "src/module/actor/import.ts:1532",
+    "src/module/actor/import.ts:249",
+    "src/module/world_migration.ts:78"
+  ],
+  "Closing Crescendo": [
+    "src/module/tours/lancer-tour.ts:316"
+  ],
+  "Configuration": [
+    "src/module/apps/damage/DamageHUD.svelte:30"
+  ],
+  "Confirm": [
+    "src/module/apps/simple-prompt.ts:15"
+  ],
+  "Consume Lock On (+1)": [
+    "src/module/apps/acc_diff/TotalAccuracy.svelte:100",
+    "src/module/apps/acc_diff/TotalAccuracy.svelte:27",
+    "src/module/apps/acc_diff/TotalAccuracy.svelte:40",
+    "src/module/apps/acc_diff/TotalAccuracy.svelte:87"
+  ],
+  "Contents:": [
+    "src/module/apps/lcp-manager/LCPDetails.svelte:10"
+  ],
+  "Cool Mech": [
+    "public/templates/window/promptStabilize.hbs:4"
+  ],
+  "Core Bonuses": [
+    "src/module/apps/inventory.ts:114"
+  ],
+  "Core Data has not been built yet": [
+    "public/templates/lcp/lcp-manager.hbs:4"
+  ],
+  "Core Data is at v{x}": [
+    "public/templates/lcp/lcp-manager.hbs:4"
+  ],
+  "Core active flow drop on hotbar was missing an action path": [
+    "src/module/flows/hotbar.ts:305"
+  ],
+  "Core active flow drop on hotbar was not from a frame item": [
+    "src/module/flows/hotbar.ts:310"
+  ],
+  "Core active flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:301"
+  ],
+  "Could not find character to import! No share code entered.": [
+    "src/module/actor/pilot-sheet.ts:101"
+  ],
+  "Could not import mech '{x}' as you lack the permission to create new actors. Please ask your GM for assistance (either they import for you, or give you permissions)": [
+    "src/module/actor/import.ts:1268",
+    "src/module/actor/import.ts:738"
+  ],
+  "Could not import mech '{x}' as you lack the permission to update the actor. Please ask your GM for assistance.": [
+    "src/module/actor/import.ts:1287",
+    "src/module/actor/import.ts:764"
+  ],
+  "Could not infer action type": [
+    "src/module/actor/lancer-actor-sheet.ts:270",
+    "src/module/actor/lancer-actor-sheet.ts:481"
+  ],
+  "Could not load {x}: {x}": [
+    "src/module/apps/lcp-manager/LCPSelector.svelte:104",
+    "src/module/apps/lcp-manager/LCPSelector.svelte:77"
+  ],
+  "Could not migrate {x}: unable to unlock": [
+    "src/module/world_migration.ts:178"
+  ],
+  "Counter Editing": [
+    "src/module/apps/counter-editor.ts:17"
+  ],
+  "DAMAGE": [
+    "public/templates/item/mech_weapon.hbs:76",
+    "public/templates/item/pilot_weapon.hbs:33",
+    "public/templates/window/action_editor.hbs:17"
+  ],
+  "DAMAGE TYPES": [
+    "public/templates/window/bonus.hbs:6"
+  ],
+  "DEACTIVATE": [
+    "src/module/helpers/item.ts:1180"
+  ],
+  "DELETE": [
+    "public/templates/item/frame.hbs:35"
+  ],
+  "DEPLOYABLES": [
+    "public/templates/item/core_bonus.hbs:24",
+    "public/templates/item/frame.hbs:132",
+    "public/templates/item/mech_system.hbs:47",
+    "public/templates/item/pilot_armor.hbs:30",
+    "public/templates/item/pilot_gear.hbs:36",
+    "public/templates/item/pilot_weapon.hbs:44",
+    "public/templates/item/talent.hbs:71"
+  ],
+  "DEPRECATED": [
+    "src/module/item/item-sheet.ts:97"
+  ],
+  "DESCRIPTION": [
+    "public/templates/item/core_bonus.hbs:18",
+    "public/templates/item/frame.hbs:19",
+    "public/templates/item/mech_system.hbs:38",
+    "public/templates/item/mech_weapon.hbs:79",
+    "public/templates/item/npc_class.hbs:27",
+    "public/templates/item/npc_template.hbs:16",
+    "public/templates/item/organization.hbs:18",
+    "public/templates/item/pilot_armor.hbs:16",
+    "public/templates/item/pilot_gear.hbs:27",
+    "public/templates/item/pilot_weapon.hbs:36",
+    "public/templates/item/reserve.hbs:19",
+    "public/templates/item/skill.hbs:21",
+    "public/templates/item/status.hbs:22",
+    "public/templates/item/tag.hbs:21",
+    "public/templates/item/talent.hbs:23"
+  ],
+  "DETAILS": [
+    "public/templates/actor/deployable.hbs:68",
+    "public/templates/item/skill.hbs:23"
+  ],
+  "DROP HERE": [
+    "src/module/helpers/refs.ts:297"
+  ],
+  "DROP NPC FEATURES HERE": [
+    "src/module/helpers/refs.ts:282"
+  ],
+  "Damage": [
+    "public/templates/actor/deployable.hbs:57",
+    "public/templates/actor/mech.hbs:130",
+    "public/templates/actor/npc.hbs:95",
+    "public/templates/actor/pilot.hbs:251"
+  ],
+  "Damage - {x}": [
+    "src/module/flows/hotbar.ts:136"
+  ],
+  "Damage Roll": [
+    "src/module/apps/damage/data.svelte.ts:487"
+  ],
+  "Damage application button has no damage data available": [
+    "src/module/flows/damage.ts:726"
+  ],
+  "Damage application button not in chat message": [
+    "src/module/flows/damage.ts:720"
+  ],
+  "Damage flow drop on hotbar was not from a weapon": [
+    "src/module/flows/hotbar.ts:219"
+  ],
+  "Damage flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:211"
+  ],
+  "Damage roll button has no attack data available": [
+    "src/module/flows/damage.ts:648"
+  ],
+  "Damage roll button not in chat message": [
+    "src/module/flows/damage.ts:641"
+  ],
+  "Damage undo button has no chat message": [
+    "src/module/flows/damage.ts:792"
+  ],
+  "Damage undo button has no damage to undo!": [
+    "src/module/flows/damage.ts:810"
+  ],
+  "Damage undo button has no target": [
+    "src/module/flows/damage.ts:797"
+  ],
+  "Damage undo button not in chat message": [
+    "src/module/flows/damage.ts:787"
+  ],
+  "Deathwish": [
+    "src/module/tours/lancer-tour.ts:317"
+  ],
+  "Decrease flat bonus": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:307",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:51"
+  ],
+  "Delete Document": [
+    "src/module/helpers/item.ts:1647"
+  ],
+  "Demo LCP": [
+    "src/module/tours/lancer-tour.ts:85"
+  ],
+  "Difficulty": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:26"
+  ],
+  "Drag items from the relevant compendiums, such as Mech frames or NPC Features.": [
+    "public/templates/window/lancerHelp.hbs:9"
+  ],
+  "Dragonspark": [
+    "src/module/tours/lancer-tour.ts:318"
+  ],
+  "E-DEF": [
+    "public/templates/item/frame.hbs:28",
+    "src/module/actor/pilot-sheet.ts:364"
+  ],
+  "E-DEFENSE": [
+    "public/templates/item/npc_class.hbs:42"
+  ],
+  "E-Defense": [
+    "public/templates/chat/scan-card.hbs:57",
+    "public/templates/journal/scan-entry.hbs:77"
+  ],
+  "EFFECT": [
+    "public/templates/item/core_bonus.hbs:19",
+    "public/templates/item/mech_system.hbs:39",
+    "public/templates/item/mech_weapon.hbs:82",
+    "public/templates/item/npc_feature.hbs:101",
+    "public/templates/item/npc_feature.hbs:105",
+    "public/templates/item/npc_feature.hbs:137",
+    "public/templates/item/npc_feature.hbs:200",
+    "public/templates/item/npc_feature.hbs:97",
+    "public/templates/item/pilot_armor.hbs:18",
+    "public/templates/item/pilot_gear.hbs:29",
+    "public/templates/item/pilot_weapon.hbs:37",
+    "src/module/flows/activation.ts:88",
+    "src/module/flows/system.ts:56",
+    "src/module/helpers/npc.ts:257",
+    "src/module/helpers/npc.ts:305",
+    "src/module/helpers/npc.ts:362"
+  ],
+  "EFFICIENCY": [
+    "public/templates/item/organization.hbs:25"
+  ],
+  "ENG": [
+    "public/templates/item/npc_class.hbs:36"
+  ],
+  "ENGINEERING": [
+    "src/module/flows/overheat.ts:285"
+  ],
+  "EVASION": [
+    "public/templates/item/frame.hbs:27",
+    "public/templates/item/npc_class.hbs:41",
+    "src/module/actor/pilot-sheet.ts:360"
+  ],
+  "Edit": [
+    "src/module/helpers/item.ts:1723",
+    "src/module/helpers/item.ts:1735"
+  ],
+  "Edit Bonus:": [
+    "public/templates/window/bonus.hbs:1"
+  ],
+  "Edit Field:": [
+    "public/templates/window/html_editor.hbs:1"
+  ],
+  "Edit Text": [
+    "src/module/apps/text-editor.ts:118"
+  ],
+  "Effect": [
+    "public/templates/item/bond.hbs:71"
+  ],
+  "Effect flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:276"
+  ],
+  "Empty": [
+    "src/module/helpers/refs.ts:80"
+  ],
+  "Engaged (-1)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:356",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:87"
+  ],
+  "Engineering": [
+    "public/templates/chat/scan-card.hbs:27",
+    "public/templates/journal/scan-entry.hbs:33"
+  ],
+  "Engineering - {x}": [
+    "src/module/flows/hotbar.ts:173"
+  ],
+  "Equip armor": [
+    "src/module/helpers/item.ts:364"
+  ],
+  "Equip gear": [
+    "src/module/helpers/item.ts:509"
+  ],
+  "Equip reserve": [
+    "src/module/helpers/item.ts:571"
+  ],
+  "Equip weapon": [
+    "src/module/helpers/item.ts:437"
+  ],
+  "Errant": [
+    "src/module/tours/lancer-tour.ts:319"
+  ],
+  "Error - No macro exists for item type \"{x}\"": [
+    "src/module/flows/item.ts:73"
+  ],
+  "Error finding stat input for macro.": [
+    "src/module/actor/npc-sheet.ts:84"
+  ],
+  "Error importing from V2 share code. V2 share codes may no longer work, or this share code may need to be refreshed.": [
+    "src/module/actor/pilot-sheet.ts:95"
+  ],
+  "Error importing from V3 share code.": [
+    "src/module/actor/pilot-sheet.ts:83"
+  ],
+  "Error in attack flow - {x} is an invalid type!": [
+    "src/module/flows/attack.ts:304",
+    "src/module/flows/attack.ts:388"
+  ],
+  "Error in tech attack flow - {x} is an invalid type!": [
+    "src/module/flows/tech.ts:184"
+  ],
+  "Error rolling tech attack macro (not a valid tech attacker).": [
+    "src/module/flows/tech.ts:105"
+  ],
+  "Error while migrating actor compendium {x}. Check the console for details.": [
+    "src/module/world_migration.ts:198"
+  ],
+  "Error while migrating actor {x}. Check the console for details.": [
+    "src/module/world_migration.ts:259"
+  ],
+  "Error while migrating item compendium {x}. Check the console for details.": [
+    "src/module/world_migration.ts:208"
+  ],
+  "Error while migrating scene {x}. Check the console for details.": [
+    "src/module/world_migration.ts:218",
+    "src/module/world_migration.ts:338"
+  ],
+  "Error while migrating unlinked token {x} in scene {x}. Check the console for details.": [
+    "src/module/world_migration.ts:328"
+  ],
+  "Evasion": [
+    "public/templates/chat/scan-card.hbs:40",
+    "public/templates/journal/scan-entry.hbs:52"
+  ],
+  "Export": [
+    "src/module/helpers/io.ts:60"
+  ],
+  "Exporting for this version of actor is currently unsupported.": [
+    "src/module/helpers/io.ts:20"
+  ],
+  "Exporting ran into an issue, or actor type is not supported.": [
+    "src/module/helpers/io.ts:38"
+  ],
+  "Exposed": [
+    "src/module/helpers/chat.ts:143"
+  ],
+  "FAQ": [
+    "public/templates/window/lancerHelp.hbs:14",
+    "src/module/config.ts:19"
+  ],
+  "FEATURE TYPE:": [
+    "public/templates/item/npc_feature.hbs:2"
+  ],
+  "FLEX": [
+    "public/templates/item/frame.hbs:34"
+  ],
+  "FREQUENCY": [
+    "public/templates/window/action_editor.hbs:12"
+  ],
+  "FULL": [
+    "public/templates/item/npc_feature.hbs:59",
+    "src/module/helpers/npc.ts:40"
+  ],
+  "FULL REPAIR": [
+    "src/module/flows/full-repair.ts:74"
+  ],
+  "FULL REPAIR - {x}": [
+    "src/module/flows/full-repair.ts:37"
+  ],
+  "Failed to load LCP {x}": [
+    "src/module/apps/lcp-manager/LCPSelector.svelte:66",
+    "src/module/apps/lcp-manager/LCPSelector.svelte:93"
+  ],
+  "Failed to update pilot: {x}": [
+    "src/module/actor/import.ts:1542",
+    "src/module/actor/import.ts:977"
+  ],
+  "Filter Ignore:": [
+    "public/templates/item/tag.hbs:26"
+  ],
+  "First, make sure you have your LANCER data imported properly via the compendium manager in the \"Compendiums\" tab. If you have non-core content you want to use in your game, this would be the place to do it as well.": [
+    "public/templates/window/lancerHelp.hbs:2"
+  ],
+  "Flat Modifier": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:11"
+  ],
+  "Flat attack bonus": [
+    "src/module/helpers/item.ts:206"
+  ],
+  "For 'cannot be reduced' effects like the Paracausal mod": [
+    "src/module/apps/damage/DamageHUD.svelte:318",
+    "src/module/apps/damage/DamageTarget.svelte:108"
+  ],
+  "For effects which cause the attacker to deal half damage in addition to resistance, like Heavy Gunner": [
+    "src/module/apps/damage/DamageHUD.svelte:327",
+    "src/module/apps/damage/DamageTarget.svelte:115"
+  ],
+  "Frames": [
+    "src/module/apps/inventory.ts:67"
+  ],
+  "Frequency:": [
+    "public/templates/item/bond.hbs:106"
+  ],
+  "Full Action": [
+    "public/templates/actor/mech.hbs:112",
+    "public/templates/window/action_manager.hbs:26"
+  ],
+  "Full Repair - {x}": [
+    "src/module/flows/hotbar.ts:96"
+  ],
+  "Gale": [
+    "src/module/tours/lancer-tour.ts:321"
+  ],
+  "Gale Storm": [
+    "src/module/tours/lancer-tour.ts:320"
+  ],
+  "Gear": [
+    "src/module/apps/inventory.ts:98"
+  ],
+  "Global Accuracy/Difficulty Adjustment": [
+    "src/module/apps/acc_diff/AccDiffInput.svelte:10",
+    "src/module/apps/acc_diff/AccDiffInput.svelte:14"
+  ],
+  "Goldsmith": [
+    "src/module/tours/lancer-tour.ts:322"
+  ],
+  "Good Kisser": [
+    "src/module/tours/lancer-tour.ts:323"
+  ],
+  "Grit - {x}": [
+    "src/module/flows/hotbar.ts:158"
+  ],
+  "HEAT": [
+    "public/templates/item/npc_class.hbs:43",
+    "src/module/actor/pilot-sheet.ts:359"
+  ],
+  "HEAT CAP": [
+    "public/templates/item/frame.hbs:29"
+  ],
+  "HEAT COST": [
+    "public/templates/window/action_editor.hbs:13"
+  ],
+  "HEAVY": [
+    "public/templates/item/frame.hbs:35"
+  ],
+  "HISTORY": [
+    "public/templates/actor/pilot.hbs:120"
+  ],
+  "HP": [
+    "public/templates/item/frame.hbs:24",
+    "public/templates/item/npc_class.hbs:38",
+    "src/module/actor/pilot-sheet.ts:358"
+  ],
+  "HULL": [
+    "public/templates/item/npc_class.hbs:33",
+    "src/module/flows/structure.ts:424"
+  ],
+  "Half Damage": [
+    "src/module/apps/damage/DamageHUD.svelte:323",
+    "src/module/apps/damage/DamageHUD.svelte:81",
+    "src/module/helpers/chat.ts:156"
+  ],
+  "Heat Cap": [
+    "public/templates/chat/scan-card.hbs:53",
+    "public/templates/journal/scan-entry.hbs:71"
+  ],
+  "Helpful Links": [
+    "public/templates/window/lancerHelp.hbs:13"
+  ],
+  "Hidden:": [
+    "public/templates/item/tag.hbs:25"
+  ],
+  "Hull": [
+    "public/templates/chat/scan-card.hbs:15",
+    "public/templates/journal/scan-entry.hbs:15"
+  ],
+  "Hull - {x}": [
+    "src/module/flows/hotbar.ts:164"
+  ],
+  "ID": [
+    "public/templates/window/bonus.hbs:4",
+    "src/module/helpers/item.ts:316"
+  ],
+  "ID:": [
+    "public/templates/item/tag.hbs:24"
+  ],
+  "IMPORT {x} FOR {x}?": [
+    "src/module/util/requests.ts:14"
+  ],
+  "INFLUENCE": [
+    "public/templates/item/organization.hbs:26"
+  ],
+  "INIT": [
+    "src/module/flows/activation.ts:81"
+  ],
+  "INTEGRATED": [
+    "public/templates/item/frame.hbs:35"
+  ],
+  "INTEGRATED GEAR": [
+    "public/templates/item/frame.hbs:59",
+    "public/templates/item/talent.hbs:34"
+  ],
+  "INTEGRATED ITEMS": [
+    "public/templates/item/core_bonus.hbs:26",
+    "public/templates/item/mech_system.hbs:49",
+    "public/templates/item/weapon_mod.hbs:33",
+    "src/module/helpers/item-editors.ts:274"
+  ],
+  "INVADE": [
+    "public/templates/chat/tech-attack-card.hbs:1"
+  ],
+  "IS TECH ATTACK?": [
+    "public/templates/window/action_editor.hbs:7"
+  ],
+  "Icon Preview": [
+    "public/templates/combat/lancer-initiative-settings-v2.hbs:6"
+  ],
+  "Impaired (-1)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:351",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:79"
+  ],
+  "Import From File": [
+    "src/module/apps/lcp-manager/LCPSelector.svelte:1"
+  ],
+  "Import LCP": [
+    "public/templates/lcp/lcp-manager.hbs:34",
+    "public/templates/lcp/lcp-manager.hbs:65",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:105",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:132",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:71"
+  ],
+  "Import Selected Loadout": [
+    "src/module/actor/import.ts:284"
+  ],
+  "Import all necessary LCPs first using the": [
+    "src/module/actor/import.ts:1523"
+  ],
+  "Import of {x}, Callsign {x} complete.": [
+    "src/module/actor/pilot-sheet.ts:156"
+  ],
+  "Import/Update LCP": [
+    "public/templates/lcp/lcp-manager.hbs:23"
+  ],
+  "Import/Update Selected": [
+    "src/module/apps/lcp-manager/LCPTable.svelte:197",
+    "src/module/apps/lcp-manager/LCPTable.svelte:46",
+    "src/module/apps/lcp-manager/LCPTable.svelte:91"
+  ],
+  "Imported LCPs": [
+    "public/templates/lcp/lcp-manager.hbs:76"
+  ],
+  "Importing character from V2 share code...": [
+    "src/module/actor/pilot-sheet.ts:89"
+  ],
+  "Importing character from V3 share code...": [
+    "src/module/actor/pilot-sheet.ts:78"
+  ],
+  "Inaccurate (-1)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:350",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:78"
+  ],
+  "Incomplete Pilot Import": [
+    "src/module/actor/import.ts:1526"
+  ],
+  "Increase accuracy": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:260",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:494"
+  ],
+  "Increase difficulty": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:291",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:514"
+  ],
+  "Increase flat bonus": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:299",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:44"
+  ],
+  "Innate Accuracy/Difficulty": [
+    "src/module/helpers/item.ts:229"
+  ],
+  "Insert {x} weapon": [
+    "src/module/helpers/item.ts:667"
+  ],
+  "Installed LCPs": [
+    "src/module/settings.ts:33"
+  ],
+  "Instrument": [
+    "src/module/tours/lancer-tour.ts:324"
+  ],
+  "Invalid Stabilize choice!": [
+    "src/module/actor/struss-util.ts:58"
+  ],
+  "Invalid UUID for flow drop on hotbar": [
+    "src/module/flows/hotbar.ts:66"
+  ],
+  "Invalid attacker for damage roll": [
+    "src/module/flows/damage.ts:655"
+  ],
+  "Invalid target UUID for damage application": [
+    "src/module/flows/damage.ts:760"
+  ],
+  "Invalid target for damage application, no actor found": [
+    "src/module/flows/damage.ts:765"
+  ],
+  "Invalid target for damage roll": [
+    "src/module/flows/damage.ts:671"
+  ],
+  "Item {x} can't deal damage!": [
+    "src/module/flows/damage.ts:126"
+  ],
+  "Item {x} cannot attack as it is not a system!": [
+    "src/module/item/lancer-item.ts:607"
+  ],
+  "Item {x} cannot attack as it is not a weapon!": [
+    "src/module/item/lancer-item.ts:597"
+  ],
+  "Item {x} cannot roll damage as it is not a weapon!": [
+    "src/module/item/lancer-item.ts:616"
+  ],
+  "Item {x} has no actions, how did you even get here?": [
+    "src/module/item/lancer-item.ts:636"
+  ],
+  "Item {x} has no bond powers!": [
+    "src/module/item/lancer-item.ts:696",
+    "src/module/item/lancer-item.ts:705"
+  ],
+  "Item {x} is not a mech frame!": [
+    "src/module/item/lancer-item.ts:655"
+  ],
+  "Item {x} is not a mech system, weapon mod, or NPC feature!": [
+    "src/module/item/lancer-item.ts:625"
+  ],
+  "Item {x} is not a skill!": [
+    "src/module/item/lancer-item.ts:687"
+  ],
+  "Item {x} is not owned by actor {x}!": [
+    "src/module/flows/damage.ts:664"
+  ],
+  "Journal folder {x} does not exist and must be created by a user with permissions to do so.": [
+    "src/module/flows/scan.ts:225"
+  ],
+  "Key:": [
+    "public/templates/item/license.hbs:43"
+  ],
+  "Kinesthesia": [
+    "src/module/tours/lancer-tour.ts:325"
+  ],
+  "LANCER Compendium Manager": [
+    "src/module/apps/lcp-manager/lcp-manager.ts:88"
+  ],
+  "LANCER Compendiums cleared.": [
+    "src/module/comp-builder.ts:286"
+  ],
+  "LANCER Help": [
+    "public/templates/window/lancerHelp.hbs:1"
+  ],
+  "LANCER System migration to version {x} completed!": [
+    "src/module/world_migration.ts:162"
+  ],
+  "LID": [
+    "public/templates/item/status.hbs:16"
+  ],
+  "LID:": [
+    "public/templates/item/license.hbs:42",
+    "public/templates/window/tag.hbs:8"
+  ],
+  "LOADED": [
+    "src/module/helpers/refs.ts:248"
+  ],
+  "LOCKED: BRACING": [
+    "src/module/helpers/loadout.ts:129"
+  ],
+  "Lancer Compendium Manager": [
+    "src/module/actor/import.ts:1523"
+  ],
+  "Lancer Condition Icons is Integrated": [
+    "src/module/status-icons.ts:832"
+  ],
+  "Lancer Core Book Data": [
+    "src/module/util/lcps.ts:388"
+  ],
+  "Lancer Data Version": [
+    "src/module/settings.ts:24"
+  ],
+  "Lancer Initiative": [
+    "src/module/helpers/automation/combat.ts:105"
+  ],
+  "Lancer Initiative Module is not Needed": [
+    "src/module/helpers/automation/combat.ts:111"
+  ],
+  "Lancer flow error: {x} is not a valid step": [
+    "src/module/flows/flow.ts:162"
+  ],
+  "Licenses": [
+    "src/module/apps/inventory.ts:110"
+  ],
+  "Loading data, please wait…": [
+    "src/module/apps/lcp-manager/LCPManager.svelte:1"
+  ],
+  "Lock On (+1)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:107",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:373"
+  ],
+  "MAIN": [
+    "public/templates/item/frame.hbs:34"
+  ],
+  "MAIN/AUX": [
+    "public/templates/item/frame.hbs:34"
+  ],
+  "MAJOR IDEALS": [
+    "public/templates/item/bond.hbs:5"
+  ],
+  "MAX HP": [
+    "public/templates/actor/deployable.hbs:52"
+  ],
+  "MINOR IDEALS": [
+    "public/templates/item/bond.hbs:16"
+  ],
+  "MOUNTED EFFECT": [
+    "public/templates/item/core_bonus.hbs:20"
+  ],
+  "MOUNTED SYSTEMS": [
+    "src/module/helpers/loadout.ts:216"
+  ],
+  "MOUNTED WEAPONS": [
+    "src/module/helpers/loadout.ts:194"
+  ],
+  "Manual Adjust": [
+    "src/module/apps/acc_diff/AccDiffInput.svelte:2"
+  ],
+  "Manufacturer": [
+    "public/templates/item/license.hbs:41"
+  ],
+  "Mark Destroyed": [
+    "src/module/helpers/item.ts:1615"
+  ],
+  "Mark Repaired": [
+    "src/module/helpers/item.ts:1583"
+  ],
+  "Master:": [
+    "public/templates/item/bond.hbs:108"
+  ],
+  "Max HP": [
+    "public/templates/chat/scan-card.hbs:36",
+    "public/templates/journal/scan-entry.hbs:46"
+  ],
+  "Max:": [
+    "public/templates/window/counter.hbs:2"
+  ],
+  "Mech has no repairs left. Please try again.": [
+    "src/module/flows/stabilize.ts:86"
+  ],
+  "Migration to v{x} in progress. Please do not shut down your world or refresh the page until migration is complete.": [
+    "src/module/world_migration.ts:93"
+  ],
+  "Min:": [
+    "public/templates/window/counter.hbs:1"
+  ],
+  "Mods": [
+    "src/module/apps/inventory.ts:79"
+  ],
+  "Movement": [
+    "public/templates/actor/mech.hbs:111"
+  ],
+  "Multiple pilot loadouts found. Please select a single loadout to import and use:": [
+    "src/module/actor/import.ts:279"
+  ],
+  "NOTES": [
+    "public/templates/actor/npc.hbs:118",
+    "public/templates/actor/pilot.hbs:121"
+  ],
+  "NPC classes": [
+    "public/templates/lcp/lcp-manager.hbs:63",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:52"
+  ],
+  "NPC features": [
+    "public/templates/lcp/lcp-manager.hbs:69",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:61"
+  ],
+  "NPC templates": [
+    "public/templates/lcp/lcp-manager.hbs:65",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:57"
+  ],
+  "NPC → Deployable Bonuses": [
+    "src/module/effects/converter.ts:258"
+  ],
+  "Name": [
+    "public/templates/lcp/lcp-manager.hbs:76",
+    "src/module/helpers/item.ts:317"
+  ],
+  "New Counter": [
+    "src/module/util/unpacking/defaults.ts:93"
+  ],
+  "New Power": [
+    "src/module/util/unpacking/defaults.ts:117"
+  ],
+  "New Rank": [
+    "src/module/util/unpacking/defaults.ts:158"
+  ],
+  "New Trait": [
+    "src/module/util/unpacking/defaults.ts:130"
+  ],
+  "New action": [
+    "src/module/util/unpacking/defaults.ts:68"
+  ],
+  "Next, go to the Actors tab and create any PCs you want to use. You can either import from COMP/CON using the RM-4://SYNC tab, or manually build it out yourself. NPCs have to be manually built out for now.": [
+    "public/templates/window/lancerHelp.hbs:6"
+  ],
+  "No": [
+    "src/module/flows/full-repair.ts:53"
+  ],
+  "No License": [
+    "src/module/helpers/item-editors.ts:294"
+  ],
+  "No Mod Installed": [
+    "src/module/helpers/item.ts:788"
+  ],
+  "No actor found for dismemberment damage button.": [
+    "src/module/flows/structure.ts:375"
+  ],
+  "No core power remaining on this frame!": [
+    "src/module/flows/frame.ts:41"
+  ],
+  "No damage configured, skipping the roll.": [
+    "src/module/flows/damage.ts:321"
+  ],
+  "No flow subtype provided for basic flow drop on hotbar": [
+    "src/module/flows/hotbar.ts:87"
+  ],
+  "No repairs remaining!": [
+    "src/module/actor/struss-util.ts:32"
+  ],
+  "No source specified": [
+    "src/module/helpers/item.ts:878"
+  ],
+  "No target for damage application": [
+    "src/module/flows/damage.ts:741",
+    "src/module/flows/damage.ts:746"
+  ],
+  "Non-NPC cannot fire an NPC weapon!": [
+    "src/module/flows/attack.ts:261"
+  ],
+  "Non-NPC cannot use an NPC system!": [
+    "src/module/flows/tech.ts:134"
+  ],
+  "Non-mech cannot fire a mech weapon!": [
+    "src/module/flows/attack.ts:204"
+  ],
+  "Non-mech cannot use a mech system!": [
+    "src/module/flows/attack.ts:239",
+    "src/module/flows/tech.ts:156"
+  ],
+  "Non-pilot cannot fire a pilot weapon!": [
+    "src/module/flows/attack.ts:283"
+  ],
+  "Non-pilot cannot use a pilot talent!": [
+    "src/module/flows/tech.ts:172"
+  ],
+  "Notice: {x} has been fully repaired.": [
+    "src/module/flows/full-repair.ts:75"
+  ],
+  "ON ATTACK": [
+    "public/templates/item/mech_weapon.hbs:85"
+  ],
+  "ON CRIT": [
+    "public/templates/item/mech_weapon.hbs:91"
+  ],
+  "ON HIT": [
+    "public/templates/item/mech_weapon.hbs:88",
+    "src/module/helpers/npc.ts:263",
+    "src/module/helpers/npc.ts:311"
+  ],
+  "ON HIT EFFECT": [
+    "public/templates/item/npc_feature.hbs:199"
+  ],
+  "OPTION 1": [
+    "public/templates/window/promptStabilize.hbs:2"
+  ],
+  "OPTION 2": [
+    "public/templates/window/promptStabilize.hbs:7"
+  ],
+  "OPTIONAL FEATURE": [
+    "public/templates/item/npc_feature.hbs:23"
+  ],
+  "OPTIONAL FEATURES": [
+    "public/templates/item/npc_class.hbs:42",
+    "public/templates/item/npc_template.hbs:10"
+  ],
+  "OTHER": [
+    "src/module/helpers/npc.ts:41"
+  ],
+  "Official LANCER Content": [
+    "public/templates/lcp/lcp-manager.hbs:2"
+  ],
+  "On a 1–3, all weapons on one mount of your choice are destroyed": [
+    "src/module/flows/structure.ts:567"
+  ],
+  "On a 4–6, a system of your choice is destroyed": [
+    "src/module/flows/structure.ts:570"
+  ],
+  "Only GM can modify the Compendiums.": [
+    "src/module/apps/lcp-manager/LCPManager.svelte:94"
+  ],
+  "Only Mechs and NPCs can take stress damage": [
+    "src/module/flows/overheat.ts:59"
+  ],
+  "Only Mechs and NPCs can take structure damage": [
+    "src/module/flows/structure.ts:71"
+  ],
+  "Only NPCs can recharge!": [
+    "src/module/actor/lancer-actor.ts:1069"
+  ],
+  "Only mechs and NPCs can tech attack!": [
+    "src/module/actor/lancer-actor.ts:1098"
+  ],
+  "Only mechs can cascade.": [
+    "src/module/flows/cascade.ts:58",
+    "src/module/flows/cascade.ts:82"
+  ],
+  "Only mechs can overcharge!": [
+    "src/module/actor/lancer-actor.ts:1060"
+  ],
+  "Only npcs and mechs can roll overheat.": [
+    "src/module/flows/overheat.ts:140",
+    "src/module/flows/overheat.ts:205",
+    "src/module/flows/overheat.ts:241",
+    "src/module/flows/overheat.ts:277"
+  ],
+  "Only npcs and mechs can roll structure.": [
+    "src/module/flows/structure.ts:195",
+    "src/module/flows/structure.ts:259",
+    "src/module/flows/structure.ts:296",
+    "src/module/flows/structure.ts:346",
+    "src/module/flows/structure.ts:416",
+    "src/module/flows/structure.ts:445"
+  ],
+  "Only npcs and mechs can roll structure/overheat.": [
+    "src/module/flows/structure.ts:475"
+  ],
+  "Only npcs and mechs can work with \"remaining structure\" logic.": [
+    "src/module/flows/structure.ts:553"
+  ],
+  "Organizations": [
+    "src/module/apps/inventory.ts:122"
+  ],
+  "Origin Name": [
+    "public/templates/item/npc_feature.hbs:47"
+  ],
+  "Overcharge - {x}": [
+    "src/module/flows/hotbar.ts:116"
+  ],
+  "Overheat": [
+    "public/templates/actor/mech.hbs:101"
+  ],
+  "Overheat - {x}": [
+    "src/module/flows/hotbar.ts:106"
+  ],
+  "Overkill": [
+    "src/module/apps/damage/DamageHUD.svelte:311",
+    "src/module/apps/damage/DamageHUD.svelte:75"
+  ],
+  "Overwrite": [
+    "public/templates/window/bonus.hbs:6"
+  ],
+  "Owl": [
+    "src/module/tours/lancer-tour.ts:326"
+  ],
+  "Oxhorn": [
+    "src/module/tours/lancer-tour.ts:327"
+  ],
+  "PASSIVE": [
+    "src/module/helpers/loadout.ts:408",
+    "src/module/helpers/npc.ts:40"
+  ],
+  "POWERS": [
+    "public/templates/item/bond.hbs:43"
+  ],
+  "PROFILE ACTIONS": [
+    "public/templates/item/mech_weapon.hbs:94"
+  ],
+  "PROTOCOL": [
+    "src/module/helpers/npc.ts:40"
+  ],
+  "PURPOSE": [
+    "public/templates/item/organization.hbs:24"
+  ],
+  "Pilot → Deployable Bonuses": [
+    "src/module/effects/converter.ts:216"
+  ],
+  "Pilot → Mech Bonuses": [
+    "src/module/effects/converter.ts:99"
+  ],
+  "PilotNET Community on Discord": [
+    "public/templates/window/lancerHelp.hbs:23"
+  ],
+  "Please select your two Stabilize actions": [
+    "public/templates/window/promptStabilize.hbs:1"
+  ],
+  "Please update the Core data before importing LCPs.": [
+    "src/module/apps/lcp-manager/LCPManager.svelte:98"
+  ],
+  "Poundcakes": [
+    "src/module/tours/lancer-tour.ts:328"
+  ],
+  "Powered by Lancer": [
+    "src/module/config.ts:19"
+  ],
+  "Prerequisite": [
+    "public/templates/item/bond.hbs:68"
+  ],
+  "Primary": [
+    "src/module/helpers/io.ts:199",
+    "src/module/helpers/io.ts:238"
+  ],
+  "Prone (+1)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:104",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:369"
+  ],
+  "Protocol": [
+    "public/templates/actor/mech.hbs:110",
+    "public/templates/window/action_manager.hbs:18"
+  ],
+  "QUESTIONS": [
+    "public/templates/item/bond.hbs:23"
+  ],
+  "QUICK": [
+    "public/templates/item/npc_feature.hbs:57",
+    "src/module/helpers/npc.ts:40"
+  ],
+  "Quick Action": [
+    "public/templates/actor/mech.hbs:113",
+    "public/templates/window/action_manager.hbs:29"
+  ],
+  "RANGE": [
+    "public/templates/item/mech_weapon.hbs:73",
+    "public/templates/item/npc_feature.hbs:85",
+    "public/templates/item/pilot_weapon.hbs:32",
+    "public/templates/window/action_editor.hbs:18"
+  ],
+  "RANGES TYPES": [
+    "public/templates/window/bonus.hbs:11"
+  ],
+  "RANK:": [
+    "public/templates/item/skill.hbs:3"
+  ],
+  "REACTION": [
+    "public/templates/item/npc_feature.hbs:4",
+    "src/module/helpers/npc.ts:40"
+  ],
+  "REACTION INIT": [
+    "public/templates/window/action_editor.hbs:9"
+  ],
+  "REACTION TRIGGER": [
+    "public/templates/window/action_editor.hbs:10"
+  ],
+  "RECALL": [
+    "src/module/helpers/item.ts:1181"
+  ],
+  "REDEPLOY": [
+    "src/module/helpers/item.ts:1182"
+  ],
+  "REPAIRS": [
+    "public/templates/item/frame.hbs:26"
+  ],
+  "RESERVE :: {x}": [
+    "src/module/flows/item.ts:60"
+  ],
+  "RESOURCE LABEL": [
+    "public/templates/item/reserve.hbs:18"
+  ],
+  "ROLL DAMAGE": [
+    "src/module/flows/structure.ts:359"
+  ],
+  "Rank": [
+    "src/module/helpers/item-editors.ts:303"
+  ],
+  "Raven": [
+    "src/module/tours/lancer-tour.ts:329"
+  ],
+  "Reaction": [
+    "public/templates/actor/mech.hbs:114",
+    "public/templates/window/action_manager.hbs:35"
+  ],
+  "Rebuild Core Data": [
+    "public/templates/lcp/lcp-manager.hbs:12",
+    "public/templates/lcp/lcp-manager.hbs:30"
+  ],
+  "Recharge": [
+    "public/templates/actor/npc.hbs:79"
+  ],
+  "Refresh": [
+    "src/module/helpers/automation/combat.ts:114",
+    "src/module/status-icons.ts:835"
+  ],
+  "Refresh Powers": [
+    "public/templates/actor/pilot.hbs:105"
+  ],
+  "Reliable": [
+    "src/module/apps/damage/DamageHUD.svelte:101",
+    "src/module/apps/damage/DamageHUD.svelte:332"
+  ],
+  "Reload": [
+    "public/templates/window/promptStabilize.hbs:9"
+  ],
+  "Remove": [
+    "src/module/helpers/item.ts:1694"
+  ],
+  "Remove this damage type": [
+    "src/module/apps/damage/DamageInput.svelte:28",
+    "src/module/apps/damage/DamageInput.svelte:48"
+  ],
+  "Rename": [
+    "src/module/helpers/item.ts:1755"
+  ],
+  "Replace": [
+    "public/templates/window/bonus.hbs:7"
+  ],
+  "Reserve {x} has already been used!": [
+    "src/module/flows/item-utils.ts:104"
+  ],
+  "Reserves": [
+    "src/module/apps/inventory.ts:118"
+  ],
+  "Reset": [
+    "src/module/apps/lancer-initiative-config-form.ts:31"
+  ],
+  "Resist": [
+    "src/module/helpers/chat.ts:97"
+  ],
+  "Resist {x}": [
+    "src/module/helpers/chat.ts:137"
+  ],
+  "Restore HP": [
+    "public/templates/window/promptStabilize.hbs:7"
+  ],
+  "Restore a backup of this world and": [
+    "src/module/world_migration.ts:72"
+  ],
+  "Roll": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:118",
+    "src/module/apps/damage/DamageHUD.svelte:53",
+    "src/module/apps/struct_stress/StructStressHUD.svelte:17"
+  ],
+  "Roll a basic attack": [
+    "src/module/helpers/actor.ts:120"
+  ],
+  "Roll a burn check and generate damage": [
+    "src/module/helpers/actor.ts:77"
+  ],
+  "Roll an attack with this system": [
+    "src/module/helpers/npc.ts:140"
+  ],
+  "Roll an attack with this weapon": [
+    "src/module/helpers/item.ts:481",
+    "src/module/helpers/item.ts:753",
+    "src/module/helpers/npc.ts:195"
+  ],
+  "Roll damage for this weapon without attacking": [
+    "src/module/helpers/item.ts:172"
+  ],
+  "Roll {x}d6 to determine what happens.": [
+    "src/module/apps/struct_stress/StructStressHUD.svelte:16"
+  ],
+  "SAVE": [
+    "public/templates/item/frame.hbs:33",
+    "public/templates/item/npc_class.hbs:47",
+    "src/module/actor/pilot-sheet.ts:366"
+  ],
+  "SCAN // 🞂 {x} 🞀": [
+    "public/templates/chat/scan-card.hbs:1"
+  ],
+  "SENSORS": [
+    "public/templates/item/frame.hbs:32",
+    "public/templates/item/npc_class.hbs:46",
+    "src/module/actor/pilot-sheet.ts:367"
+  ],
+  "SIZE": [
+    "public/templates/item/frame.hbs:35",
+    "public/templates/item/mech_weapon.hbs:15",
+    "public/templates/item/npc_class.hbs:48"
+  ],
+  "SOURCE": [
+    "public/templates/item/npc_feature.hbs:15"
+  ],
+  "SPEED": [
+    "public/templates/item/frame.hbs:30",
+    "public/templates/item/npc_class.hbs:44",
+    "src/module/actor/pilot-sheet.ts:365"
+  ],
+  "STABILIZE - {x}": [
+    "src/module/flows/stabilize.ts:48"
+  ],
+  "STATUS": [
+    "public/templates/item/mech_system.hbs:10",
+    "public/templates/item/mech_weapon.hbs:20",
+    "public/templates/item/pilot_gear.hbs:5",
+    "public/templates/item/pilot_weapon.hbs:5"
+  ],
+  "STRESS": [
+    "public/templates/item/npc_class.hbs:40",
+    "src/module/actor/pilot-sheet.ts:363"
+  ],
+  "STRUCTURE": [
+    "public/templates/item/npc_class.hbs:39",
+    "src/module/actor/pilot-sheet.ts:362"
+  ],
+  "SUPERHEAVY": [
+    "public/templates/item/frame.hbs:35"
+  ],
+  "SYNERGIES": [
+    "public/templates/item/core_bonus.hbs:23",
+    "public/templates/item/mech_system.hbs:48",
+    "public/templates/item/pilot_armor.hbs:31",
+    "public/templates/item/pilot_gear.hbs:37",
+    "public/templates/item/pilot_weapon.hbs:45",
+    "public/templates/item/talent.hbs:72",
+    "public/templates/item/weapon_mod.hbs:32"
+  ],
+  "SYS": [
+    "public/templates/item/npc_class.hbs:35"
+  ],
+  "SYS POINTS": [
+    "public/templates/item/frame.hbs:34"
+  ],
+  "SYSTEM": [
+    "public/templates/item/npc_feature.hbs:6"
+  ],
+  "SYSTEMS": [
+    "public/templates/chat/scan-card.hbs:44",
+    "public/templates/journal/scan-entry.hbs:63"
+  ],
+  "Salaryman": [
+    "src/module/tours/lancer-tour.ts:330"
+  ],
+  "Save": [
+    "public/templates/window/html_editor.hbs:3",
+    "src/module/apps/action-tracker-settings.ts:44",
+    "src/module/apps/automation-settings.ts:49",
+    "src/module/apps/lancer-initiative-config-form.ts:30",
+    "src/module/apps/status-icon-config.ts:44",
+    "src/module/helpers/commons.ts:894"
+  ],
+  "Save Target": [
+    "public/templates/chat/scan-card.hbs:73",
+    "public/templates/journal/scan-entry.hbs:97"
+  ],
+  "Scan": [
+    "public/templates/actor/mech.hbs:128"
+  ],
+  "Scan - {x}": [
+    "src/module/flows/hotbar.ts:121"
+  ],
+  "Scherzo": [
+    "src/module/tours/lancer-tour.ts:331"
+  ],
+  "Seeking (*)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:341",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:75"
+  ],
+  "Select LCP file": [
+    "src/module/apps/lcp-manager/LCPSelector.svelte:124",
+    "src/module/apps/lcp-manager/LCPSelector.svelte:4"
+  ],
+  "Select Pilot Loadout": [
+    "src/module/actor/import.ts:275"
+  ],
+  "Select damage multiplier": [
+    "src/module/helpers/chat.ts:97"
+  ],
+  "Selected LCPs": [
+    "src/module/apps/lcp-manager/LCPSelector.svelte:84"
+  ],
+  "Selected Official Sources": [
+    "src/module/apps/lcp-manager/LCPTable.svelte:47"
+  ],
+  "Sensor Range": [
+    "public/templates/chat/scan-card.hbs:77",
+    "public/templates/journal/scan-entry.hbs:103"
+  ],
+  "Size {x}": [
+    "public/templates/chat/scan-card.hbs:61",
+    "public/templates/journal/scan-entry.hbs:83"
+  ],
+  "Skill flow drop on hotbar was not from a skill item": [
+    "src/module/flows/hotbar.ts:249"
+  ],
+  "Skill flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:244"
+  ],
+  "Skills": [
+    "src/module/apps/inventory.ts:106"
+  ],
+  "Smart (*)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:339",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:71"
+  ],
+  "Speed": [
+    "public/templates/chat/scan-card.hbs:69",
+    "public/templates/journal/scan-entry.hbs:91"
+  ],
+  "Stabilize": [
+    "public/templates/actor/mech.hbs:97"
+  ],
+  "Stabilize - {x}": [
+    "src/module/flows/hotbar.ts:101"
+  ],
+  "Standard Move": [
+    "public/templates/window/action_manager.hbs:23"
+  ],
+  "Standard Profile": [
+    "src/module/util/unpacking/defaults.ts:172"
+  ],
+  "Starting import of {x}, Callsign {x}. Please wait.": [
+    "src/module/actor/pilot-sheet.ts:151"
+  ],
+  "Stat flow drop on hotbar was missing a stat path": [
+    "src/module/flows/hotbar.ts:150"
+  ],
+  "Stat flow drop on hotbar was not from an actor": [
+    "src/module/flows/hotbar.ts:146"
+  ],
+  "Statuses": [
+    "src/module/apps/inventory.ts:126",
+    "src/module/apps/inventory.ts:83"
+  ],
+  "Stress": [
+    "public/templates/actor/pilot.hbs:180",
+    "public/templates/chat/scan-card.hbs:49",
+    "public/templates/journal/scan-entry.hbs:65"
+  ],
+  "Stress Damage": [
+    "src/module/flows/overheat.ts:70"
+  ],
+  "Structure": [
+    "public/templates/actor/mech.hbs:100",
+    "public/templates/chat/scan-card.hbs:32",
+    "public/templates/journal/scan-entry.hbs:40"
+  ],
+  "Structure - {x}": [
+    "src/module/flows/hotbar.ts:111"
+  ],
+  "Structure Damage": [
+    "src/module/flows/structure.ts:82"
+  ],
+  "Stunned": [
+    "src/module/apps/acc_diff/TotalAccuracy.svelte:22",
+    "src/module/apps/acc_diff/TotalAccuracy.svelte:78",
+    "src/module/models/items/status.ts:50"
+  ],
+  "Submit": [
+    "src/module/flows/stabilize.ts:53"
+  ],
+  "Subscriptions aren't made atm": [
+    "src/module/helpers/hooks.ts:31"
+  ],
+  "Successfully loaded pilot new state.": [
+    "src/module/actor/import.ts:1538",
+    "src/module/actor/import.ts:974"
+  ],
+  "Suggested Modules": [
+    "public/templates/window/lancerHelp.hbs:17"
+  ],
+  "Sunset": [
+    "src/module/tours/lancer-tour.ts:332"
+  ],
+  "Superheavy Bracing": [
+    "src/module/actor/mech-sheet.ts:223"
+  ],
+  "Superman": [
+    "src/module/tours/lancer-tour.ts:333"
+  ],
+  "Support (1)": [
+    "src/module/tours/lancer-tour.ts:288"
+  ],
+  "System - {x}": [
+    "src/module/flows/hotbar.ts:170"
+  ],
+  "System Destruction": [
+    "src/module/flows/structure.ts:569"
+  ],
+  "System Migration Version": [
+    "src/module/settings.ts:16"
+  ],
+  "System {x} has no remaining uses!": [
+    "src/module/flows/item-utils.ts:46"
+  ],
+  "System {x} has not recharged!": [
+    "src/module/flows/item-utils.ts:122"
+  ],
+  "Systems": [
+    "public/templates/chat/scan-card.hbs:23",
+    "public/templates/journal/scan-entry.hbs:27",
+    "src/module/apps/inventory.ts:75"
+  ],
+  "T {x} DAMAGE": [
+    "public/templates/item/npc_feature.hbs:104"
+  ],
+  "TACTICS": [
+    "public/templates/item/npc_class.hbs:28"
+  ],
+  "TAG": [
+    "public/templates/window/tag.hbs:1"
+  ],
+  "TAG META INFO": [
+    "public/templates/item/tag.hbs:10"
+  ],
+  "TAGS": [
+    "public/templates/item/frame.hbs:175",
+    "public/templates/item/mech_system.hbs:52",
+    "public/templates/item/mech_weapon.hbs:97",
+    "public/templates/item/npc_feature.hbs:203",
+    "public/templates/item/pilot_armor.hbs:33",
+    "public/templates/item/pilot_gear.hbs:40",
+    "public/templates/item/pilot_weapon.hbs:49",
+    "public/templates/item/weapon_mod.hbs:34"
+  ],
+  "TEAR OFF": [
+    "src/module/flows/structure.ts:458"
+  ],
+  "TECH": [
+    "public/templates/item/npc_feature.hbs:53",
+    "public/templates/item/npc_feature.hbs:8"
+  ],
+  "TECH ATK": [
+    "public/templates/chat/tech-attack-card.hbs:1",
+    "public/templates/item/frame.hbs:31"
+  ],
+  "TECH ATTACK?": [
+    "public/templates/item/npc_feature.hbs:63"
+  ],
+  "TECH ATTACKS": [
+    "public/templates/chat/scan-card.hbs:37",
+    "public/templates/journal/scan-entry.hbs:55"
+  ],
+  "TEMPLATE": [
+    "public/templates/item/npc_feature.hbs:20"
+  ],
+  "TERSE DESCRIPTION": [
+    "public/templates/item/talent.hbs:24",
+    "public/templates/window/action_editor.hbs:14"
+  ],
+  "TIER {x}": [
+    "src/module/helpers/actor.ts:418"
+  ],
+  "TIER {x} {x}": [
+    "public/templates/chat/scan-card.hbs:2",
+    "public/templates/journal/scan-entry.hbs:1"
+  ],
+  "TITLE": [
+    "src/module/apps/lcp-manager/LCPTable.svelte:3"
+  ],
+  "TODO: Add arrayed counters editor": [
+    "src/module/helpers/item-editors.ts:112"
+  ],
+  "TODO: Reset the weapons": [
+    "src/module/actor/mech-sheet.ts:265"
+  ],
+  "TRAIT": [
+    "public/templates/item/npc_feature.hbs:10"
+  ],
+  "TRAITS": [
+    "public/templates/chat/scan-card.hbs:50",
+    "public/templates/item/frame.hbs:42",
+    "public/templates/journal/scan-entry.hbs:71"
+  ],
+  "TRIGGER": [
+    "public/templates/item/npc_feature.hbs:97",
+    "src/module/flows/activation.ts:84",
+    "src/module/flows/system.ts:56",
+    "src/module/helpers/npc.ts:356"
+  ],
+  "TYPE": [
+    "public/templates/item/mech_weapon.hbs:32",
+    "public/templates/item/npc_feature.hbs:76",
+    "public/templates/item/reserve.hbs:10",
+    "public/templates/item/status.hbs:15",
+    "public/templates/window/action_editor.hbs:6"
+  ],
+  "Tag Editing": [
+    "src/module/apps/tag-editor.ts:16"
+  ],
+  "Tag edit button missing data-path attribute": [
+    "src/module/helpers/tags.ts:13"
+  ],
+  "Tags": [
+    "src/module/settings.ts:41"
+  ],
+  "Talents": [
+    "src/module/apps/inventory.ts:102"
+  ],
+  "Tally XP": [
+    "public/templates/actor/pilot.hbs:93"
+  ],
+  "Targeting": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:63"
+  ],
+  "Tech Attack - {x}": [
+    "src/module/flows/hotbar.ts:131"
+  ],
+  "Tech attack flow drop on hotbar was not from a system or NPC feature": [
+    "src/module/flows/hotbar.ts:201"
+  ],
+  "Tech attack flow drop on hotbar was not from an item": [
+    "src/module/flows/hotbar.ts:197"
+  ],
+  "Test Class": [
+    "src/module/tours/lancer-tour.ts:161"
+  ],
+  "Test NPC": [
+    "src/module/tours/lancer-tour.ts:156"
+  ],
+  "Test Pilot": [
+    "src/module/tours/lancer-tour.ts:122"
+  ],
+  "Test Template": [
+    "src/module/tours/lancer-tour.ts:167"
+  ],
+  "Test Weapon": [
+    "src/module/tours/lancer-tour.ts:212"
+  ],
+  "The": [
+    "src/module/helpers/automation/combat.ts:105"
+  ],
+  "The following Actors could not be created or updated:": [
+    "src/module/actor/import.ts:1517"
+  ],
+  "The following Items were not found in the compendium and could not be imported:": [
+    "src/module/actor/import.ts:1521"
+  ],
+  "The icons and functionality from Lancer Condition Icons has been integrated with the system, and your settings have been migrated. Lancer Condition Icons will now be disabled, and you can feel free to uninstall it if no other worlds are using it.": [
+    "src/module/status-icons.ts:826"
+  ],
+  "The mech is at full Stress, no overheat check to roll.": [
+    "src/module/flows/overheat.ts:160"
+  ],
+  "The mech is at full Structure, no structure check to roll.": [
+    "src/module/flows/structure.ts:200"
+  ],
+  "The module has been disabled.": [
+    "src/module/helpers/automation/combat.ts:107"
+  ],
+  "The page must now be refreshed for the module change to take effect.": [
+    "src/module/helpers/automation/combat.ts:107",
+    "src/module/status-icons.ts:828"
+  ],
+  "The targeted token has no associated actor.": [
+    "src/module/flows/scan.ts:49"
+  ],
+  "This LCP contains:": [
+    "public/templates/lcp/lcp-manager.hbs:40"
+  ],
+  "This row is bonus damage": [
+    "public/templates/chat/damage-card.hbs:39",
+    "public/templates/chat/damage-card.hbs:63",
+    "src/module/helpers/chat.ts:126"
+  ],
+  "This world is too old to migrate directly to Lancer {x} and Foundry 13.": [
+    "src/module/world_migration.ts:69"
+  ],
+  "This world is too old to migrate directly to Lancer {x} and Foundry 13. Restore a backup of this world and migrate to Foundry 12.343 first.": [
+    "src/module/world_migration.ts:83"
+  ],
+  "Thrown (*)": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:354",
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:83"
+  ],
+  "Tier - {x}": [
+    "src/module/flows/hotbar.ts:161"
+  ],
+  "Tier {x}": [
+    "public/templates/actor/npc.hbs:5"
+  ],
+  "Timber": [
+    "src/module/tours/lancer-tour.ts:334"
+  ],
+  "To manually build out an actor, there are two steps:": [
+    "public/templates/window/lancerHelp.hbs:8"
+  ],
+  "Token has hp remaining. No need to roll structure.": [
+    "src/module/flows/structure.ts:77"
+  ],
+  "Token is not at heat cap. No need to roll stress.": [
+    "src/module/flows/overheat.ts:65"
+  ],
+  "Total": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:72"
+  ],
+  "Total:": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:17"
+  ],
+  "Trying to access tokens from a different scene!": [
+    "src/module/apps/acc_diff/data.svelte.ts:179",
+    "src/module/apps/damage/data.svelte.ts:190"
+  ],
+  "Tyrant": [
+    "src/module/tours/lancer-tour.ts:335"
+  ],
+  "UNKNOWN EXOTIC SYSTEM": [
+    "src/module/flows/scan.ts:156"
+  ],
+  "UNKNOWN EXOTIC TECH ATTACK": [
+    "src/module/flows/scan.ts:123"
+  ],
+  "UNKNOWN EXOTIC TRAIT": [
+    "src/module/flows/scan.ts:180"
+  ],
+  "UNKNOWN EXOTIC WEAPON": [
+    "src/module/flows/scan.ts:91"
+  ],
+  "UNLOCKED RANK:": [
+    "public/templates/item/license.hbs:5"
+  ],
+  "UNLOCKED RANK: {x}": [
+    "public/templates/item/talent.hbs:4"
+  ],
+  "USE": [
+    "src/module/helpers/commons.ts:219"
+  ],
+  "USES": [
+    "src/module/helpers/item.ts:249",
+    "src/module/helpers/item.ts:558",
+    "src/module/helpers/refs.ts:235",
+    "src/module/helpers/refs.ts:270"
+  ],
+  "USES:": [
+    "public/templates/item/npc_feature.hbs:35"
+  ],
+  "Ultra Berserker (1)": [
+    "src/module/tours/lancer-tour.ts:280"
+  ],
+  "Unable to add LCP Manager button - Compendium Tab buttons not found!": [
+    "src/module/apps/lcp-manager/lcp-manager.ts:33"
+  ],
+  "Undo this damage": [
+    "src/module/actor/lancer-actor.ts:241"
+  ],
+  "Unknown flow type for flow drop on hotbar!": [
+    "src/module/flows/hotbar.ts:318"
+  ],
+  "Unlink": [
+    "src/module/helpers/item.ts:1668"
+  ],
+  "Unresolved deployabled LID \"{x}\". Re-import + Set yourself as its owner": [
+    "src/module/helpers/item.ts:1148"
+  ],
+  "Unselect File": [
+    "src/module/apps/lcp-manager/LCPSelector.svelte:3"
+  ],
+  "Update Core Data": [
+    "public/templates/lcp/lcp-manager.hbs:19"
+  ],
+  "Update to v{x}": [
+    "public/templates/lcp/lcp-manager.hbs:9"
+  ],
+  "Uses": [
+    "src/module/helpers/item-editors.ts:342"
+  ],
+  "Value": [
+    "public/templates/window/bonus.hbs:5"
+  ],
+  "Value:": [
+    "public/templates/window/counter.hbs:2",
+    "public/templates/window/tag.hbs:3"
+  ],
+  "Verminspeaker": [
+    "src/module/tours/lancer-tour.ts:336"
+  ],
+  "Version": [
+    "public/templates/lcp/lcp-manager.hbs:77"
+  ],
+  "Veteran:": [
+    "public/templates/item/bond.hbs:107"
+  ],
+  "View Inventory": [
+    "public/templates/actor/mech.hbs:52"
+  ],
+  "WEAPON": [
+    "public/templates/item/npc_feature.hbs:10"
+  ],
+  "WEAPON SIZES": [
+    "public/templates/window/bonus.hbs:18"
+  ],
+  "WEAPON TYPES": [
+    "public/templates/window/bonus.hbs:14"
+  ],
+  "WEAPONS": [
+    "public/templates/chat/scan-card.hbs:33",
+    "public/templates/journal/scan-entry.hbs:48"
+  ],
+  "Weapon Destruction": [
+    "src/module/flows/structure.ts:566"
+  ],
+  "Weapon {x} has no remaining uses!": [
+    "src/module/flows/item-utils.ts:48"
+  ],
+  "Weapon {x} has not recharged!": [
+    "src/module/flows/item-utils.ts:124"
+  ],
+  "Weapon {x} is not loaded!": [
+    "src/module/flows/attack.ts:317"
+  ],
+  "Weapons": [
+    "src/module/apps/inventory.ts:71",
+    "src/module/apps/inventory.ts:90"
+  ],
+  "XP": [
+    "public/templates/actor/pilot.hbs:181"
+  ],
+  "Yes": [
+    "src/module/flows/full-repair.ts:42"
+  ],
+  "You are not permitted to create actors and no GM's are online, so sync will not produce any new mechs or deployables.": [
+    "src/module/actor/import.ts:1016",
+    "src/module/actor/import.ts:242"
+  ],
+  "You can only scan NPC actors.": [
+    "src/module/flows/scan.ts:53"
+  ],
+  "You cannot apply damage to an actor you do not own": [
+    "src/module/flows/damage.ts:769"
+  ],
+  "You cannot undo damage to an actor you do not own": [
+    "src/module/flows/damage.ts:801"
+  ],
+  "You do not own {x}, so you cannot roll damage for them": [
+    "src/module/flows/damage.ts:659"
+  ],
+  "You must enter a Comp/Con pilot share code before downloading!": [
+    "src/module/actor/pilot-sheet.ts:72"
+  ],
+  "You must import the Core Book Data in the Lancer Compendium Manager before importing a pilot.": [
+    "src/module/actor/import.ts:986"
+  ],
+  "You must select an LCP file before importing.": [
+    "src/module/apps/lcp-manager/LCPManager.svelte:106"
+  ],
+  "You must target a token to scan.": [
+    "src/module/flows/scan.ts:44"
+  ],
+  "Your GM can allow Players/Trusted Players to create actors in Settings->Configure Permissions.": [
+    "src/module/actor/import.ts:1017",
+    "src/module/actor/import.ts:243"
+  ],
+  "bonds": [
+    "src/module/apps/lcp-manager/LCPDetails.svelte:21"
+  ],
+  "buck wild": [
+    "src/module/tours/lancer-tour.ts:337"
+  ],
+  "by {x}": [
+    "public/templates/lcp/lcp-manager.hbs:30",
+    "public/templates/lcp/lcp-manager.hbs:32",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:4",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:6"
+  ],
+  "clear": [
+    "src/module/apps/automation-settings.ts:51"
+  ],
+  "first.": [
+    "src/module/world_migration.ts:73"
+  ],
+  "flags.{x}.manual_token_size": [
+    "src/module/token.ts:253"
+  ],
+  "frames": [
+    "public/templates/lcp/lcp-manager.hbs:46",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:36"
+  ],
+  "jellyfish": [
+    "src/module/tours/lancer-tour.ts:338"
+  ],
+  "mech systems": [
+    "public/templates/lcp/lcp-manager.hbs:50",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:40"
+  ],
+  "mech weapons": [
+    "public/templates/lcp/lcp-manager.hbs:54",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:43"
+  ],
+  "migrate to Foundry 12.343": [
+    "src/module/world_migration.ts:73"
+  ],
+  "module is intended for use in non-Lancer systems to use Lancer-style initiative. Since all of its functionality is already included in the system, enabling the module can cause issues.": [
+    "src/module/helpers/automation/combat.ts:105"
+  ],
+  "pilot gear": [
+    "public/templates/lcp/lcp-manager.hbs:45",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:31"
+  ],
+  "pilot skills": [
+    "public/templates/lcp/lcp-manager.hbs:42",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:14"
+  ],
+  "recommended modules": [
+    "src/module/config.ts:19"
+  ],
+  "reserves": [
+    "src/module/apps/lcp-manager/LCPDetails.svelte:28"
+  ],
+  "reset": [
+    "src/module/apps/action-tracker-settings.ts:45",
+    "src/module/apps/automation-settings.ts:50",
+    "src/module/apps/lancer-initiative-config-form.ts:31",
+    "src/module/apps/status-icon-config.ts:45"
+  ],
+  "result": [
+    "src/module/apps/text-editor.ts:12"
+  ],
+  "statuses/conditions": [
+    "public/templates/lcp/lcp-manager.hbs:60"
+  ],
+  "submit": [
+    "src/module/apps/action-tracker-settings.ts:44",
+    "src/module/apps/automation-settings.ts:49",
+    "src/module/apps/lancer-initiative-config-form.ts:30",
+    "src/module/apps/status-icon-config.ts:44"
+  ],
+  "tags": [
+    "public/templates/lcp/lcp-manager.hbs:58"
+  ],
+  "talents": [
+    "public/templates/lcp/lcp-manager.hbs:43",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:16"
+  ],
+  "todo action": [
+    "public/templates/item/frame.hbs:78",
+    "public/templates/item/frame.hbs:89"
+  ],
+  "vs {x}": [
+    "src/module/apps/acc_diff/AccDiffHUD.svelte:72"
+  ],
+  "weapon mods": [
+    "public/templates/lcp/lcp-manager.hbs:55",
+    "src/module/apps/lcp-manager/LCPDetails.svelte:48"
+  ],
+  "{x} - bonuses": [
+    "src/module/effects/converter.ts:439"
+  ],
+  "{x} - overrides": [
+    "src/module/effects/converter.ts:463"
+  ],
+  "{x} / {x} SP USED": [
+    "src/module/helpers/loadout.ts:216"
+  ],
+  "{x} // {x} {x} Feature": [
+    "src/module/helpers/npc.ts:234"
+  ],
+  "{x} DAMAGE": [
+    "src/module/flows/damage.ts:699"
+  ],
+  "{x} DIFFICULTY": [
+    "src/module/helpers/item.ts:224"
+  ],
+  "{x} SYSTEM POINTS": [
+    "src/module/helpers/commons.ts:244"
+  ],
+  "{x} Weapon Mount": [
+    "src/module/helpers/loadout.ts:128",
+    "src/module/helpers/loadout.ts:173"
+  ],
+  "{x} damage": [
+    "src/module/item/lancer-item.ts:619"
+  ],
+  "{x} has had their actions manually reset.": [
+    "src/module/apps/action/action-manager.ts:127"
+  ],
+  "{x} has taken {x} damage!": [
+    "src/module/apps/struct_stress/StructStressHUD.svelte:7"
+  ],
+  "{x} is ending their turn": [
+    "src/module/flows/action-track.ts:36"
+  ],
+  "{x} is starting their turn": [
+    "src/module/flows/action-track.ts:34"
+  ],
+  "{x} took {x} {x}damage!": [
+    "src/module/actor/lancer-actor.ts:236"
+  ],
+  "{x} {x} has no remaining uses!": [
+    "src/module/flows/item-utils.ts:98"
+  ],
+  "{x}'s inventory": [
+    "src/module/apps/inventory.ts:166"
+  ],
+  "{x}{x} Burn": [
+    "src/module/actor/lancer-actor.ts:963"
+  ],
+  "{x}{x} HP": [
+    "src/module/actor/lancer-actor.ts:948"
+  ],
+  "{x}{x} Heat": [
+    "src/module/actor/lancer-actor.ts:978"
+  ],
+  "{x}{x} Overshield": [
+    "src/module/actor/lancer-actor.ts:933"
+  ],
+  "{x}{x} Repairs": [
+    "src/module/actor/lancer-actor.ts:1023"
+  ],
+  "{x}{x} Stress": [
+    "src/module/actor/lancer-actor.ts:1008"
+  ],
+  "{x}{x} Structure": [
+    "src/module/actor/lancer-actor.ts:993"
+  ]
+}

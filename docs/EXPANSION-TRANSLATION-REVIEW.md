@@ -74,3 +74,16 @@
 本记录的 13 个骨架和八套牌照是该轮核对范围，不代表当前全部 103 个骨架已做相同范围的逐字比对。之后的专业牌照见[专业牌照说明](PROFESSIONAL-LICENSES.md)，当前装备风味段落覆盖见[核对表](EQUIPMENT-LORE-AUDIT.md)。上文「未全文录入背景段落」描述的是当时状态；现已补录能可靠匹配的段落，其余仍列为缺项。
 
 规则源继续在 `source/expansions/all-expansions.js` 与 `source/expansions/professional-licenses.js` 维护；独立补录的风味译文在 `source/lore/zh.json`。修改后运行 `node tools/build-data.js`，并检查扩展文案、规则回归及风味文本。待英文澄清的问题仍保留为未决项，不因整理文档而视为已解决。
+
+## 按官方数据修正（2026-11-07）
+
+导出 Foundry 内容包时，把与官方补充书重复的条目逐项比对了数值（见 [Foundry 扩展包核对表](FVTT-LCP-AUDIT.md)）。以下 4 处与官方数据不同，用户确认以官方为准，已修改 `source/expansions/all-expansions.js`，源文件中留有注释：
+
+| 条目 | 字段 | PDF 转录 | 现值（官方数据） |
+|---|---|---|---|
+| 萨加玛塔 | 定位 | 打击 | 防御（Wallflower `mf_sagarmatha`） |
+| 库图佐夫 | 定位 | 打击、支援 | 防御、支援（OWS `mf_kutuzov`） |
+| 帝王蝶 | SP | 5 | 7（KTB `mf_emperor`） |
+| 不稳定 NHP | 标签 | 独特、AI（另加 AI 上限 +1 抵消） | 独特、1/轮（Dustgrave `ms_iconoclast`）；不带 AI 标签，不计入 AI 上限 |
+
+不稳定 NHP 的车卡效果不变：仍不计入 AI 上限（`test-rules.js` 的偶像破坏者检查覆盖此项）。

@@ -250,6 +250,7 @@ function mergeExpansion(d) {
 
 // 兜底：整份数据再过一遍图标替换（含 HTML 里残留的实体）
 const calibrated = mergeExpansion(require('./core-v35').apply(require('./calibrate-text').walk(data)));
+require('./build-official-supplements').apply(calibrated, ROOT);
 const out = "// 自动生成，请勿手改。来源：massif-press/lancer-data + reno-lam.github.io/Lancer-Free-Version\nwindow.LANCER_DATA = " + deIcon(JSON.stringify(calibrated)) + ";\n";
 fs.mkdirSync(path.join(ROOT, "assets/js"), { recursive: true });
 fs.writeFileSync(path.join(ROOT, "assets/js/data.js"), out);

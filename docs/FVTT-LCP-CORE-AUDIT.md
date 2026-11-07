@@ -15,6 +15,7 @@
 | pilot_gear | 37 |
 | skills | 22 |
 | tags | 67 |
+| statuses | 15 |
 
 - 覆盖官方条目：424
 - 新增条目：7

@@ -1,0 +1,18 @@
+{
+	"_说明": "Foundry 状态与状况（source/fvtt/core/statuses.json，按 icon 对应）→ 车卡器术语库（assets/js/glossary.js）的条目名。说明文字取自术语库，terse 为简述。",
+	"danger-zone": { "term": "超温危域", "terse": "热度达到热度上限的一半或以上" },
+	"downandout": { "term": "昏迷", "terse": "驾驶员 HP 降至 0，不省人事并晕眩" },
+	"engaged": { "term": "交战", "terse": "与敌对角色邻接；远程攻击 +1 难度" },
+	"exposed": { "term": "暴露", "terse": "受到的动能、爆炸与能量伤害加倍" },
+	"hidden": { "term": "匿迹", "terse": "不能被直接指定为目标，也不会造成交战" },
+	"invisible": { "term": "隐形", "terse": "对其攻击有 50% 的机会直接落空" },
+	"prone": { "term": "伏卧", "terse": "对其攻击 +1 准度，视为缓慢" },
+	"shut-down": { "term": "关机", "terse": "清除热度与暴露，免疫科技动作，晕眩直到开机" },
+	"immobilized": { "term": "固定", "terse": "不能自主移动" },
+	"impaired": { "term": "受损", "terse": "所有攻击、检定与豁免 +1 难度" },
+	"jammed": { "term": "受扰", "terse": "不能通讯、进行科技动作或反应，攻击受限" },
+	"lock-on": { "term": "锁定", "terse": "攻击该目标时可消耗锁定，获得 +1 准度" },
+	"shredded": { "term": "离散", "terse": "不能从装甲或抗性中受益" },
+	"slow": { "term": "缓慢", "terse": "只能进行标准移动，不能推进或特殊移动" },
+	"stunned": { "term": "晕眩", "terse": "不能移动或行动；回避最高为 5，机体与敏捷检定和豁免自动失败" }
+}

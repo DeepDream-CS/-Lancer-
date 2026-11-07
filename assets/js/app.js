@@ -467,7 +467,7 @@ function progressParts(p) {
 			const z = Z.cb[nk(c.name)];
 			return `<div class="list-item ${have ? "active" : ok ? "" : "locked"}"><div class="li-head"><span class="li-title">${label("cb", c)}${extBadge(c)}</span>
 				<button data-act="cb" data-arg="${c.id}" ${!have && !ok ? "disabled" : ""}>${have ? "移除" : "选择"}</button></div>
-				<div class="desc">${z ? z.html : esc(c.effect)}</div></div>`;
+				<div class="desc">${z ? z.html : esc(c.effect)}</div>${officialSupplementHtml(c)}</div>`;
 		}).join("")}`).join("")}
 	</div>`,
 	talents: `<div class="card wide">
@@ -479,7 +479,7 @@ function progressParts(p) {
 			const z = Z.talents[t.name];
 			const ranks = t.ranks.map((rk, i) => `<div class="rank ${i < r ? "have" : ""}"><div class="rank-h">${["I", "II", "III"][i]}．${esc(z ? z.ranks[i].name : rk.name)}</div>${z ? z.ranks[i].html : rk.description}</div>`).join("");
 			return `${t.ext && !D.talents[i - 1]?.ext ? `<div class="mfr ext-head">扩展天赋 <span class="muted">${esc(t.pack || "")}</span></div>` : ""}<div class="list-item ${r ? "active" : ""} ${t.incomplete ? "locked" : ""}" data-talent-row="${t.id}" data-selected="${!!r}"><div class="li-head"><span class="li-title">${label("talent", t)}${extBadge(t)}</span>${t.ranks.length ? stepper("tal", t.id, r, 0, t.ranks.length, v => ["—", "I", "II", "III"][v]) : '<span class="muted">资料不全，暂不可选</span>'}</div>
-				<div class="muted">${esc(t.terse || "")}</div>${det("t" + t.id, "天赋详情", (z ? z.desc : "") + ranks)}</div>`;
+				<div class="muted">${esc(t.terse || "")}</div>${det("t" + t.id, "天赋详情", (z ? z.desc : "") + ranks + officialSupplementHtml(t))}</div>`;
 		}).join("")}
 	</div>`,
 	};
@@ -553,13 +553,20 @@ function weaponModSummary(mod, p, m) {
 	const meta = [`${mod.sp || 0} SP`, tagsPlain(limitedTags(mod.tags, p, m))].filter(Boolean).join("；");
 	return `模块：${plain("item", mod)}（${meta}）`;
 }
+function officialSupplementHtml(it) {
+ const supplement=it.official_supplement;
+ if(!supplement?.entries?.length)return '';
+ return det('official-supplement-'+it.id,'官方补充说明',
+  '<p class="muted">'+esc(supplement.source)+'</p>'+supplement.entries.map(entry=>
+   '<section class="blk"><div class="blk-h">'+esc(entry.label)+'</div><div class="desc">'+entry.text+'</div></section>').join(''));
+}
 function equipmentLoreHtml(it, title='风味文本') {
 	if(it.parts?.length) return it.parts.map(part=>equipmentLoreHtml(part,'改装风味文本：'+plain('item',part))).join('');
 	const lore=window.LANCER_LORE?.items?.[it.id] || (it.description ? {text:it.description,lang:/[\u4e00-\u9fff]/.test(it.description)?'zh':'en'} : null);
-	if(!lore?.text) return '';
+	if(!lore?.text) return officialSupplementHtml(it);
 	const text=lore.text.replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'');
 	const attribution=lore.source ? `<p class="muted">来源：${esc(lore.source)}${lore.pages?.length?' · PDF 第 '+lore.pages.join('、')+' 页':''}</p>` : '';
-	return det('lore-'+it.id, title+(lore.lang==='en'?'（英文原文，待译）':''),`<div class="desc equipment-lore">${text.split(/\n+/).filter(Boolean).map(s=>`<p>${esc(s)}</p>`).join('')}${attribution}</div>`);
+	return det('lore-'+it.id, title+(lore.lang==='en'?'（英文原文，待译）':''),`<div class="desc equipment-lore">${text.split(/\n+/).filter(Boolean).map(s=>`<p>${esc(s)}</p>`).join('')}${attribution}</div>`) + officialSupplementHtml(it);
 }
 function weaponInfo(w, mod, p = P(), m = M()) {
 	const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
