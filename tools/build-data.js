@@ -182,7 +182,7 @@ for (const k of ["weapons", "systems", "mods"]) data[k] = drop(data[k], ["descri
 	for (const [en, zhf] of pairs) for (const k in zhf) if (en[k]) same[en[k]] = zhf[k];
 
 	const byId = {};
-	for (const k of ["frames", "weapons", "systems", "mods", "tags", "skills", "talents", "pilot_gear"]) data[k].forEach(o => { byId[o.id] = o; });
+	for (const k of ["frames", "weapons", "systems", "mods", "core_bonuses", "tags", "skills", "talents", "pilot_gear"]) data[k].forEach(o => { byId[o.id] = o; });
 	const ids = Object.keys(byId).sort((a, b) => b.length - a.length); // id 本身可能含「.」，取最长前缀
 	let n = 0, miss = 0;
 	for (const [en, zhf] of pairs) for (const key in en) {

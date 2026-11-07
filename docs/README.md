@@ -16,6 +16,9 @@
 | [规则 FAQ 翻译](FAQ-TRANSLATION.md) | 184 条快照问答的使用、来源和验证 |
 | [界面与交互改进](UI-UX.md) | 按日期记录布局、查询、地图与配置交互更新 |
 | [风味文本覆盖与缺项](EQUIPMENT-LORE-AUDIT.md) | 自动生成的当前覆盖情况及未匹配清单 |
+| [Foundry 内容包](FVTT-LCP.md) | 导出 Foundry VTT LANCER 系统可导入的核心规则书与扩展内容包、导入顺序与手动处理的规则 |
+| [Foundry 核心包核对表](FVTT-LCP-CORE-AUDIT.md) | 自动生成：核心条目覆盖情况、仍为英文的文字 |
+| [Foundry 扩展包核对表](FVTT-LCP-AUDIT.md) | 自动生成：覆盖的官方条目、数值差异、仍为英文的文字 |
 
 ## 数据维护入口
 
@@ -23,6 +26,7 @@
 - [装备风味文本](../source/lore/README.md)：中文段落、来源、页码、缺项与构建方式。
 - `node tools/build-data.js`：生成规则数据，并生成风味文本及缺项表。
 - `node tools/build-faq.js`：单独生成 FAQ。
+- [Foundry 内容包数据](../source/fvtt/README.md)：官方补充书快照、id 映射与补译；`node tools/build-lcp.js` 生成内容包。
 - 完整检查命令及环境要求见[项目说明](../README.md)与[开发约定](../CLAUDE.md)。
 
 ## 阅读约定

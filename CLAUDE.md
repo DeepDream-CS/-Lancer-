@@ -84,6 +84,8 @@ node tools/test-core-corrections.js # 核心修正、无人机动作和重分配
 node tools/test-equipment-lore.js   # 风味文本与出处
 node tools/test-system-library.js   # 系统库浏览器检查（需本机 Playwright / Edge）
 node tools/i18n-missing.js          # 自译缺项
+node tools/build-lcp.js             # Foundry 核心包与扩展包（dist/fvtt/）及核对表 docs/FVTT-LCP-*.md
+node tools/test-lcp.js              # Foundry 内容包的枚举、引用、映射检查
 ```
 
 - test-v35 用数值结构摘要锁住核心数据；扩展内容和新增的顶层字段（如 `ext_rules`、`professional_licenses`）要在 `stripExt()` 里剔除，不要改基线。
@@ -116,3 +118,15 @@ node tools/i18n-missing.js          # 自译缺项
 ## 判定速查（2026-11-05）
 
 顶部“判定速查”可打开结构伤害、过热（压力）两张表及结算步骤，支持手机、离线查询、Esc 关闭。依据用户提供的《枪骑兵》核心规则书 v3.5 PDF 第 75–76 页。只读查询，不改角色或战斗地图存档。实现位于 `assets/js/damage-reference.js` 与 `assets/css/damage-reference.css`，由 `index.html` 加载。
+
+
+## Foundry 内容包（2026-11-07）
+
+`tools/build-lcp.js` 把 `assets/js/data.js` 导出为 Foundry VTT LANCER 系统（v3.1.3）可导入的两个 v2 LCP（`PACKS`：`core` 核心规则书、`ext` 扩展内容），见 [Foundry 内容包](docs/FVTT-LCP.md)。用户的系统 fork 在 `../foundryvtt-lancer`，仅作对照，不改系统本体。
+
+- 两个包都以 Foundry 自带数据为底（核心包 `source/fvtt/core/` 的 lancer-data 3.1.7，扩展包 `source/fvtt/official/`），按 id 覆盖英文版，换成车卡器文本与数值；只采用含汉字的车卡器文字。
+- 核心包只采用车卡器有意改过的数值（data.js 与 `source/lancer-data/` 副本不同）；那份副本比 3.1.7 旧，不要直接拿它的数值覆盖。
+- 扩展条目与官方补充书重复时按 `source/fvtt/official-map.json` 改用官方 id；新增扩展条目若对应官方补充书，要在映射表补上，否则会与英文版重复。
+- 新的车卡器专用字段要加进 `BUILDER_ONLY`，需要 GM 手动处理的写进 `builderNotes()`。Foundry 枚举或频率不合法会让整批导入失败，`test-lcp.js` 会检查。
+- 仍为英文的文字在 `dist/fvtt/zh-overrides*.todo.json`，补译写到 `source/fvtt/zh-overrides*.json`。
+- 骨架改成中文名后，Foundry 按英文名查插图的地方（新建条目、机甲换骨架）找不到图；覆盖已有条目时图片保留。
