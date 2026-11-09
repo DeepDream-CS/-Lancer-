@@ -32,16 +32,16 @@ const PACKS = {
 		lcp: "lancer-cn-expansions.lcp", audit: "FVTT-LCP-AUDIT.md", todo: "zh-overrides.todo.json",
 		overrides: "zh-overrides.json", baseDirs: ["official"], kinds: KINDS, select: x => x.ext,
 		manifest: {
-			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.5.0",
-			description: "简易车卡器收录的扩展骨架、装备、天赋与核心奖励（中文）。官方补充书条目会覆盖 Foundry 自带的英文版；其余为新增内容。",
+			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.6.0",
+			description: "简易车卡器收录的扩展骨架、装备、天赋与核心奖励（中文），以及官方模组与第三方书的 NPC 职业、模板与特性。官方补充书条目会覆盖 Foundry 自带的英文版；其余为新增内容。",
 		},
 	},
 	core: {
 		lcp: "lancer-cn-core.lcp", audit: "FVTT-LCP-CORE-AUDIT.md", todo: "zh-overrides-core.todo.json",
 		overrides: "zh-overrides-core.json", baseDirs: ["core"], kinds: CORE_KINDS, select: x => !x.ext,
 		manifest: {
-			name: "枪骑兵简易车卡器：核心规则书（中文）", author: "DeepDream-CS", version: "1.0.0",
-			description: "核心规则书的骨架、装备、天赋、核心奖励、驾驶员装备、技能与标签（中文，译名依 v3.5 规则书）。导入后覆盖 Foundry 核心数据的英文版。",
+			name: "枪骑兵简易车卡器：核心规则书（中文）", author: "DeepDream-CS", version: "1.1.0",
+			description: "核心规则书的骨架、装备、天赋、核心奖励、驾驶员装备、技能与标签，以及 NPC 职业、模板与特性（中文，译名依 v3.5 规则书）。导入后覆盖 Foundry 核心数据的英文版。",
 		},
 	},
 };
@@ -630,6 +630,11 @@ function build(packId = "ext") {
 	if (isCore) out.statuses = buildStatuses(audit);
 	// NPC 模板与特性（扩展包）：Foundry 自带的官方补充书 NPC 数据，换成 source/fvtt/zh-npc.json 的中文
 	if (!isCore) Object.assign(out, buildNpcs(audit));
+	// 车卡器「NPC 构筑」的职业、模板与特性（核心包：核心规则书；扩展包：官方模组与第三方书）
+	{
+		const npc = buildBuilderNpcs(isCore, audit);
+		for (const k of Object.keys(npc)) out[k] = [...(out[k] || []), ...npc[k]];
+	}
 
 	// 手工补译
 	const byId = new Map(kinds.flatMap(k => out[k].map(item => [item.id, item])));
@@ -707,6 +712,7 @@ function buildStatuses(audit) {
 // ---- NPC：以官方记录为底（Foundry 按 id 覆盖），只换名称与说明类文字；类型、伤害、射程、标签等英文枚举不动。
 // 特性的 origin.name 是所属模板 / 职业的名字，显示在特性标题上，换成同名模板的中文名。
 const NPC_KINDS = ["npc_templates", "npc_features"];
+const NPC_FILES = ["npc_classes", "npc_templates", "npc_features"];
 function buildNpcs(audit) {
 	const zhFile = path.join(FVTT, "zh-npc.json");
 	const zh = fs.existsSync(zhFile) ? JSON.parse(fs.readFileSync(zhFile, "utf8")) : {};
@@ -736,6 +742,61 @@ function buildNpcs(audit) {
 	return out;
 }
 const CJK_ALL = /[㐀-鿿]/;
+
+// 车卡器「NPC 构筑」的职业 / 模板 / 特性（assets/js/npc-classes.js）→ LCP 的 npc_classes / npc_templates / npc_features。
+// 核心规则书的进核心包，其他书的进扩展包；尘墓模板已由 buildNpcs 用官方数据导出（同一组 id），这里跳过。
+// 这样在 Foundry 里把职业拖到 NPC 上时，系统能在合集包里找到它的基础特性；从车卡器导出的 NPC JSON 自带全部物品，不依赖这些条目。
+function loadNpcBuilderData() {
+	const ctx = { window: {} };
+	vm.runInNewContext(fs.readFileSync(path.join(ROOT, "assets/js/npc-classes.js"), "utf8"), ctx);
+	return ctx.window.LANCER_NPC_CLASSES;
+}
+const npcHtml = s => (s ? "<p>" + String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") + "</p>" : "");
+// 车卡器数值键 → LCP 的 NPC 数值键（util/migrations.ts 的 convertNpcStats 认得这些）
+const NPC_STAT_KEYS = { hp: "hp", armor: "armor", evasion: "evade", edef: "edef", speed: "speed", size: "size", heatcap: "heatcap", save: "save", sensor: "sensor", structure: "structure", stress: "stress", activations: "activations", hull: "hull", agi: "agility", sys: "systems", eng: "engineering" };
+function packNpcFeature(f, owner, ownerType) {
+	const effectText = (f.keywords ? "【" + f.keywords.join("，") + "】" + (f.effect ? "\n" : "") : "") + (f.effect || "") + (f.type !== "Weapon" && f.on_hit ? "\n命中：" + f.on_hit : "");
+	// Foundry 的特性加成只有一组数值（migrateData 取第一层级）；按层级不同的加成（人类「老兵」）取 T1，原文在效果里
+	const block = src => src && Object.fromEntries(Object.entries(src).map(([k, v]) => [NPC_STAT_KEYS[k] || k, Array.isArray(v) ? v[0] : v]));
+	const x = {
+		id: f.id, name: f.name, type: f.type, origin: { type: ownerType, name: owner.name, base: !!f.base },
+		effect: npcHtml(effectText), tags: f.tags.map(t => (t.val === undefined ? { id: t.id } : { id: t.id, val: Array.isArray(t.val) ? `{${t.val.join("/")}}` : t.val })),
+		locked: false, hide_active: false,
+	};
+	if (f.bonus) x.bonus = block(f.bonus);
+	if (f.override) x.override = block(f.override);
+	if (f.type === "Weapon") Object.assign(x, {
+		weapon_type: [f.weapon_size, f.weapon_kind].filter(Boolean).join(" "),
+		damage: f.damage.map(d => ({ type: d.type, damage: d.val })), range: f.range.map(r => ({ type: r.type, val: r.val })),
+		on_hit: npcHtml(f.on_hit), accuracy: f.accuracy, attack_bonus: f.attack_bonus,
+	});
+	if (f.type === "Reaction") x.trigger = f.trigger || "";
+	if (f.type === "Tech") {
+		x.tech_type = f.tech_type === "Full" ? "Full" : "Quick";
+		// 有攻击加值或准度才写：Foundry 只要这两个字段存在就当作科技攻击（unpackNpcFeature 的 tech_attack）
+		if ((f.attack_bonus || []).some(Boolean) || (f.accuracy || []).some(Boolean)) { x.attack_bonus = f.attack_bonus || [0, 0, 0]; x.accuracy = f.accuracy || [0, 0, 0]; }
+	}
+	return x;
+}
+function buildBuilderNpcs(isCore, audit) {
+	const C = loadNpcBuilderData();
+	const mine = o => (isCore ? o.pack === "核心规则书" : o.pack !== "核心规则书" && o.pack !== "尘墓");
+	const out = { npc_classes: [], npc_templates: [], npc_features: [] };
+	for (const c of C.classes.filter(mine)) {
+		out.npc_classes.push({
+			id: c.id, name: c.name, role: c.role, power: 0, info: { flavor: npcHtml(c.flavor), tactics: npcHtml([c.tactics, c.custom_note && "定制：" + c.custom_note].filter(Boolean).join("\n")) },
+			stats: Object.fromEntries(Object.entries(NPC_STAT_KEYS).map(([k, lk]) => [lk, c.stats[k]])),
+			base_features: c.base.map(f => f.id), optional_features: c.optional.map(f => f.id),
+		});
+		for (const f of [...c.base, ...c.optional]) out.npc_features.push(packNpcFeature(f, c, "Class"));
+	}
+	for (const t of C.templates.filter(mine)) {
+		out.npc_templates.push({ id: t.id, name: t.name, power: 0, description: npcHtml(t.description), base_features: t.base.map(f => f.id), optional_features: t.optional.map(f => f.id) });
+		for (const f of [...t.base, ...t.optional]) out.npc_features.push(packNpcFeature(f, t, "Template"));
+	}
+	audit.builderNpcs = { classes: out.npc_classes.length, templates: out.npc_templates.length, features: out.npc_features.length };
+	return out;
+}
 
 // ---- 极简 zip 写入（deflate），JSZip 可读
 function zip(files) {
@@ -769,7 +830,7 @@ function lcpFiles(out, P = PACKS.ext) {
 	const files = [["lcp_manifest.json", JSON.stringify(P.manifest, null, 2)]];
 	for (const k of P.kinds) if (out[k]?.length) files.push([`${k}.json`, JSON.stringify(out[k], null, 2)]);
 	if (out.statuses?.length) files.push(["statuses.json", JSON.stringify(out.statuses, null, 2)]);
-	for (const k of ["npc_templates", "npc_features"]) if (out[k]?.length) files.push([`${k}.json`, JSON.stringify(out[k], null, 2)]);
+	for (const k of NPC_FILES) if (out[k]?.length) files.push([`${k}.json`, JSON.stringify(out[k], null, 2)]);
 	return files;
 }
 
@@ -779,7 +840,8 @@ function auditMarkdown({ out, audit, untouched, packs, packId, P }) {
 	const cell = v => String(typeof v === "string" ? v : JSON.stringify(v)).replace(/\|/g, "\\|").replace(/\n/g, " ");
 	L.push(`# Foundry LCP 导出核对表：${isCore ? "核心规则书" : "扩展内容"}`, "", "由 `node tools/build-lcp.js` 生成，请勿手改。", "");
 	L.push(`内容包：${P.manifest.name} ${P.manifest.version}`, "");
-	L.push("| 类别 | 条目数 |", "|---|---|", ...P.kinds.map(k => `| ${k} | ${out[k].length} |`), ...(out.statuses ? [`| statuses | ${out.statuses.length} |`] : []), ...["npc_templates", "npc_features"].filter(k => out[k]).map(k => `| ${k} | ${out[k].length} |`), "");
+	L.push("| 类别 | 条目数 |", "|---|---|", ...P.kinds.map(k => `| ${k} | ${out[k].length} |`), ...(out.statuses ? [`| statuses | ${out.statuses.length} |`] : []), ...NPC_FILES.filter(k => out[k]?.length).map(k => `| ${k} | ${out[k].length} |`), "");
+	if (audit.builderNpcs) L.push(`其中来自车卡器「NPC 构筑」：职业 ${audit.builderNpcs.classes}、模板 ${audit.builderNpcs.templates}、特性 ${audit.builderNpcs.features}（数据见 \`source/npc/\`）。`, "");
 	L.push(`- 覆盖官方条目：${audit.overlaid.length}`, `- 新增条目：${audit.added.length}`, `- 写入的车卡器说明：${audit.notes} 条`, `- 补译：${audit.overrides} 处`, "");
 	L.push("官方数据版本：" + packs.map(p => `${p.name} ${p.version}`).join("，"), "");
 	if (audit.mapErrors.length) L.push("## 映射错误", "", ...audit.mapErrors.map(s => `- ${s}`), "");
@@ -834,5 +896,5 @@ if (require.main === module) {
 	for (const id of arg ? [arg] : Object.keys(PACKS)) writePack(id);
 }
 
-module.exports = { build, zip, lcpFiles, loadOfficial, ENUM, KINDS, CORE_KINDS, TEXT_FIELDS, PACKS, MANIFEST, freqOk };
+module.exports = { build, zip, lcpFiles, loadOfficial, ENUM, KINDS, CORE_KINDS, TEXT_FIELDS, PACKS, MANIFEST, freqOk, NPC_FILES };
 

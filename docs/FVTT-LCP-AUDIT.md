@@ -2,7 +2,7 @@
 
 由 `node tools/build-lcp.js` 生成，请勿手改。
 
-内容包：枪骑兵简易车卡器：扩展内容（中文） 1.5.0
+内容包：枪骑兵简易车卡器：扩展内容（中文） 1.6.0
 
 | 类别 | 条目数 |
 |---|---|
@@ -13,8 +13,11 @@
 | core_bonuses | 21 |
 | talents | 21 |
 | pilot_gear | 1 |
-| npc_templates | 3 |
-| npc_features | 32 |
+| npc_classes | 52 |
+| npc_templates | 13 |
+| npc_features | 644 |
+
+其中来自车卡器「NPC 构筑」：职业 52、模板 10、特性 612（数据见 `source/npc/`）。
 
 - 覆盖官方条目：108
 - 新增条目：323

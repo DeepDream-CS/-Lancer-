@@ -1,0 +1,74 @@
+/* NPC 构筑（assets/js/npc-builder.js），配色与 NPC 库一致 */
+#npcBuilder { color: #e5e9f0; background: #171b23; border: 1px solid #495368; border-radius: 12px; width: min(1400px, 96vw); max-width: none; height: 92dvh; max-height: 96dvh; padding: 0; }
+#npcBuilder::backdrop { background: #000b; }
+#npcBuilder[open] { display: flex; flex-direction: column; }
+#npcBuilder > header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid #3b4351; }
+#npcBuilder h2, #npcBuilder h3 { margin: 0; color: #edc383; }
+#npcBuilder p { margin: 8px 0; line-height: 1.7; }
+#npcBuilder > header p, .nb-meta, .nb-help, .nb-roster span, .nb-empty { font-size: 13px; color: #b6c1d3; }
+#npcBuilder a { color: #edc383; }
+#npcBuilder :focus-visible { outline: 2px solid #edc383; outline-offset: 2px; }
+.nb-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 0; flex: 1; }
+.nb-roster { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-right: 1px solid #3b4351; min-height: 0; }
+.nb-list { flex: 1; overflow: auto; }
+.nb-list button { display: block; width: 100%; text-align: left; margin-bottom: 8px; padding: 10px 12px; white-space: normal; }
+.nb-list strong, .nb-list span { display: block; }
+.nb-list button[aria-current=true] { border-color: #edc383; background: #383126; }
+.nb-roster-foot { display: flex; gap: 6px; }
+.nb-roster-foot button { flex: 1; }
+.nb-main { overflow: auto; padding: 18px 22px 28px; }
+.nb-intro { max-width: 760px; }
+.nb-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.nb-row label, .nb-extra, .nb-notes { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.nb-name input { width: 240px; }
+.nb-tier { display: flex; gap: 4px; }
+.nb-tier button { min-width: 52px; }
+.nb-tier button[aria-checked=true] { border-color: #edc383; background: #383126; color: #edc383; font-weight: 600; }
+.nb-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin: 12px 0; }
+.nb-stat { background: #222936; border: 1px solid #333c4c; border-radius: 8px; padding: 6px 8px; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 4px; }
+.nb-stat span { font-size: 12px; color: #b6c1d3; grid-column: 1 / -1; }
+.nb-stat strong { font-size: 20px; color: #f1f3f7; }
+.nb-stat input { width: 46px; min-height: 28px !important; padding: 2px 4px; font-size: 12px; text-align: center; }
+.nb-stat.nb-adjusted { border-color: #edc383; }
+.nb-warn { margin: 8px 0; padding: 10px 14px 10px 30px; background: #3a2422; border: 1px solid #a5463f; border-radius: 8px; color: #f3c2bc; }
+.nb-about { margin: 8px 0; background: #1f2530; border-radius: 8px; padding: 2px 12px; }
+.nb-about summary { cursor: pointer; padding: 8px 0; color: #edc383; }
+.nb-templates, .nb-picks { border: 1px solid #333c4c; border-radius: 8px; margin: 10px 0; padding: 8px 12px 10px; }
+.nb-templates legend, .nb-picks legend { color: #edc383; padding: 0 6px; font-size: 13px; }
+.nb-templates > div { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 4px 0; }
+.nb-pack { font-size: 12px; color: #8f9bb0; min-width: 72px; }
+.nb-picks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.nb-picks label, .nb-templates label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.nb-picks small { color: #8f9bb0; }
+.nb-extra { margin: 6px 0 12px; max-width: 360px; }
+.nb-feats { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
+.nb-feat { background: #1f2530; border: 1px solid #333c4c; border-left: 4px solid #6b7a94; border-radius: 8px; padding: 10px 12px; }
+.nb-feat header { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.nb-feat header strong { color: #f1f3f7; font-size: 15px; }
+.nb-kind { font-size: 12px; padding: 0 6px; border-radius: 4px; background: #333c4c; }
+.nb-origin { font-size: 12px; color: #8f9bb0; margin-left: auto; }
+.nb-unpick { min-height: 26px !important; padding: 0 8px; font-size: 12px; }
+.nb-feat p { margin: 6px 0; font-size: 14px; }
+.nb-wline { color: #edc383; }
+.nb-weapon { border-left-color: #c9524a; }
+.nb-system { border-left-color: #4f8fc9; }
+.nb-trait { border-left-color: #8a8f99; }
+.nb-reaction { border-left-color: #59a86b; }
+.nb-tech { border-left-color: #a46fd1; }
+.nb-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.nb-tag { font-size: 12px; padding: 0 6px; border: 1px solid #495368; border-radius: 10px; color: #cdd5e2; }
+.nb-tv { color: #edc383; font-weight: 600; text-decoration: underline dotted #edc38388; cursor: help; }
+.nb-notes { margin-top: 14px; }
+.nb-notes textarea { width: 100%; box-sizing: border-box; }
+.nb-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+.nb-status { font-size: 13px; color: #9fd3a8; }
+@media (max-width: 760px) {
+  #npcBuilder { width: 98vw; height: 96dvh; }
+  .nb-layout { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .nb-roster { border-right: 0; border-bottom: 1px solid #3b4351; padding: 10px; max-height: 190px; overflow: hidden; gap: 6px; }
+  .nb-list { display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; min-height: 56px; }
+  .nb-list button { flex: 0 0 auto; width: auto; max-width: 200px; margin: 0; padding: 6px 10px; }
+  .nb-main { padding: 12px; }
+  .nb-name input { width: 180px; }
+  .nb-feats { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,9665 @@
+{
+ "_说明": "由 tools/parse-npc-core.js 从核心规则书 v3.5 NPC 章节（PDF 第 272–325 页）的提取文字生成；数值按 T1/T2/T3 排列。",
+ "source": "《枪骑兵》核心规则书v3.5",
+ "template_intro": "模板可进一步定义 NPC，添加风味或改变他们在战斗中的功能。特别地，超体，精英，低等兵和老兵模板可以用来制造更困难或更容易的敌人。除非有特别的说明（如在班组中），你可以对 NPC 应用任何模板。有些，如老兵，可以应用于其他模板（如超体和精英），以制造非常难对付的敌人。要应用模板，首先要创建一个基础 NPC，然后写下或添加模板被动提供的任何增益（如额外结构）。然后根据模板选择一个或多个可选系统。",
+ "classes": [
+  {
+   "id": "npcc_cn_ace",
+   "name": "王牌",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 278,
+   "pages": [
+    278
+   ],
+   "flavor": "首位展现王牌原型机魅力的角色是艾斯琳·詹森（Aisling Jensen），她是维丹娜（Verdana）解放运动期间活跃的一名辅助飞军驾驶员。作为底盘和苍穹之骑士，像艾斯琳这样的王牌以高速扫射、敏捷机动和不顾一切的大胆壮举将他们的机甲投入战斗。他们骄傲自信，热衷于一场精彩的决斗。",
+   "tactics": "王牌是高机动快反应的突击，可以使用桶滚来减轻危险或高伤害攻击。桶滚对重型武器尤为有效。他们的引导武器无视掩体，也不需要视线，因此可以持续造成伤害。相对较低的 HP 使得王牌容易受到持续伤害，且他们在对付科技攻击时相对较弱。",
+   "stats": {
+    "hull": [
+     -2,
+     -2,
+     -2
+    ],
+    "sys": [
+     1,
+     2,
+     3
+    ],
+    "agi": [
+     3,
+     4,
+     6
+    ],
+    "eng": [
+     0,
+     1,
+     1
+    ],
+    "hp": [
+     10,
+     12,
+     14
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     12,
+     15,
+     18
+    ],
+    "edef": [
+     8,
+     8,
+     10
+    ],
+    "speed": [
+     5,
+     6,
+     7
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "SSC 飞行系统",
+     "type": "System",
+     "tags": [],
+     "effect": "王牌可以在移动或推进时飞行。",
+     "id": "npcf_cn_ace_1",
+     "base": true
+    },
+    {
+     "name": "导弹发射器",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_seeking"
+      },
+      {
+       "id": "tg_smart"
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 10
+      },
+      {
+       "type": "Blast",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        4,
+        6,
+        8
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_ace_2",
+     "base": true
+    },
+    {
+     "name": "桶滚",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      }
+     ],
+     "trigger": "近战或远程攻击命中王牌。",
+     "effect": "王牌执行桶滚，向任意方向飞行 6 空间致使攻击未命中。该移动忽略交战和反应。",
+     "id": "npcf_cn_ace_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "轰炸区",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 3
+      },
+      {
+       "id": "tg_free_action"
+      },
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "若王牌在移动或推进时处于飞行，他们可以向飞行路径下方或邻近的一个角色投掷炸弹。这会造成必须至少与目标占据 1 空间重叠的溅射 1 爆炸。受影响区域内角色必须通过敏捷豁免否则受到 6/8/10 爆炸伤害并伏卧。",
+     "id": "npcf_cn_ace_4",
+     "base": false
+    },
+    {
+     "name": "低空扫射",
+     "type": "Trait",
+     "tags": [],
+     "effect": "1/轮，一个快速动作，王牌可向任何方向飞行等同速度空间，向路径下方或邻近一个角色自动造成 3/4/6动能伤害。",
+     "id": "npcf_cn_ace_5",
+     "base": false
+    },
+    {
+     "name": "导弹群",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_loading"
+      },
+      {
+       "id": "tg_seeking"
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Burst",
+       "val": 5
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      }
+     ],
+     "effect": "该武器对锁定角色造双倍伤害且不影响盟友角色。",
+     "id": "npcf_cn_ace_6",
+     "base": false
+    },
+    {
+     "name": "快速响应",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "一个敌方角色在视线内移动。",
+     "effect": "王牌可以推进。",
+     "id": "npcf_cn_ace_7",
+     "base": false
+    },
+    {
+     "name": "箔条发射器",
+     "type": "Trait",
+     "tags": [],
+     "effect": "使用桶滚后，王牌将视为处于软性掩护中直到下一回合结束；此外桶滚可用来对抗科技攻击。",
+     "id": "npcf_cn_ace_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_aegis",
+   "name": "宙斯盾",
+   "role": "支援",
+   "role_en": "support",
+   "page": 279,
+   "pages": [
+    279
+   ],
+   "flavor": "宙斯盾原型机被用来驻守阵地、支持盟友和压制敌人。在科摩罗（Comorrand）行动中，卡拉金驾驶员麦克伦南（MacLennan）家族的格洛丽亚（Gloria）女士首次使用它并取得显著效果。宙斯盾以其强大防御措施而闻名。其驾驶员可熟练运用传统工具至尖端技术，将最小屏障化为坚固堡垒。",
+   "tactics": "宙斯盾是坚固的防御支援单位。覆盖尽可能多盟友的防御网最为有效，因它们很难重新部署。再生护盾也保护宙斯盾免受移动性降低的影响。",
+   "stats": {
+    "hull": [
+     0,
+     0,
+     0
+    ],
+    "sys": [
+     2,
+     3,
+     4
+    ],
+    "agi": [
+     -2,
+     -1,
+     -1
+    ],
+    "eng": [
+     2,
+     3,
+     5
+    ],
+    "hp": [
+     14,
+     18,
+     18
+    ],
+    "armor": [
+     2,
+     2,
+     3
+    ],
+    "evasion": [
+     7,
+     8,
+     8
+    ],
+    "edef": [
+     10,
+     12,
+     14
+    ],
+    "speed": [
+     3,
+     3,
+     3
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     10,
+     10,
+     10
+    ],
+    "save": [
+     10,
+     11,
+     12
+    ],
+    "sensor": [
+     8,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "轻型雷射炮",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 8
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        3,
+        3,
+        3
+       ]
+      },
+      {
+       "type": "Burn",
+       "val": [
+        2,
+        4,
+        6
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_aegis_1",
+     "base": true
+    },
+    {
+     "name": "防御网",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 4
+      },
+      {
+       "id": "tg_shield"
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "宙斯盾会在爆发 3 内散布一面强大辉煌的斥力护盾。激活时，宙斯盾固定，但所有受影响区域内的角色或物品遭到来自区域外的远程、近战和科技攻击则+2难度，且不会被会心一击。受影响区域内的角色可正常攻击该区域内外的角色。受影响区域内盟友角色也获得对受损和缓慢的免疫，当进入该区域且已身负这些状态则立即移除它们。该效果持续到宙斯盾协定结束，或自身晕眩、受扰或被摧毁。非自主移动会导致护盾随宙斯盾一起移动。",
+     "id": "npcf_cn_aegis_2",
+     "base": true
+    },
+    {
+     "name": "再生护盾",
+     "type": "Trait",
+     "tags": [],
+     "effect": "宙斯盾对受损和缓慢免疫，且不会被会心一击。",
+     "id": "npcf_cn_aegis_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "自适应屏蔽",
+     "type": "Trait",
+     "tags": [],
+     "effect": "每轮首次在防御网中的盟友受伤害时，防御网内所有盟友获得对该类型伤害抗性。该持续到宙斯盾下一回合结束。",
+     "id": "npcf_cn_aegis_4",
+     "base": false
+    },
+    {
+     "name": "护法",
+     "type": "Trait",
+     "tags": [],
+     "effect": "邻近盟友可将该机体充当硬性掩护。",
+     "id": "npcf_cn_aegis_5",
+     "base": false
+    },
+    {
+     "name": "火山带",
+     "type": "Trait",
+     "tags": [],
+     "effect": "任意在防御网区域内开始其回合或在轮内首次进入该区域的敌方角色受到 2 热度并且离散直到对方离开该区域。",
+     "id": "npcf_cn_aegis_6",
+     "base": false
+    },
+    {
+     "name": "硬光覆盖系统",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_deployable"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_shield"
+      }
+     ],
+     "effect": "以快速动作部署线形 3 硬光墙。该墙免疫伤害和效果并赐予硬性掩护。受掩护角色获得线形，溅射，爆发和锥形伤害的抗性。",
+     "id": "npcf_cn_aegis_7",
+     "base": false
+    },
+    {
+     "name": "HA 黑壁系统",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "以完整动作，宙斯盾在射程 5 生成 5 空间高覆盖线形 10 霎间黑墙。所有空间必须是自由空间。墙阻挡视线，影响或攻击，并提供硬性掩护。角色在墙中开始其回合或在自己回合中进入墙则掷 D6。若结果为 4+，将被移出游戏直到对方下一回合结束，当再次出现时自由选择墙体射程 10 以内自由空间。若没有自由空间则会在某个空间自由时返回。该墙持续存在直到宙斯盾以快速动作结束或被摧毁。当它结束时，放逐到霎间中的角色重新出现。",
+     "id": "npcf_cn_aegis_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_archer",
+   "name": "弓箭手",
+   "role": "操纵",
+   "role_en": "controller",
+   "page": 280,
+   "pages": [
+    280
+   ],
+   "flavor": "弓箭手原型为大熊座公司（Ursa Major）的护门者之匙二型（Gatekeeper Key-II），因伊卡伯德·卡登（Ichabod Carden）在地震动（Terramoto）战役中的英勇行为而广为人知。弓箭手原型机为强大的瞄准和叠加边界机动系统而牺牲装甲，这让它们深受热爱控制每次射击精确目标的驾驶员青睐。",
+   "tactics": "弓箭手擅长于对敌人施加“选择惩罚”——他们让角色在采取某些行动或让弓箭手攻击他们之间做出选择。使用弓箭手锁定高机动或强攻击的 PC，或掩护更脆弱的盟友。记住，当弓箭手能够相当接近他们的目标时最为有效，但他们并不特别坚固。",
+   "stats": {
+    "hull": [
+     -1,
+     -1,
+     -1
+    ],
+    "sys": [
+     2,
+     3,
+     4
+    ],
+    "agi": [
+     2,
+     3,
+     4
+    ],
+    "eng": [
+     -1,
+     -1,
+     -1
+    ],
+    "hp": [
+     16,
+     20,
+     20
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     8,
+     10,
+     12
+    ],
+    "edef": [
+     8,
+     10,
+     12
+    ],
+    "speed": [
+     5,
+     5,
+     6
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     11,
+     13,
+     16
+    ],
+    "sensor": [
+     15,
+     15,
+     15
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "轻机枪",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_reliable",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 10
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        5,
+        7,
+        10
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_archer_1",
+     "base": true
+    },
+    {
+     "name": "压制",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "弓箭手在视线射程 10 内选择一个目标：对方受损，而弓箭手获得活靶子反应。该效果持续到弓箭手使用活靶子；目标伤害弓箭手或离开弓箭手视线；弓箭手晕眩、受扰或被摧毁；弓箭手为该动作选择一个新目标；或者弓箭手以一个自由行动结束它。\n【活靶子】（反应）触发：弓箭手的压制目标开始移动。\n效果：用一件武器的攻击进行阻拦。",
+     "id": "npcf_cn_archer_2",
+     "base": true
+    },
+    {
+     "name": "优秀哨兵",
+     "type": "Trait",
+     "tags": [],
+     "effect": "弓箭手所有反应攻击+1 准度（例：守望）。",
+     "id": "npcf_cn_archer_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "致盲弹",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "在弓箭手成功攻击后迫使目标进行工程豁免。若失败目标下一回合结束前只有邻近空间的视线。",
+     "id": "npcf_cn_archer_4",
+     "base": false
+    },
+    {
+     "name": "威胁迫近",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "距离弓箭手实现射程 10 内一个敌方角色移动或执行动作。",
+     "effect": "该角色必须选择：失去触发的动作/移动，或继续执行但让弓箭手以一件武器立即攻击目标。",
+     "id": "npcf_cn_archer_5",
+     "base": false
+    },
+    {
+     "name": "覆盖火力",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 4
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "弓箭手在视线射程 10 内选择溅射 3 区域，并获得逮住你了反应。\n【逮住你了】（反应）触发：一个角色在该区域进行攻击。\n效果：弓箭手可以攻击该角色。",
+     "id": "npcf_cn_archer_6",
+     "base": false
+    },
+    {
+     "name": "快速响应",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "一个敌人角色在视线内移动。",
+     "effect": "弓箭手可以推进。",
+     "id": "npcf_cn_archer_7",
+     "base": false
+    },
+    {
+     "name": "火雹",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 4
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "弓箭手在射程 10 内选择一个敌人：对方固定并受损直到下一回合结束，或直到弓箭手晕眩或受扰，或直到目标允许弓箭手以反应对其进行一件武器的攻击。",
+     "id": "npcf_cn_archer_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_assassin",
+   "name": "暗杀者",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 281,
+   "pages": [
+    281
+   ],
+   "flavor": "暗杀者型机甲倾向于敏捷，高伤和速度。这些驾驶员为提高效率而牺牲舒适性，从拆除生命维持到通讯系统，取而代之更强大的处理能力和潜行能力。暗杀者可单打独斗，也可组队作战，驾驶着他们小巧优美的机甲穿过几乎无法穿越的地形，在毫无防备情况下逮住目标。",
+   "tactics": "暗杀者是重击落单角色的真正专家。使用暗杀者标记选择一个目标，然后充分利用暗杀者的高速和轻跃来接近距离。有个相当具有威胁的的组合，将暗杀者与会造成机动性降低状态如昏迷或伏卧的 NPC 配对。若没有“魔鬼的咳嗽”霰弹枪这样的可选系统，暗杀者便只能进行近战攻击，且很容易受到持续伤害。",
+   "stats": {
+    "hull": [
+     0,
+     1,
+     1
+    ],
+    "sys": [
+     1,
+     1,
+     2
+    ],
+    "agi": [
+     2,
+     3,
+     4
+    ],
+    "eng": [
+     -1,
+     0,
+     0
+    ],
+    "hp": [
+     15,
+     15,
+     15
+    ],
+    "armor": [
+     0,
+     1,
+     1
+    ],
+    "evasion": [
+     12,
+     15,
+     17
+    ],
+    "edef": [
+     8,
+     8,
+     8
+    ],
+    "speed": [
+     6,
+     6,
+     8
+    ],
+    "size": [
+     0.5,
+     0.5,
+     1
+    ],
+    "heatcap": [
+     7,
+     7,
+     7
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "size_note": [
+    "1/2 或 1",
+    "1/2 或 1",
+    "1"
+   ],
+   "base": [
+    {
+     "name": "KAI 生物电镀",
+     "type": "Trait",
+     "tags": [],
+     "effect": "暗杀者所有敏捷检定+1 准度。此外可以正常速度攀爬和游泳，忽略困难地形，并进行标准移动时可以水平跳跃速度距离，并垂直跳跃速度一半距离（任何组合）。",
+     "id": "npcf_cn_assassin_1",
+     "base": true
+    },
+    {
+     "name": "热能锋刃",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      2,
+      2,
+      2
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 2
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        4,
+        5,
+        6
+       ]
+      }
+     ],
+     "effect": "对伏卧、离散、固定或晕眩目标造成双倍伤害。",
+     "id": "npcf_cn_assassin_2",
+     "base": true
+    },
+    {
+     "name": "暗杀者标记",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "暗杀者选择视线内一个角色。直到场景结束前使用以下效果：• 对目标伤害有抗性。• 对该目标造成的伤害无法减免。• 在该目标强制的所有豁免中获得+1 准度。暗杀者只有当前目标被摧毁后才能选择新目标。",
+     "id": "npcf_cn_assassin_3",
+     "base": true
+    },
+    {
+     "name": "轻跃",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 5
+      }
+     ],
+     "effect": "暗杀者在任意方向飞行 6 空间，但必须降落在一个表面上。降落时，暗杀者邻近的角色必须通过敏捷豁免否则伏卧。",
+     "id": "npcf_cn_assassin_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "“魔鬼的咳嗽”霰弹枪",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_knockback",
+       "val": 2
+      },
+      {
+       "id": "tg_loading"
+      }
+     ],
+     "weapon_size": "重型",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      0,
+      0,
+      0
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 3
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        10,
+        15,
+        20
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_assassin_5",
+     "base": false
+    },
+    {
+     "name": "闷棍",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 5
+      }
+     ],
+     "tech_type": "Quick",
+     "effect": "暗杀者选择邻近的一个角色：对方必须通过工程豁免否则晕眩直到对方下一回合结束。",
+     "id": "npcf_cn_assassin_6",
+     "base": false
+    },
+    {
+     "name": "回旋踢",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "暗杀者选择邻近的一个角色：对方必须通过机体豁免否则从暗杀者推开 4 空间并伏卧。",
+     "id": "npcf_cn_assassin_7",
+     "base": false
+    },
+    {
+     "name": "云投射",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "暗杀者引爆炸药制造出一片烟、薄或其他爆发 3 区域遮盖物。暗杀者在受影响区域内获得软性掩护，完全位于区域内或外除暗杀者之外的角色都无法建立视线进入或离开该区域。部分区域内的角色不受影响。该效果会持续到暗杀者下一回合结束，或直到暗杀者再次使用该系统。",
+     "id": "npcf_cn_assassin_8",
+     "base": false
+    },
+    {
+     "name": "爆裂匕首",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 3
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "暗杀者消耗 1 充能向射程 3 内一个角色投掷爆裂匕首，远程攻击目标+2/+4/+6。命中则匕首嵌入目标并在对方下一回合结束时爆炸，爆发 1 内造成 6/8/10 爆炸伤害。",
+     "id": "npcf_cn_assassin_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_assault",
+   "name": "突击手",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 282,
+   "pages": [
+    282
+   ],
+   "flavor": "突击手机甲是银河系中最为常见的主要战斗骨架。配备重型步枪、随身武器和一套增强移动、瞄准和防御能力的系统，它们是直接可靠坚韧英勇的战斗单位。突击手机甲驾驶员的训练和装备也是最为价格低廉的，但这并不会妨碍其危险性。",
+   "tactics": "突击手是直接了当造成伤害的突击。把他们安置在一个可以有效利用他们韧性和适当射程的位置，使用受身抵抗伤害以最大限度提高他们的生存能力。",
+   "stats": {
+    "hull": [
+     1,
+     2,
+     3
+    ],
+    "sys": [
+     1,
+     2,
+     3
+    ],
+    "agi": [
+     1,
+     2,
+     3
+    ],
+    "eng": [
+     1,
+     2,
+     3
+    ],
+    "hp": [
+     15,
+     18,
+     21
+    ],
+    "armor": [
+     1,
+     1,
+     1
+    ],
+    "evasion": [
+     8,
+     10,
+     12
+    ],
+    "edef": [
+     8,
+     9,
+     10
+    ],
+    "speed": [
+     4,
+     4,
+     4
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     8,
+     8,
+     8
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "重型突击步枪",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_reliable",
+       "val": [
+        2,
+        3,
+        4
+       ]
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "步枪",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 10
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        6,
+        8,
+        10
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_assault_1",
+     "base": true
+    },
+    {
+     "name": "格斗匕首",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "副武器",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        4,
+        6,
+        7
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_assault_2",
+     "base": true
+    },
+    {
+     "name": "受身",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "一次攻击命中突击手，但伤害还未掷出。",
+     "effect": "获得对所有攻击伤害的抗性。",
+     "id": "npcf_cn_assault_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "下挂榴弹发射器",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_loading"
+      },
+      {
+       "id": "tg_arcing"
+      }
+     ],
+     "weapon_size": "副武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 8
+      },
+      {
+       "type": "Blast",
+       "val": 2
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        4,
+        6,
+        8
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_assault_4",
+     "base": false
+    },
+    {
+     "name": "微型导弹弹幕",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "突击手发射一连串线形 8 的微型导弹。受影响区域内的所有角色必须成功进行机体豁免，否则受到 6/8/10动能伤害。成功豁免伤害减半。",
+     "id": "npcf_cn_assault_5",
+     "base": false
+    },
+    {
+     "name": "高冲击弹药",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_mod"
+      }
+     ],
+     "effect": "这些高口径弹药只能与重型突击步枪一起使用。当使用这些弹药时，突击手攻击变为 AP 和+4 动能伤害，但重型突击步枪再次使用前必须重新上膛（正如其拥有装填）。",
+     "id": "npcf_cn_assault_6",
+     "base": false
+    },
+    {
+     "name": "自动锁定",
+     "type": "Trait",
+     "tags": [],
+     "effect": "突击手在攻击时忽略掩护，尽管仍需要视线。",
+     "id": "npcf_cn_assault_7",
+     "base": false
+    },
+    {
+     "name": "军纪",
+     "type": "Trait",
+     "tags": [],
+     "effect": "突击手与至少一名带有机甲标签的盟友角色邻近时，其攻击、检定和豁免+1 准度。",
+     "id": "npcf_cn_assault_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_barricade",
+   "name": "路障",
+   "role": "操纵",
+   "role_en": "controller",
+   "page": 283,
+   "pages": [
+    283
+   ],
+   "flavor": "维尔德系统公司（Veld Systems）守护者五型（（Keeper Pattern 5）是种常见卫兵机甲，因其在拉玛之歌战役（Sing Rama Sing）中的出色表现而名声大噪。战役中，炽天使连队的奥黛丽·雷默斯（Audrey Reimaus）用守护者 5 型独自保护了拉玛城主天梯塔的安全，从而保证城市居民疏散通道。",
+   "tactics": "需封锁高机动目标那么路障是把好手。它们可以使用便携打印机为盟友制造硬性掩护，或阻止近战机甲通过区域。",
+   "stats": {
+    "hull": [
+     0,
+     1,
+     2
+    ],
+    "sys": [
+     1,
+     1,
+     2
+    ],
+    "agi": [
+     -2,
+     -2,
+     -2
+    ],
+    "eng": [
+     3,
+     5,
+     6
+    ],
+    "hp": [
+     12,
+     16,
+     20
+    ],
+    "armor": [
+     1,
+     1,
+     1
+    ],
+    "evasion": [
+     6,
+     7,
+     8
+    ],
+    "edef": [
+     9,
+     11,
+     13
+    ],
+    "speed": [
+     3,
+     3,
+     4
+    ],
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "heatcap": [
+     10,
+     11,
+     12
+    ],
+    "save": [
+     12,
+     15,
+     18
+    ],
+    "sensor": [
+     15,
+     15,
+     15
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "重子长矛",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 10
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        2,
+        2,
+        2
+       ]
+      }
+     ],
+     "effect": "T2~3 时，该武器可一次攻击两次，击中单独角色两次或攻击两个角色一次。",
+     "on_hit": "目标缓慢直到他们下一回合结束。",
+     "id": "npcf_cn_barricade_1",
+     "base": true
+    },
+    {
+     "name": "便携打印机",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_protocol"
+      }
+     ],
+     "effect": "路障打印出一个大小 2 立方体在邻近的自由区域。立方体提供硬性掩护，是具有 20 HP 和闪避 5 的单个物品。",
+     "id": "npcf_cn_barricade_2",
+     "base": true
+    },
+    {
+     "name": "冲击电镀",
+     "type": "System",
+     "tags": [],
+     "effect": "路障有对动能攻击有抗性。",
+     "id": "npcf_cn_barricade_3",
+     "base": true
+    },
+    {
+     "name": "堡垒模块",
+     "type": "Trait",
+     "tags": [],
+     "effect": "路障忽略困难地形和危险地形。",
+     "id": "npcf_cn_barricade_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "拖下水",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "tech_type": "Quick",
+     "effect": "路障对感应中的一个角色进行科技攻击。若成功，目标每主动移动 1 空间就会造成 2AP 能量伤害直到对方下一回合结束。",
+     "id": "npcf_cn_barricade_5",
+     "base": false
+    },
+    {
+     "name": "地震斥力器",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "所有爆发 3 内的非飞行角色必须通过机体豁免否则从路障击退 3 空格并被伏卧。场景结束前受影响区域变为困难地形。",
+     "id": "npcf_cn_barricade_6",
+     "base": false
+    },
+    {
+     "name": "挤压出物",
+     "type": "Trait",
+     "tags": [],
+     "effect": "路障使用便携打印机一次可以打印两个独立立方体而非一个。",
+     "id": "npcf_cn_barricade_7",
+     "base": false
+    },
+    {
+     "name": "饥饿/竞逐帽贝",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "路障在其邻近大小 4 自由区域迅速打印部署小型移动地雷。受影响区域为困难地形；此外敌对角色在轮内首次进入该区域或在其中开始其回合则必须通过系统豁免否则缓慢直到对方下一回合结束。",
+     "id": "npcf_cn_barricade_8",
+     "base": false
+    },
+    {
+     "name": "泰坦陷阱无人机",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "陷阱无人机（大小 1/2，HP 5/10/15，回避 10/12/14，电子防御 10/12/14，标签：无人机）该无人机可以打印部署到任何邻近的自由空间。当敌方角色进入无人机射程 3 或在其中开始回合时，无人机会发出一道脉冲固定对方直到无人机被摧毁。",
+     "id": "npcf_cn_barricade_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_bastion",
+   "name": "棱堡",
+   "role": "卫兵",
+   "role_en": "defender",
+   "page": 284,
+   "pages": [
+    284
+   ],
+   "flavor": "棱堡以宙斯盾原型机甲的纯粹防御优势换取更大的机动性。它们将区域抗拒进攻能力与坚固防御系统以及先进通信系统相结合。这些机甲是众多强大中队指挥官的最爱。这种搭配效能在德洛梅达星系（Dromeda system）与虚空之间（Space Between）星际海盗公会的交战中得到了最佳展示，当时一名战地晋升的辅助军官赞德·里夫斯（Zander Reeves）就驾驶着这种机甲。",
+   "tactics": "棱堡是顽强的防御者，利用自己的机体和大小来保护自己和附近。使用盾墙防御远处的敌人，如炮兵和狙击手。棱堡（和他们的结界）对于击退和强制移动的攻击非常脆弱，因这些效果会破坏他们的许多能力。",
+   "stats": {
+    "hull": [
+     2,
+     4,
+     6
+    ],
+    "sys": [
+     0,
+     0,
+     0
+    ],
+    "agi": [
+     -3,
+     -3,
+     -2
+    ],
+    "eng": [
+     2,
+     3,
+     4
+    ],
+    "hp": [
+     10,
+     10,
+     10
+    ],
+    "armor": [
+     3,
+     3,
+     4
+    ],
+    "evasion": [
+     8,
+     10,
+     10
+    ],
+    "edef": [
+     8,
+     8,
+     8
+    ],
+    "speed": [
+     4,
+     4,
+     4
+    ],
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "heatcap": [
+     8,
+     10,
+     12
+    ],
+    "save": [
+     8,
+     10,
+     12
+    ],
+    "sensor": [
+     5,
+     5,
+     5
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "轮转榴弹发射器",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_arcing"
+      },
+      {
+       "id": "tg_loading"
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 8
+      },
+      {
+       "type": "Blast",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        4,
+        6,
+        8
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_bastion_1",
+     "base": true
+    },
+    {
+     "name": "重型突击盾",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_knockback",
+       "val": 1
+      }
+     ],
+     "weapon_size": "重型",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 2
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        3,
+        6,
+        9
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_bastion_2",
+     "base": true
+    },
+    {
+     "name": "无敌意阻截",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_protocol"
+      }
+     ],
+     "effect": "棱堡及其邻近的一个盟友角色对视线内的一个角色所造成的所有伤害获得抗性。以一个协定，棱堡可选择一个新盟友角色或目标。盟友角色若离开邻近则失去抗性。",
+     "id": "npcf_cn_bastion_3",
+     "base": true
+    },
+    {
+     "name": "护法",
+     "type": "Trait",
+     "tags": [],
+     "effect": "邻近盟友可将该机体充当硬性掩护。",
+     "id": "npcf_cn_bastion_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "近威胁抗拒系统",
+     "type": "System",
+     "tags": [],
+     "effect": "当某角色在射程 3 内攻击棱堡时，对方在掷骰前要受到 2/3/4AP 爆炸伤害。",
+     "id": "npcf_cn_bastion_5",
+     "base": false
+    },
+    {
+     "name": "围困护法",
+     "type": "Trait",
+     "tags": [],
+     "effect": "邻近棱堡的盟友角色获得对溅射、爆发、线形和锥形攻击所造成伤害的抗性。",
+     "id": "npcf_cn_bastion_6",
+     "base": false
+    },
+    {
+     "name": "“暂停”引擎",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "棱堡与一个邻近盟友角色暂时被屏蔽到便携式霎间闪烁嵌板中，获得对所有伤害和效果的免疫直到棱堡的下一回合开始。盟友角色若离开邻近则失去免疫。在棱堡下一回合开始，它们会陷入晕眩直到下一回合开始。",
+     "id": "npcf_cn_bastion_7",
+     "base": false
+    },
+    {
+     "name": "无畏捍卫者",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "棱堡射程 5 内的一个盟友受到伤害，同时棱堡没被固定，缓慢，晕眩或其他不能移动的方式。",
+     "effect": "棱堡可以移动到邻近空间并承受伤害。",
+     "id": "npcf_cn_bastion_8",
+     "base": false
+    },
+    {
+     "name": "死亡抗拒",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_shield"
+      }
+     ],
+     "effect": "每轮棱堡第一次被远程或近战攻击成功命中所有伤害降为 0。",
+     "id": "npcf_cn_bastion_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_berserker",
+   "name": "狂战士",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 285,
+   "pages": [
+    285
+   ],
+   "flavor": "狂战士型机甲具备先进热循环系统，该系统能将产生的热量转化为纯粹的进攻力量，从而指数级提升其武器输出。该机甲原型最广为人知的便是达尔·梅洛斯将军（Gen’Dal Merlos）那濒毁的骑士们（Knights of Imminent Destruction），它本身也深受专注于纯粹战斗的组织、私人军事公司（PMC）以及已建立国家中可否认资产部队的青睐。",
+   "tactics": "狂战士是非常优秀的肉搏决斗者，近距离接触时非常可怕。当他们越是尽可能接近敌军，其潜力越大。鉴于他们差劲的热度上限和电子防御，狂战士很容易遭受科技攻击。聪明的对手会利用好斗为自己建立的优势，让狂战士转而对付盟友，所以最好让他们远离友军。",
+   "stats": {
+    "hull": [
+     3,
+     4,
+     6
+    ],
+    "sys": [
+     -2,
+     -2,
+     -2
+    ],
+    "agi": [
+     2,
+     4,
+     4
+    ],
+    "eng": [
+     -1,
+     -1,
+     0
+    ],
+    "hp": [
+     12,
+     16,
+     20
+    ],
+    "armor": [
+     1,
+     1,
+     1
+    ],
+    "evasion": [
+     8,
+     9,
+     10
+    ],
+    "edef": [
+     6,
+     6,
+     6
+    ],
+    "speed": [
+     5,
+     5,
+     5
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     6,
+     6,
+     6
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     5,
+     5,
+     5
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "链斧",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "重型",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        7,
+        9,
+        11
+       ]
+      }
+     ],
+     "effect": "会心一击：目标离散直到对方下一回合结束。",
+     "id": "npcf_cn_berserker_1",
+     "base": true
+    },
+    {
+     "name": "热潮防御",
+     "type": "Trait",
+     "tags": [],
+     "effect": "狂战士对所有伤害都具抗性，除非它们被受损、晕眩、固定、离散、缓慢或暴露。",
+     "id": "npcf_cn_berserker_2",
+     "base": true
+    },
+    {
+     "name": "好斗",
+     "type": "Trait",
+     "tags": [],
+     "effect": "每轮受到第一次伤害后，狂战士必须立即用链斧攻击邻近的任意角色——无论敌友。",
+     "id": "npcf_cn_berserker_3",
+     "base": true
+    },
+    {
+     "name": "雪崩冲锋",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "狂战士沿着直线移动与速度相等的空间，忽略反应和交战，然后用链斧攻击随机邻近角色——无论敌友。",
+     "id": "npcf_cn_berserker_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "主宰",
+     "type": "Trait",
+     "tags": [],
+     "effect": "当狂战士使用雪崩冲锋时，所有邻近冲锋路径或最终位置的角色必须通过机体豁免否则伏卧无论敌友。",
+     "id": "npcf_cn_berserker_5",
+     "base": false
+    },
+    {
+     "name": "捕鲸叉加农炮",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        2,
+        4,
+        6
+       ]
+      }
+     ],
+     "effect": "",
+     "on_hit": "与狂战士大小相等或更小的目标会被拉到其邻近位置或尽可能靠近。若目标更大，则狂战士就会被拉到对方邻近位置。若目标在邻近位置结束移动，则狂战士擒拿对方。",
+     "id": "npcf_cn_berserker_6",
+     "base": false
+    },
+    {
+     "name": "钉枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        5,
+        7,
+        9
+       ]
+      }
+     ],
+     "effect": "会心一击：目标进行敏捷豁免。若失败，对方固定直到下一回合结束。",
+     "id": "npcf_cn_berserker_7",
+     "base": false
+    },
+    {
+     "name": "报复",
+     "type": "Trait",
+     "tags": [],
+     "effect": "每当狂战士受到伤害时，其下次攻击额外造成+2/+3/+4 伤害。该加值最多可叠加+8。该加值在狂战士发动攻击时，或在下一回合结束时丢失。",
+     "id": "npcf_cn_berserker_8",
+     "base": false
+    },
+    {
+     "name": "燥热",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_shield"
+      },
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "狂战士在近战中受到伤害。",
+     "effect": "狂战士获得对攻击伤害的抗性并且攻击者必须通过工程豁免否则受到 2/4/6 燃烧伤害。",
+     "id": "npcf_cn_berserker_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_bombard",
+   "name": "投弹者",
+   "role": "炮击",
+   "role_en": "artillery",
+   "page": 286,
+   "pages": [
+    286
+   ],
+   "flavor": "阿尔塔全域弹道公司（Alta All-Theater Ballistics）原型机投弹者底盘及其授权仿品是全银河系中普遍存在的闪光点。建立在长期运行部署持久作战基础，投弹者机甲是为快速部署炮兵至战区的武装部队提供的可行性解决方案。根据此类参数配置的底盘通常位于前线后方数英里设防位置；一种特别非对称部署策略包括在战区上空安置投弹者组——通常是在本地卫星、人工捕获至稳定轨道的天然卫星或专门建造的轨道平台上。从它们的有利位置，炮组可向下方天体倾泻炮弹而远离战斗危险。",
+   "tactics": "投弹者是种长距离炮击机甲，其设计目的用来惩戒那些依靠邻近优势紧密阵型的角色他们在近距离时相对脆弱，但在一段距离后对困境有承受力，所以把他们放远一点，以最大化他们的效力。投弹者的撼地炮弹在阻止敌人移动和提供掩护方面效果很好，但也会伤害盟友。",
+   "stats": {
+    "hull": [
+     0,
+     1,
+     1
+    ],
+    "sys": [
+     1,
+     2,
+     3
+    ],
+    "agi": [
+     -1,
+     -1,
+     -1
+    ],
+    "eng": [
+     2,
+     3,
+     5
+    ],
+    "hp": [
+     10,
+     13,
+     16
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     7,
+     8,
+     8
+    ],
+    "edef": [
+     12,
+     14,
+     16
+    ],
+    "speed": [
+     2,
+     2,
+     3
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     11,
+     13,
+     16
+    ],
+    "sensor": [
+     15,
+     15,
+     15
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "射石加农炮",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_arcing"
+      },
+      {
+       "id": "tg_ordnance"
+      }
+     ],
+     "weapon_size": "超重型",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      -1,
+      -1,
+      -1
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 25
+      },
+      {
+       "type": "Blast",
+       "val": 2
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        5,
+        7,
+        8
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_bombard_1",
+     "base": true
+    },
+    {
+     "name": "集束弹药",
+     "type": "Trait",
+     "tags": [],
+     "effect": "投弹者的攻击对第一个以外所有目标造成+2/+3/+4 伤害。",
+     "id": "npcf_cn_bombard_2",
+     "base": true
+    },
+    {
+     "name": "撼地炮弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_free_action"
+      }
+     ],
+     "effect": "用射石加农炮攻击时，投弹者也可以发射一枚特殊的震地炮弹。除了造成伤害外，距离目标空间爆发 3 以内的角色必须通过机体豁免否则伏卧。碎片或破碎的泥土被撞击抛起，在投弹者选择的自由空间内（受影响区域内）制造 2 个大小 1 的硬性掩护。",
+     "id": "npcf_cn_bombard_3",
+     "base": true
+    },
+    {
+     "name": "攻城甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "投弹者对所有来自射程 3 以外攻击造成的伤害都有抗性。",
+     "id": "npcf_cn_bombard_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "高冲击炮弹",
+     "type": "Trait",
+     "tags": [],
+     "effect": "命中时，射石加农炮将目标向外击退 3 空间。",
+     "id": "npcf_cn_bombard_5",
+     "base": false
+    },
+    {
+     "name": "掩体粉碎机",
+     "type": "Trait",
+     "tags": [],
+     "effect": "射石加农炮对受影响区域内物品和地形造成10/15/20AP 爆炸伤害，无需掷骰。",
+     "id": "npcf_cn_bombard_6",
+     "base": false
+    },
+    {
+     "name": "耀斑无人机",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "耀斑无人机（尺寸 1/2，HP10/20/30，闪避 10，电子防御 10，标签：无人机）该无人机可被部署到视线射程 25 空间，在那里盘旋并开始向爆发 2 区域投射强光。受影响区域内所有角色，包括那些移动到该区域或在区域内开始其回合的角色将失去隐形和匿迹，且无法在该区域内躲藏或隐形。此外，投弹者对受影响区域内角色的攻击+1 准度。无人机会承受投弹者攻击的伤害，投弹者一次只能部署一架无人机；若部署新的无人机，则旧的会解体。",
+     "id": "npcf_cn_bombard_7",
+     "base": false
+    },
+    {
+     "name": "轮转加农炮",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_knockback",
+       "val": 3
+      },
+      {
+       "id": "tg_loading"
+      },
+      {
+       "id": "tg_ordnance"
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Cone",
+       "val": 5
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_bombard_8",
+     "base": false
+    },
+    {
+     "name": "集群引导炸弹",
+     "type": "Trait",
+     "tags": [],
+     "effect": "射石加农炮在所选目标空间射程 3 内的三个角色受到 2/3/4 爆炸伤害，无论命中与否。",
+     "id": "npcf_cn_bombard_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_breacher",
+   "name": "破门手",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 288,
+   "pages": [
+    288
+   ],
+   "flavor": "坎贝尔轨道动力（Campbell Orbital Dynamics）生产的 C-O Mk III 在登舰行动中以高效著称，它经常出现在亚轨道行星防御部队和海盗部队的军火库中。官方的说法是“CO”是“CombatOrbitital”（战斗轨道）的缩写，但民间调侃 CO3 是个“Can Opener”（开罐器），其灵感来自于最著名的 CO3驾驶员之一瓦莱里娅·罗贾斯-萨尼克（Valeria Rojas-Sarnik）的呼号。",
+   "tactics": "破门手可造成可观的爆炸伤害，但他们不是特别精准。为了提高他们的能力，使用锁定或与支援 NPC 配合。破门撞击装置可快速完成掩护工作;然而，它缺乏速度和范围，并有引发反应的风险。",
+   "stats": {
+    "hull": [
+     2,
+     3,
+     4
+    ],
+    "sys": [
+     -1,
+     -1,
+     -1
+    ],
+    "agi": [
+     0,
+     1,
+     2
+    ],
+    "eng": [
+     1,
+     2,
+     3
+    ],
+    "hp": [
+     18,
+     20,
+     22
+    ],
+    "armor": [
+     1,
+     1,
+     1
+    ],
+    "evasion": [
+     9,
+     11,
+     13
+    ],
+    "edef": [
+     7,
+     7,
+     7
+    ],
+    "speed": [
+     3,
+     4,
+     5
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     7,
+     7,
+     8
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     5,
+     4,
+     5
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "双管霰弹枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      -2,
+      -2,
+      -2
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 3
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        6,
+        8,
+        10
+       ]
+      }
+     ],
+     "effect": "该武器可同时对同一或不同角色进行两次攻击。",
+     "id": "npcf_cn_breacher_1",
+     "base": true
+    },
+    {
+     "name": "破门撞击装置",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "破门手在一条直线上最多移动 6 空间，忽略交战并穿过但不能停止其他角色占据的空间。破门手路径上的障碍物和物体受到 10/20/30AP 动能伤害。破门手穿过被摧毁的任何障碍物并继续移动，直到移动 6 空间或未能摧毁一个障碍物时停下。任何在破门手路径上的角色必须通过敏捷豁免否则将被尽可能直接地推开并伏卧。",
+     "id": "npcf_cn_breacher_2",
+     "base": true
+    },
+    {
+     "name": "破甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "在一回合内被破门手的双管霰弹枪成功命中超过一次的角色将在剩余场景中离散。",
+     "id": "npcf_cn_breacher_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "痛苦制造者",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "破门手在射程 3 以内选择一个角色。他们的下一回合被延迟到目标回合后。破门手回合开始时，若目标仍在射程 3 以内，他们可用自由动作使用双管霰弹枪攻击目标 4 次，而非 2 次。",
+     "id": "npcf_cn_breacher_4",
+     "base": false
+    },
+    {
+     "name": "高级撞角",
+     "type": "Trait",
+     "tags": [],
+     "effect": "当使用破门撞击装置时，破门手多移动 4 空间，目标在敏捷豁免上+1 难度。",
+     "id": "npcf_cn_breacher_5",
+     "base": false
+    },
+    {
+     "name": "跟踪器倒计时",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "tech_type": "Quick",
+     "effect": "破门手对感应内的角色进行科技攻击。成功后，破门手对目标的所有攻击都将获得+1/2/3 准度，且每回合可以一次自由动作进行推进，只要能直接接近目标。这将持续到任意双方角色被摧毁且不能改变新目标。",
+     "id": "npcf_cn_breacher_6",
+     "base": false
+    },
+    {
+     "name": "高热装药",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_grenade"
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "破门手消耗 1 充能向射程 5 内某空间投掷榴弹。此后溅射 2 爆炸中的角色受到 2/4/6 燃烧伤害，若成功进行敏捷豁免，伤害减半。物品，地形和可展开受到10/20/30 AP 动能伤害。",
+     "id": "npcf_cn_breacher_7",
+     "base": false
+    },
+    {
+     "name": "射镖霰弹枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "副武器",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      0,
+      0,
+      0
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 3
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        2,
+        3,
+        4
+       ]
+      }
+     ],
+     "effect": "使用此武器攻击会从目标空间边缘向后形成锥形 3破片。攻击目标空间和受影响区域内所有角色。锥形范围不能改变方向。",
+     "id": "npcf_cn_breacher_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_cataphract",
+   "name": "甲胄骑兵",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 289,
+   "pages": [
+    289
+   ],
+   "flavor": "甲胄骑兵中队由强调机动性、冲击力和韧性的快速打击机甲组成；因而，全银河系对拥有瞬间冲破防线能力的甲胄骑兵原型机倍感畏惧。没有什么比一支甲胄骑兵中队冲破静止战线重炮点式防御武器阵地，消灭曾不可撼动的防御者更可怕（或更鼓舞人心）了。甲胄骑兵级底盘中的旗舰机是赛德系统公司（Sine Die Systems）的终焉-44，装载着 SDS 可怖撞锤加农炮，一匹棱角分明的野兽。底盘经久不衰地受欢迎可以归因于凯瑟琳“C- 80”·尼德（Catherine “C- 80” Need）的成功，她驾驶终焉-44在卡琳娜近端防御战（the defense of Carina-Proximal）中大获全胜，一战成名。",
+   "tactics": "甲胄骑兵是高机动突击。践踏允许他们越过敌人到达后方，在那里他们使用钉刺迫使脆弱目标进入不利位置。将甲胄骑兵放置更靠近个体敌方角色位置，单点防御盾无法同距离多目标工作。注意甲胄骑兵移动时仍会引起反应，所以要小心使用他们的能力。",
+   "stats": {
+    "hull": [
+     1,
+     2,
+     4
+    ],
+    "sys": [
+     0,
+     0,
+     0
+    ],
+    "agi": [
+     1,
+     3,
+     4
+    ],
+    "eng": [
+     0,
+     0,
+     0
+    ],
+    "hp": [
+     15,
+     17,
+     20
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     10,
+     12
+    ],
+    "edef": [
+     8,
+     8,
+     8
+    ],
+    "speed": [
+     8,
+     8,
+     8
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     6,
+     7,
+     8
+    ],
+    "save": [
+     12,
+     14,
+     16
+    ],
+    "sensor": [
+     5,
+     5,
+     5
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "撞锤加农炮",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "重型",
+     "weapon_kind": "近战/大炮",
+     "attack_bonus": [
+      0,
+      0,
+      0
+     ],
+     "accuracy": [
+      1,
+      2,
+      3
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      },
+      {
+       "type": "Threat",
+       "val": 2
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        5,
+        5,
+        5
+       ]
+      }
+     ],
+     "effect": "这种长矛既可用作远程亦可用作近战武器，但不能在同一回合同时使用。在 T2~3 时，该武器可攻击两次，目标可以是同一个角色，也可以是两个不同角色。",
+     "id": "npcf_cn_cataphract_1",
+     "base": true
+    },
+    {
+     "name": "践踏",
+     "type": "Trait",
+     "tags": [],
+     "effect": "甲胄骑兵忽略交战并穿过但不能停止其他角色占据的空间，1/回合对这些角色造成 2/3/4 动能伤害。",
+     "id": "npcf_cn_cataphract_2",
+     "base": true
+    },
+    {
+     "name": "钉刺",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "甲胄骑兵在直线上移动最多 8 空间，选择一个甲胄骑兵通过或结束邻近的角色；该角色进行+1 难度机体豁免。失败则被甲胄骑兵擒拿并拖拽至移动结束终点。",
+     "id": "npcf_cn_cataphract_3",
+     "base": true
+    },
+    {
+     "name": "单点防御盾",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_shield"
+      }
+     ],
+     "effect": "甲胄骑兵对最近的敌方角色所有伤害具备抗性。若多个角色距离相等，则该效果不适用。",
+     "id": "npcf_cn_cataphract_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "导电套索",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      },
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "在视线射程 5 内的一个角色必须通过机体豁免。失败则会被拉到尽可能靠近甲胄骑兵的位置；若对方至邻近，则甲胄骑兵自动擒拿对方。",
+     "id": "npcf_cn_cataphract_5",
+     "base": false
+    },
+    {
+     "name": "长矛射击",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "甲胄骑兵以线形 5 发射一支导电长矛。受影响区域内所有角色必须通过工程豁免否则受扰直到对方下一回合结束。",
+     "id": "npcf_cn_cataphract_6",
+     "base": false
+    },
+    {
+     "name": "导电投石索",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "射程 10 内的飞行角色必须通过敏捷豁免。若失败则立即降落并固定直到对方下一回合结束。此效果算没有伤害的坠落。",
+     "id": "npcf_cn_cataphract_7",
+     "base": false
+    },
+    {
+     "name": "电容释放",
+     "type": "Trait",
+     "tags": [],
+     "effect": "只要甲胄骑兵未被缓慢或固定，就获得对能量伤害和热度的抗性。在甲胄骑兵回合结束时，所有与之相邻近角色受到 2/3/4 热度。",
+     "id": "npcf_cn_cataphract_8",
+     "base": false
+    },
+    {
+     "name": "冲锋",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "甲胄骑兵以直线移动等同速度的空间，忽略反应和交战，然后用撞锤加农炮攻击射程内的目标。",
+     "id": "npcf_cn_cataphract_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_demolisher",
+   "name": "粉碎者",
+   "role": "卫兵",
+   "role_en": "defender",
+   "page": 290,
+   "pages": [
+    290
+   ],
+   "flavor": "对贾迪戈莫拉城（Jadigmora City）漫长的围攻，见证了第一台真正粉碎者骨架的诞生。基于老式狂战士机甲，粉碎者用更持久的系统取代了戏剧性热流系统，改进了液压强度以及超大规模近战武器稳定器。粉碎者驾驶员很快发现了震波武器的一系列新用途。名为海耶斯·罗斯福德（Hayes Rothford）的枪骑兵同他的 NHP 克拉克（Clarke），是第一位真正展示了该平台力量的驾驶员/副驾驶员团队，他们单枪匹马在低轨道击落了一艘攻城护卫舰。",
+   "tactics": "粉碎者是缓慢而坚韧的卫兵，当他们与敌人接近时会给予大量伤害并晕眩。在近战中使用他们的大小和力量迫使敌人角色移动离开而不是与他们战斗，然后使用挖壕固守抵御重击。",
+   "stats": {
+    "hull": [
+     3,
+     4,
+     6
+    ],
+    "sys": [
+     -1,
+     -1,
+     -1
+    ],
+    "agi": [
+     -2,
+     -2,
+     -2
+    ],
+    "eng": [
+     2,
+     3,
+     4
+    ],
+    "hp": [
+     15,
+     20,
+     25
+    ],
+    "armor": [
+     2,
+     2,
+     2
+    ],
+    "evasion": [
+     6,
+     6,
+     6
+    ],
+    "edef": [
+     7,
+     7,
+     7
+    ],
+    "speed": [
+     2,
+     2,
+     3
+    ],
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     10,
+     13,
+     15
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "毁灭重锤",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_ap"
+      }
+     ],
+     "weapon_size": "超重型",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      -1,
+      -1,
+      -1
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 2
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        10,
+        14,
+        16
+       ]
+      }
+     ],
+     "effect": "",
+     "on_hit": "目标必须通过机体豁免否则晕眩直到对方下一回合结束。",
+     "id": "npcf_cn_demolisher_1",
+     "base": true
+    },
+    {
+     "name": "掘壕固守",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "一次攻击命中粉碎者，但伤害还未掷出。",
+     "effect": "获得对所有攻击伤害的抗性，但缓慢直到自己下一回合结束。",
+     "id": "npcf_cn_demolisher_2",
+     "base": true
+    },
+    {
+     "name": "冲击装甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "粉碎者对近战武器具有抗性。",
+     "id": "npcf_cn_demolisher_3",
+     "base": true
+    },
+    {
+     "name": "重型骨架",
+     "type": "Trait",
+     "tags": [],
+     "effect": "粉碎者无法被小于自身的角色推，拉，伏卧或击退。",
+     "id": "npcf_cn_demolisher_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "连柄大横扫",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "effect": "粉碎者以爆发 2 弧度横挥毁灭重锤取代正常攻击。对影响区域内任意角色进行近战攻击。命中则目标受到4/6/8 爆炸伤害并受损直到对方下一回合结束。",
+     "id": "npcf_cn_demolisher_5",
+     "base": false
+    },
+    {
+     "name": "动能代偿",
+     "type": "Trait",
+     "tags": [],
+     "effect": "每次粉碎者使用毁灭重锤未命中则所有后续攻击获得+1 准度直到下次命中。该准度可多次叠加。",
+     "id": "npcf_cn_demolisher_6",
+     "base": false
+    },
+    {
+     "name": "震荡导弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "视线射程 5 内粉碎者所选的任意角色必须通过机体豁免否则缓慢和受损直到对方下一回合结束。",
+     "id": "npcf_cn_demolisher_7",
+     "base": false
+    },
+    {
+     "name": "地震毁灭者",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "除了能飞行的角色，所有在锥形 3 或线形 5 内的角色必须通过敏捷豁免否则晕眩直到对方下一回合结束。",
+     "id": "npcf_cn_demolisher_8",
+     "base": false
+    },
+    {
+     "name": "当头棒喝",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 5
+      }
+     ],
+     "tech_type": "Quick",
+     "effect": "粉碎者选择其邻近的一个角色：对方必须通过工程豁免否则晕眩直到对方下一回合结束。",
+     "id": "npcf_cn_demolisher_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_engineer",
+   "name": "工程师",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 291,
+   "pages": [
+    291
+   ],
+   "flavor": "各种类型的本地化工程师级机甲在全银河系中都颇为常见，专属于它们自身所运作的天体或舞台。工程师作为一种原型早已存在，但直到拉斯·萨姆拉兵工厂公务主管科里达·伊索尔德-诺莱（Corrida Isolde-Nollet）提出了完整的设计原则，它才在很大程度上被定义。在所有情况下，工程师的任务都呈一致性：保卫、维护、安全。工程师在战线中部或后方的最佳作战位置，协调重要阵地的防御，监督所有作战资产的全面部署。记住：若你不能了解敌人，你就会输。",
+   "tactics": "工程师的可部署炮塔使他们成为强大的武力倍增器，他们可以每回合部署一个。若敌人不能快速对付工程师炮塔，他们的潜在危害迅速飙升——当他们瞄准带有工程师标记的角色时更是如此。没有工程师标记，炮塔会攻击最近目标，玩家可以借此来控制谁受到伤害。",
+   "stats": {
+    "hull": [
+     -1,
+     -1,
+     -1
+    ],
+    "sys": [
+     1,
+     2,
+     3
+    ],
+    "agi": [
+     -1,
+     -1,
+     -1
+    ],
+    "eng": [
+     3,
+     4,
+     6
+    ],
+    "hp": [
+     20,
+     20,
+     20
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     7,
+     9,
+     11
+    ],
+    "edef": [
+     10,
+     10,
+     12
+    ],
+    "speed": [
+     3,
+     3,
+     3
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     10,
+     12,
+     14
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     15,
+     15,
+     15
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "高射加农炮",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_smart"
+      }
+     ],
+     "weapon_size": "重型",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 15
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      }
+     ],
+     "effect": "该武器对飞行目标攻击有+2 准度。",
+     "id": "npcf_cn_engineer_1",
+     "base": true
+    },
+    {
+     "name": "可部署炮塔",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "可部署炮塔（大小 1/2，HP5/8/10，回避 10，电子防御 10，标签：无人机）这些自我建构炮塔可部署到任何邻近的自由空间。在工程师回合，部署炮塔会攻击射程 10 内最近的敌方角色。攻击+1/+2/+3，伤害 4/5/6 动能伤害。工程师最多同时拥有 6 台已部署炮塔，若工程师被摧毁，所有炮塔均失效。",
+     "id": "npcf_cn_engineer_2",
+     "base": true
+    },
+    {
+     "name": "工程师标记",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "直到工程师下一回合结束，工程师可部署炮塔将攻击它们选择的目标（在射程内），而不是攻击最近的敌方角色。",
+     "id": "npcf_cn_engineer_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "强力部署者",
+     "type": "Trait",
+     "tags": [],
+     "effect": "工程师可使用可部署炮塔一次部署 2 台炮塔。如此行事，该系统视为再充能 4+直到下一次再充能。",
+     "id": "npcf_cn_engineer_4",
+     "base": false
+    },
+    {
+     "name": "穹盾协议",
+     "type": "Trait",
+     "tags": [],
+     "effect": "可部署炮塔对飞行目标+2 准度。",
+     "id": "npcf_cn_engineer_5",
+     "base": false
+    },
+    {
+     "name": "牧羊人领域",
+     "type": "Trait",
+     "tags": [],
+     "effect": "工程师邻近无人机、物体和掩体获得伤害抗性。",
+     "id": "npcf_cn_engineer_6",
+     "base": false
+    },
+    {
+     "name": "移动炮塔",
+     "type": "Trait",
+     "tags": [],
+     "effect": "工程师回合开始时，可向任意方向移动所有可部署炮塔最多 3 空间。",
+     "id": "npcf_cn_engineer_7",
+     "base": false
+    },
+    {
+     "name": "军火库",
+     "type": "Trait",
+     "tags": [],
+     "effect": "工程师使用可部署炮塔时，可为其炮塔选择以下一种改造：• 狱火：炮塔攻击变成锥形 3，2/3/4 燃烧伤害。• 地狱风暴：炮塔攻击变成射程 15，溅射 1，2/3/4 爆炸。• 猎人：炮塔攻击获得可靠 1。• 蓄势待发：炮塔或工程师摧毁时，炮塔在爆发 1 爆炸。受影响区域内角色必须通过敏捷豁免否则受到 7/9/11 爆炸伤害。",
+     "id": "npcf_cn_engineer_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_goliath",
+   "name": "歌利亚",
+   "role": "卫兵",
+   "role_en": "defender",
+   "page": 292,
+   "pages": [
+    292,
+    293
+   ],
+   "flavor": "在摇篮外八环地区的马德雷山线，檀君（Dangun）骨架是常有之物。由帕克装甲系统（Park Armored Systems）公司研制，由匕首中队（Dagger Squadron）雇佣军连队推广，檀君因其韧性和动能交换能力以及可靠的全战区性能而广受欢迎。檀君是构建突击部队的核心力量——能够搭载强大磁场技术装备的泰坦级机甲，其设计在动能战斗中难以被对手克制。帕克装甲系统公司的投资组合中有诸多小型舰队合同，是家值得关注的制造商；事实上，哈里逊兵工厂已对此给予特别关注，并在万物网上传言表明两家公司可能在不久将来建立合作伙伴关系。",
+   "tactics": "歌利亚是机动性相对缓慢卫兵，这会为他们带来敌人。通过挤压目标，歌利亚迫使危险的敌人集中攻击他们；它只需要视线，让歌利亚能够瞄准高机动或难以命中的角色。歌利亚庞大的身躯也为他们的盟友提供了掩护。",
+   "stats": {
+    "hull": [
+     4,
+     6,
+     6
+    ],
+    "sys": [
+     1,
+     1,
+     1
+    ],
+    "agi": [
+     -2,
+     -2,
+     -2
+    ],
+    "eng": [
+     0,
+     0,
+     2
+    ],
+    "hp": [
+     25,
+     30,
+     35
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     6,
+     6,
+     6
+    ],
+    "edef": [
+     6,
+     6,
+     6
+    ],
+    "speed": [
+     3,
+     3,
+     3
+    ],
+    "size": [
+     3,
+     3,
+     3
+    ],
+    "heatcap": [
+     8,
+     10,
+     12
+    ],
+    "save": [
+     11,
+     13,
+     15
+    ],
+    "sensor": [
+     10,
+     10,
+     15
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "鼓轮霰弹枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "重型",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        5,
+        5,
+        5
+       ]
+      }
+     ],
+     "effect": "T2 时，该武器可一次攻击两次，目标可以是同一个角色，也可以是两个不同角色。T3 时，它可以一次攻击三次。",
+     "id": "npcf_cn_goliath_1",
+     "base": true
+    },
+    {
+     "name": "挤压目标",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 4
+      },
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "tech_type": "Quick",
+     "effect": "视线感应内的一个角色攻击歌利亚外其他角色时+3 难度，直到歌利亚下一回合开始。",
+     "id": "npcf_cn_goliath_2",
+     "base": true
+    },
+    {
+     "name": "重型骨架",
+     "type": "Trait",
+     "tags": [],
+     "effect": "歌利亚无法被小于自身的角色推，拉，伏卧或击退。",
+     "id": "npcf_cn_goliath_3",
+     "base": true
+    },
+    {
+     "name": "护法",
+     "type": "Trait",
+     "tags": [],
+     "effect": "邻近盟友可将歌利亚充当硬性掩护。",
+     "id": "npcf_cn_goliath_4",
+     "base": true
+    },
+    {
+     "name": "围攻装甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "歌利亚对射程 3 以外的所有攻击伤害具有抗性。",
+     "id": "npcf_cn_goliath_5",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "斥力肘击",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "歌利亚射程 2 内的角色必须通过机体豁免否则受到 4/5/6 动能伤害，从歌利亚推离 5 空格并伏卧。",
+     "id": "npcf_cn_goliath_6",
+     "base": false
+    },
+    {
+     "name": "钉栓",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "歌利亚射程 2 内的一个角色固定和受损，直到对方对歌利亚造成伤害，歌利亚陷入晕眩或被摧毁，或当歌利亚以其他角色为目标结束。此效果持续期间，歌利亚被固定。",
+     "id": "npcf_cn_goliath_7",
+     "base": false
+    },
+    {
+     "name": "粉碎性拥抱",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "邻近歌利亚的角色必须通过敏捷豁免否则自动被歌利亚擒拿并受扰，直到不再擒拿为止。歌利亚一次只能以该方式擒拿一个角色。",
+     "id": "npcf_cn_goliath_8",
+     "base": false
+    },
+    {
+     "name": "警惕性护法",
+     "type": "Trait",
+     "tags": [],
+     "effect": "从歌利亚提供的掩护中受益的盟友角色获得所有伤害抗性。",
+     "id": "npcf_cn_goliath_9",
+     "base": false
+    },
+    {
+     "name": "报复",
+     "type": "Trait",
+     "tags": [],
+     "effect": "每当歌利亚受到伤害时，其下次攻击额外造成+2/+3/+4 伤害。该加值最多可叠加+8。该加值在歌利亚发动攻击时，或在下一回合结束时丢失。",
+     "id": "npcf_cn_goliath_10",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_hive",
+   "name": "蜂巢",
+   "role": "操纵",
+   "role_en": "controller",
+   "page": 294,
+   "pages": [
+    294
+   ],
+   "flavor": "理论上，火卫二事件后发展起来的无人机和无人机群与其老前辈没有太大区别：它们会建立本地万物网；制造并部署一个或半个世纪的无人机；协调它们以实现各自目标。尽管如此，复杂的处理员-训练员关系允许驾驶员在直接控制和自主操作之间切换，这会在连续操作无人机一个月后造成心理创伤。因此，建议他们每两周轮换一次配对的蜂巢枢纽。",
+   "tactics": "蜂巢使用剃刀蜂群控制战场，为盟友提供软性掩护，并排斥区域内他们的敌人。部署峰群并使用雄蜂攻势来锁定敌人，或者将他们移动到蜂群和盟友范围内。",
+   "stats": {
+    "hull": [
+     -1,
+     -1,
+     1
+    ],
+    "sys": [
+     2,
+     4,
+     5
+    ],
+    "agi": [
+     0,
+     0,
+     0
+    ],
+    "eng": [
+     1,
+     1,
+     1
+    ],
+    "hp": [
+     20,
+     20,
+     20
+    ],
+    "armor": [
+     0,
+     1,
+     1
+    ],
+    "evasion": [
+     8,
+     8,
+     10
+    ],
+    "edef": [
+     10,
+     13,
+     16
+    ],
+    "speed": [
+     5,
+     5,
+     5
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     12,
+     14,
+     17
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "猎杀者虫巢",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_smart"
+      },
+      {
+       "id": "tg_seeking"
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "巢房",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 8
+      }
+     ],
+     "damage": [
+      {
+       "type": "Burn",
+       "val": [
+        3,
+        3,
+        3
+       ]
+      }
+     ],
+     "effect": "T2 时，该武器可一次攻击两次，目标可以是同一个角色，也可以是两个不同角色。T3 时，它可以一次攻击三次。",
+     "id": "npcf_cn_hive_1",
+     "base": true
+    },
+    {
+     "name": "雄蜂攻势",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Quick",
+     "effect": "蜂巢对感应内一个角色进行科技攻击。成功则目标将选择其一：对方固定并受损直到下一回合结束，或立即朝蜂巢所选方向移动 5 空间。该移动忽略交战和反应。",
+     "id": "npcf_cn_hive_2",
+     "base": true
+    },
+    {
+     "name": "剃刀蜂群",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 4
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "蜂巢在感应内某自由空间部署一个溅射 1 剃刀蜂群。盟友角色只要部分处于受影响区域内便获得软性掩护。敌对角色至少在该区域内开始其回合或在轮内首次进入该区域则受到 2/4/6 燃烧伤害。蜂巢可部署任意数量剃刀蜂群，每剃刀蜂群会持续至场景结束，或直到蜂巢被摧毁。",
+     "id": "npcf_cn_hive_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "电镀纳米云",
+     "type": "System",
+     "tags": [],
+     "effect": "蜂巢射程3 内敌方角色在其回合开始时受到2 燃烧伤害；此外直到对方离开射程 3，否则进行所有系统检定和豁免以及所有科技攻击+1/2/3 难度。",
+     "id": "npcf_cn_hive_4",
+     "base": false
+    },
+    {
+     "name": "机动蜂群",
+     "type": "Trait",
+     "tags": [],
+     "effect": "蜂巢回合开始可移动所有剃刀蜂群任何方向最多 2空间，包括进入其他角色占据的空间。",
+     "id": "npcf_cn_hive_5",
+     "base": false
+    },
+    {
+     "name": "倾泻蜂群",
+     "type": "Trait",
+     "tags": [],
+     "effect": "角色受到剃刀蜂群燃烧伤害时必须通过系统豁免，否则在受到伤害后立即向蜂巢所选方向移动 4 空间。该移动忽略交战和反应。",
+     "id": "npcf_cn_hive_6",
+     "base": false
+    },
+    {
+     "name": "研磨小队战术",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "tech_type": "Quick",
+     "effect": "蜂巢释放难以击中的微型无人机，对视线感知内一个敌方角色使用科技攻击。命中则无人机紧紧抓住目标，对方每次执行任意动作或反应受到 2 燃烧伤害直到对方下一回合结束。",
+     "id": "npcf_cn_hive_7",
+     "base": false
+    },
+    {
+     "name": "寻索云",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_smart"
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "巢房",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Cone",
+       "val": 5
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      }
+     ],
+     "effect": "受到该武器伤害的角色被锁定。",
+     "id": "npcf_cn_hive_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_hornet",
+   "name": "马蜂",
+   "role": "操纵",
+   "role_en": "controller",
+   "page": 295,
+   "pages": [
+    295
+   ],
+   "flavor": "勇士巴龙公司（SatriaBarong）的击剑手（Espada）系列半身骨架机甲长期以来是底盘赛道的热门选择；尤其是击剑手机甲是备受尊敬的勇士巴龙–岛野奢华（ShimanoLUX）底盘赛车队的首选。近来，勇士巴龙在 SSC 授权下开始研制一款去岛野奢华品牌化的击剑手军用规格变体，由此诞生了马蜂原型机，为其他公司提供了一个适配和改进的平台。这些竞争者中最著名的是钱德拉塞卡与赫歇尔公司（Chandrasekhar & Herschel），他们是新蓝移大奖赛领域的主要赞助商。",
+   "tactics": "马蜂是小巧而迅速的操控者，很难击中，且非常恼人。他们造成的伤害有限，但他们的能力造成移动减少状态是非常适合锁定敌人的突击。对他们敌人来说幸运的是，马蜂差劲的电子防御使他们容易受到智慧武器和科技攻击。",
+   "stats": {
+    "hull": [
+     -2,
+     -2,
+     -2
+    ],
+    "sys": [
+     2,
+     3,
+     4
+    ],
+    "agi": [
+     2,
+     4,
+     6
+    ],
+    "eng": [
+     0,
+     0,
+     0
+    ],
+    "hp": [
+     8,
+     8,
+     8
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     16,
+     18,
+     20
+    ],
+    "edef": [
+     6,
+     7,
+     8
+    ],
+    "speed": [
+     6,
+     8,
+     10
+    ],
+    "size": [
+     0.5,
+     0.5,
+     0.5
+    ],
+    "heatcap": [
+     5,
+     6,
+     7
+    ],
+    "save": [
+     12,
+     14,
+     16
+    ],
+    "sensor": [
+     5,
+     5,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "针刺手枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "副武器",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 8
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        1,
+        2,
+        3
+       ]
+      }
+     ],
+     "effect": "",
+     "on_hit": "目标受损直到对方下一回合结束。",
+     "id": "npcf_cn_hornet_1",
+     "base": true
+    },
+    {
+     "name": "SCC 总套组",
+     "type": "System",
+     "tags": [],
+     "effect": "马蜂可以在移动或推进时悬浮。",
+     "id": "npcf_cn_hornet_2",
+     "base": true
+    },
+    {
+     "name": "迂回",
+     "type": "Trait",
+     "tags": [],
+     "effect": "每轮以一个反应可对马蜂的第一次攻击自动失败。",
+     "id": "npcf_cn_hornet_3",
+     "base": true
+    },
+    {
+     "name": "钉刺系统",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Quick",
+     "effect": "马蜂对感应内角色进行科技攻击。命中则对方会受到 3/4/5 热度并受扰直到对方下一回合结束。",
+     "id": "npcf_cn_hornet_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "适应/规避/脱离",
+     "type": "Trait",
+     "tags": [],
+     "effect": "马蜂获得对擒拿的免疫且始终忽视交战。",
+     "id": "npcf_cn_hornet_5",
+     "base": false
+    },
+    {
+     "name": "本影封锁",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "某角色在视线感应范围内试图攻击。",
+     "effect": "目标必须通过系统检定否则攻击自动失败。",
+     "id": "npcf_cn_hornet_6",
+     "base": false
+    },
+    {
+     "name": "超音速",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "马蜂以不可思议的速度飞至视线射程 50 内的空间视为瞬间移动。",
+     "id": "npcf_cn_hornet_7",
+     "base": false
+    },
+    {
+     "name": "巫术导弹",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_smart"
+      }
+     ],
+     "weapon_size": "副武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      0,
+      0,
+      0
+     ],
+     "accuracy": [
+      1,
+      2,
+      3
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      },
+      {
+       "type": "Blast",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Heat",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_hornet_8",
+     "base": false
+    },
+    {
+     "name": "锁定/维持标枪",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "马蜂向视线射程 5 内的目标射出标枪。目标必须通过机体豁免否则被刺穿，此时标枪将受害者顶死在地面（或其他表面）上使对方固定和离散。对方自身或任何邻近角色可尝试用一个完整动作进行机体豁免来移除标枪；否则，该效果持续到场景结束或直到马蜂再次使用该动作。",
+     "id": "npcf_cn_hornet_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_mirage",
+   "name": "蜃楼",
+   "role": "支援",
+   "role_en": "support",
+   "page": 296,
+   "pages": [
+    296,
+    297
+   ],
+   "flavor": "蜃楼级机甲机甲通常被受雇于与地平线结盟的武装团体所使用。由于没有原始制造商，它们是少数几个可供知情组织使用的非荷鲁斯开源模式组之一。蜃楼使用先进礼拜编码，用幻术和误导的面纱把自己和盟友包裹起来。虽然围绕这些机甲的扭曲效应是显而易见地由传感器扭曲引起，但它们的力量甚至足以影响到有机系统——在接触时需谨慎。",
+   "tactics": "蜃城是强大的支援机甲，能够随意传送他们的盟友，并用扭曲探头关闭远程攻击者。他们可让盟友角色隐形，但同时也会变得脆弱。这些优势是有代价的：忽略掩护的武器和系统——如“引导”武器——可以绕过扭曲探头，蜃城本身不会造成任何伤害。",
+   "stats": {
+    "hull": [
+     -2,
+     -2,
+     -2
+    ],
+    "sys": [
+     2,
+     3,
+     4
+    ],
+    "agi": [
+     1,
+     2,
+     3
+    ],
+    "eng": [
+     1,
+     2,
+     3
+    ],
+    "hp": [
+     10,
+     12,
+     14
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     12,
+     14
+    ],
+    "edef": [
+     12,
+     15,
+     18
+    ],
+    "speed": [
+     5,
+     6,
+     7
+    ],
+    "size": [
+     0.5,
+     0.5,
+     0.5
+    ],
+    "heatcap": [
+     6,
+     6,
+     6
+    ],
+    "save": [
+     11,
+     14,
+     17
+    ],
+    "sensor": [
+     15,
+     15,
+     20
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "扭曲探头",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "tech_type": "Quick",
+     "effect": "蜃楼对感应内一个目标进行科技攻击。成功则对方受到 2/3/4 热度且下一回合结束前所有攻击目标视为拥有软性掩护。",
+     "id": "npcf_cn_mirage_1",
+     "base": true
+    },
+    {
+     "name": "现实闪烁",
+     "type": "Trait",
+     "tags": [],
+     "effect": "蜃楼在执行一次标准移动时瞬间移动。",
+     "id": "npcf_cn_mirage_2",
+     "base": true
+    },
+    {
+     "name": "数据面纱",
+     "type": "System",
+     "tags": [],
+     "effect": "默认蜃楼处于隐形并可用快速动作将此状况转移视线内另一角色。蜃楼不再隐形，只有以快速动作将其转移回或转移至另一角色蜃楼才恢复状况；否则此效果将持续到蜃楼被摧毁。",
+     "id": "npcf_cn_mirage_3",
+     "base": true
+    },
+    {
+     "name": "漏洞扫描器",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "蜃楼先进电子对抗系统对敌人系统造成严重破坏，致使它们在战场上误报。它们可在感应内瞬间移动最多2 个盟友角色，向任何方向移动 5 空间，揭示其“真实”位置。该移动忽略交战和反应。蜃楼同时获得信标光点反应。\n【信标光点】（反应，1/轮）触发：一个敌对角色在视线内执行动作。\n效果：蜃楼可让一个盟友角色向任意方向瞬间移动 5 空间。",
+     "id": "npcf_cn_mirage_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "幻术子程序",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Quick",
+     "effect": "蜃楼对感应内一个目标进行科技攻击。成功则目标视所有蜃楼的盟友角色为隐形直到对方下一回合开始。",
+     "id": "npcf_cn_mirage_5",
+     "base": false
+    },
+    {
+     "name": "扭曲目标",
+     "type": "Trait",
+     "tags": [],
+     "effect": "蜃楼射程 50 内所有盟友角色获得软性掩护。若蜃楼受伤害，此效果直到对方下一回合开始时结束。",
+     "id": "npcf_cn_mirage_6",
+     "base": false
+    },
+    {
+     "name": "超折叠挤压",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "tech_type": "Quick",
+     "effect": "蜃楼对射程 5 的一个敌方角色进行科技攻击。成功则目标与蜃楼视线内的某盟友角色交换位置，由蜃楼选择同时进行瞬间移动。飞行角色无法与不飞行角色交换，反之亦然。",
+     "id": "npcf_cn_mirage_7",
+     "base": false
+    },
+    {
+     "name": "虚伪神像显化",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_tech"
+      }
+     ],
+     "tech_type": "Full",
+     "effect": "蜃楼视线射程5 内自由空间创造三个大小1 数据构念。这些构念提供软性掩护但可通过。当有敌方角色经过构念时该构念会消失，而对方必须通过系统豁免否则受到 2 热度并固定直到下一回合结束。蜃楼回合中任意时点，只要有足够空间就可以将视线内某盟友瞬间移动到数据构念位置，让其消失。",
+     "id": "npcf_cn_mirage_8",
+     "base": false
+    },
+    {
+     "name": "多重性",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "视线内一个盟友角色被命中。",
+     "effect": "攻击者必须通过系统豁免。失败则蜃楼的盟友将获得对攻击伤害和效果的免疫，并可向自选方向瞬间移动最多 5 空间。",
+     "id": "npcf_cn_mirage_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_operator",
+   "name": "操作员",
+   "role": "炮击",
+   "role_en": "artillery",
+   "page": 298,
+   "pages": [
+    298
+   ],
+   "flavor": "操作员是已知的未知，极少能在前线遭遇，但这不该被误认其脆弱性。操作员在任何方面都相当危险而致命。和他们机甲一样，操作员身体中也装载着最先进的技术。当他们在战斗中死去，他们的身体以及他们的机甲会一同自焚，将任何技术和数据化为灰烬。",
+   "tactics": "操作员是极具机动能力的精英炮击机甲。他们不是特别硬，但可以使用回溯驱动在战场周围瞬间移动，使自己处于有利位置：在障碍物或地形上，或在掩体——任何他们可以使用高度精确的猛禽等离子步枪狙击敌人的地方。",
+   "stats": {
+    "hull": [
+     2,
+     3,
+     4
+    ],
+    "sys": [
+     2,
+     3,
+     4
+    ],
+    "agi": [
+     2,
+     3,
+     4
+    ],
+    "eng": [
+     2,
+     3,
+     4
+    ],
+    "hp": [
+     10,
+     12,
+     15
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     12,
+     14
+    ],
+    "edef": [
+     10,
+     12,
+     14
+    ],
+    "speed": [
+     5,
+     5,
+     5
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "猛禽等离子步枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "重型",
+     "weapon_kind": "步枪",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      2,
+      2,
+      2
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 20
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        7,
+        7,
+        7
+       ]
+      }
+     ],
+     "effect": "T2 时，该武器可一次攻击两次，目标可以是同一个角色，也可以是两个不同角色。T3 时，它可以一次攻击三次。",
+     "id": "npcf_cn_operator_1",
+     "base": true
+    },
+    {
+     "name": "回溯驱动",
+     "type": "System",
+     "tags": [],
+     "effect": "操作员在执行标准移动时瞬间移动。",
+     "id": "npcf_cn_operator_2",
+     "base": true
+    },
+    {
+     "name": "瞬步",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "操作员可瞬间移动到视线射程 50 内的自由空间。",
+     "id": "npcf_cn_operator_3",
+     "base": true
+    },
+    {
+     "name": "自我消除",
+     "type": "Trait",
+     "tags": [],
+     "effect": "操作员机体被摧毁时会立即释放一波过热等离子体自焚。当次此动作执行时，邻近操作员的所有角色必须通过敏捷豁免否则受到 4/6/8 能量伤害。成功则伤害减半。随后该机甲从战场上移除——它被彻底消灭了。",
+     "id": "npcf_cn_operator_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "褪色生成器",
+     "type": "System",
+     "tags": [],
+     "effect": "操作员回合结束时会隐形直到下一回合开始。若受到伤害或进行反应，该状况立即停止。",
+     "id": "npcf_cn_operator_5",
+     "base": false
+    },
+    {
+     "name": "瞬动破片",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "操作员瞬间移动到视线射程 15 内另一角色所占据的空间。目标必须通过敏捷豁免否则受到 4/8/12AP 能量伤害并受扰直到对方下一回合结束。成功则伤害减半。无论成功与否，操作员受到 1d6AP 能量伤害，并被放置在目标邻近自由空间中。",
+     "id": "npcf_cn_operator_6",
+     "base": false
+    },
+    {
+     "name": "要塞",
+     "type": "Trait",
+     "tags": [],
+     "effect": "操作员系统豁免+3 准度，针对它们的科技攻击+3难度。",
+     "id": "npcf_cn_operator_7",
+     "base": false
+    },
+    {
+     "name": "散兵",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "每回合一次，操作员回合中任意时点，可用一个自由动作进行推进。",
+     "id": "npcf_cn_operator_8",
+     "base": false
+    },
+    {
+     "name": "超新星导弹",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_seeking"
+      }
+     ],
+     "weapon_size": "副武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 15
+      },
+      {
+       "type": "Blast",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        4,
+        6,
+        8
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_operator_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_priest",
+   "name": "司铎",
+   "role": "支援",
+   "role_en": "support",
+   "page": 299,
+   "pages": [
+    299
+   ],
+   "flavor": "司铎原型机甲可在科技狂热者邪教、超人类主义运动以及优先考虑技术霸权的国家或公司中找到。这些骨架被配置为将其敏感核心系统与共感机体互相连接，创造数字超结构以建立和保持全战区控制。司铎原型底盘和策略的使用先驱是由一支被称为玛雅信使（Messengers of MAIA）的神秘小团体。表面上信使们是个情报集团，他们推动所有系统（合成体和有机体）达到他们的理论极限。他们甚至在相互联系的驾驶员之间分享感官输入——一种已知会导致超感知逃逸和其他升格精神状态的体验。",
+   "tactics": "司铎是强大的支援机甲，使用他们的授权可以高效地配合其他角色。使用他们的散列护盾保护脆弱目标，并授权给盟友突进或卫兵。敌人可以通过将司铎与他们的同伴分开来解除授权，此时双方都对状态效果变得脆弱。",
+   "stats": {
+    "hull": [
+     -1,
+     -1,
+     -1
+    ],
+    "sys": [
+     2,
+     4,
+     6
+    ],
+    "agi": [
+     -1,
+     -1,
+     -1
+    ],
+    "eng": [
+     2,
+     3,
+     4
+    ],
+    "hp": [
+     10,
+     13,
+     16
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     10,
+     10
+    ],
+    "edef": [
+     12,
+     15,
+     18
+    ],
+    "speed": [
+     5,
+     5,
+     6
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     10,
+     10,
+     10
+    ],
+    "save": [
+     11,
+     13,
+     15
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "誓绝",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Quick",
+     "effect": "司铎对感应内一个目标进行科技攻击。成功则对方每次攻击都受到 2/3/4 热度直到对方下一回合结束。",
+     "id": "npcf_cn_priest_1",
+     "base": true
+    },
+    {
+     "name": "坚定目标",
+     "type": "Trait",
+     "tags": [],
+     "effect": "司铎系统豁免+1 准度，针对它们的科技攻击+1难度。",
+     "id": "npcf_cn_priest_2",
+     "base": true
+    },
+    {
+     "name": "授权",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "司铎将射程 5 内一个盟友机甲或载具的系统连接起来。只要对方保持连接并在射程 5 内，目标所有攻击就能获得+1/2/3 准度且可使用司铎系统代替自身。然而若二者之一受扰、受损或晕眩，另一个角色也会在相同持续时间内接受该状态或直到连接被切断。若其中一个角色被摧毁或彼此移动超过 5 空间，则连接被切断。司铎一次只能与一个角色连接。",
+     "id": "npcf_cn_priest_3",
+     "base": true
+    },
+    {
+     "name": "散列护盾",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "司铎释放微型无人机聚集在附近机甲周围提供保护。司铎或处于感应内一个盟友将从之后的 1d3 次攻击中获得对伤害和热度的抗性。该效果不会叠加。",
+     "id": "npcf_cn_priest_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "伟大授权",
+     "type": "Trait",
+     "tags": [],
+     "effect": "授权使目标对所有伤害获得抗性，但司铎在连接时固定。",
+     "id": "npcf_cn_priest_5",
+     "base": false
+    },
+    {
+     "name": "附魔盾",
+     "type": "Trait",
+     "tags": [],
+     "effect": "散列护盾同时给予护盾 5/6/8。",
+     "id": "npcf_cn_priest_6",
+     "base": false
+    },
+    {
+     "name": "圣所",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_full_tech"
+      }
+     ],
+     "tech_type": "Full",
+     "effect": "司铎感应内选择一个盟友角色。在目标受到攻击之前，攻击者必须先通过系统豁免。攻击者失败则无法再次攻击目标，直到该角色的下一回合开始。",
+     "id": "npcf_cn_priest_7",
+     "base": false
+    },
+    {
+     "name": "要塞",
+     "type": "Trait",
+     "tags": [],
+     "effect": "坚定目标的所有值从+1 提升为+3。",
+     "id": "npcf_cn_priest_8",
+     "base": false
+    },
+    {
+     "name": "分形攻势",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      },
+      {
+       "id": "tg_recharge",
+       "val": 5
+      }
+     ],
+     "trigger": "被授权连接的一个角色受到伤害。",
+     "effect": "攻击者进行系统豁免。若失败则晕眩直到对方下一回合结束。",
+     "id": "npcf_cn_priest_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_pyro",
+   "name": "纵火狂",
+   "role": "卫兵",
+   "role_en": "defender",
+   "page": 300,
+   "pages": [
+    300
+   ],
+   "flavor": "海西危机后，由枪骑兵弗拉马（Flama）和他名副其实的魔鬼军团第一次普及，纵火狂在全银河系被斥为军事国和企业国拥有的纯粹破坏性力量的化身。它们的使用在为达到目的不择手段的组织中颇为常见。纵火狂拥有良好装甲，隔热性能比大多数同等重量的底盘都要好，其设计用来控制难以置信的内部热量，同时向敌人投射挥发性化学物质和火焰。纵火狂通常用于城市和丛林战，在那里他们得以用来铲除固守的防御者。",
+   "tactics": "纵火狂是缓慢而坚韧的机甲，对已遭受烧伤的角色尤为有效。若玩家不保持他们的距离，纵火狂便可向他们使用爆炸性通风倾倒大量的热量。放置纵火狂，让他们使用防火带盾保护盟友免受火力。然而请注意，玩家可以移动盾牌将其效力降低到零，或者他们可以通过使用晕眩或击退武器攻击纵火狂使其失效。",
+   "stats": {
+    "hull": [
+     1,
+     2,
+     3
+    ],
+    "sys": [
+     -1,
+     -1,
+     0
+    ],
+    "agi": [
+     -1,
+     0,
+     0
+    ],
+    "eng": [
+     3,
+     4,
+     5
+    ],
+    "hp": [
+     10,
+     13,
+     15
+    ],
+    "armor": [
+     3,
+     3,
+     4
+    ],
+    "evasion": [
+     8,
+     8,
+     8
+    ],
+    "edef": [
+     8,
+     8,
+     8
+    ],
+    "speed": [
+     2,
+     2,
+     2
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     12,
+     12,
+     16
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     8,
+     8,
+     8
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "火焰喷射器",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_heat_self",
+       "val": 4
+      }
+     ],
+     "weapon_size": "重型",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Cone",
+       "val": 5
+      }
+     ],
+     "damage": [
+      {
+       "type": "Burn",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      }
+     ],
+     "effect": "该武器对已燃烧的角色造成双倍燃烧。",
+     "id": "npcf_cn_pyro_1",
+     "base": true
+    },
+    {
+     "name": "爆炸性通风",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "纵火狂清除所有热量。爆发 1 内的角色必须通过敏捷豁免否则受到等同纵火狂清除量一半的热度并伏卧。",
+     "id": "npcf_cn_pyro_2",
+     "base": true
+    },
+    {
+     "name": "隔热",
+     "type": "Trait",
+     "tags": [],
+     "effect": "纵火狂对燃烧免疫。",
+     "id": "npcf_cn_pyro_3",
+     "base": true
+    },
+    {
+     "name": "防火带盾",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_shield"
+      }
+     ],
+     "effect": "纵火狂回合结束时，视线内其中末端 1 空间与纵火狂邻近的自由空间创造出高 4 空间的线形 4 能量护盾。它不会阻挡视线，但提供软性掩护；当攻击一个受益于掩体的角色时，掷骰 1d6 出 4+视为未命中。这将持续到纵火狂下一回合开始，或纵火狂移动或晕眩。它无法和隐形叠用。",
+     "id": "npcf_cn_pyro_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "无屏蔽反应堆",
+     "type": "Trait",
+     "tags": [],
+     "effect": "角色开始回合中与纵火狂邻近，或在轮内首次与纵火狂邻近，则受到 2/3/4 热度。",
+     "id": "npcf_cn_pyro_5",
+     "base": false
+    },
+    {
+     "name": "围攻装甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "纵火狂对射程 3 以外的所有攻击伤害具有抗性。",
+     "id": "npcf_cn_pyro_6",
+     "base": false
+    },
+    {
+     "name": "凝固汽油弹",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_arcing"
+      },
+      {
+       "id": "tg_loading"
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      },
+      {
+       "type": "Blast",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Burn",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      },
+      {
+       "type": "Heat",
+       "val": [
+        2,
+        4,
+        6
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_pyro_7",
+     "base": false
+    },
+    {
+     "name": "超热",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_shield"
+      }
+     ],
+     "trigger": "纵火狂受到近战攻击的伤害。",
+     "effect": "纵火狂对所有攻击伤害获得抗性。攻击者必须通过工程豁免否则受到 2/4/6 燃烧伤害。",
+     "id": "npcf_cn_pyro_8",
+     "base": false
+    },
+    {
+     "name": "爆炸性喷口",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "爆发 2 以内的敌人必须通过机体豁免否则击退至区域外并伏卧。然后纵火狂向任意方向飞行 5 空间，但必须在完成该动作后着陆。",
+     "id": "npcf_cn_pyro_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_rainmaker",
+   "name": "祈雨师",
+   "role": "炮击",
+   "role_en": "artillery",
+   "page": 301,
+   "pages": [
+    301
+   ],
+   "flavor": "这带有戏谑意味的“祈雨师”，是对专门使用火箭和导弹的机甲和驾驶员的绰号。祈雨师被灵活作战单位所青睐，它装载了武器移动平台，能够在任何范围内对付任何目标。",
+   "tactics": "祈雨师既是炮兵又是指挥者。他们的标枪火箭弹迫使角色避开某些区域或承受一定的伤害。他们还可以通过猎犬导弹和阿特拉斯导弹等可选系统造成延迟伤害。和其他炮击机甲一样，祈雨师自身相对来说比较脆弱。",
+   "stats": {
+    "hull": [
+     0,
+     0,
+     0
+    ],
+    "sys": [
+     2,
+     3,
+     3
+    ],
+    "agi": [
+     0,
+     1,
+     1
+    ],
+    "eng": [
+     0,
+     0,
+     1
+    ],
+    "hp": [
+     10,
+     12,
+     14
+    ],
+    "armor": [
+     1,
+     1,
+     1
+    ],
+    "evasion": [
+     8,
+     10,
+     12
+    ],
+    "edef": [
+     8,
+     10,
+     12
+    ],
+    "speed": [
+     3,
+     3,
+     3
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     15,
+     15,
+     15
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "导弹舱",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_arcing"
+      },
+      {
+       "id": "tg_reliable",
+       "val": [
+        2,
+        3,
+        3
+       ]
+      },
+      {
+       "id": "tg_knockback",
+       "val": 1
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 20
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        4,
+        5,
+        6
+       ]
+      }
+     ],
+     "effect": "该武器一次可以攻击 1~3 个角色。",
+     "id": "npcf_cn_rainmaker_1",
+     "base": true
+    },
+    {
+     "name": "标枪火箭弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "祈雨师会在视线射程 20 内选择互相不邻近的 3 自由空间。所有角色都知悉选择了哪些空间。祈雨师向空中发射一连串自动瞄准火箭：下次当一个敌对角色在选定空间移动穿越，或在其上开始其回合，或从上方不超过 10 空间的位置经过——会被火箭击中造成 5/6/7 动能伤害。每空格只能触发一次。该效果持续到祈雨师下一回合开始。",
+     "id": "npcf_cn_rainmaker_2",
+     "base": true
+    },
+    {
+     "name": "狩猎者",
+     "type": "Trait",
+     "tags": [],
+     "effect": "对锁定的敌方角色，祈雨师武器获得智慧，引导和AP。",
+     "id": "npcf_cn_rainmaker_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "地狱导弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "祈雨师射程 20 某起点向外锥形 3 内所有角色受到4/6/8 能量伤害和 2 热度，通过敏捷豁免伤害减半。该系统无需视线，只需到达目标可能路线。",
+     "id": "npcf_cn_rainmaker_4",
+     "base": false
+    },
+    {
+     "name": "猎犬导弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "猎犬导弹（大小 1/2，HP10/15/20，回避 10，电子防御 10，标签：无人机）祈雨师邻近空间部署猎犬导弹，选择视线射程 20内一个目标。祈雨师开始回合时导弹向目标飞行 3 空间，若目标被锁定飞行 6 空间。它直线移动，若需要可绕过掩体和地形机动。当它与角色碰撞或到达目标时会产生爆发 1 的爆炸。受影响区域内角色受到 16/20/24 能量伤害，通过敏捷豁免则伤害减半。",
+     "id": "npcf_cn_rainmaker_5",
+     "base": false
+    },
+    {
+     "name": "无尽之雨",
+     "type": "Trait",
+     "tags": [],
+     "effect": "祈雨师为标枪火箭弹选择 6 空间，而非 3。",
+     "id": "npcf_cn_rainmaker_6",
+     "base": false
+    },
+    {
+     "name": "齐射",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "选择视线射程 20 内所有角色受到 4/6/8 爆炸伤害，成功进行敏捷豁免伤害减半。",
+     "id": "npcf_cn_rainmaker_7",
+     "base": false
+    },
+    {
+     "name": "阿特拉斯导弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "祈雨师选择视线射程 30 内一个地面空间，所有角色都知悉选择了哪些空间。祈雨师发射一枚导弹，在下一轮结束时该地点造成溅射 2 的爆炸；受影响角色受到16/20/24 爆炸伤害，成功进行敏捷豁免伤害减半。",
+     "id": "npcf_cn_rainmaker_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_ronin",
+   "name": "浪人",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 302,
+   "pages": [
+    302
+   ],
+   "flavor": "浪人骨架不同于狂战士和粉碎者所青睐的机甲，它们并非为创造性战术应用而改造或临时制作——它们是精品制造者专为近身格斗而精心设计。尽管在多数评论家看来有些过时，但静滞和磁力防御技术的兴起使得浪人在现代战斗中更具活力。浪人在武术文化和表演格斗厂商中都很常见，高超的肉搏能力使它们在竞争中脱颖而出。在偏爱远程战斗的文化中，浪人型机甲的使用较少，但那些使用了古典武器并幸存下来的驾驶员却享有某种荣誉。传奇枪骑兵须佐之男（Susanoo）将这一原型机抬升至神话版的地位，在新塞莱斯廷之殇（Neo-Celestine Disappointment）期间，她驾驶着代言的 GRAM 科技公司（GRAMtech ）的打击者一型底盘，与无数信天翁机队伴飞作战。",
+   "tactics": "浪人是简单直接的高伤害近战突击者。弹反使敌人用远程武器攻击浪人变得非常危险，但他们往往会在装甲敌人手中遭重，并严重依赖准度。",
+   "stats": {
+    "hull": [
+     1,
+     2,
+     4
+    ],
+    "sys": [
+     -1,
+     -1,
+     -1
+    ],
+    "agi": [
+     2,
+     4,
+     5
+    ],
+    "eng": [
+     -1,
+     -1,
+     -1
+    ],
+    "hp": [
+     18,
+     20,
+     22
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     13,
+     16
+    ],
+    "edef": [
+     7,
+     7,
+     7
+    ],
+    "speed": [
+     5,
+     5,
+     6
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     7,
+     7,
+     7
+    ],
+    "save": [
+     10,
+     13,
+     15
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "碳纤维剑",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 2
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        6,
+        6,
+        6
+       ]
+      }
+     ],
+     "effect": "T2 时，该武器可一次攻击两次，目标可以是同一个角色，也可以是两个不同角色。T3 时，它可以一次攻击三次。\n会心一击：造成+1d6 动能伤害。",
+     "id": "npcf_cn_ronin_1",
+     "base": true
+    },
+    {
+     "name": "弹反",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_shield"
+      },
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "浪人受到远程攻击的伤害。",
+     "effect": "掷骰 1d6：4+，浪人获得该攻击的伤害抗性，并且攻击者必须对自己重复此次攻击。",
+     "id": "npcf_cn_ronin_2",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "充能斩",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "所有与浪人邻近的角色受到 6/9/12 动能伤害，若通过敏捷豁免则减半。",
+     "id": "npcf_cn_ronin_3",
+     "base": false
+    },
+    {
+     "name": "箔条发射器",
+     "type": "Trait",
+     "tags": [],
+     "effect": "浪人推进后获得软性掩护直到下一个回合开始。",
+     "id": "npcf_cn_ronin_4",
+     "base": false
+    },
+    {
+     "name": "共鸣锋刃",
+     "type": "Trait",
+     "tags": [],
+     "effect": "被浪人伤害的角色将获得一个浪人标记。浪人回合开始时可用一个自由动作清除所有浪人标记，自动对所有浪人标记角色造成 1d6AP 动能伤害并清除标记。",
+     "id": "npcf_cn_ronin_5",
+     "base": false
+    },
+    {
+     "name": "直觉模式",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "直到浪人下一个回合结束，每回合首次被选为攻击目标时，浪人可率先以反应使用碳纤维剑攻击射程内的角色。",
+     "id": "npcf_cn_ronin_6",
+     "base": false
+    },
+    {
+     "name": "加长刀刃",
+     "type": "System",
+     "tags": [],
+     "effect": "浪人的碳纤维剑变为威胁 3。当浪人每回合首次用它进行会心一击时，威胁内的所有角色都将受到 2/3/4动能伤害——包括目标。",
+     "id": "npcf_cn_ronin_7",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_scourer",
+   "name": "清扫器",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 304,
+   "pages": [
+    304
+   ],
+   "flavor": "清扫器级机甲的特点是通过大规模输出递归能量平台携带致命的能量武器。这些机甲遍布银河系，扮演着专业角色，用强大的光束攻击支援常规地面部队，既能够轻松阻止电子威胁，也能够有效打击敌方士兵。",
+   "tactics": "清扫器专注于单目标施行多次攻击造成大量伤害。它们可以很容易地用来对付移动缓慢或强硬的难敌。然而，当被迫转换目标时，他们的效率会降低许多，他们需要保持不动才能充分利用自己的武器。",
+   "stats": {
+    "hull": [
+     1,
+     2,
+     3
+    ],
+    "sys": [
+     0,
+     0,
+     1
+    ],
+    "agi": [
+     0,
+     1,
+     1
+    ],
+    "eng": [
+     1,
+     2,
+     4
+    ],
+    "hp": [
+     10,
+     13,
+     15
+    ],
+    "armor": [
+     2,
+     2,
+     2
+    ],
+    "evasion": [
+     8,
+     9,
+     10
+    ],
+    "edef": [
+     8,
+     8,
+     8
+    ],
+    "speed": [
+     4,
+     4,
+     4
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     12
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "热能喷枪",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_heat_self",
+       "val": 4
+      }
+     ],
+     "weapon_size": "重型",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 8
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        6,
+        8,
+        10
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_scourer_1",
+     "base": true
+    },
+    {
+     "name": "倾泻聚焦",
+     "type": "Trait",
+     "tags": [],
+     "effect": "当清扫器使用热能喷枪命中时，若目标在上一轮中也被热能喷枪成功命中，则目标受到 5/7/8 燃烧伤害。",
+     "id": "npcf_cn_scourer_2",
+     "base": true
+    },
+    {
+     "name": "冷却模块",
+     "type": "System",
+     "tags": [],
+     "effect": "在清扫器回合开始时，若它们在上一回合结束后没有移动包括强制移动，则清扫器清除所有热度。",
+     "id": "npcf_cn_scourer_3",
+     "base": true
+    },
+    {
+     "name": "烧蚀保护层",
+     "type": "System",
+     "tags": [],
+     "effect": "清扫器对能量伤害具有抗性。",
+     "id": "npcf_cn_scourer_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "超压",
+     "type": "Trait",
+     "tags": [],
+     "effect": "受倾泻聚焦影响的角色会离散和缓慢直到对方下一回合结束。",
+     "id": "npcf_cn_scourer_5",
+     "base": false
+    },
+    {
+     "name": "紧急通风口",
+     "type": "Trait",
+     "tags": [],
+     "effect": "当清扫器超过其热度上限或被晕眩时，它们隐形直到下一回合开始。",
+     "id": "npcf_cn_scourer_6",
+     "base": false
+    },
+    {
+     "name": "脉冲镭射",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Line",
+       "val": 10
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        4,
+        4,
+        4
+       ]
+      }
+     ],
+     "effect": "T2~3 时，该武器可一次攻击两次，目标可以是同一个角色，也可以是两个不同角色。",
+     "id": "npcf_cn_scourer_7",
+     "base": false
+    },
+    {
+     "name": "闪光镜头",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "以清扫器为原点的锥形 5 内所有角色必须通过系统豁免否则受扰直到清扫器下一回合开始。",
+     "id": "npcf_cn_scourer_8",
+     "base": false
+    },
+    {
+     "name": "熔化",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "清扫器对射程 10 内的可展开或无人机进行远程攻击，成功则造成 20AP 能量伤害。",
+     "id": "npcf_cn_scourer_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_scout",
+   "name": "斥候",
+   "role": "支援",
+   "role_en": "support",
+   "page": 305,
+   "pages": [
+    305
+   ],
+   "flavor": "最具破坏性的机械化战争战略需要主动、近距离、积极地应用轨道、大气和地面火力支援。于是斥候机甲与它们的驾驶员应运而生。使用先进的目标定位系统，侦察兵既是战术协调者也是炮兵指挥官，它们与盟军一起绘制战场地图，并精确地定位直接目标和自主开火。",
+   "tactics": "斥候是被设计用来提升他们盟友伤害的支援机甲。他们自身不会造成伤害，但标记步枪和隐形场都可保证他们的盟友角色的存活并防止敌人隐匿。他们尤其擅长揭示隐形角色，但需要接近目标才能充分利用这种能力。如同大多数支援机，斥候机甲自身的承受力并不足。",
+   "stats": {
+    "hull": [
+     -1,
+     -2,
+     -2
+    ],
+    "sys": [
+     3,
+     4,
+     5
+    ],
+    "agi": [
+     2,
+     4,
+     5
+    ],
+    "eng": [
+     -1,
+     -1,
+     0
+    ],
+    "hp": [
+     8,
+     8,
+     8
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     12,
+     15,
+     18
+    ],
+    "edef": [
+     10,
+     13,
+     16
+    ],
+    "speed": [
+     6,
+     7,
+     8
+    ],
+    "size": [
+     0.5,
+     0.5,
+     0.5
+    ],
+    "heatcap": [
+     6,
+     6,
+     6
+    ],
+    "save": [
+     11,
+     13,
+     15
+    ],
+    "sensor": [
+     20,
+     20,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "size_note": [
+    "1/2 或 1",
+    "1/2 或 1",
+    "1/2 或 1"
+   ],
+   "base": [
+    {
+     "name": "标记步枪",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_smart"
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "步枪",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      2,
+      2,
+      2
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 15
+      }
+     ],
+     "damage": [],
+     "effect": "",
+     "on_hit": "目标受到锁定。只要他们锁定，则同时离散并不能躲藏或隐形。",
+     "id": "npcf_cn_scout_1",
+     "base": true
+    },
+    {
+     "name": "视野",
+     "type": "Trait",
+     "tags": [],
+     "effect": "斥候忽略躲藏和隐形，它们知悉感知内所有角色精确位置。",
+     "id": "npcf_cn_scout_2",
+     "base": true
+    },
+    {
+     "name": "回升扫描",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "斥候选择射程 5 内所有角色进行系统豁免。失败则立即失去匿迹和隐形，且无法从任何掩护中重新获得该状况或增益直到斥候下一回合开始。",
+     "id": "npcf_cn_scout_3",
+     "base": true
+    },
+    {
+     "name": "隐形场",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "斥候生成爆发 3 的隐形场持续到下一回合结束。受影响区域内的斥候和盟友角色隐形，但斥候在系统激活时固定。",
+     "id": "npcf_cn_scout_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "系统掠劫者",
+     "type": "Trait",
+     "tags": [],
+     "effect": "在回升扫描中豁免失败的角色会被锁定并受到2/3/4 热度。",
+     "id": "npcf_cn_scout_5",
+     "base": false
+    },
+    {
+     "name": "测位仪",
+     "type": "Trait",
+     "tags": [],
+     "effect": "与斥候邻近时，盟友角色所有攻击掷骰+1 准度。",
+     "id": "npcf_cn_scout_6",
+     "base": false
+    },
+    {
+     "name": "暴露弱点",
+     "type": "Trait",
+     "tags": [],
+     "effect": "成功被标记步枪攻击的角色下次成功被远程或近战攻击时受到+4/+6/+8 额外伤害。若它没被触发，则持续到场景结束。",
+     "id": "npcf_cn_scout_7",
+     "base": false
+    },
+    {
+     "name": "数据面纱",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "默认斥候处于隐形并可用快速动作将此状态转移视线内另一角色。斥候不再隐形，只有以快速动作将其转移回或转移至另一角色斥候才恢复状态；否则此效果将持续到斥候被摧毁。",
+     "id": "npcf_cn_scout_8",
+     "base": false
+    },
+    {
+     "name": "轨道炮打击",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "斥候视线射程 20 地面上选择一个空间；所有角色都知悉选择了哪个空间。斥候呼叫施行轨道轰炸，在下一轮结束时击中目标，造成爆发 2 的爆炸。受影响区域角色必须通过敏捷豁免。失败则受到 12/16/20 能量伤害并伏卧。若成功，伤害减半并仍保持站立。",
+     "id": "npcf_cn_scout_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_seeder",
+   "name": "播种机",
+   "role": "操纵",
+   "role_en": "controller",
+   "page": 306,
+   "pages": [
+    306
+   ],
+   "flavor": "作为工兵的播种机原型机擅长部署由地雷陷阱组成的防御网。它们装载传感器套组炸药，以小队形式运作：它们共同在战场上铺设陷阱和圈套，布设地雷和其他区域拒止系统以引导敌人进入杀伤区。",
+   "tactics": "播种机擅长封锁区域，用地雷控制敌人行动。播种机可在每个回合放置一枚地雷，正因如此若不加以干涉随，它们便可迅速将战场的一部分变成一片混乱。盟友角色不会触发播种机地雷，但若它们被波及爆炸中会受到地雷影响。播种机可以获取可选系统迫使角色分散或承受额外伤害。",
+   "stats": {
+    "hull": [
+     0,
+     1,
+     2
+    ],
+    "sys": [
+     2,
+     3,
+     4
+    ],
+    "agi": [
+     0,
+     0,
+     0
+    ],
+    "eng": [
+     0,
+     0,
+     0
+    ],
+    "hp": [
+     12,
+     14,
+     16
+    ],
+    "armor": [
+     2,
+     2,
+     2
+    ],
+    "evasion": [
+     7,
+     8,
+     9
+    ],
+    "edef": [
+     10,
+     10,
+     11
+    ],
+    "speed": [
+     4,
+     4,
+     4
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     10,
+     10,
+     10
+    ],
+    "save": [
+     12,
+     15,
+     18
+    ],
+    "sensor": [
+     15,
+     15,
+     15
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "布雷",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_mine"
+      },
+      {
+       "id": "tg_quick_action"
+      },
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "播种机在射程 3 内自由空间部署一枚地雷。一旦部署完毕，当敌人移动到它上方则就会产生溅射 1 爆炸，同时影响盟友和敌人。• 晕眩地雷：该区域角色若未能通过工程豁免则晕眩直到对方下一回合结束。• 炸药地雷：该区域角色受到 8/12/16 爆炸伤害，通过敏捷豁免伤害减半。• 密封地雷：该区域内机体豁免失败的角色固定直到对方下一回合结束，然后缓慢再到下一回合结束。• 电震地雷：该区域内系统豁免失败的角色受扰直到一份下一回合结束，然后受损再到下一回合结束。播种机地雷是隐形且无法被瞄准的，但在感应内的敌方角色可通过成功的系统检定来发现它们。角色可在同一空间通过快速动作进行系统检定除它们；然而，这一检定的失败将引爆地雷。",
+     "id": "npcf_cn_seeder_1",
+     "base": true
+    },
+    {
+     "name": "重力榴弹发射器",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_arcing"
+      },
+      {
+       "id": "tg_knockback",
+       "val": 1
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "发射器",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 8
+      },
+      {
+       "type": "Blast",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Explosive",
+       "val": [
+        2,
+        3,
+        4
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_seeder_2",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "弹跳地雷",
+     "type": "Trait",
+     "tags": [],
+     "effect": "当敌对角色飞行或移动到布雷上方 10 空间时也会激活，地雷跳跃到 10 空间高度，在其上升撞到的第一个角色旁引爆。",
+     "id": "npcf_cn_seeder_3",
+     "base": false
+    },
+    {
+     "name": "绊索",
+     "type": "Trait",
+     "tags": [],
+     "effect": "布雷获得再充能 5+。地雷现在占据线形 3 区域，当敌人移动进入或穿越该区域时，地雷会从最近的空间引爆。",
+     "id": "npcf_cn_seeder_4",
+     "base": false
+    },
+    {
+     "name": "快速部署者",
+     "type": "Trait",
+     "tags": [],
+     "effect": "布雷一次埋设两枚地雷而非一枚。",
+     "id": "npcf_cn_seeder_5",
+     "base": false
+    },
+    {
+     "name": "重力钉刺",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "视线射程 5 内的一个角色必须通过系统豁免否则一枚重力钉刺将附加在其身上。播种机用协定引爆所有重力钉刺，使目标自动受到 4/6/8AP 爆炸伤害，并被拉向播种机选择的方向 3 空间。一个快速动作并通过系统豁免可剔除一枚重力钉刺。",
+     "id": "npcf_cn_seeder_6",
+     "base": false
+    },
+    {
+     "name": "引爆钉刺",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "视线射程 5 内最多 3 个角色必须通过系统豁免否则一枚引爆钉刺将附加在其身上。播种机下一回合开始，所有引爆钉刺都将引爆，产生爆发 1 爆炸，对所有受影响角色造成 3/5/7 爆炸伤害。若受影响区域重叠，角色将从多个钉刺来源受到多个伤害。",
+     "id": "npcf_cn_seeder_7",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_sentinel",
+   "name": "哨兵",
+   "role": "卫兵",
+   "role_en": "defender",
+   "page": 307,
+   "pages": [
+    307
+   ],
+   "flavor": "哨兵原型机常被用作守卫和护送，也常是指挥官随从或炮兵阵地的驻守。这些机甲及其驾驶员采用了先进技术套件以确保其护卫对象能存活和运转，即使这要付出自身底盘或生命的代价。与较为重型的棱堡原型不同，哨兵迅捷而灵敏：它们常用采用主动防御策略，使用先进技术、系统和直接武器进行先发制人的攻击以保护对象其目标。",
+   "tactics": "哨兵是高机动卫兵，专注于通过守望来保护他们的盟友。他们是直接近距离攻击者，依靠定位来充分利用他们的装备，他们并不具备等同于其他卫兵的承受力。",
+   "stats": {
+    "hull": [
+     2,
+     3,
+     4
+    ],
+    "sys": [
+     1,
+     2,
+     3
+    ],
+    "agi": [
+     1,
+     2,
+     3
+    ],
+    "eng": [
+     1,
+     2,
+     3
+    ],
+    "hp": [
+     16,
+     20,
+     24
+    ],
+    "armor": [
+     1,
+     1,
+     1
+    ],
+    "evasion": [
+     8,
+     11,
+     13
+    ],
+    "edef": [
+     8,
+     11,
+     13
+    ],
+    "speed": [
+     5,
+     5,
+     6
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "战斗霰弹枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        6,
+        8,
+        10
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_sentinel_1",
+     "base": true
+    },
+    {
+     "name": "伸缩剑",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        4,
+        6,
+        8
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_sentinel_2",
+     "base": true
+    },
+    {
+     "name": "子夜之眼",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "哨兵缓慢，但守望的 1/回合取代 1/轮。一旦激活，该效果将一直持续到以快速动作终止。",
+     "id": "npcf_cn_sentinel_3",
+     "base": true
+    },
+    {
+     "name": "护法",
+     "type": "Trait",
+     "tags": [],
+     "effect": "邻近盟友可将哨兵充当硬性掩护。",
+     "id": "npcf_cn_sentinel_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "制裁者弹药",
+     "type": "Trait",
+     "tags": [],
+     "effect": "被哨兵守望攻击伤害的角色同时缓慢直到对方下一回合结束。",
+     "id": "npcf_cn_sentinel_5",
+     "base": false
+    },
+    {
+     "name": "盛怒喉缩",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "哨兵为该系统提供武器。一旦装备好，哨兵就会在下一次使用战斗霰弹枪进行两次而非一次攻击。",
+     "id": "npcf_cn_sentinel_6",
+     "base": false
+    },
+    {
+     "name": "穿刺者",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "当哨兵用守望攻击时，其目标必须通过机体豁免否则固定并受扰直到对方下一回合结束。",
+     "id": "npcf_cn_sentinel_7",
+     "base": false
+    },
+    {
+     "name": "快速响应",
+     "type": "Reaction",
+     "tags": [],
+     "trigger": "一个敌人角色在视线内移动。",
+     "effect": "哨兵可以推进。",
+     "id": "npcf_cn_sentinel_8",
+     "base": false
+    },
+    {
+     "name": "保镖",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_protocol"
+      }
+     ],
+     "effect": "哨兵选择射程 5 内的盟友角色作为其守护目标并获得自反式打击反应。\n【自反式打击】（反应）触发：某角色攻击哨兵的守护目标。\n效果：哨兵率先用守望攻击该角色。",
+     "id": "npcf_cn_sentinel_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_sniper",
+   "name": "狙击手",
+   "role": "炮击",
+   "role_en": "artillery",
+   "page": 308,
+   "pages": [
+    308,
+    309
+   ],
+   "flavor": "某些驾驶员没能在战场上目睹狙击手的原因是那些驾驶员已经死了。这些机甲是为了稳定性，绝对精度和以牺牲机动性为代价的远程动能武器而建造，它们往往以小规模自给团队运作，远离直接战斗。狙击手驾驶员是个骄傲的兵种，更强调经济性和优雅性，而非破坏力。",
+   "tactics": "对狙击手破坏力的恐惧理所当然，尤其是当他们制造集中伤害时。使用狙击手标记，他们可以直接造成结构伤害，使几乎任何角色运作时间缩短。对手可以通过巧妙地使用掩体或伏卧来避免这种情况。狙击手主要缺点是他们需要固定位置才能进行最好的工作，他们的步枪需要完整动作才能射击。",
+   "stats": {
+    "hull": [
+     -2,
+     -2,
+     -2
+    ],
+    "sys": [
+     1,
+     3,
+     4
+    ],
+    "agi": [
+     1,
+     2,
+     3
+    ],
+    "eng": [
+     1,
+     1,
+     2
+    ],
+    "hp": [
+     10,
+     12,
+     14
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     13,
+     16
+    ],
+    "edef": [
+     8,
+     9,
+     10
+    ],
+    "speed": [
+     4,
+     4,
+     4
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     6,
+     6,
+     6
+    ],
+    "save": [
+     11,
+     13,
+     15
+    ],
+    "sensor": [
+     15,
+     15,
+     15
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "反器材步枪",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_ap"
+      },
+      {
+       "id": "tg_ordnance"
+      },
+      {
+       "id": "tg_loading"
+      }
+     ],
+     "weapon_size": "超重型",
+     "weapon_kind": "步枪",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      2,
+      2,
+      2
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 25
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        10,
+        15,
+        20
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_sniper_1",
+     "base": true
+    },
+    {
+     "name": "狙击手标记",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "视线射程 25 内一个角色获得狙击手标记。对具有狙击手标记的目标，反器材步枪造成 1 结构伤害取代正常伤害。角色知悉自己身上的狙击手标记。若处于掩护或伏卧则忽略该效果并正常承受伤害。在该角色回合中，具有狙击手标记的角色可以用自由动作伏卧。狙击手一次只能标记一个角色，但可以将狙击手标记以一个完整动作转移到另一个角色。",
+     "id": "npcf_cn_sniper_2",
+     "base": true
+    },
+    {
+     "name": "登山者",
+     "type": "Trait",
+     "tags": [],
+     "effect": "狙击手可以在任何表面（包括悬垂和垂直表面）攀爬并且保持静止不动不受惩罚。",
+     "id": "npcf_cn_sniper_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "甄选装弹",
+     "type": "System",
+     "tags": [],
+     "effect": "狙击手在使用反器材步枪攻击之前可以选择一种特殊弹药类型。使用此弹药功能进行攻击如常并在成功攻击时产生额外效果。狙击手可从以下选项中选择：• 电磁：目标必须通过系统豁免否则受扰直到对方下一回合结束。• 耀斑：目标失去匿迹或隐形直到对方下一回合结束才能重新获得。• 冲击：目标必须通过机体豁免否则伏卧。• 熔化：目标必须通过工程豁免否则离散直到对方下一回合结束。",
+     "id": "npcf_cn_sniper_4",
+     "base": false
+    },
+    {
+     "name": "防御性抓钩",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 4
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "狙击手可以用抓钩将自己拉到射程 5 以内的任何地点，如同飞行。狙击手同时获得重新定位反应。\n【重新定位】（反应）触发：一个敌人角色在视线内移动。\n效果：狙击手可适用防御性抓钩。",
+     "id": "npcf_cn_sniper_5",
+     "base": false
+    },
+    {
+     "name": "遮蔽炸弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "狙击手引爆一枚炸弹，制造出爆发 3 的烟、雾或其他隐藏物。狙击手在受影响区域内获得软性掩护，除了狙击手以外角色无法画出视线进入或离开该区域。部分在区域内的角色对区域外角色有视线。这该效果持续到狙击手下一回合结束，或者直到狙击手再次使用该系统。",
+     "id": "npcf_cn_sniper_6",
+     "base": false
+    },
+    {
+     "name": "移动靶子",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "一个敌人角色在视线射程 20 内移动。",
+     "effect": "狙击手打断对方移动。该角色必须要么放弃引发的动作/移动，要么立即被狙击手使用反器材步枪攻击。若步枪尚未装填，则狙击手可以放弃该动作进行装填。",
+     "id": "npcf_cn_sniper_7",
+     "base": false
+    },
+    {
+     "name": "死亡金属轮",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "狙击手为反器材步枪填装一种特殊的过穿透力子弹：下一次攻击变为线形 20。",
+     "id": "npcf_cn_sniper_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_specter",
+   "name": "幽鬼",
+   "role": "突击",
+   "role_en": "striker",
+   "page": 310,
+   "pages": [
+    310
+   ],
+   "flavor": "开发幽鬼原型机的原则很简单：不被击中胜过最强盔甲。幽鬼利用尖端光电伪装从战场和敌人扫描中消失。它们忽隐忽现，混淆视觉与雷达。这是它们如此致命的原因，尽管武器确实也起到关键作用。",
+   "tactics": "幽灵是高机动突击，对那些失误落单的敌人表现出众。使用潜行连同他们的高威胁和速度让他们越过前线去寻找脆弱个体目标，如狙击手和炮击机。幽灵永久隐形，这是他们生存的关键；他们的承受力不强，但可以随时躲藏。",
+   "stats": {
+    "hull": [
+     -3,
+     -2,
+     -2
+    ],
+    "sys": [
+     1,
+     2,
+     3
+    ],
+    "agi": [
+     3,
+     5,
+     6
+    ],
+    "eng": [
+     0,
+     1,
+     1
+    ],
+    "hp": [
+     10,
+     10,
+     10
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     15,
+     18
+    ],
+    "edef": [
+     8,
+     9,
+     12
+    ],
+    "speed": [
+     4,
+     5,
+     7
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "heatcap": [
+     7,
+     7,
+     7
+    ],
+    "save": [
+     10,
+     13,
+     14
+    ],
+    "sensor": [
+     5,
+     5,
+     5
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "单丝剑",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 3
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        5,
+        5,
+        5
+       ]
+      }
+     ],
+     "effect": "T2 时，该武器可一次攻击两次，目标可以是同一个角色，也可以是两个不同角色。T3 时，它可以一次攻击三次。",
+     "id": "npcf_cn_specter_1",
+     "base": true
+    },
+    {
+     "name": "潜行",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "幽鬼移动等于速度的空间，然后躲藏。该移动忽略交火和反应。",
+     "id": "npcf_cn_specter_2",
+     "base": true
+    },
+    {
+     "name": "战术斗篷",
+     "type": "Trait",
+     "tags": [],
+     "effect": "幽鬼永久隐形。",
+     "id": "npcf_cn_specter_3",
+     "base": true
+    },
+    {
+     "name": "追猎",
+     "type": "Trait",
+     "tags": [],
+     "effect": "当目标邻近没有其他角色时，幽鬼近战攻击造成+5 伤害。",
+     "id": "npcf_cn_specter_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "要塞",
+     "type": "Trait",
+     "tags": [],
+     "effect": "幽鬼系统豁免+3 准度，针对它们的科技攻击+3难度。",
+     "id": "npcf_cn_specter_5",
+     "base": false
+    },
+    {
+     "name": "枯竭系统",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_full_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Full",
+     "effect": "幽鬼对邻近角色进行科技攻击。成功则目标晕眩。此效果持续到除幽鬼外其他角色开始回合与目标邻近或移动到目标邻近。",
+     "id": "npcf_cn_specter_6",
+     "base": false
+    },
+    {
+     "name": "瞬步",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "幽鬼可瞬间移动到视线射程 50 内的自由空间。",
+     "id": "npcf_cn_specter_7",
+     "base": false
+    },
+    {
+     "name": "冲锋手枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "副武器",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      },
+      {
+       "type": "Threat",
+       "val": 3
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        2,
+        2,
+        2
+       ]
+      }
+     ],
+     "effect": "T2 时，该武器可一次攻击两次，目标可以是同一个角色，也可以是两个不同角色。T3 时，它可以一次攻击三次。",
+     "id": "npcf_cn_specter_8",
+     "base": false
+    },
+    {
+     "name": "弱点分析仪",
+     "type": "System",
+     "tags": [],
+     "effect": "幽鬼开始躲藏的回合时，其下一次攻击（当匿迹时）获得+1/+2/+3 准度，且会心一击时+1d6 动能伤害。",
+     "id": "npcf_cn_specter_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_support",
+   "name": "支援者",
+   "role": "支援",
+   "role_en": "support",
+   "page": 311,
+   "pages": [
+    311
+   ],
+   "flavor": "支援者原型机甲通过大量即时分诊系统库，从基本闪印电镀到浅介质结构加固包和白浴纳米浆，来维持其盟友的生产和行动。从边界花园战场前线的“庄严之神的微笑”（Laughter of a Solemn God）到外太阳系收购股份有限公司（ExtraSolar Acquisitions, Inc.）离群天体猎人执行的精确行动，当机甲团队需要比部署更长的生存时间时，支援者原型机甲的效用将无与伦比。",
+   "tactics": "支援者是无法造成任何伤害的笨重机甲，但有强大的治疗和状态清除效果。尽管他们有一定的承受力，但无法保护自己，需要接近他们的盟友才能起效。聪明的玩家会在补给无人机被激活前射击并摧毁它们，扑灭任何治疗的机会。",
+   "stats": {
+    "hull": [
+     1,
+     1,
+     1
+    ],
+    "sys": [
+     0,
+     1,
+     2
+    ],
+    "agi": [
+     -2,
+     -1,
+     -1
+    ],
+    "eng": [
+     2,
+     4,
+     6
+    ],
+    "hp": [
+     15,
+     18,
+     22
+    ],
+    "armor": [
+     1,
+     1,
+     1
+    ],
+    "evasion": [
+     8,
+     10,
+     12
+    ],
+    "edef": [
+     8,
+     10,
+     12
+    ],
+    "speed": [
+     4,
+     4,
+     4
+    ],
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     10,
+     12,
+     16
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [
+    {
+     "name": "密封枪",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "支援者选择视线射程 5 内一个角色，盟友或敌人：• 盟友：目标清除所有燃烧但会缓慢直到对方下一回合结束。• 敌人：目标必须通过敏捷豁免否则缓慢直到对方下一回合结束。无论成功与否，围绕其爆发 1 区域变为困难地形，持续到场景结束。",
+     "id": "npcf_cn_support_1",
+     "base": true
+    },
+    {
+     "name": "补给无人机",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "补给无人机（大小 1/2，HP 5/8/10，回避 10/12/14，电子防御 10/12/14，标签：无人机）该无人机可在射程 5 内空间悬停。下一次盟友角色移动到无人机旁边时，它会钳制释放其储备，恢复5/10/15HP。",
+     "id": "npcf_cn_support_2",
+     "base": true
+    },
+    {
+     "name": "单子修补云",
+     "type": "Trait",
+     "tags": [],
+     "effect": "盟友角色靠近支援者时，所有豁免和机甲技能检定中掷骰两次并选择更高的结果。",
+     "id": "npcf_cn_support_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "远程重启",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "支援者清除射程 5 内的盟友角色以下任意两种状态：受损，受扰，晕眩和缓慢。",
+     "id": "npcf_cn_support_4",
+     "base": false
+    },
+    {
+     "name": "附魔云",
+     "type": "Trait",
+     "tags": [],
+     "effect": "盟友角色开始其回合时与支援者邻近，他们可以清除一个状态。",
+     "id": "npcf_cn_support_5",
+     "base": false
+    },
+    {
+     "name": "遥控云",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "支援者在射程 5 内释放溅射 2 纳米云。盟友角色在该区域开始其回合或在轮内首次进入该区域，将恢复2/4/6HP。云在支援者下一回合开始时消散。",
+     "id": "npcf_cn_support_6",
+     "base": false
+    },
+    {
+     "name": "防御性脉冲",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "射程 3 内的所有盟友角色清除受扰与锁定。",
+     "id": "npcf_cn_support_7",
+     "base": false
+    },
+    {
+     "name": "碰锁无人机",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "碰锁无人机（大小 1/2，HP 5/10/15，回避 10，电子防御 10，标签：无人机）该自动部署无人机可在射程 3 内钳住一个角色，占据相同空间并与其一起移动。当无人机附着目标身上时，目标每回合开始获得 5/8/10HP 并在所有检定、豁免和攻击上+1 准度。敌人可瞄准无人机攻击。",
+     "id": "npcf_cn_support_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_witch",
+   "name": "女巫",
+   "role": "操纵",
+   "role_en": "controller",
+   "page": 312,
+   "pages": [
+    312,
+    314
+   ],
+   "flavor": "女巫原型底盘总能在体系风暴的中心找到位置，它们擅长制造现实空间和军团空间怖物来覆盖战场。在任何时候，它们都有可能在物理战场和万物网的骚乱中同时作战。为了处理由此产生的输入输出混乱漩涡，女巫通常会与人格克隆的 NHP 配对，通过并行处理任务来提高战斗效率。",
+   "tactics": "女巫是务实的控制者，使用拆毁术来施加热度，使用盲目术来关闭远程攻击者。掠夺性逻辑给了他们对付重武器角色的工具，这也可以帮助他们的盟友。在女巫们释放大部分热度后，目标一般在下一个回合都有机会释放自己的热度。",
+   "stats": {
+    "hull": [
+     -2,
+     -1,
+     -2
+    ],
+    "sys": [
+     3,
+     5,
+     6
+    ],
+    "agi": [
+     1,
+     2,
+     3
+    ],
+    "eng": [
+     0,
+     0,
+     0
+    ],
+    "hp": [
+     12,
+     14,
+     14
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     12,
+     14
+    ],
+    "edef": [
+     13,
+     16,
+     20
+    ],
+    "speed": [
+     6,
+     6,
+     6
+    ],
+    "size": [
+     0.5,
+     0.5,
+     0.5
+    ],
+    "heatcap": [
+     8,
+     8,
+     8
+    ],
+    "save": [
+     12,
+     15,
+     18
+    ],
+    "sensor": [
+     15,
+     15,
+     20
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "size_note": [
+    "1/2 或 1",
+    "1/2 或 1",
+    "1/2 或 1"
+   ],
+   "base": [
+    {
+     "name": "拆毁术",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "tech_type": "Quick",
+     "effect": "女巫对感应内一个角色进行科技攻击。成功则目标会立即受到 1/2/3 热度，然后在女巫下一回合开始时受到 4 热度。",
+     "id": "npcf_cn_witch_1",
+     "base": true
+    },
+    {
+     "name": "盲目术",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 4
+      }
+     ],
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "tech_type": "Quick",
+     "effect": "女巫对感应内一个角色进行科技攻击。成功则目标在下一回合结束前只对邻近空间有视线。",
+     "id": "npcf_cn_witch_2",
+     "base": true
+    },
+    {
+     "name": "掠夺性逻辑",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 6
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Quick",
+     "effect": "女巫对感应内一个角色进行科技攻击。成功则目标立即使用女巫选择的武器攻击女巫选择射程内的角色。",
+     "id": "npcf_cn_witch_3",
+     "base": true
+    },
+    {
+     "name": "模糊术",
+     "type": "Trait",
+     "tags": [],
+     "effect": "女巫自身回合中，它们隐形。",
+     "id": "npcf_cn_witch_4",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "扩散苦难",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      },
+      {
+       "id": "tg_free_action"
+      }
+     ],
+     "effect": "1/轮，当女巫使用快速科技或完整科技时，可用自由动作针对主要目标邻近的任意角色重复其选择。",
+     "id": "npcf_cn_witch_5",
+     "base": false
+    },
+    {
+     "name": "暗云",
+     "type": "Trait",
+     "tags": [],
+     "effect": "如果目标在超温危域，则拆毁术的额外热度伤害在女巫下一回合开始时增加到 7 热度。",
+     "id": "npcf_cn_witch_6",
+     "base": false
+    },
+    {
+     "name": "束缚术",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Quick",
+     "effect": "女巫对感应内一个角色进行科技攻击。命中则女巫将目标束缚在射程 3 内位置。若目标从该点移动超过 3空间（无论自主或强制），将受到 2/3/4 热度并受扰直到对方下一回合结束，然后该效果结束。否则对方会被持续束缚直到女巫被摧毁或晕眩，或场景结束。",
+     "id": "npcf_cn_witch_7",
+     "base": false
+    },
+    {
+     "name": "石化术",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_full_tech"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 6
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Full",
+     "effect": "女巫对感应内的一个角色进行科技攻击。成功则目标缓慢。在对方下一回合会固定。再下一回合会晕眩。所有状态在回合结束时结束。",
+     "id": "npcf_cn_witch_8",
+     "base": false
+    },
+    {
+     "name": "痛苦转移",
+     "type": "Tech",
+     "tags": [
+      {
+       "id": "tg_quick_tech"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 5
+      }
+     ],
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "tech_type": "Quick",
+     "effect": "女巫对感应内的一个角色进行科技攻击。若成功，在女巫的下一回合结束前，每当该目标受到热度，其射程 5 内所有盟友角色收到相同数量的热度。有时，你可能需要非机甲类的 NPC。以下特殊职业——人类，步兵班组和怪形——适用于这些情况。",
+     "id": "npcf_cn_witch_9",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_human",
+   "name": "人类",
+   "role": "生物",
+   "role_en": "biological",
+   "page": 314,
+   "pages": [
+    314
+   ],
+   "flavor": "会有各式人类最终都走上战场，包括驾驶员、VIP 和旁观者。当有人在战斗中爬出他们的机甲时，你将主要使用人类 NPC；若你想要一组完整的步兵班，使用班组职业代替。人类永远不能附加其他模板，也不能获得结构。",
+   "tactics": "",
+   "custom_note": "选择其一： 选择任意：",
+   "stats": {
+    "hull": [
+     1,
+     2,
+     3
+    ],
+    "sys": [
+     1,
+     2,
+     3
+    ],
+    "agi": [
+     1,
+     2,
+     3
+    ],
+    "eng": [
+     1,
+     2,
+     3
+    ],
+    "hp": [
+     6,
+     6,
+     6
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     10,
+     10,
+     10
+    ],
+    "edef": [
+     10,
+     10,
+     10
+    ],
+    "speed": [
+     4,
+     4,
+     4
+    ],
+    "size": [
+     0.5,
+     0.5,
+     0.5
+    ],
+    "save": [
+     10,
+     10,
+     10
+    ],
+    "sensor": [
+     5,
+     5,
+     5
+    ],
+    "heatcap": [
+     0,
+     0,
+     0
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "base": [],
+   "optional": [
+    {
+     "name": "远程武器",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "",
+     "weapon_kind": "",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        1,
+        2,
+        3
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_human_1",
+     "base": false
+    },
+    {
+     "name": "近战武器",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "",
+     "weapon_kind": "",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        1,
+        2,
+        3
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_human_2",
+     "base": false
+    },
+    {
+     "name": "反装甲武器",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "",
+     "weapon_kind": "",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 8
+      }
+     ],
+     "damage": [
+      {
+       "type": "Variable",
+       "val": [
+        3,
+        4,
+        5
+       ],
+       "note": "爆炸或能量"
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_human_3",
+     "base": false
+    },
+    {
+     "name": "老兵",
+     "type": "Trait",
+     "tags": [],
+     "effect": "+2/+4/+6 HP",
+     "id": "npcf_cn_human_4",
+     "base": false,
+     "bonus": {
+      "hp": [
+       2,
+       4,
+       6
+      ]
+     }
+    },
+    {
+     "name": "披甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "+1~2 装甲",
+     "id": "npcf_cn_human_5",
+     "base": false,
+     "bonus": {
+      "armor": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_squad",
+   "name": "班组",
+   "role": "生物",
+   "role_en": "biological",
+   "page": 315,
+   "pages": [
+    315
+   ],
+   "flavor": "虽然驾驶员个体和其他非机甲士兵可能不会对大多数机甲构成太大威胁，但一支装备精良训练有素的步兵班组本身就是危险。",
+   "tactics": "班组就是他们理所当然的样子：由五到十名全副武装的士兵组成的小队在战场上作为一个角色。",
+   "stats": {
+    "hull": [
+     2,
+     4,
+     6
+    ],
+    "sys": [
+     2,
+     4,
+     6
+    ],
+    "agi": [
+     2,
+     4,
+     6
+    ],
+    "eng": [
+     2,
+     4,
+     6
+    ],
+    "hp": [
+     10,
+     15,
+     20
+    ],
+    "armor": [
+     0,
+     0,
+     0
+    ],
+    "evasion": [
+     8,
+     8,
+     8
+    ],
+    "edef": [
+     8,
+     8,
+     8
+    ],
+    "speed": [
+     4,
+     4,
+     4
+    ],
+    "size": [
+     4,
+     4,
+     4
+    ],
+    "save": [
+     10,
+     12,
+     14
+    ],
+    "sensor": [
+     15,
+     15,
+     15
+    ],
+    "heatcap": [
+     0,
+     0,
+     0
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "size_note": [
+    "4（1/2 个体）",
+    "4（1/2 个体）",
+    "4（1/2 个体）"
+   ],
+   "base": [
+    {
+     "name": "士兵",
+     "type": "Trait",
+     "tags": [],
+     "effect": "班组是一个角色，但它代表着一群士兵行动。当小队受到一定伤害就会导致一名或多名士兵死亡。最终，这将减少班组每回合的攻击次数，如相关武器所列。在默认情况下，班组由 10 成员组成，每位成员拥有 1HP。",
+     "id": "npcf_cn_squad_1",
+     "base": true
+    },
+    {
+     "name": "普通军士",
+     "type": "Trait",
+     "tags": [],
+     "effect": "班组无法使用低等兵，老兵，或超体模板，且永远不能获得结构。",
+     "id": "npcf_cn_squad_2",
+     "base": true
+    },
+    {
+     "name": "人多力量大",
+     "type": "Trait",
+     "tags": [],
+     "effect": "班组对所有非线形，锥形，溅射或爆发的攻击伤害有抗性，并且对擒拿，冲撞，击退和晕眩免疫。",
+     "id": "npcf_cn_squad_3",
+     "base": true
+    },
+    {
+     "name": "散开",
+     "type": "Trait",
+     "tags": [],
+     "effect": "不追踪士兵个体位置，该班组成员被假定它所占据的空间内自由移动。其他角色可在班组占据的空间中自由移动并结束他们回合，只要班组占据至少 2 自由空间，它就可以重叠障碍物、掩护或其他角色结束其回合。",
+     "id": "npcf_cn_squad_4",
+     "base": true
+    },
+    {
+     "name": "尺寸不足",
+     "type": "Trait",
+     "tags": [],
+     "effect": "单独士兵可轻松躲到掩体后，但机甲规模级别武器的强大力量限制了他们被掩护的效率。班组总是处于软性掩护，即使在开阔地带，但无法从硬性掩护中获益。",
+     "id": "npcf_cn_squad_5",
+     "base": true
+    },
+    {
+     "name": "主要武器",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "步枪",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 5
+      }
+     ],
+     "damage": [
+      {
+       "type": "Variable",
+       "val": [
+        2,
+        3,
+        4
+       ],
+       "note": "动能，能量或爆炸（制作时选择）"
+      }
+     ],
+     "effect": "该武器可一次攻击 2 次；若班组损失超过一半 HP则只能攻击 1 次。",
+     "id": "npcf_cn_squad_6",
+     "base": true
+    },
+    {
+     "name": "反装甲武器",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_ap"
+      }
+     ],
+     "weapon_size": "重型",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 10
+      }
+     ],
+     "damage": [
+      {
+       "type": "Variable",
+       "val": [
+        5,
+        6,
+        7
+       ],
+       "note": "动能，能量或爆炸（制作时选择）"
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_squad_7",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "披甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "班组+1 装甲。",
+     "id": "npcf_cn_squad_8",
+     "base": false,
+     "bonus": {
+      "armor": 1
+     }
+    },
+    {
+     "name": "伏击者",
+     "type": "Trait",
+     "tags": [],
+     "effect": "班组在首轮战斗中所有攻击、豁免和检定+2 准度。",
+     "id": "npcf_cn_squad_9",
+     "base": false
+    },
+    {
+     "name": "卧倒藏好",
+     "type": "Reaction",
+     "tags": [],
+     "trigger": "班组被攻击命中。",
+     "effect": "班组获得伤害抗性，但固定直到下一回合结束。",
+     "id": "npcf_cn_squad_10",
+     "base": false
+    },
+    {
+     "name": "快速突入装置",
+     "type": "Trait",
+     "tags": [],
+     "effect": "班组可以在移动或推进时飞行。",
+     "id": "npcf_cn_squad_11",
+     "base": false
+    },
+    {
+     "name": "纪律",
+     "type": "Trait",
+     "tags": [],
+     "effect": "失去 HP 不会影响班组每回合的攻击次数。",
+     "id": "npcf_cn_squad_12",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npcc_cn_monstrosity",
+   "name": "怪形",
+   "role": "生物",
+   "role_en": "biological",
+   "page": 316,
+   "pages": [
+    316,
+    317
+   ],
+   "flavor": "怪形，作为特别庞大或令人恐惧的自然捕食者。它们通常生活在野外，但其中一些却能被驯化并训练用于战斗。在银河系遥远的角落，对这些生物的需求很高。",
+   "tactics": "",
+   "stats": {
+    "hull": [
+     3,
+     4,
+     6
+    ],
+    "sys": [
+     -2,
+     -2,
+     -2
+    ],
+    "agi": [
+     2,
+     3,
+     4
+    ],
+    "eng": [
+     -2,
+     -2,
+     -2
+    ],
+    "hp": [
+     14,
+     16,
+     18
+    ],
+    "armor": [
+     1,
+     1,
+     1
+    ],
+    "evasion": [
+     10,
+     12,
+     15
+    ],
+    "edef": [
+     10,
+     10,
+     10
+    ],
+    "speed": [
+     6,
+     7,
+     8
+    ],
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "save": [
+     10,
+     12,
+     15
+    ],
+    "sensor": [
+     10,
+     10,
+     10
+    ],
+    "heatcap": [
+     0,
+     0,
+     0
+    ],
+    "structure": [
+     1,
+     1,
+     1
+    ],
+    "stress": [
+     1,
+     1,
+     1
+    ],
+    "activations": [
+     1,
+     1,
+     1
+    ]
+   },
+   "size_note": [
+    "1 或 2",
+    "1 或 2",
+    "1~3"
+   ],
+   "base": [
+    {
+     "name": "独特生理机能",
+     "type": "Trait",
+     "tags": [],
+     "effect": "若怪形有结构（例如，它拥有精英或超体模板），当它受到结构伤害时，参照怪形结构伤害表掷骰。\n怪形结构伤害表 掷骰[结构伤害]D6\n5~6 擦身而过 怪形痛苦地畏缩；它会受损直到它下一回合结束。\n3~4 强力一击 怪形被重击的力量击倒伏卧。\n2 肢解 攻击卸下怪形四肢或大块组织；它受到 1d6 动能伤害，并在场景结束前缓慢。\n1 直接命中\n结果取决于怪形的剩余结构：\n• 3+结构：怪形被重击头部并昏迷直到它下一回合结束。\n• 2 结构：怪形必须成功进行机体豁免，否则将被摧毁。\n• 1 结构：怪形被摧毁。\n多数 1 致命一击 怪形被摧毁。",
+     "id": "npcf_cn_monstrosity_1",
+     "base": true
+    },
+    {
+     "name": "致命游戏",
+     "type": "Trait",
+     "tags": [],
+     "effect": "怪形至少有一个可选突变。",
+     "id": "npcf_cn_monstrosity_2",
+     "base": true
+    },
+    {
+     "name": "爪击",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "",
+     "weapon_kind": "",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        6,
+        8,
+        12
+       ]
+      }
+     ],
+     "effect": "",
+     "id": "npcf_cn_monstrosity_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "酸液喷吐",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 10
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        3,
+        4,
+        5
+       ]
+      }
+     ],
+     "effect": "",
+     "on_hit": "目标离散直到对方下一回合结束。",
+     "id": "npcf_cn_monstrosity_4",
+     "base": false
+    },
+    {
+     "name": "黏着分泌物",
+     "type": "Trait",
+     "tags": [],
+     "effect": "每回合首个被怪形伤害的角色必须通过工程豁免否则缓慢。该效果会持续到目标恢复 HP 或场景结束。",
+     "id": "npcf_cn_monstrosity_5",
+     "base": false
+    },
+    {
+     "name": "掘穴动物",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "只要地表有足够延展性，怪形就会在地下挖洞。挖洞时它被视为隐形，可自由穿过角色和其他障碍物所占据的空间；但它只能移动、推进或出现在一个自由空间（作为一个快速动作）。当怪形出现时，它附近的所有角色必须成功进行机体豁免，否则将被伏卧。",
+     "id": "npcf_cn_monstrosity_6",
+     "base": false
+    },
+    {
+     "name": "腐蚀啮咬",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "与怪形邻近的角色必须通过机体豁免否则将受到4/5/6 燃烧伤害。成功与否都会离散直到对方恢复任意HP。",
+     "id": "npcf_cn_monstrosity_7",
+     "base": false
+    },
+    {
+     "name": "纠缠之爪",
+     "type": "Trait",
+     "tags": [],
+     "effect": "怪物在擒拿中+1 准度，在攻击被它擒拿的目标时+1 准度，且获得在擒拿中推进和使用反应的能力。",
+     "id": "npcf_cn_monstrosity_8",
+     "base": false
+    },
+    {
+     "name": "自然伪装",
+     "type": "Trait",
+     "tags": [],
+     "effect": "怪形在邻近任何地形或掩体时隐形，且将软性掩护视为硬性掩护。",
+     "id": "npcf_cn_monstrosity_9",
+     "base": false
+    },
+    {
+     "name": "横冲直撞",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "怪形以直线移动等同速度空间，无视反应和交火，在其他角色占据的空间中自由移动。经过或邻近路径的角色必须通过敏捷豁免否则受到 4/6/8 动能伤害。",
+     "id": "npcf_cn_monstrosity_10",
+     "base": false
+    },
+    {
+     "name": "再生器",
+     "type": "Trait",
+     "tags": [],
+     "effect": "在怪形回合结束时，恢复其总 HP1/4。若它在同一回合中受到能量伤害，则不会恢复任何 HP。",
+     "id": "npcf_cn_monstrosity_11",
+     "base": false
+    },
+    {
+     "name": "逆刺",
+     "type": "Trait",
+     "tags": [],
+     "effect": "怪形受到近战武器的伤害后，会自动对攻击者造成1/2/3AP 动能伤害。",
+     "id": "npcf_cn_monstrosity_12",
+     "base": false
+    },
+    {
+     "name": "迅捷",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_free_action"
+      },
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "每轮一次，怪形可以在其回合中以一个自由动作进行推进。",
+     "id": "npcf_cn_monstrosity_13",
+     "base": false
+    },
+    {
+     "name": "调节隐匿",
+     "type": "Trait",
+     "tags": [],
+     "effect": "怪形获得以下两种伤害抗性：动能，能量，爆炸。若其降低到总 HP 一半或更少，则失去抗性。若它有任意结构，则当 HP 恢复到完全时将重新获得抗性。",
+     "id": "npcf_cn_monstrosity_14",
+     "base": false
+    },
+    {
+     "name": "有翼",
+     "type": "Trait",
+     "tags": [],
+     "effect": "怪形在移动时可飞行，在移动结束时无需落地。",
+     "id": "npcf_cn_monstrosity_15",
+     "base": false
+    }
+   ]
+  }
+ ],
+ "templates": [
+  {
+   "id": "npct_cn_commander",
+   "name": "指挥官",
+   "page": 318,
+   "pages": [
+    318
+   ],
+   "description": "指挥官在大规模战役中运转，在天体和星际太空操控舰队和军队。他们可能不是最致命的士兵，但他们能激发出军队中最好的一面。",
+   "base": [
+    {
+     "name": "强化",
+     "type": "Trait",
+     "tags": [],
+     "effect": "指挥官获得+1 结构和+1 压力。",
+     "id": "npcf_cn_commander_1",
+     "base": true,
+     "bonus": {
+      "structure": 1,
+      "stress": 1
+     }
+    },
+    {
+     "name": "权威之声",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "一个盟友攻击，检定或豁免失败，并指挥官没有受扰。",
+     "effect": "盟友可以重掷此骰。",
+     "id": "npcf_cn_commander_2",
+     "base": true
+    },
+    {
+     "name": "指挥官特征",
+     "type": "Trait",
+     "tags": [],
+     "effect": "指挥官从指挥官特征表中选择其一。若指挥官受扰，则该特征不受用。",
+     "id": "npcf_cn_commander_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "激励广播",
+     "type": "Trait",
+     "tags": [],
+     "effect": "视线内所有盟友角色（指挥官除外）系统豁免+1准度，对其进行的科技攻击+1 难度。",
+     "id": "npcf_cn_commander_4",
+     "base": false
+    },
+    {
+     "name": "强攻",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "trigger": "某盟友角色受到目标的伤害。",
+     "effect": "指挥官可攻击目标，成功时造成一半伤害，热度或燃烧。",
+     "id": "npcf_cn_commander_5",
+     "base": false
+    },
+    {
+     "name": "向前推进！",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 4
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "指挥官清除当前视线内某盟友角色的晕眩或受扰状态。",
+     "id": "npcf_cn_commander_6",
+     "base": false
+    },
+    {
+     "name": "齐步行进",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      },
+      {
+       "id": "tg_protocol"
+      }
+     ],
+     "effect": "指挥官可让视线内某盟军角色推进。",
+     "id": "npcf_cn_commander_7",
+     "base": false
+    },
+    {
+     "name": "军纪",
+     "type": "Trait",
+     "tags": [],
+     "effect": "邻近指挥官的盟友角色在所有攻击、豁免和检定上+1 准度。",
+     "id": "npcf_cn_commander_8",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npct_cn_rpv",
+   "name": "RPV",
+   "page": 318,
+   "pages": [
+    318
+   ],
+   "description": "远程驾驶员媒介（RPV）是由 NHP、非现场驾驶员或伙伴/礼宾单元驾驶的任意机甲。它们以电子战的脆弱性换取个体单位的力量，并可以进行舱内有机单元限制之外的系统操作。",
+   "base": [
+    {
+     "name": "HP 加值",
+     "type": "Trait",
+     "tags": [],
+     "effect": "RPV 获得+5 HP——它可以无视可能炸毁驾驶舱并致人死亡的伤害。",
+     "id": "npcf_cn_rpv_1",
+     "base": true,
+     "bonus": {
+      "hp": 5
+     }
+    },
+    {
+     "name": "无人驾驶",
+     "type": "Trait",
+     "tags": [],
+     "effect": "RPV 对任何直接影响驾驶员的系统或动作具有免疫；然而，它也会永久受损，且无法做出复杂的决定或道德判断。",
+     "id": "npcf_cn_rpv_2",
+     "base": true
+    },
+    {
+     "name": "科技脆弱",
+     "type": "Trait",
+     "tags": [],
+     "effect": "敌方对 RPV 的科技动作+1 准度。",
+     "id": "npcf_cn_rpv_3",
+     "base": true
+    }
+   ],
+   "optional": []
+  },
+  {
+   "id": "npct_cn_elite",
+   "name": "精英",
+   "page": 318,
+   "pages": [
+    318
+   ],
+   "description": "精英敌人比大多数敌人更强大——仅次于超体。他们可能是特别坚韧或经验丰富的驾驶员，特种部队，或使用比普通士兵更高水平技术或更好的装备的敌人。精英们可以在每轮行动几次并获得额外结构，这将高效地使他们的 HP 加倍，并允许他们像 PC 一样进行结构伤害检定。",
+   "base": [
+    {
+     "name": "强化",
+     "type": "Trait",
+     "tags": [],
+     "effect": "精英获得+1 结构和+1 压力。",
+     "id": "npcf_cn_elite_1",
+     "base": true,
+     "bonus": {
+      "structure": 1,
+      "stress": 1
+     }
+    },
+    {
+     "name": "蓄势待发",
+     "type": "Trait",
+     "tags": [],
+     "effect": "精英每轮获得两个单独的回合。",
+     "id": "npcf_cn_elite_2",
+     "base": true,
+     "bonus": {
+      "activations": 1
+     }
+    },
+    {
+     "name": "职业军人",
+     "type": "Trait",
+     "tags": [],
+     "effect": "精英无法获得低等兵或超体模板",
+     "id": "npcf_cn_elite_3",
+     "base": true
+    },
+    {
+     "name": "专业攻击",
+     "type": "Trait",
+     "tags": [],
+     "effect": "精英从他们的职业中选择一个额外的可选系统。",
+     "id": "npcf_cn_elite_4",
+     "base": true
+    }
+   ],
+   "optional": []
+  },
+  {
+   "id": "npct_cn_exotic",
+   "name": "异种",
+   "page": 319,
+   "pages": [
+    319
+   ],
+   "description": "即使在这充满奇迹的银河系中，异种也是怪异而危险的敌人。一些具备独特技术，某些尚不适用于更宽泛的银河系，有些使用者更新至现代的古老武器样式，而另一些则携带着或采用着完全不符合联盟原则的装备或战术。",
+   "base": [
+    {
+     "name": "异种科技",
+     "type": "Trait",
+     "tags": [],
+     "effect": "扫描不会显示任何关于异种系统的信息。",
+     "id": "npcf_cn_exotic_1",
+     "base": true
+    },
+    {
+     "name": "固化目标",
+     "type": "Trait",
+     "tags": [],
+     "effect": "异种获得系统豁免+1 准度，针对它们的科技攻击+1 难度。",
+     "id": "npcf_cn_exotic_2",
+     "base": true
+    },
+    {
+     "name": "异种系统",
+     "type": "Trait",
+     "tags": [],
+     "effect": "异种在异种系统和特征表中最多可以选择两项。",
+     "id": "npcf_cn_exotic_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "活体底盘",
+     "type": "Trait",
+     "tags": [],
+     "effect": "该特征只在异种是机甲情况下选择。异种化为生物。",
+     "id": "npcf_cn_exotic_4",
+     "base": false
+    },
+    {
+     "name": "霎间割裂",
+     "type": "System",
+     "tags": [],
+     "effect": "异种移动时瞬间移动。",
+     "id": "npcf_cn_exotic_5",
+     "base": false
+    },
+    {
+     "name": "现世挤出物",
+     "type": "Trait",
+     "tags": [],
+     "effect": "异种实际是某高维概念实体从非物质空间挤压而出的部分实体。异种获得所有伤害抗性；然而它们只造成一半伤害，其他角色可自由通过并结束回合在其空间，好似它们不存在。",
+     "id": "npcf_cn_exotic_6",
+     "base": false
+    },
+    {
+     "name": "活体武器",
+     "type": "Trait",
+     "tags": [],
+     "effect": "异种获得受扰免疫。此外其武器具有自然产生弹药的生物技术和半有机成分。异种重新装填武器时同样恢复 1d6HP。",
+     "id": "npcf_cn_exotic_7",
+     "base": false
+    },
+    {
+     "name": "非因果律武器",
+     "type": "Trait",
+     "tags": [],
+     "effect": "选择一件异种武器。它的伤害不以任何方式减少——装甲，抗性，免疫，或其他。",
+     "id": "npcf_cn_exotic_8",
+     "base": false
+    },
+    {
+     "name": "计时环",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "异种致使时间流的局部扭曲。它们可以重掷 1d20，或以反应迫使视线内另一个角色重掷 1d20。必须接受新的结果。",
+     "id": "npcf_cn_exotic_9",
+     "base": false
+    },
+    {
+     "name": "再生器",
+     "type": "Trait",
+     "tags": [],
+     "effect": "在异种回合结束时，恢复其总 HP 的 1/4。若它在同一回合中受到能量伤害，则不会恢复任何 HP。",
+     "id": "npcf_cn_exotic_10",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npct_cn_grunt",
+   "name": "低等兵",
+   "page": 319,
+   "pages": [
+    319
+   ],
+   "description": "低等兵比炮灰高一级。他们通常以大批量生产或库存的机甲进入战场——通常以纪律而非卓越而训练。低等兵个体可能不会构成威胁，但在团队中，他们可能会成为压倒骆驼的最后一根稻草，甚至威胁到最强大的敌人。",
+   "base": [
+    {
+     "name": "无用之人",
+     "type": "Trait",
+     "tags": [],
+     "effect": "低等兵只有 1HP 并无法获得更多 HP。与其他角色不同的是，他们在成功豁免时从不受到伤害——无论使用的是什么武器或系统——但在其他情况下，他们正常受到伤害。",
+     "id": "npcf_cn_grunt_1",
+     "base": true,
+     "override": {
+      "hp": 1
+     }
+    },
+    {
+     "name": "贫弱",
+     "type": "Trait",
+     "tags": [],
+     "effect": "低等兵决不会拥有超过 1 结构和 1 压力，当他们从除自己的系统和武器以外的任何来源受到热度时，他们会立即被摧毁。",
+     "id": "npcf_cn_grunt_2",
+     "base": true,
+     "override": {
+      "structure": 1,
+      "stress": 1
+     }
+    },
+    {
+     "name": "普通军士",
+     "type": "Trait",
+     "tags": [],
+     "effect": "低等兵无法与老兵，班组，精英，或超体模板混用。",
+     "id": "npcf_cn_grunt_3",
+     "base": true
+    }
+   ],
+   "optional": []
+  },
+  {
+   "id": "npct_cn_mercenary",
+   "name": "雇佣兵",
+   "page": 320,
+   "pages": [
+    320
+   ],
+   "description": "雇佣兵为出价最高者服务。他们可能会拥护某种信仰或旗帜，但说到做生意，他们只对出价最高者忠诚。",
+   "base": [
+    {
+     "name": "机会主义者",
+     "type": "Trait",
+     "tags": [],
+     "effect": "雇佣兵对与盟友角色交战的目标攻击+1 准度。",
+     "id": "npcf_cn_mercenary_1",
+     "base": true
+    },
+    {
+     "name": "雇佣兵系统和特征",
+     "type": "Trait",
+     "tags": [],
+     "effect": "选择可选系统时，雇佣兵也可从雇佣兵系统和特征表中选择。",
+     "id": "npcf_cn_mercenary_2",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "赏金猎人",
+     "type": "Trait",
+     "tags": [],
+     "effect": "在战斗开始前，GM 选择一个 PC：他的脑袋会标上赏金。任何雇佣兵在战斗中对驾驶员和机甲的所有攻击、检定和豁免都+1 准度。",
+     "id": "npcf_cn_mercenary_3",
+     "base": false
+    },
+    {
+     "name": "高效杀手",
+     "type": "Trait",
+     "tags": [],
+     "effect": "佣兵攻击 2 结构或以下角色获得+1 准度和 AP。",
+     "id": "npcf_cn_mercenary_4",
+     "base": false
+    },
+    {
+     "name": "人情债",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "雇佣兵请求帮助：轨道或炮火轰炸，目标是视线射程 30 内的溅射 2。受影响区域内的角色必须通过敏捷豁免否则受到 6/8/12 爆炸伤害并伏卧。成功则伤害减半不会伏卧。",
+     "id": "npcf_cn_mercenary_5",
+     "base": false
+    },
+    {
+     "name": "侦察无人机",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "侦查无人机（大小 1/2，HP10，回避 10，电子防御 10，标签：无人机）雇佣兵将无人机部署到感应内的自由空间。无人机构建一个爆发 2 的边界，在这个边界内，角色不能匿迹或隐形，若已拥有该状况则失去这些状况。雇佣兵攻击受影响区域内角色+1 准度。以一个协定，无人机可被部署到一个新地点。",
+     "id": "npcf_cn_mercenary_6",
+     "base": false
+    },
+    {
+     "name": "最终宣言",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 1
+      }
+     ],
+     "trigger": "雇佣兵降低到总 HP 一半以下。",
+     "effect": "爆发 1 内的角色必须通过敏捷豁免否则受到 2 动能伤害并受扰直到对方下一回合结束。随后雇佣兵向任意方向移动等同速度的空间。该移动忽略交战与反应。",
+     "id": "npcf_cn_mercenary_7",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npct_cn_pirate",
+   "name": "海盗",
+   "page": 320,
+   "pages": [
+    320,
+    321
+   ],
+   "description": "海盗生活在边界上——被占领的遗忘空间的避难所。他们活动范围很广，在霎闸、星际航线未定星球上活动。他们总能找到在任何地方存放或移动的资源，人们处于绝望之中，律法随之捉襟见肘。",
+   "base": [
+    {
+     "name": "致命",
+     "type": "Trait",
+     "tags": [],
+     "effect": "海盗在会心一击时+1d6 额外伤害。",
+     "id": "npcf_cn_pirate_1",
+     "base": true
+    },
+    {
+     "name": "海盗系统和特征",
+     "type": "Trait",
+     "tags": [],
+     "effect": "选择可选系统时，海盗也可从海盗系统和特征表中选择。",
+     "id": "npcf_cn_pirate_2",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "跳帮栓链",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_thrown",
+       "val": 5
+      }
+     ],
+     "weapon_size": "重型",
+     "weapon_kind": "近战",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Threat",
+       "val": 1
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        5,
+        7,
+        9
+       ]
+      }
+     ],
+     "effect": "",
+     "on_hit": "目标必须通过机体豁免否则被拉向海盗并自动擒拿。",
+     "id": "npcf_cn_pirate_3",
+     "base": false
+    },
+    {
+     "name": "分裂弹",
+     "type": "Trait",
+     "tags": [],
+     "effect": "海盗在会心一击时+3 额外伤害。",
+     "id": "npcf_cn_pirate_4",
+     "base": false
+    },
+    {
+     "name": "核虫火箭",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "1d3 微型无人机附着在视线射程 10 内的一个角色身上，并开始钻进目标驾驶舱。在 1d3+2 轮，若有任何核虫仍附着，那么它们会抵达驾驶舱并狠揍一顿驾驶员，降低他们的 HP 到 0。目标知晓无人机需要工作多少轮，以及还有多少附着。目标和邻近盟友角色可以用一个快速动作在系统或工程检定成功下移除一架无人机。此外，若目标关机，核虫会陷入困惑，它们的轮次倒计时会暂停。",
+     "id": "npcf_cn_pirate_5",
+     "base": false
+    },
+    {
+     "name": "撬爪",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "海盗试图撬开邻近一个角色的驾驶舱。目标必须通过机体豁免否则驾驶员立即下马被迫踢出机甲。",
+     "id": "npcf_cn_pirate_6",
+     "base": false
+    },
+    {
+     "name": "奴隶信号",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_recharge",
+       "val": 5
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "射程 10 内一个有人驾驶的机甲或载具必须通过系统豁免。失败则目标内所有驾驶员和其他生物角色会被信号吞没而昏迷。除非其机甲或载具有 AI，否则机甲晕眩。若受影响角色（或其机甲或载具）受伤害，他们会被震醒而结束效果。与目标邻近的角色也可通过完整动作进行系统检定来消除信号从而结束效果。否则效果持续至海盗被摧毁。",
+     "id": "npcf_cn_pirate_7",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npct_cn_ship",
+   "name": "飞船",
+   "page": 321,
+   "pages": [
+    321
+   ],
+   "description": "无论是民用还是军用，飞船都由其飞行能力定义，并为太空旅行而设计。虽然它们大多在大气外使用，但大多数在需要时可在近地位置运行。此模板可应用于任何机甲 NPC。用飞船取代机甲标签。",
+   "base": [
+    {
+     "name": "飞行物",
+     "type": "Trait",
+     "tags": [],
+     "effect": "飞船在零重力环境中正常移动。它在大气中悬浮。它获得对固定、晕眩和伏卧的免疫。",
+     "id": "npcf_cn_ship_1",
+     "base": true
+    },
+    {
+     "name": "巨物",
+     "type": "Trait",
+     "tags": [],
+     "effect": "飞船大小 4。虽然它比大多数机甲更大，但就飞船标准而言它的规模很小；更大飞船的重型装甲无法被机甲规模的武器破坏。",
+     "id": "npcf_cn_ship_2",
+     "base": true,
+     "override": {
+      "size": 4
+     }
+    },
+    {
+     "name": "船员",
+     "type": "Trait",
+     "tags": [],
+     "effect": "飞船至少需要两名船员。",
+     "id": "npcf_cn_ship_3",
+     "base": true
+    },
+    {
+     "name": "装甲船体",
+     "type": "Trait",
+     "tags": [],
+     "effect": "飞船获得+5HP。",
+     "id": "npcf_cn_ship_4",
+     "base": true,
+     "bonus": {
+      "hp": 5
+     }
+    },
+    {
+     "name": "无法交互",
+     "type": "Trait",
+     "tags": [],
+     "effect": "飞船不能拾取物体，操纵物体或环境，或擒拿。",
+     "id": "npcf_cn_ship_5",
+     "base": true
+    },
+    {
+     "name": "近战受限",
+     "type": "Trait",
+     "tags": [],
+     "effect": "除冲撞外，飞船不能进行近战攻击。",
+     "id": "npcf_cn_ship_6",
+     "base": true
+    },
+    {
+     "name": "运输",
+     "type": "Trait",
+     "tags": [],
+     "effect": "飞船可运输一队班组或总大小小于自身的角色。",
+     "id": "npcf_cn_ship_7",
+     "base": true
+    }
+   ],
+   "optional": []
+  },
+  {
+   "id": "npct_cn_spacer",
+   "name": "太空民",
+   "page": 321,
+   "pages": [
+    321
+   ],
+   "description": "太空民是那些在无尽真空中诞生和成长的人。他们擅长在困难低重力的环境中和周围机动，这种环境只有在太空和低轨道中才会遇到——霎间跳跃站，空间站，小行星场以及军用和商用飞船之间的虚无。",
+   "base": [
+    {
+     "name": "高机动",
+     "type": "Trait",
+     "tags": [],
+     "effect": "太空民在零重力环境下可以正常移动。",
+     "id": "npcf_cn_spacer_1",
+     "base": true
+    },
+    {
+     "name": "太空民系统",
+     "type": "Trait",
+     "tags": [],
+     "effect": "选择可选系统时太空民可从太空民系统表中选择。",
+     "id": "npcf_cn_spacer_2",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "震荡枪",
+     "type": "Weapon",
+     "tags": [
+      {
+       "id": "tg_knockback",
+       "val": 3
+      }
+     ],
+     "weapon_size": "主武器",
+     "weapon_kind": "步枪",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Cone",
+       "val": 3
+      }
+     ],
+     "damage": [],
+     "effect": "",
+     "id": "npcf_cn_spacer_3",
+     "base": false
+    },
+    {
+     "name": "重力枪",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "主武器",
+     "weapon_kind": "步枪",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 10
+      }
+     ],
+     "damage": [],
+     "effect": "",
+     "on_hit": "目标必须通过机体豁免否则以直线拉向太空民最多 10 空间或直到对方碰到障碍物。若与障碍物碰撞，对方伏卧。",
+     "id": "npcf_cn_spacer_4",
+     "base": false
+    },
+    {
+     "name": "密封胶陷阱",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_mine"
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "当敌方角色移动到邻近地雷的位置，爆发 1 内角色会被一层厚厚的快干密封胶覆盖并固定。它们会一直粘着直到密封胶受到足够伤害而崩裂；它有 5/10/15HP和回避 5。",
+     "id": "npcf_cn_spacer_5",
+     "base": false
+    },
+    {
+     "name": "震荡榴弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_grenade"
+      },
+      {
+       "id": "tg_limited",
+       "val": 1
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "太空民花费 1 充能使用以下动作：震荡榴弹（榴弹，射程 5，溅射 1）：受影响区域角色必须通过行敏捷检定否则将被以远离爆炸中心的方式击退 3 空间。若与障碍物碰撞，对方伏卧。",
+     "id": "npcf_cn_spacer_6",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npct_cn_ultra",
+   "name": "超体",
+   "page": 322,
+   "pages": [
+    322,
+    323
+   ],
+   "description": "超体是枪骑兵在战场上可能遭遇的最危险的个体敌人——他们是英雄勇士、优越军士、神选战士和其他强大的战斗力量。超体可以指挥一小群随从或在前线领导一支军队，但他们不是伟大的战略家。他们的主要任务总是直接与敌人交战，守住或冲破防线，并通过英勇之举确保自己的一方赢得胜利。超体是种强大的敌人，能够同时对付多个机甲，如同电子游戏中的“boss”角色一样。如同精英，他们有额外结构，这意味着他们需要在结构伤害表上掷骰，比大多数 NPC 更有韧性。正因他们比普通 NPC 更强大（并且追踪他们更复杂），所以建议你在任何既定战斗中只使用一个超体。",
+   "base": [
+    {
+     "name": "精英中的精英",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体无法使用精英或低等兵模板。",
+     "id": "npcf_cn_ultra_1",
+     "base": true
+    },
+    {
+     "name": "震慑",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体每轮有两个单独的回合。每回合它们都会重新获得花费的反应。若超体在战斗开始时面对 5 或更多的敌对角色，则每轮有三个回合。",
+     "id": "npcf_cn_ultra_2",
+     "base": true,
+     "bonus": {
+      "activations": 1
+     }
+    },
+    {
+     "name": "致命",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体在会心一击时+1d6 额外伤害。",
+     "id": "npcf_cn_ultra_3",
+     "base": true
+    },
+    {
+     "name": "主宰",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体回合开始时，它们清除一个状态。在回合结束时，会修复一件被摧毁的武器或系统。",
+     "id": "npcf_cn_ultra_4",
+     "base": true
+    },
+    {
+     "name": "强化",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体获得+3 结构和+3 压力。",
+     "id": "npcf_cn_ultra_5",
+     "base": true,
+     "bonus": {
+      "structure": 3,
+      "stress": 3
+     }
+    },
+    {
+     "name": "传奇",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体掷骰结构伤害和过热检定两次取任意结果。",
+     "id": "npcf_cn_ultra_6",
+     "base": true
+    },
+    {
+     "name": "先进元件",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体职业中选择 1~2 个额外可选系统。",
+     "id": "npcf_cn_ultra_7",
+     "base": true
+    },
+    {
+     "name": "韧性",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体获得+5HP。",
+     "id": "npcf_cn_ultra_8",
+     "base": true,
+     "bonus": {
+      "hp": 5
+     }
+    },
+    {
+     "name": "本能反应",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体每轮可以无限制次数守望。",
+     "id": "npcf_cn_ultra_9",
+     "base": true
+    },
+    {
+     "name": "超体系统和特征",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体从超体系统和特征表中选择 1~3 项。",
+     "id": "npcf_cn_ultra_10",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "悬浮推进",
+     "type": "System",
+     "tags": [],
+     "effect": "超体可在移动或推进时悬浮。",
+     "id": "npcf_cn_ultra_11",
+     "base": false
+    },
+    {
+     "name": "斥力场",
+     "type": "System",
+     "tags": [],
+     "effect": "敌方角色开始其回合时若邻近超体，或在轮内首次邻近超体时受到 2/4/6 能量伤害+2 热度，并且必须通过系统豁免否则受损直到对方下一回合结束。",
+     "id": "npcf_cn_ultra_12",
+     "base": false
+    },
+    {
+     "name": "围攻盾",
+     "type": "System",
+     "tags": [],
+     "effect": "超体对射程 3 外的所有攻击伤害具有抗性。",
+     "id": "npcf_cn_ultra_13",
+     "base": false
+    },
+    {
+     "name": "裂片屏蔽",
+     "type": "System",
+     "tags": [],
+     "effect": "该系统替换韧性。超体永久隐形。",
+     "id": "npcf_cn_ultra_14",
+     "base": false
+    },
+    {
+     "name": "短循环光矛",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_ordnance"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "绘制线形 30 路径，1 空间宽：受影响区域内角色必须通过敏捷豁免否则受到 1 结构伤害。成功则 HP 减少到 1。小于大小 5 的物品将被彻底消灭。",
+     "id": "npcf_cn_ultra_15",
+     "base": false
+    },
+    {
+     "name": "齐射模块",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      },
+      {
+       "id": "tg_protocol"
+      }
+     ],
+     "effect": "超体以稳定姿态准备一件武器。它们下一回合，以协定超体使用该武器攻击任意数量角色，只要在射程内，没有掩护或伏卧。所有角色都知悉该攻击，且可以选择在其回合中以一个自由动作伏卧来规避成为目标。作为该效果的一部分，超体可使用准备好的武器进行无限次的攻击，即使它有装填标签。",
+     "id": "npcf_cn_ultra_16",
+     "base": false
+    },
+    {
+     "name": "狼猎导弹",
+     "type": "System",
+     "tags": [
+      {
+       "id": "tg_drone"
+      },
+      {
+       "id": "tg_recharge",
+       "val": 6
+      },
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "狼猎导弹（大小 1，HP10/15/20，回避 10，电子防御10，标签：无人机）超体邻近空间部署狼猎导弹，选择视线射程 30 内一个目标。超体开始回合时导弹向目标飞行 3 空间，若目标被锁定飞行 6 空间。它尽可能直线移动，若需要可绕过掩体和地形机动。当它与角色碰撞或到达目标时会产生爆发 1 爆炸。受影响区域内角色受到 14/20/28 能量伤害，若通过敏捷豁免则伤害减半。超体一次只能部署一枚狼猎导弹，且该系统只能在导弹引爆后再充能。",
+     "id": "npcf_cn_ultra_17",
+     "base": false
+    },
+    {
+     "name": "阿耳戈斯装甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体拥有 6 装甲。每次掷骰结构伤害或过热检定，它们失去 2 装甲，最低 0。",
+     "id": "npcf_cn_ultra_18",
+     "base": false,
+     "override": {
+      "armor": 6
+     }
+    },
+    {
+     "name": "毁灭",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_round",
+       "val": 1
+      }
+     ],
+     "effect": "1/轮，超体发动一次成功的攻击时，视线内所有角色受到 2/4/6 动能，能量或爆炸伤害。",
+     "id": "npcf_cn_ultra_19",
+     "base": false
+    },
+    {
+     "name": "规避",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体获得+4 回避（最高 20）和-1 结构。",
+     "id": "npcf_cn_ultra_20",
+     "base": false,
+     "bonus": {
+      "evasion": 4,
+      "structure": -1
+     }
+    },
+    {
+     "name": "额外致命",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体每回合首次会心一击在 T2 造成+2d6 伤害，或在 T3 造成+3d6 伤害。",
+     "id": "npcf_cn_ultra_21",
+     "base": false
+    },
+    {
+     "name": "要塞",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体系统豁免+3 准度，针对它们的科技攻击+3难度。",
+     "id": "npcf_cn_ultra_22",
+     "base": false
+    },
+    {
+     "name": "带头冲锋",
+     "type": "Reaction",
+     "tags": [
+      {
+       "id": "tg_unlimited"
+      }
+     ],
+     "trigger": "一个敌人在视线内移动。",
+     "effect": "超体可推进。该反应在一轮中使用次数为任意。",
+     "id": "npcf_cn_ultra_23",
+     "base": false
+    },
+    {
+     "name": "军团",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体获得+4 电子防御（最高 20），所有科技攻击+1 准度。",
+     "id": "npcf_cn_ultra_24",
+     "base": false,
+     "bonus": {
+      "edef": 4
+     }
+    },
+    {
+     "name": "无限",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体可超限。它们总是受到 1d6 热度，代替标准代价。",
+     "id": "npcf_cn_ultra_25",
+     "base": false
+    },
+    {
+     "name": "视域",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体忽略隐形且感应内敌方角色无法躲藏。",
+     "id": "npcf_cn_ultra_26",
+     "base": false
+    },
+    {
+     "name": "卓越结构",
+     "type": "Trait",
+     "tags": [],
+     "effect": "该特征取代韧性。超体获得对一种伤害抗性——动能、能量或爆炸。它们不能获得对两种以上伤害类型的永久抗性，无论是来自该系统还是其他系统。",
+     "id": "npcf_cn_ultra_27",
+     "base": false
+    },
+    {
+     "name": "卓越骨架",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体获得对缓慢、离散和固定的免疫。",
+     "id": "npcf_cn_ultra_28",
+     "base": false
+    },
+    {
+     "name": "卓越反应堆",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体获得对晕眩和暴露的免疫。",
+     "id": "npcf_cn_ultra_29",
+     "base": false
+    },
+    {
+     "name": "卓越索敌",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体进行远程攻击时忽略掩体。",
+     "id": "npcf_cn_ultra_30",
+     "base": false
+    },
+    {
+     "name": "至高维护",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      },
+      {
+       "id": "tg_free_action"
+      }
+     ],
+     "effect": "超体获得对受扰的免疫；此外，超体可在他们回合中以自由动作重新装填武器，并以快速动作修复被摧毁的武器或系统。",
+     "id": "npcf_cn_ultra_31",
+     "base": false
+    },
+    {
+     "name": "至高近战",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_free_action"
+      }
+     ],
+     "effect": "超体在所有近战攻击上+1 准度；此外，每他们的回合一次，超体可以用自由动作进行擒拿，冲撞或一次近战攻击。",
+     "id": "npcf_cn_ultra_32",
+     "base": false
+    },
+    {
+     "name": "势不可挡",
+     "type": "Trait",
+     "tags": [],
+     "effect": "超体免疫所有非自主移动，包括击退和伏卧。",
+     "id": "npcf_cn_ultra_33",
+     "base": false
+    },
+    {
+     "name": "地狱火投射器",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "重型",
+     "weapon_kind": "CQB",
+     "attack_bonus": [
+      2,
+      4,
+      6
+     ],
+     "accuracy": [
+      0,
+      0,
+      0
+     ],
+     "range": [
+      {
+       "type": "Cone",
+       "val": 5
+      }
+     ],
+     "damage": [
+      {
+       "type": "Energy",
+       "val": [
+        3,
+        3,
+        3
+       ]
+      },
+      {
+       "type": "Burn",
+       "val": [
+        4,
+        5,
+        6
+       ]
+      }
+     ],
+     "effect": "该武器可进行两次攻击，但两次区域不可重叠。",
+     "id": "npcf_cn_ultra_34",
+     "base": false
+    },
+    {
+     "name": "蹂躏者炮塔",
+     "type": "Weapon",
+     "tags": [],
+     "weapon_size": "重型",
+     "weapon_kind": "大炮",
+     "attack_bonus": [
+      1,
+      2,
+      3
+     ],
+     "accuracy": [
+      1,
+      1,
+      1
+     ],
+     "range": [
+      {
+       "type": "Range",
+       "val": 10
+      }
+     ],
+     "damage": [
+      {
+       "type": "Kinetic",
+       "val": [
+        4,
+        5,
+        6
+       ]
+      }
+     ],
+     "effect": "该武器同时攻击视线射程内的所有敌方角色。",
+     "id": "npcf_cn_ultra_35",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npct_cn_veteran",
+   "name": "老兵",
+   "page": 324,
+   "pages": [
+    324
+   ],
+   "description": "老兵是久经沙场、经验丰富的战士。这不是他们第一次登台演出，他们承受士气冲击的能力远远高于未经考验的新手。他们在战场上的价值在于他们为部署带来的经验以及他们在前线的稳定存在。使用老兵模板制作让人记忆犹新的角色。",
+   "base": [
+    {
+     "name": "强化",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵获得+1 结构和+1 压力。",
+     "id": "npcf_cn_veteran_1",
+     "base": true,
+     "bonus": {
+      "structure": 1,
+      "stress": 1
+     }
+    },
+    {
+     "name": "老兵",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老板获得一项机甲技能（制造时选择）所有检定与豁免+1 准度：机体，敏捷，系统，工程。",
+     "id": "npcf_cn_veteran_2",
+     "base": true
+    },
+    {
+     "name": "老兵特征",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵每层级获得一个老兵特征。",
+     "id": "npcf_cn_veteran_3",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "杂技演员",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵移动或推进后可飞行 3 空间。该飞行无视交战和反应。",
+     "id": "npcf_cn_veteran_4",
+     "base": false
+    },
+    {
+     "name": "致命",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵在会心一击时+1d6 额外伤害。",
+     "id": "npcf_cn_veteran_5",
+     "base": false
+    },
+    {
+     "name": "假死",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵每场战斗中被摧毁时，他们实际在假死——他们看起来被摧毁了，但还剩 1HP。邻近老兵的角色可通过系统检定或驾驶员技能检定来揭示；否则老兵会一直被忽视直到对方移动或执行动作。",
+     "id": "npcf_cn_veteran_6",
+     "base": false
+    },
+    {
+     "name": "骇客",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵成功的科技攻击造成+2 热度。",
+     "id": "npcf_cn_veteran_7",
+     "base": false
+    },
+    {
+     "name": "固化目标",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵获得系统豁免+1 准度，针对它们的科技攻击+1 难度。",
+     "id": "npcf_cn_veteran_8",
+     "base": false
+    },
+    {
+     "name": "暴头",
+     "type": "Trait",
+     "tags": [],
+     "effect": "1/轮，会心一击时，老兵的目标必须通过机体豁免否则只能在对方下一回合结束前只能涉及邻近空间视线。",
+     "id": "npcf_cn_veteran_9",
+     "base": false
+    },
+    {
+     "name": "隔热",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵对燃烧免疫。",
+     "id": "npcf_cn_veteran_10",
+     "base": false
+    },
+    {
+     "name": "传奇",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵掷骰结构伤害和过热检定两次取任意结果。",
+     "id": "npcf_cn_veteran_11",
+     "base": false
+    },
+    {
+     "name": "微弱信号",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵忽略射程 3 内角色隐形，射程 3 内敌方角色无法成功躲藏（若已躲藏则保持隐匿）。",
+     "id": "npcf_cn_veteran_12",
+     "base": false
+    },
+    {
+     "name": "闪电反射",
+     "type": "Trait",
+     "tags": [],
+     "effect": "当老兵被任意重武器或超重型武器攻击时，先掷1d6。结果为 5+时，攻击自动落空。",
+     "id": "npcf_cn_veteran_13",
+     "base": false
+    },
+    {
+     "name": "无限",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵可超限。它们总是受到 1d6 热度，代替标准代价。",
+     "id": "npcf_cn_veteran_14",
+     "base": false
+    },
+    {
+     "name": "NHP 副驾驶员",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵获得 AI 标签。其机甲或载具为自动驾驶，甚至可以在没有驾驶员情况下工作。NHP 会陷入层流，使用与 PC 的 AI 相同的规则。",
+     "id": "npcf_cn_veteran_15",
+     "base": false
+    },
+    {
+     "name": "饯别之礼",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_quick_action"
+      }
+     ],
+     "effect": "老兵可以自爆（见第三章机甲战斗）。",
+     "id": "npcf_cn_veteran_16",
+     "base": false
+    },
+    {
+     "name": "竞技大师",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵可下马。步行时，老兵使用人类职业，并可以执行所有 PC 驾驶员可用的动作，包括骑乘。",
+     "id": "npcf_cn_veteran_17",
+     "base": false
+    },
+    {
+     "name": "自我修复",
+     "type": "Trait",
+     "tags": [
+      {
+       "id": "tg_full_action"
+      }
+     ],
+     "effect": "1/场景，以完整动作，老兵恢复所有 HP 并清除所有状态。",
+     "id": "npcf_cn_veteran_18",
+     "base": false
+    },
+    {
+     "name": "冲击装甲",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵对主武器的伤害获得抗性。",
+     "id": "npcf_cn_veteran_19",
+     "base": false
+    },
+    {
+     "name": "狡猾",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵的标准移动忽略交战，不会引起反应。",
+     "id": "npcf_cn_veteran_20",
+     "base": false
+    },
+    {
+     "name": "钢爪",
+     "type": "Trait",
+     "tags": [],
+     "effect": "副武器无法对老兵造成超过 1 伤害。",
+     "id": "npcf_cn_veteran_21",
+     "base": false
+    },
+    {
+     "name": "毒蛇之速",
+     "type": "Trait",
+     "tags": [],
+     "effect": "老兵总是率先行动，甚至比 PC 玩家更早行动。无论在叙事扮演还是机甲战斗中，只要有谁先行动的问题，总是老兵。如果多个角色都有该特征，那么每次只有一个角色可以使用它。",
+     "id": "npcf_cn_veteran_22",
+     "base": false
+    }
+   ]
+  },
+  {
+   "id": "npct_cn_vehicle",
+   "name": "载具",
+   "page": 325,
+   "pages": [
+    325
+   ],
+   "description": "尽管机甲大肆盛行，但大多数装甲战斗、运输、侦察以及其他民用和军事任务都是由不起眼的履带式或轮式载具完成。由核聚变、内燃、电、氢，风，人，非因果律引擎，或更不寻常的能源提供动力，，载具可以载客、装载武器、穿披挂装甲，或以其他方式迅速完成设计它们的简单任务：将人员和物品以良好的状态快速地从 A 地运送到 B 地。此模板可应用于任何机甲 NPC。用载具取代机甲标签。",
+   "base": [
+    {
+     "name": "受限处理",
+     "type": "Trait",
+     "tags": [],
+     "effect": "载具必须始终在直线上移动，尽管它可以在不同方向上移动和推进。此外，载具无法攀爬或游泳，并且只有在盟友角色邻近时才能清除伏卧。",
+     "id": "npcf_cn_vehicle_1",
+     "base": true
+    },
+    {
+     "name": "乘员",
+     "type": "Trait",
+     "tags": [],
+     "effect": "若载具大于大小 1/2，则它可能有一个乘员；若是如此，它的乘员至少是它的一半大小。",
+     "id": "npcf_cn_vehicle_2",
+     "base": true
+    },
+    {
+     "name": "无法交互",
+     "type": "Trait",
+     "tags": [],
+     "effect": "载具不能拾取物体，操纵物体或环境，或擒拿。",
+     "id": "npcf_cn_vehicle_3",
+     "base": true
+    },
+    {
+     "name": "近战受限",
+     "type": "Trait",
+     "tags": [],
+     "effect": "除冲撞外，载具不能进行近战攻击。",
+     "id": "npcf_cn_vehicle_4",
+     "base": true
+    },
+    {
+     "name": "型号",
+     "type": "Trait",
+     "tags": [],
+     "effect": "载具可从载具特征表中选择一或多项。",
+     "id": "npcf_cn_vehicle_5",
+     "base": true
+    }
+   ],
+   "optional": [
+    {
+     "name": "飞车",
+     "type": "Trait",
+     "tags": [],
+     "effect": "当载具移动或推进时，它可以飞行。",
+     "id": "npcf_cn_vehicle_6",
+     "base": false
+    },
+    {
+     "name": "运输",
+     "type": "Trait",
+     "tags": [],
+     "effect": "载具可运输一队班组或总大小小于自身的角色。",
+     "id": "npcf_cn_vehicle_7",
+     "base": false
+    },
+    {
+     "name": "步行或悬浮",
+     "type": "Trait",
+     "tags": [],
+     "effect": "载具无视困难地形。",
+     "id": "npcf_cn_vehicle_8",
+     "base": false
+    }
+   ]
+  }
+ ]
+}

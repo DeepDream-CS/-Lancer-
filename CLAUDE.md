@@ -15,7 +15,7 @@
 | 文件 | 作用 |
 |---|---|
 | `assets/js/`、`assets/css/` | 网页资源统一收纳；生成器、测试与页面均引用此处，根目录不保留重复资源 |
-| `index.html` | 页面骨架；脚本顺序：`assets/js/data.js → assets/js/equipment-lore.js → assets/js/wizard.js → assets/js/cardexport.js → assets/js/rules.js → assets/js/glossary.js → assets/js/ui.js → assets/js/system-library.js → assets/js/faq-data.js → assets/js/faq.js → assets/js/frame-catalog.js → assets/js/battlemap.js → assets/js/app.js → assets/js/foundry-export.js` |
+| `index.html` | 页面骨架；脚本顺序：`assets/js/data.js → assets/js/equipment-lore.js → assets/js/wizard.js → assets/js/cardexport.js → assets/js/rules.js → assets/js/glossary.js → assets/js/ui.js → assets/js/system-library.js → assets/js/faq-data.js → assets/js/faq.js → assets/js/frame-catalog.js → assets/js/battlemap.js → assets/js/app.js → assets/js/foundry-export.js`；之后是判定速查、`npc-data.js → npc-library.js`（NPC 库）、`npc-classes.js → npc-builder.js`（NPC 构筑） |
 | `assets/js/data.js` | **生成文件，不要手改**。由 `tools/build-data.js` 生成 |
 | `assets/js/equipment-lore.js` | **生成文件，不要手改**。风味文本独立数据，由 `tools/build-equipment-lore.js` 生成 |
 | `assets/js/system-library.js` / `assets/css/system-library.css` | 只读系统与武器改装查询，搜索、筛选、规则及风味文本展示 |
@@ -31,6 +31,9 @@
 | `assets/js/glossary.js` | 手写术语（`GLOSSARY_SRC`）；标签说明与扩展规则在运行时并入 |
 | `assets/js/cardexport.js` | 角色卡图片（canvas）与文字卡 |
 | `assets/js/foundry-export.js` | 导出到 Foundry：角色转为 COMP/CON v2 驾驶员 JSON（Foundry 驾驶员表「文件导入」），扩展条目按 `D.fvtt_map` 改用官方 id |
+| `assets/js/npc-library.js`、`assets/js/npc-data.js` | NPC 库：原书页图与文字检索（资料见 `source/npc/README.md`） |
+| `assets/js/npc-builder.js` / `assets/css/npc-builder.css` | NPC 构筑：职业 + 层级 + 模板 + 可选系统，存 localStorage `lancer-npc-builder-v1`，导出 Foundry NPC 角色 JSON（`toFoundry`）；`window.NPCBuilder` 提供计算接口 |
+| `assets/js/npc-classes.js` | **生成文件，不要手改**。由 `tools/build-npc-classes.js` 从 `source/npc/core-npcs.json`、`books-npcs.json` 与尘墓模板生成 |
 | `assets/css/style.css` | 主样式 |
 | `source/lancer-data/` | COMP/CON 开源数值数据（核心规则书） |
 | `source/cn/`、`source/tw/` | 规则站简体 / 繁体原文 |
@@ -90,6 +93,10 @@ node tools/test-lcp.js              # Foundry 内容包的枚举、引用、映�
 node tools/build-fvtt-module.js     # Foundry 界面中文模组 lancer-cn（dist/fvtt/lancer-cn/、.zip）
 node tools/test-fvtt-module.js      # 模组译文、清单、写死英文翻译、骨架插图钩子检查
 node tools/test-foundry-export.js   # 导出到 Foundry 的驾驶员 JSON：结构与所有条目 id 都能在 Foundry 中找到
+node tools/parse-npc-core.js [--text] [--write]  # 从 NPC 库原书文字解析核心 NPC 职业 / 模板 → source/npc/core-npcs.json
+node tools/parse-npc-books.js [--text] [--empty] [--write]  # 官方模组与第三方书的 NPC → source/npc/books-npcs.json
+node tools/build-npc-classes.js     # NPC 构筑数据 assets/js/npc-classes.js
+node tools/test-npc-builder.js      # NPC 数据结构、解析回归、数值计算、全部职业与模板导出 Foundry NPC 的合法性
 node tools/scan-fvtt-labels.js ../foundryvtt-lancer [--write]  # 扫描系统模板与代码中写死的英文，对照 / 更新快照
 node tools/export-official-todo.js  # 官方补充书中车卡器未收录条目的清单与待译 JSON
 node tools/export-npc-todo.js       # Foundry 官方数据中的 NPC 职业 / 特性 / 模板待译 JSON（dist/fvtt/zh-npc.todo.json）
@@ -145,3 +152,21 @@ node tools/draft-ext-actions.js [--write]  # 扩展条目正文里的动作 → 
 - 攻击卡「命中效果 · 施加」状态按钮（`onRenderChatMessage`、`statusesIn`）：按物品文字识别状态，排除条件、自身、列举等写法；无权限时经模组 socket 请 GM 施加（`module.json` 需 `socket: true`）。带附加武器数据的改装另导出「附带武器」（build-lcp）。
 - 「区域」工具栏的 GM 工具「软性 / 硬性掩护格」（`lancerCoverSoft` / `lancerCoverHard`）：点格子加入本场景的掩护区（带 `flags.lancer-cn.coverCells`）；与六边形墙体共用 `PAINT_TOOLS` 涂画逻辑。行为类型显示名写进语言键 `TYPES.RegionBehavior.lancer-cn.cover`。
 - 「墙壁」工具栏的 GM 工具「六边形墙体」（`lancerHexWall`）：点击格子放置 / 移除一整格墙体（6 段阻挡移动的墙 + 玩家可见的实心六边形图形，带 `flags.lancer-cn.hexWall`），设置 `hexWallBlocksSight` 控制是否阻挡视线。
+
+
+## NPC 构筑（2026-11-09）
+
+顶部「NPC 构筑」（`assets/js/npc-builder.js`）参照 COMP/CON 的 NPC 名册：选择职业、层级、模板和可选系统，自动计算数值，可导出 Foundry NPC 角色 JSON（Foundry 中新建 NPC 角色 → 右键「导入数据」）。
+
+- 核心职业 / 模板数据由 `tools/parse-npc-core.js` 从 NPC 库的原书文字（`assets/js/npc-data.js`，核心规则书 PDF 第 278–325 页）解析，原文照录。修正写在解析器里（`STAT_PATCHES` 等），再用 `--write` 重新生成；不要直接手改 `source/npc/core-npcs.json`，测试会比对。
+- 其他书的 NPC 由 `tools/parse-npc-books.js` 解析，各书的版面问题写在 `BOOKS`：
+  - `skip` / `cut`：去掉整页或页末的小说、通讯记录；
+  - `strip` / `drop` / `dropExact` / `dropRanges`：去掉标题和残留文字；
+  - `moves`：效果文字排在名称前面时，把它移回名称之后；
+  - `forceNames`：前一句没有句号结尾时，强制把这一行当作特性标题。
+  
+  逐条修正写在 `FEATURE_PATCHES`：改为可选、并入其他特性、删除、在开头加原文说明。同样只用 `--write` 重新生成 `source/npc/books-npcs.json`，不要手改。
+- 模板加成只填原文写明的数字；原文的互斥（精英 / 超体 / 低等兵、班组、人类）只提示，不阻止。
+- 导出格式按 foundryvtt-lancer 3.1.3 的 `npc`、`npc_class`、`npc_template`、`npc_feature` 数据模型：层级数值是三个元素的数组，层级标签值写成 `{a/b/c}`，物品带 16 位 `_id`。
+- 待核对的原文写法列在 `source/npc/README.md`。
+- NPC 职业 / 模板 / 特性也由 `build-lcp.js` 的 `buildBuilderNpcs` 写进内容包（核心规则书 → 核心包，其他书 → 扩展包；尘墓用官方数据）。NPC 数据变了要重新运行 `build-npc-classes.js` 再 `build-lcp.js`，并提高内容包版本号；`test-lcp.js` 检查格式与引用。

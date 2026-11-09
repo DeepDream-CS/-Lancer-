@@ -132,6 +132,9 @@ node tools/test-expansion-copy.js
 | `node tools/build-lcp.js` / `test-lcp.js` | 生成并检查 Foundry 核心包与扩展包（`dist/fvtt/`）及核对表 |
 | `node tools/build-fvtt-module.js` / `test-fvtt-module.js` | 生成并检查 Foundry 界面中文模组 lancer-cn |
 | `node tools/test-foundry-export.js` | 「导出到 Foundry」的驾驶员 JSON 结构，以及所有条目 id 都能在 Foundry 中找到 |
+| `node tools/parse-npc-core.js [--text] [--write]` | 从 NPC 库的原书文字解析核心 NPC 职业与模板，`--write` 写入 `source/npc/core-npcs.json` |
+| `node tools/parse-npc-books.js [--text] [--empty] [--write]` | 解析官方模组与第三方书的 NPC；`--empty` 列出没有文字的特性及其原书上下文，`--write` 写入 `source/npc/books-npcs.json` |
+| `node tools/build-npc-classes.js` / `test-npc-builder.js` | 生成 NPC 构筑数据 `assets/js/npc-classes.js`；检查数据结构、解析回归、数值计算，以及全部职业与模板导出 Foundry NPC 的合法性 |
 
 除系统库浏览器检查外，上述数据与规则检查可直接用 Node.js 运行。`tools/test-system-library.js` 当前使用本机已安装的 Playwright 和 Edge，脚本中的依赖路径需按检查环境调整；运行会在项目根目录写入 `system-library-preview.png`。这些是开发检查所需工具，普通使用车卡器无需安装。
 
@@ -159,3 +162,30 @@ GitHub Pages 使用仓库中的静态成品；修改数据源后应先生成并�
 ## 判定速查（2026-11-05）
 
 顶部“判定速查”可打开结构伤害、过热（压力）两张表及结算步骤，支持手机、离线查询、Esc 关闭。依据用户提供的《枪骑兵》核心规则书 v3.5 PDF 第 75–76 页。只读查询，不改角色或战斗地图存档。实现位于 `assets/js/damage-reference.js` 与 `assets/css/damage-reference.css`，由 `index.html` 加载。
+
+
+## NPC 查看板块
+
+顶部 NPC 库提供来源／类别筛选、规则全文搜索、原书数值表大图和可复制文字。当前覆盖用户提供的 24 本资料正文，编目 271 个参考页。此为原书查询库；可套模板、切换层级的结构化构筑见下节「NPC 构筑」。模组正文包含剧透；参考页号采用 PDF 文件实际页序。独立海战《战斗群》属于另一套规则，正文可检索，不混入机甲 NPC 职业列表。
+
+## NPC 构筑（2026-11-09）
+
+顶部「NPC 构筑」参照 COMP/CON 的 NPC 名册，按核心规则书 v3.5 的步骤组合 NPC。共 85 个职业、25 个模板：
+
+- **内容**：
+  - 30 个机甲职业，以及人类、班组、怪形 3 个特殊职业；
+  - 核心规则书 12 个模板（指挥官、RPV、精英、异种、低等兵、雇佣兵、海盗、飞船、太空民、超体、老兵、载具）；
+  - Foundry 官方《尘墓》3 个模板（恐怖体、工业机甲、特战队员）；
+  - 官方模组的 7 个新职业和 1 个模板：《塞壬之歌》水蛭、暴风雨，《壁花不容》潜伏者、神行客、怨恨者，《冬痕行动》主战坦克与海军陆战队模板，模组资源合集的复仇者；
+  - 第三方书 45 个职业、9 个模板：《苏丹》《卡斯特与帕勒克》《冷核圆形竞技场》《强化战斗》《午夜伊菲革涅亚》《天堂末班车》《浴金焰》《军团》。冷核竞技场的 5 个标志性 NPC 各带一个「标志性超体」附加，作为模板列出；
+  - 职业选单中核心规则书按角色分组，其他书按书分组，第三方书注明「第三方」。
+- **构筑**：
+  - 选择职业和层级（T1–T3）后，数值、攻击加值、伤害和效果文字里的「x/y/z」都按层级显示。
+  - 勾选模板和可选系统。模板的数值加成（如强化 +1 结构 / 压力、超体韧性 +5 HP、低等兵 1 HP）自动计入。
+  - 可以从其他职业添加系统（原书允许在职业之间交换系统），各项数值也可以手动加减。
+  - 原书写明的互斥（精英与超体、低等兵与老兵等，班组和人类的模板限制）以及可选系统超出建议数量时，页面会提示，但不阻止。
+- **保存与导出**：
+  - NPC 存在当前浏览器（localStorage 的 `lancer-npc-builder-v1`），可备份全部、导入备份，也可以复制文字版。
+  - 「导出到 Foundry」生成 LANCER 系统的 NPC 角色 JSON，包括职业、模板和全部特性。在 Foundry 中新建一个 NPC 角色，右键选「导入数据」，再选择这个文件；层级可以在角色表上切换。
+
+数据由 `tools/parse-npc-core.js`（核心规则书 PDF 第 278–325 页）和 `tools/parse-npc-books.js`（其他书）从 NPC 库的原书文字解析而来，写在 `source/npc/core-npcs.json`、`source/npc/books-npcs.json`。说明与待核对项见 [source/npc/README.md](source/npc/README.md)。

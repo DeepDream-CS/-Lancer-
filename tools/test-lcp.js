@@ -180,9 +180,11 @@ function checkPack(packId) {
 	for (const pack of fs.readdirSync(offDir)) for (const k of Object.keys(offNpc)) { const f = path.join(offDir, pack, k + ".json"); if (fs.existsSync(f)) offNpc[k].push(...readJson(f)); }
 	const lcpFilesExt = unzip(fs.readFileSync(path.join(ROOT, "dist/fvtt", PACKS.ext.lcp)));
 	for (const k of Object.keys(offNpc)) {
-		const got = out[k] || [];
-		ok(got.length === offNpc[k].length && got.length > 0, `${k} 应全部导出（${got.length} / ${offNpc[k].length}）`);
-		ok(lcpFilesExt[`${k}.json`] && JSON.parse(lcpFilesExt[`${k}.json`]).length === got.length, `扩展包应包含 ${k}.json`);
+		const offIds = new Set(offNpc[k].map(o => o.id));
+		// 车卡器「NPC 构筑」的条目另外检查（见下文）
+		const got = (out[k] || []).filter(x => offIds.has(x.id));
+		ok(got.length === offNpc[k].length && got.length > 0, `${k} 官方条目应全部导出（${got.length} / ${offNpc[k].length}）`);
+		ok(lcpFilesExt[`${k}.json`] && JSON.parse(lcpFilesExt[`${k}.json`]).length === (out[k] || []).length, `扩展包应包含 ${k}.json`);
 		for (const x of got) {
 			const o = offNpc[k].find(y => y.id === x.id);
 			ok(CJK.test(x.name), `${k} ${x.id} 名称应为中文：${x.name}`);
@@ -191,8 +193,8 @@ function checkPack(packId) {
 			for (const f of ["effect", "description", "on_hit", "trigger"]) if (/[A-Za-z]{4,}/.test(String(o[f] || "").replace(/<[^>]+>/g, ""))) ok(CJK.test(x[f] || ""), `${k} ${x.id} 的 ${f} 应为中文`);
 		}
 	}
-	const tplZh = Object.fromEntries((out.npc_templates || []).map(t => [offNpc.npc_templates.find(o => o.id === t.id).name, t.name]));
-	for (const ft of out.npc_features || []) if (ft.origin?.type === "Template" && ft.origin.name) ok(Object.values(tplZh).includes(ft.origin.name), `NPC 特性 ${ft.id} 的来源模板名应为中文：${ft.origin.name}`);
+	const tplZh = Object.fromEntries((out.npc_templates || []).filter(t => offNpc.npc_templates.some(o => o.id === t.id)).map(t => [offNpc.npc_templates.find(o => o.id === t.id).name, t.name]));
+	for (const ft of out.npc_features || []) if (ft.origin?.type === "Template" && ft.origin.name && offNpc.npc_features.some(o => o.id === ft.id)) ok(Object.values(tplZh).includes(ft.origin.name), `NPC 特性 ${ft.id} 的来源模板名应为中文：${ft.origin.name}`);
 
 	// 自动生成的动作按钮（说明块 + source/fvtt/ext-actions.json）
 	ok(audit.autoActions.length >= 80, `扩展条目应自动生成动作按钮（实际 ${audit.autoActions.length}）`);
@@ -350,6 +352,65 @@ function checkPack(packId) {
 			ok(!lost.length, `${where}：译文缺少原文数字 ${lost.join("、")}`);
 		}
 	}
+}
+
+// ---- 车卡器「NPC 构筑」的职业 / 模板 / 特性：核心规则书在核心包，官方模组与第三方书在扩展包
+{
+	const vm = require("vm");
+	const ctx = { window: {} };
+	vm.runInNewContext(fs.readFileSync(path.join(ROOT, "assets/js/npc-classes.js"), "utf8"), ctx);
+	const C = ctx.window.LANCER_NPC_CLASSES;
+	const coreTags = new Set(readJson(path.join(ROOT, "source/fvtt/core/tags.json")).map(t => t.id));
+	const STAT_KEYS = ["activations", "armor", "hp", "evade", "edef", "heatcap", "speed", "sensor", "save", "hull", "agility", "systems", "engineering", "size", "structure", "stress"];
+	const allIds = new Set();
+	for (const packId of ["core", "ext"]) {
+		const { out } = results[packId];
+		const files = unzip(fs.readFileSync(path.join(ROOT, "dist/fvtt", PACKS[packId].lcp)));
+		const inPack = o => (packId === "core" ? o.pack === "核心规则书" : o.pack !== "核心规则书" && o.pack !== "尘墓");
+		const wantClasses = C.classes.filter(inPack), wantTemplates = C.templates.filter(inPack);
+		const mineIds = new Set([...wantClasses, ...wantTemplates].flatMap(o => [o.id, ...o.base.map(f => f.id), ...o.optional.map(f => f.id)]));
+		const only = list => (list || []).filter(x => mineIds.has(x.id));
+		const classes = only(out.npc_classes), templates = only(out.npc_templates), features = only(out.npc_features);
+		ok(wantClasses.length > 0 && wantClasses.every(c => classes.some(x => x.id === c.id)), `${packId} 包应包含全部 ${wantClasses.length} 个车卡器 NPC 职业`);
+		ok(wantTemplates.every(t => templates.some(x => x.id === t.id)), `${packId} 包应包含全部 ${wantTemplates.length} 个车卡器 NPC 模板`);
+		for (const k of ["npc_classes", "npc_templates", "npc_features"]) ok(files[`${k}.json`] && JSON.parse(files[`${k}.json`]).length === (out[k] || []).length, `${packId} 包的 LCP 应包含 ${k}.json`);
+		const featIds = new Set(features.map(f => f.id));
+		for (const x of [...classes, ...templates, ...features]) { ok(!allIds.has(x.id), `NPC id 重复：${x.id}`); allIds.add(x.id); ok(CJK.test(x.name) || x.name === "RPV", `NPC ${x.id} 名称应为中文`); }
+		for (const c of classes) {
+			for (const k of STAT_KEYS) ok(Array.isArray(c.stats[k]) && c.stats[k].length === 3 && c.stats[k].every(Number.isFinite), `职业 ${c.name} 数值 ${k} 应为三个层级的数字`);
+			ok(c.stats.size.every(s => s >= 0.5), `职业 ${c.name} 大小至少 1/2`);
+			ok(c.info && typeof c.info.flavor === "string" && typeof c.info.tactics === "string", `职业 ${c.name} 有 info`);
+		}
+		for (const o of [...classes, ...templates]) for (const id of [...o.base_features, ...o.optional_features]) ok(featIds.has(id), `${o.name} 引用的特性 ${id} 应在同一个包里`);
+		for (const f of features) {
+			const w = `NPC 特性 ${f.name}（${f.id}）`;
+			ok(["Trait", "System", "Reaction", "Weapon", "Tech"].includes(f.type), w + " 类型");
+			ok(["Class", "Template"].includes(f.origin?.type) && f.origin.name, w + " 来源");
+			for (const t of f.tags) ok(coreTags.has(t.id) && (t.val === undefined || typeof t.val === "number" || /^\{\d+\/\d+\/\d+\}$/.test(t.val)), `${w} 标签 ${t.id}=${t.val}`);
+			for (const blk of [f.bonus, f.override]) if (blk) for (const [k, v] of Object.entries(blk)) ok(STAT_KEYS.includes(k) && Number.isFinite(v), `${w} 加成 ${k}=${v}（Foundry 只取一个数值）`);
+			if (f.type === "Weapon") {
+				ok(f.damage.every(d => ENUM.damage.includes(d.type) && d.damage.length === 3), `${w} 伤害类型与三个层级`);
+				ok(f.range.every(r => ENUM.range.includes(r.type) && Number.isInteger(r.val)), `${w} 射程`);
+				ok([f.accuracy, f.attack_bonus].every(a => a.length === 3 && a.every(Number.isInteger)), `${w} 准度 / 攻击加值`);
+			}
+			if (f.type === "Reaction") ok(typeof f.trigger === "string" && f.trigger, `${w} 触发`);
+			if (f.type === "Tech") {
+				ok(["Quick", "Full"].includes(f.tech_type), `${w} 科技类型`);
+				// 只有真正的科技攻击才带加值字段，否则 Foundry 会把豁免类科技当成攻击
+				ok(("attack_bonus" in f) === ("accuracy" in f), `${w} 攻击加值与准度同时出现或同时省略`);
+			}
+		}
+	}
+	// 不与官方 NPC 数据或其他内容包条目撞 id
+	const offNpcIds = new Set();
+	for (const pack of fs.readdirSync(offDir)) for (const k of ["npc_templates", "npc_features"]) { const f = path.join(offDir, pack, k + ".json"); if (fs.existsSync(f)) for (const x of readJson(f)) offNpcIds.add(x.id); }
+	ok([...allIds].every(id => !offNpcIds.has(id)), "车卡器 NPC 条目不应与官方 NPC 数据重名（尘墓模板由官方数据导出）");
+	const assault = results.core.out.npc_classes.find(c => c.id === "npcc_cn_assault");
+	ok(JSON.stringify(assault.stats.hp) === "[15,18,21]" && assault.role === "突击", "突击手的数值与角色");
+	const rifle = results.core.out.npc_features.find(f => f.name === "重型突击步枪");
+	ok(JSON.stringify(rifle.damage) === JSON.stringify([{ type: "Kinetic", damage: [6, 8, 10] }]) && rifle.tags[0].val === "{2/3/4}", "重型突击步枪的伤害与层级标签");
+	const sap = results.core.out.npc_features.find(f => f.id === "npcf_cn_assassin_6");
+	ok(sap && sap.type === "Tech" && !("attack_bonus" in sap), "暗杀者「闷棍」是豁免类科技，不带攻击加值");
 }
 
 console.log(`test-lcp：${checks} 项检查，${failures ? failures + " 项失败" : "全部通过"}（扩展：覆盖 ${results.ext.audit.overlaid.length}、新增 ${results.ext.audit.added.length}；核心：覆盖 ${results.core.audit.overlaid.length}、新增标签 ${results.core.audit.added.length}）`);
