@@ -67,7 +67,7 @@ const TPL_EXPR = /\$\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/g;
 // 字面量前面的上下文：通知、对话框 / 窗口 / 聊天卡的标题、按钮文字、提示等
 const CONTEXT = new RegExp(
   "(?:notifications[!?]*\\.(?:info|warn|error)\\(\\s*" +
-    "|\\b(?:title|label|hint|desc|description|content|name|text|tooltip|flavor|subtitle|header)\\s*[:=]\\s*" +
+    "|\\b(?:title|label|hint|desc|description|content|name|text|tooltip|flavor|subtitle|header|human)\\s*[:=]\\s*" +
     "|\\b(?:title|label|desc|description|content)\\s*[:=]\\s*[^,;\\n]*\\?\\s*[^,;\\n]*:\\s*)$"
 );
 

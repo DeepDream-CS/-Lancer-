@@ -175,6 +175,83 @@ function checkPack(packId) {
 // ---- 扩展内容
 {
 	const { out, audit } = checkPack("ext");
+	// NPC 模板与特性（官方补充书数据 + zh-npc.json）
+	const offNpc = { npc_templates: [], npc_features: [] };
+	for (const pack of fs.readdirSync(offDir)) for (const k of Object.keys(offNpc)) { const f = path.join(offDir, pack, k + ".json"); if (fs.existsSync(f)) offNpc[k].push(...readJson(f)); }
+	const lcpFilesExt = unzip(fs.readFileSync(path.join(ROOT, "dist/fvtt", PACKS.ext.lcp)));
+	for (const k of Object.keys(offNpc)) {
+		const got = out[k] || [];
+		ok(got.length === offNpc[k].length && got.length > 0, `${k} 应全部导出（${got.length} / ${offNpc[k].length}）`);
+		ok(lcpFilesExt[`${k}.json`] && JSON.parse(lcpFilesExt[`${k}.json`]).length === got.length, `扩展包应包含 ${k}.json`);
+		for (const x of got) {
+			const o = offNpc[k].find(y => y.id === x.id);
+			ok(CJK.test(x.name), `${k} ${x.id} 名称应为中文：${x.name}`);
+			for (const f of ["type", "weapon_type", "damage", "range", "tags", "base_features", "optional_features", "attack_bonus", "accuracy", "uses", "recharge"])
+				ok(JSON.stringify(x[f]) === JSON.stringify(o[f]), `${k} ${x.id} 的 ${f} 应与官方相同（Foundry 依赖英文枚举与数值）`);
+			for (const f of ["effect", "description", "on_hit", "trigger"]) if (/[A-Za-z]{4,}/.test(String(o[f] || "").replace(/<[^>]+>/g, ""))) ok(CJK.test(x[f] || ""), `${k} ${x.id} 的 ${f} 应为中文`);
+		}
+	}
+	const tplZh = Object.fromEntries((out.npc_templates || []).map(t => [offNpc.npc_templates.find(o => o.id === t.id).name, t.name]));
+	for (const ft of out.npc_features || []) if (ft.origin?.type === "Template" && ft.origin.name) ok(Object.values(tplZh).includes(ft.origin.name), `NPC 特性 ${ft.id} 的来源模板名应为中文：${ft.origin.name}`);
+
+	// 自动生成的动作按钮（说明块 + source/fvtt/ext-actions.json）
+	ok(audit.autoActions.length >= 80, `扩展条目应自动生成动作按钮（实际 ${audit.autoActions.length}）`);
+	const sysById = id => out.systems.find(s => s.id === id);
+	const white = sysById("ms_ext_comet_white_star");
+	ok(white?.actions?.length === 2 && white.actions.every(a => a.activation === "Invade") && !/blk|中继协议/.test(white.effect), "白星信号拦截器的两个入侵选项应转成动作，并从效果文字中移除");
+	const shield = sysById("ms_ch_shield_array")?.actions?.[0];
+	ok(shield?.activation === "Reaction" && shield.frequency === "1/Round" && /远程攻击/.test(shield.trigger || ""), "盾牌阵列无人机的反应应带频率与触发");
+	ok(sysById("ms_ext_gas_grenade_dispenser")?.actions?.[0]?.activation === "Quick", "正文里的快速动作（瓦斯榴弹抛洒器）应生成按钮");
+	ok(out.frames.find(f => f.id === "mf_ext_red_admiral")?.traits[1]?.actions?.[0]?.activation === "Reaction", "骨架特征里的反应（赤蛱蝶「截剑流拔刀术」）应生成按钮");
+	ok(!(sysById("ms_ch_swallow")?.actions || []).length, "ext-actions.json 中写成 [] 的条目不加动作");
+	// 附带武器数据的改装 → 另导出可直接攻击的附带武器
+	const under = out.weapons.find(w => w.id === "mw_pl_underslung_data");
+	ok(under && under.name === "下挂式冲击器（附带武器）" && under.mount === "Auxiliary" && under.type === "Launcher" && under.damage[0]?.val === 5 && under.range[0]?.val === 3, "下挂式冲击器应另导出为附带武器（副武器发射器，射程 3，5 爆炸）");
+	ok(under && under.tags.some(t => t.id === "tg_ap") && under.tags.some(t => t.id === "tg_loading") && under.no_bonus && under.no_core_bonus && under.sp === 0, "附带武器：穿甲、装填，不受其他改装与核心奖励影响，0 SP");
+	ok(under && under.license_id === "pl_ips_vanguard" && /离散/.test(under.on_hit), "附带武器沿用改装的牌照，命中效果取自改装说明");
+	// 犹大漏洞是命中后的追加动作（自由动作），不是快速科技
+	const judas = sysById("ms_ext_judas_exploit")?.actions?.[0];
+	ok(judas?.activation === "Free" && judas.frequency === "1/Scene" && /命中/.test(judas.trigger || ""), "犹大漏洞应为带触发的自由动作");
+	// 2026-11-09 动作推断复核（FVTT-ACTION-INFERENCE-REVIEW）：频率属于哪个动作、按钮按操作拆分
+	const acts = (list) => (list || []).map(a => `${a.name}|${a.activation}|${a.frequency || ""}`);
+	ok(!acts(sysById("ms_piof_cicada_chatter")?.actions).some(s => s.endsWith("1/Scene")) && acts(sysById("ms_piof_cicada_chatter")?.actions).includes("集中噪音|Quick|"), "蝉鸣叨叨：1/场景限制的是受影响角色，动作本身不设频率");
+	ok(JSON.stringify(acts(sysById("ms_ch_seismic_pulse")?.actions)) === JSON.stringify(["激活脉冲场|Protocol|", "震碎地形|Quick|1/Round"]), "地震脉冲场：激活为协定，1/轮属于震碎地形");
+	ok(acts(sysById("ms_ch_saboteur")?.actions).includes("执行骑乘选项|Free|1/Round") && acts(sysById("ms_ch_saboteur")?.actions).includes("部署并骑乘|Quick|"), "破坏者无人机：1/轮属于自由动作的骑乘选项");
+	const plating = sysById("ms_kkca_transdomain_plating")?.actions || [];
+	ok(plating.length === 2 && plating[1].activation === "Reaction" && /被攻击命中/.test(plating[1].trigger), "跨域镀层：自毁抵消的反应触发是「你被命中」");
+	ok(acts(sysById("ms_ext_unsigned_surrender")?.actions).join() === "插旗坚守|Quick|,停止坚守|Protocol|", "拒签投降书：启动为快速动作，协定是停止");
+	const orni = out.frames.find(f => f.id === "mf_ext_ornithoptera");
+	ok(/推、拉、击退或伏卧/.test(orni?.traits[0]?.actions?.[0]?.trigger || "") && /紧缚/.test(orni?.core_system?.passive_actions?.[0]?.detail || ""), "鸟翼蝶：丝之舞的触发、单丝线轴的三个效果完整");
+	const anise = out.frames.find(f => f.id === "mf_piof_star_anise")?.core_system?.passive_actions || [];
+	ok(anise.map(a => `${a.name}|${a.activation}`).join() === "部署建筑项目|Quick,藤蔓传送|Free,拆除项目|Quick", "八角：部署为快速动作，自由动作只是藤蔓传送");
+	// 说明文字里写了数值的部署物（source/fvtt/ext-deployables.json）
+	const depOf = (list, name) => (list || []).find(d => d.name === name);
+	const night = depOf(sysById("ms_ch_nightjar")?.deployables, "夜莺无人机");
+	ok(night && night.type === "Drone" && night.size === 0.5 && night.hp === 5 && night.evasion === 10 && night.edef === 10, "夜莺无人机应成为部署物（大小 1/2，5 HP，10 回避 / 电子防御）");
+	const tower = depOf(sysById("ms_ext_agrippa_tower")?.deployables, "休克桥塔");
+	ok(tower && tower.size === 1 && tower.hp === 10 && tower.evasion === 5 && tower.edef === undefined && /电子防御/.test(tower.detail), "休克桥塔：原文没写电子防御时不补，说明里提示");
+	const anchor = depOf(out.frames.find(f => f.id === "mf_ch_retiarius")?.core_system?.deployables, "锚点装置");
+	ok(anchor && anchor.instances === 3 && anchor.size === 0.5 && anchor.hp === 10, "网斗士核心的锚点装置：一次部署 3 个");
+	const extDeps = readJson(path.join(ROOT, "source/fvtt/ext-deployables.json"));
+	for (const [id, list] of Object.entries(extDeps)) {
+		if (id.startsWith("_")) continue;
+		ok(audit.added.some(a => a.id === id), `ext-deployables.json 的 ${id} 应是扩展包新增的条目`);
+		for (const d of list) {
+			ok(["Deployable", "Drone", "Mine"].includes(d.type) && CJK.test(d.name) && CJK.test(d.detail), `ext-deployables.json 的 ${id}「${d.name}」类型、名称或说明不合法`);
+			ok(d.hp !== undefined && d.evasion !== undefined, `ext-deployables.json 的 ${id}「${d.name}」应写明 HP 与回避（照原文）`);
+		}
+	}
+	const extActions = readJson(path.join(ROOT, "source/fvtt/ext-actions.json"));
+	const activations = ["Quick", "Full", "Free", "Reaction", "Protocol", "Quick Tech", "Full Tech", "Invade"];
+	for (const [id, list] of Object.entries(extActions)) {
+		if (id.startsWith("_")) continue;
+		ok(audit.added.some(a => a.id === id), `ext-actions.json 的 ${id} 应是扩展包新增的条目（覆盖官方的条目保留官方动作）`);
+		for (const a of list) {
+			ok(a.name && CJK.test(a.name) && a.detail, `ext-actions.json 的 ${id} 动作缺少中文名称或说明`);
+			ok(activations.includes(a.activation), `ext-actions.json 的 ${id}「${a.name}」类型不合法：${a.activation}`);
+			ok(freqOk(a.frequency), `ext-actions.json 的 ${id}「${a.name}」频率不合法：${a.frequency}`);
+		}
+	}
 	ok(!out.frames.some(f => f.id === "mf_ext_chomolungma"), "珠穆朗玛不应再以车卡器 id 导出");
 	const chomo = out.frames.find(f => f.id === "mf_chomolungma");
 	ok(chomo && chomo.name === "珠穆朗玛" && chomo.stats.sp === 7, "珠穆朗玛应覆盖官方 mf_chomolungma");
@@ -256,7 +333,8 @@ function checkPack(packId) {
 	const addBase = dir => { for (const k of CORE_KINDS) { const f = path.join(dir, k + ".json"); if (fs.existsSync(f)) for (const x of readJson(f)) base[x.id] = x; } };
 	addBase(path.join(ROOT, "source/fvtt/core"));
 	for (const pack of fs.readdirSync(offDir)) addBase(path.join(offDir, pack));
-	for (const file of ["zh-overrides.json", "zh-overrides-core.json"]) {
+	for (const pack of fs.readdirSync(offDir)) for (const k of ["npc_templates", "npc_features"]) { const f = path.join(offDir, pack, k + ".json"); if (fs.existsSync(f)) for (const x of readJson(f)) base[x.id] = x; }
+	for (const file of ["zh-overrides.json", "zh-overrides-core.json", "zh-npc.json"]) {
 		const f = path.join(ROOT, "source/fvtt", file);
 		if (!fs.existsSync(f)) continue;
 		const ov = readJson(f);

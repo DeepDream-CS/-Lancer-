@@ -9,6 +9,9 @@
 | `official-map.json` | 车卡器扩展条目 id → 官方条目 id，手工维护（核心条目 id 与 lancer-data 相同，不需要映射） |
 | `zh-overrides.json`、`zh-overrides-core.json` | 扩展包、核心包覆盖后仍是英文的文字的补译，手工维护 |
 | `statuses-zh.json` | 核心包的状态与状况：Foundry 状态（按 icon）→ 车卡器术语库条目名，以及中文简述 |
+| `ext-actions.json` | 扩展条目正文里的动作 → Foundry 动作按钮，`tools/draft-ext-actions.js` 生成草稿后人工核对 |
+| `ext-deployables.json` | 扩展条目说明里写了数值的部署物 → Foundry 部署物，照原文转录，原文没写的数值不补 |
+| `zh-npc.json` | 官方补充书 NPC 模板与特性的中文（GPT 译、已核对），扩展包构建时套用 |
 | `module/` | 界面中文模组 lancer-cn 的源文件（语言文件译文、写死英文的词典与扫描快照、清单、脚本），见 [Foundry 内容包](../../docs/FVTT-LCP.md#界面中文模组lancer-cn) |
 
 注意 `core/` 与 `source/lancer-data/` 不同：后者是车卡器自己使用的较旧副本，构建核心包时用来判断车卡器有意改过哪些数值。

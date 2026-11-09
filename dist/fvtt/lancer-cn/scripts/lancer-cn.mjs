@@ -37,7 +37,7 @@ Hooks.on("updateActor", async (actor, changes, _options, userId) => {
 //   words    枚举词（尺寸、类型、动作等），整段只由这些词组成时逐词替换，也用于翻译 {x} 代入的部分
 //   context  只在特定界面里使用的译法（CSS 选择器 → 词典）
 
-const HARDCODED = {"exact":{"(Optional) Manually adjust numeric stats for any special customizations you want to apply. For NPCs, you would do this by editing the actor's NPC Class item. For PC mechs, you can do this by editing their Frame item from the mech's Inventory.":"（可选）手动调整数值，以应用特殊的定制。NPC 通过编辑该角色的 NPC 职业物品调整；PC 机甲通过机甲物品栏中的骨架物品调整。",", and other information about how to use the system.":"，以及系统使用方法的其他说明。","// ACTIVE":"// 主动","// Bonuses":"// 加值","// CORE SYSTEM":"// 核心系统","// PASSIVE":"// 被动","// TECH //":"// 科技 //","// TECH ATTACK //":"// 科技攻击 //","// Quick TECH //":"// 快速科技 //","// Quick TECH ATTACK //":"// 快速科技攻击 //","// Full TECH //":"// 完整科技 //","// Full TECH ATTACK //":"// 完整科技攻击 //","ACCURACY":"准度","ACTION ID":"动作 ID","ACTION NAME":"动作名称","ACTIONS":"动作","ACTIVATE":"激活","ACTIVATIONS":"激活次数","ACTIVE":"主动","ADDED ACTIONS":"附加动作","ADDED DAMAGE":"附加伤害","ADDED DEPLOYABLES":"附加部署物","ADDED RANGE":"附加射程","ADDED TAGS":"附加标签","AGI":"敏捷","ARMOR":"装甲","ATTACK BONUS":"攻击加值","AUTHOR":"作者","AUX/AUX":"副/副","AVAILABLE":"可用","AVAILABLE WEAPON MOUNTS":"可用武器挂载点","Accuracy":"准度","Accuracy and Difficulty":"准度与难度","Accurate (+1)":"精准（+1）","Action Editing":"编辑动作","Add a base damage type":"添加基础伤害类型","Add a bonus damage type":"添加额外伤害类型","Add a bonus damage type for only this target":"添加仅对该目标生效的额外伤害类型","Add global accuracy":"添加全局准度","Add global difficulty":"添加全局难度","Add new base damage type":"添加新的基础伤害类型","Agility":"敏捷","Allowed Sizes":"允许的武器尺寸","Allowed Types":"允许的武器类型","Apply damage":"施加伤害","Armor":"护甲","Armor Piercing":"穿甲","Armor Piercing (AP)":"穿甲（AP）","Attack Bonus":"攻击加值","Attack bonus":"攻击加值","Author":"作者","Available and Installed Content":"可用与已安装的内容","BASE ACTIONS":"基础动作","BASE FEATURE":"基础特性","BASE FEATURES":"基础特性","BASIC ATTACK":"基础攻击","BONUS":"额外","BURN :: ENG":"燃烧 :: 工程","BURN CLEARED!":"燃烧已清除！","Base Damage":"基础伤害","Basic Workflows":"基本流程","Bonus":"额外","Bonus Damage":"额外伤害","Bonus Editing":"编辑加值","Boon XP from another PC.":"来自其他 PC 的恩惠经验。","Browse":"浏览","Bug reports and enhancement suggestions":"问题报告与改进建议","Burn flow requires the actor to have a token in the scene":"燃烧流程需要该角色在场景中有指示物","CASCADE":"崩溃","CASCADE CHECK":"崩溃检定","CHANGELOG":"更新日志","CHARGED":"已充能","CLASS":"职业","CONSUMABLE":"消耗品","CORE":"核心","COST":"消耗","COUNTERS":"计数器","CURRENT":"当前","Cancel":"取消","Cannot Be Reduced":"不可降低","Cannot Create Actors":"无法创建角色","Cannot Migrate This World":"无法迁移此世界","Cannot be Reduced":"不可降低","Cannot fire a weapon on a non-piloted mech!":"无人驾驶的机甲不能使用武器！","Cannot use a system on a non-piloted mech!":"无人驾驶的机甲不能使用系统！","Cannot use a talent without an active mech!":"没有启用中的机甲，无法使用天赋！","Check out the project wiki for":"项目维基提供了","Clear All":"全部清除","Clear Ally Condition":"清除盟友状况","Clear Burn":"清除燃烧","Clear Compendium Data":"清除合集包数据","Clear Compendiums":"清除合集包","Clear LANCER Compendium Data":"清除 LANCER 合集包数据","Clear Own Condition":"清除自身状况","Clearing all LANCER Compendium data. Please wait.":"正在清除所有 LANCER 合集包数据，请稍候。","Close":"关闭","Configuration":"设置","Confirm":"确认","Consume Lock On (+1)":"消耗锁定（+1）","Contents:":"内容：","Cool Mech":"冷却机甲","Core Bonuses":"核心奖励","Core Data has not been built yet":"核心数据尚未生成","Could not find character to import! No share code entered.":"找不到要导入的角色！未输入分享码。","Could not infer action type":"无法判断动作类型","Counter Editing":"编辑计数器","DAMAGE":"伤害","DAMAGE TYPES":"伤害类型","DEACTIVATE":"停用","DELETE":"删除","DEPLOYABLES":"部署物","DEPRECATED":"已弃用","DESCRIPTION":"说明","DETAILS":"详情","DROP HERE":"拖放到此处","DROP NPC FEATURES HERE":"将 NPC 特性拖放到此处","Damage":"伤害","Damage Roll":"伤害掷骰","Decrease flat bonus":"减少固定加值","Delete Document":"删除条目","Difficulty":"难度","Drag items from the relevant compendiums, such as Mech frames or NPC Features.":"从相应的合集包拖入物品，例如机甲骨架或 NPC 特性。","E-DEF":"电子防御","E-DEFENSE":"电子防御","E-Defense":"电子防御","EFFECT":"效果","EFFICIENCY":"效率","ENG":"工程","ENGINEERING":"工程","EVASION":"回避","Edit":"编辑","Edit Bonus:":"编辑加值：","Edit Field:":"编辑字段：","Edit Text":"编辑文字","Effect":"效果","Empty":"空","Engaged (-1)":"交战（-1）","Engineering":"工程","Equip armor":"装上护甲","Equip gear":"装上装备","Equip reserve":"装上储备","Equip weapon":"装上武器","Error importing from V2 share code. V2 share codes may no longer work, or this share code may need to be refreshed.":"从 V2 分享码导入时出错。V2 分享码可能已失效，或需要刷新该分享码。","Error importing from V3 share code.":"从 V3 分享码导入时出错。","Error rolling tech attack macro (not a valid tech attacker).":"科技攻击宏出错（该角色不能进行科技攻击）。","Evasion":"回避","Export":"导出","Exporting for this version of actor is currently unsupported.":"目前不支持导出此版本的角色。","Exporting ran into an issue, or actor type is not supported.":"导出时出现问题，或不支持该角色类型。","Exposed":"暴露","FAQ":"常见问题","FEATURE TYPE:":"特性类型：","FLEX":"灵活","FREQUENCY":"频率","FULL":"完整动作","FULL REPAIR":"全面维修","Filter Ignore:":"筛选时忽略：","First, make sure you have your LANCER data imported properly via the compendium manager in the \"Compendiums\" tab. If you have non-core content you want to use in your game, this would be the place to do it as well.":"首先，在「合集包」标签页中通过内容包管理器正确导入 LANCER 数据。如果要在游戏中使用核心以外的内容，也在这里导入。","Flat Modifier":"固定调整值","Flat attack bonus":"固定攻击加值","For 'cannot be reduced' effects like the Paracausal mod":"用于「不可降低」的效果，例如非因果律模块","For effects which cause the attacker to deal half damage in addition to resistance, like Heavy Gunner":"用于在抗性之外还让攻击者伤害减半的效果，例如重炮手","Frames":"骨架","Frequency:":"频率：","Full Action":"完整动作","Gear":"装备","Global Accuracy/Difficulty Adjustment":"全局准度／难度调整","HEAT":"热度","HEAT CAP":"热度上限","HEAT COST":"热度消耗","HEAVY":"重型","HISTORY":"经历","HP":"HP","HULL":"机体","Half Damage":"伤害减半","Heat Cap":"热度上限","Helpful Links":"实用链接","Hidden:":"隐藏：","Hull":"机体","ID":"ID","ID:":"ID：","INFLUENCE":"影响力","INIT":"前提","INTEGRATED":"内建","INTEGRATED GEAR":"内建装备","INTEGRATED ITEMS":"内建物品","INVADE":"入侵","IS TECH ATTACK?":"是否为科技攻击？","Icon Preview":"图标预览","Impaired (-1)":"受损（-1）","Import From File":"从文件导入","Import LCP":"导入内容包","Import Selected Loadout":"导入所选配装","Import all necessary LCPs first using the":"请先导入所有需要的内容包，使用","Import/Update LCP":"导入／更新内容包","Import/Update Selected":"导入／更新所选","Imported LCPs":"已导入的内容包","Importing character from V2 share code...":"正在从 V2 分享码导入角色……","Importing character from V3 share code...":"正在从 V3 分享码导入角色……","Inaccurate (-1)":"不准（-1）","Incomplete Pilot Import":"驾驶员导入不完整","Increase accuracy":"增加准度","Increase difficulty":"增加难度","Increase flat bonus":"增加固定加值","Innate Accuracy/Difficulty":"固有准度／难度","Installed LCPs":"已安装的内容包","Invalid Stabilize choice!":"无效的稳住阵脚选项！","Key:":"键：","LANCER Compendium Manager":"LANCER 内容包管理器","LANCER Compendiums cleared.":"LANCER 合集包已清除。","LANCER Help":"LANCER 帮助","LID":"LID","LID:":"LID：","LOADED":"已装填","LOCKED: BRACING":"锁定：受身","Lancer Compendium Manager":"LANCER 内容包管理器","Lancer Condition Icons is Integrated":"Lancer Condition Icons 已整合进系统","Lancer Core Book Data":"LANCER 核心规则书数据","Lancer Data Version":"LANCER 数据版本","Lancer Initiative":"Lancer Initiative","Lancer Initiative Module is not Needed":"不需要 Lancer Initiative 模组","Licenses":"牌照","Loading data, please wait…":"正在载入数据，请稍候…","Lock On (+1)":"锁定（+1）","MAIN":"主","MAIN/AUX":"主/副","MAJOR IDEALS":"主要理想","MAX HP":"HP 上限","MINOR IDEALS":"次要理想","MOUNTED EFFECT":"挂载效果","MOUNTED SYSTEMS":"已装备系统","MOUNTED WEAPONS":"已挂载武器","Manual Adjust":"手动调整","Manufacturer":"厂商","Mark Destroyed":"标记为已摧毁","Mark Repaired":"标记为已修复","Master:":"大师：","Max HP":"HP 上限","Max:":"上限：","Mech has no repairs left. Please try again.":"机甲没有剩余维修次数。请重新选择。","Min:":"下限：","Mods":"改装","Movement":"移动","Multiple pilot loadouts found. Please select a single loadout to import and use:":"找到多套驾驶员配装。请选择一套导入使用：","NOTES":"备注","NPC classes":"NPC 职业","NPC features":"NPC 特性","NPC templates":"NPC 模板","NPC → Deployable Bonuses":"NPC → 部署物加值","Name":"名称","New Counter":"新计数器","New Power":"新能力","New Rank":"新等级","New Trait":"新特征","New action":"新动作","Next, go to the Actors tab and create any PCs you want to use. You can either import from COMP/CON using the RM-4://SYNC tab, or manually build it out yourself. NPCs have to be manually built out for now.":"然后到「角色」标签页创建要用的 PC。可以在 RM-4://SYNC 标签页从伙伴/礼宾导入，也可以自己手动建立。NPC 目前只能手动建立。","No":"否","No License":"无牌照","No Mod Installed":"未安装改装","No core power remaining on this frame!":"该骨架的核心能力已用完！","No damage configured, skipping the roll.":"未设置伤害，跳过掷骰。","No repairs remaining!":"没有剩余维修次数！","No source specified":"未指定来源","No target for damage application":"没有施加伤害的目标","Non-NPC cannot fire an NPC weapon!":"非 NPC 不能使用 NPC 武器！","Non-NPC cannot use an NPC system!":"非 NPC 不能使用 NPC 系统！","Non-mech cannot fire a mech weapon!":"非机甲不能使用机甲武器！","Non-mech cannot use a mech system!":"非机甲不能使用机甲系统！","Non-pilot cannot fire a pilot weapon!":"非驾驶员不能使用驾驶员武器！","Non-pilot cannot use a pilot talent!":"非驾驶员不能使用驾驶员天赋！","ON ATTACK":"攻击时","ON CRIT":"会心一击时","ON HIT":"命中时","ON HIT EFFECT":"命中效果","OPTION 1":"选项 1","OPTION 2":"选项 2","OPTIONAL FEATURE":"可选特性","OPTIONAL FEATURES":"可选特性","OTHER":"其他","Official LANCER Content":"官方 LANCER 内容","On a 1–3, all weapons on one mount of your choice are destroyed":"1–3：选择一个挂载点，其上的所有武器被摧毁","On a 4–6, a system of your choice is destroyed":"4–6：选择一个系统，将其摧毁","Only GM can modify the Compendiums.":"只有 GM 能修改合集包。","Only Mechs and NPCs can take stress damage":"只有机甲和 NPC 会受到压力伤害","Only Mechs and NPCs can take structure damage":"只有机甲和 NPC 会受到结构伤害","Only NPCs can recharge!":"只有 NPC 能充能！","Only mechs and NPCs can tech attack!":"只有机甲和 NPC 能进行科技攻击！","Only mechs can cascade.":"只有机甲会崩溃。","Only mechs can overcharge!":"只有机甲能超频！","Only npcs and mechs can roll overheat.":"只有 NPC 和机甲能进行过热检定。","Only npcs and mechs can roll structure.":"只有 NPC 和机甲能进行结构检定。","Only npcs and mechs can roll structure/overheat.":"只有 NPC 和机甲能进行结构／过热检定。","Organizations":"组织","Origin Name":"来源名称","Overheat":"过热","Overkill":"杀绝","Overwrite":"覆盖","PASSIVE":"被动","POWERS":"能力","PROFILE ACTIONS":"数据组动作","PROTOCOL":"协议","PURPOSE":"宗旨","Pilot → Deployable Bonuses":"驾驶员 → 部署物加值","Pilot → Mech Bonuses":"驾驶员 → 机甲加值","PilotNET Community on Discord":"PilotNET Discord 社区","Please select your two Stabilize actions":"请选择稳住阵脚的两项效果","Please update the Core data before importing LCPs.":"导入内容包前请先更新核心数据。","Powered by Lancer":"Powered by Lancer","Prerequisite":"前置条件","Primary":"主配装","Prone (+1)":"伏卧（+1）","Protocol":"协议","QUESTIONS":"问题","QUICK":"快速动作","Quick Action":"快速动作","RANGE":"射程","RANGES TYPES":"射程类型","RANK:":"等级：","REACTION":"反应","REACTION INIT":"反应前提","REACTION TRIGGER":"反应触发","RECALL":"召回","REDEPLOY":"重新部署","REPAIRS":"维修","RESOURCE LABEL":"资源标签","ROLL DAMAGE":"掷伤害","Rank":"等级","Reaction":"反应","Rebuild Core Data":"重建核心数据","Recharge":"充能","Refresh":"刷新","Refresh Powers":"刷新能力","Reliable":"可靠","Reload":"重新装填","Remove":"移除","Remove this damage type":"移除此伤害类型","Rename":"重命名","Replace":"替换","Reserves":"储备","Reset":"重置","Resist":"抗性","Restore HP":"恢复 HP","Restore a backup of this world and":"请恢复此世界的备份，并","Roll":"掷骰","Roll a basic attack":"进行基础攻击","Roll a burn check and generate damage":"进行燃烧检定并产生伤害","Roll an attack with this system":"用此系统进行攻击","Roll an attack with this weapon":"用此武器进行攻击","Roll damage for this weapon without attacking":"不攻击，直接掷此武器的伤害","SAVE":"豁免","SENSORS":"感应","SIZE":"大小","SOURCE":"来源","SPEED":"速度","STATUS":"状态","STRESS":"压力","STRUCTURE":"结构","SUPERHEAVY":"超重型","SYNERGIES":"协同效果","SYS":"系统","SYS POINTS":"SP","SYSTEM":"系统","SYSTEMS":"系统","Save":"保存","Save Target":"豁免目标","Scan":"扫描","Seeking (*)":"导引（*）","Select LCP file":"选择内容包文件","Select Pilot Loadout":"选择驾驶员配装","Select damage multiplier":"选择伤害倍率","Selected LCPs":"所选内容包","Selected Official Sources":"所选官方内容","Sensor Range":"感应","Skills":"技能触发","Smart (*)":"智慧（*）","Speed":"速度","Stabilize":"稳住阵脚","Standard Move":"标准移动","Standard Profile":"标准数据组","Statuses":"状态","Stress":"压力","Stress Damage":"压力伤害","Structure":"结构","Structure Damage":"结构伤害","Stunned":"晕眩","Submit":"提交","Successfully loaded pilot new state.":"已载入驾驶员的新状态。","Suggested Modules":"推荐模组","Superheavy Bracing":"超重型受身","System Destruction":"系统摧毁","System Migration Version":"系统迁移版本","Systems":"系统","TACTICS":"战术","TAG":"标签","TAG META INFO":"标签元信息","TAGS":"标签","TEAR OFF":"撕下部件","TECH":"科技","TECH ATK":"科技攻击","TECH ATTACK?":"科技攻击？","TECH ATTACKS":"科技攻击","TEMPLATE":"模板","TERSE DESCRIPTION":"简述","TITLE":"标题","TRAIT":"特征","TRAITS":"特征","TRIGGER":"触发","TYPE":"类型","Tag Editing":"编辑标签","Tags":"标签","Talents":"天赋","Tally XP":"统计经验","Targeting":"瞄准","The":"","The following Actors could not be created or updated:":"以下角色无法创建或更新：","The following Items were not found in the compendium and could not be imported:":"以下物品在合集包中找不到，无法导入：","The icons and functionality from Lancer Condition Icons has been integrated with the system, and your settings have been migrated. Lancer Condition Icons will now be disabled, and you can feel free to uninstall it if no other worlds are using it.":"Lancer Condition Icons 的图标和功能已整合进系统，设置也已迁移。Lancer Condition Icons 现在会被停用；如果其他世界没有用到，可以把它卸载。","The mech is at full Stress, no overheat check to roll.":"机甲压力已满，无需进行过热检定。","The mech is at full Structure, no structure check to roll.":"机甲结构已满，无需进行结构检定。","The module has been disabled.":"该模组已停用。","The page must now be refreshed for the module change to take effect.":"需要刷新页面，模组的变更才会生效。","The targeted token has no associated actor.":"选为目标的指示物没有关联角色。","This LCP contains:":"此内容包包含：","This row is bonus damage":"此行为额外伤害","Thrown (*)":"投掷（*）","To manually build out an actor, there are two steps:":"手动建立角色分两步：","Token has hp remaining. No need to roll structure.":"指示物还有剩余 HP，无需进行结构检定。","Token is not at heat cap. No need to roll stress.":"指示物热度未达上限，无需进行压力检定。","Total":"合计","Total:":"合计：","Trying to access tokens from a different scene!":"正在访问另一场景的指示物！","UNKNOWN EXOTIC SYSTEM":"未知异种系统","UNKNOWN EXOTIC TECH ATTACK":"未知异种科技攻击","UNKNOWN EXOTIC TRAIT":"未知异种特征","UNKNOWN EXOTIC WEAPON":"未知异种武器","UNLOCKED RANK:":"已解锁等级：","USE":"使用","USES":"次数","USES:":"次数：","Undo this damage":"撤销此伤害","Unlink":"取消关联","Unselect File":"取消选择文件","Update Core Data":"更新核心数据","Uses":"次数","Value":"数值","Value:":"数值：","Version":"版本","Veteran:":"老手：","View Inventory":"查看物品栏","WEAPON":"武器","WEAPON SIZES":"武器尺寸","WEAPON TYPES":"武器类型","WEAPONS":"武器","Weapon Destruction":"武器摧毁","Weapons":"武器","XP":"经验","Yes":"是","You are not permitted to create actors and no GM's are online, so sync will not produce any new mechs or deployables.":"你没有创建角色的权限，且没有 GM 在线，因此同步不会产生新的机甲或部署物。","You can only scan NPC actors.":"只能扫描 NPC。","You cannot apply damage to an actor you do not own":"你不能对不属于你的角色施加伤害","You cannot undo damage to an actor you do not own":"你不能撤销不属于你的角色受到的伤害","You must enter a Comp/Con pilot share code before downloading!":"下载前必须输入伙伴/礼宾的驾驶员分享码！","You must import the Core Book Data in the Lancer Compendium Manager before importing a pilot.":"导入驾驶员前，必须先在 LANCER 内容包管理器中导入核心规则书数据。","You must select an LCP file before importing.":"导入前必须先选择内容包文件。","You must target a token to scan.":"必须先选定一个指示物作为扫描目标。","Your GM can allow Players/Trusted Players to create actors in Settings->Configure Permissions.":"GM 可以在「设置 → 配置权限」中允许玩家／受信任玩家创建角色。","bonds":"纽带","first.":"，然后再升级。","frames":"骨架","mech systems":"机甲系统","mech weapons":"机甲武器","migrate to Foundry 12.343":"迁移到 Foundry 12.343","module is intended for use in non-Lancer systems to use Lancer-style initiative. Since all of its functionality is already included in the system, enabling the module can cause issues.":"模组用于在非 LANCER 系统中使用 LANCER 式先攻。系统已包含它的全部功能，启用该模组可能导致问题。","pilot gear":"驾驶员装备","pilot skills":"驾驶员技能触发","recommended modules":"推荐模组","reserves":"储备","statuses/conditions":"状态／状况","tags":"标签","talents":"天赋","weapon mods":"武器改装","damage!":"点伤害！"},"patterns":[["Could not import mech '{x}' as you lack the permission to create new actors. Please ask your GM for assistance (either they import for you, or give you permissions)","无法导入机甲“{x}”：你没有创建角色的权限。请让 GM 协助（由 GM 代为导入，或给予你权限）"],["This world is too old to migrate directly to Lancer {x} and Foundry 13. Restore a backup of this world and migrate to Foundry 12.343 first.","此世界版本太旧，无法直接迁移到 Lancer {x} 与 Foundry 13。请恢复此世界的备份，先迁移到 Foundry 12.343。"],["Migration to v{x} in progress. Please do not shut down your world or refresh the page until migration is complete.","正在迁移到 v{x}。迁移完成前请不要关闭世界或刷新页面。"],["Could not import mech '{x}' as you lack the permission to update the actor. Please ask your GM for assistance.","无法导入机甲“{x}”：你没有更新该角色的权限。请让 GM 协助。"],["Journal folder {x} does not exist and must be created by a user with permissions to do so.","日志文件夹 {x} 不存在，需要由有权限的用户创建。"],["Error while migrating unlinked token {x} in scene {x}. Check the console for details.","迁移未关联指示物 {x}（场景 {x}）时出错，详情见控制台。"],["Error while migrating actor compendium {x}. Check the console for details.","迁移角色合集包 {x} 时出错，详情见控制台。"],["Error while migrating item compendium {x}. Check the console for details.","迁移物品合集包 {x} 时出错，详情见控制台。"],["This world is too old to migrate directly to Lancer {x} and Foundry 13.","此世界版本太旧，无法直接迁移到 Lancer {x} 与 Foundry 13。"],["Unresolved deployabled LID \"{x}\". Re-import + Set yourself as its owner","找不到部署物 LID“{x}”。请重新导入，并把自己设为它的所有者"],["Error while migrating actor {x}. Check the console for details.","迁移角色 {x} 时出错，详情见控制台。"],["Error while migrating scene {x}. Check the console for details.","迁移场景 {x} 时出错，详情见控制台。"],["Item {x} is not a mech system, weapon mod, or NPC feature!","物品{x}不是机甲系统、武器改装或 NPC 特性！"],["You do not own {x}, so you cannot roll damage for them","{x}不属于你，你不能为其掷伤害"],["Error in tech attack flow - {x} is an invalid type!","科技攻击流程出错：{x}的类型无效！"],["Item {x} has no actions, how did you even get here?","物品{x}没有动作。"],["Item {x} cannot roll damage as it is not a weapon!","物品{x}不是武器，不能掷伤害！"],["Are you sure you want to fully repair the {x} \"{x}\"?","确定要全面维修{x}“{x}”吗？"],["LANCER System migration to version {x} completed!","LANCER 系统已迁移到 {x} 版！"],["Starting import of {x}, Callsign {x}. Please wait.","开始导入{x}（呼号 {x}），请稍候。"],["Error in attack flow - {x} is an invalid type!","攻击流程出错：{x}的类型无效！"],["Item {x} cannot attack as it is not a system!","物品{x}不是系统，不能攻击！"],["Item {x} cannot attack as it is not a weapon!","物品{x}不是武器，不能攻击！"],["Error - No macro exists for item type \"{x}\"","错误：物品类型“{x}”没有对应的宏"],["{x} has had their actions manually reset.","{x}的动作已手动重置。"],["Could not migrate {x}: unable to unlock","无法迁移 {x}：无法解锁"],["Roll {x}d6 to determine what happens.","掷 {x}d6 决定结果。"],["Notice: {x} has been fully repaired.","注意：{x}已全面维修。"],["Import of {x}, Callsign {x} complete.","{x}（呼号 {x}）导入完成。"],["Reserve {x} has already been used!","储备{x}已经用过了！"],["System {x} has no remaining uses!","系统{x}没有剩余次数！"],["Weapon {x} has no remaining uses!","武器{x}没有剩余次数！"],["Item {x} is not a mech frame!","物品{x}不是机甲骨架！"],["System {x} has not recharged!","系统{x}尚未充能！"],["Weapon {x} has not recharged!","武器{x}尚未充能！"],["Item {x} has no bond powers!","物品{x}没有纽带能力！"],["{x} {x} has no remaining uses!","{x}{x}没有剩余次数！"],["Failed to update pilot: {x}","更新驾驶员失败：{x}"],["Item {x} can't deal damage!","物品{x}不能造成伤害！"],["{x} is starting their turn","{x}开始回合"],["A {x} can't be stabilized!","{x}无法稳住阵脚！"],["Weapon {x} is not loaded!","武器{x}未装填！"],["{x} is ending their turn","{x}结束回合"],["Item {x} is not a skill!","物品{x}不是技能触发！"],["{x} has taken {x} damage!","{x}受到了{x}伤害！"],["CORE ACTIVATION :: {x}","核心激活 :: {x}"],["Failed to load LCP {x}","无法载入内容包 {x}"],["// TALENT :: {x} {x} //","// 天赋 :: {x} {x} //"],["Core Data is at v{x}","核心数据版本 v{x}"],["Could not load {x}: {x}","无法载入 {x}：{x}"],["({x} total) damage!","（共 {x}）点伤害！"],["Basic Attack - {x}","基础攻击 - {x}"],["UNLOCKED RANK: {x}","已解锁等级：{x}"],["{x} SYSTEM POINTS","{x} SP"],["{x} took {x} damage!","{x}受到 {x} 点伤害！"],["Engineering - {x}","工程 - {x}"],["Full Repair - {x}","全面维修 - {x}"],["FULL REPAIR - {x}","全面维修 - {x}"],["Insert {x} weapon","装入{x}武器"],["SCAN // 🞂 {x} 🞀","扫描 // 🞂 {x} 🞀"],["Tech Attack - {x}","科技攻击 - {x}"],["{x} // {x} {x} Feature","{x} // {x}{x}特性"],["{x} Weapon Mount","{x}武器挂载点"],["IMPORT {x} FOR {x}?","要为{2}导入{1}吗？"],["Overcharge - {x}","超频 - {x}"],["{x} - overrides","{x} - 覆盖"],["{x}'s inventory","{x}的物品栏"],["Stabilize - {x}","稳住阵脚 - {x}"],["STABILIZE - {x}","稳住阵脚 - {x}"],["Structure - {x}","结构 - {x}"],["{x} / {x} SP USED","已用 SP：{x} / {x}"],["{x} DIFFICULTY","{x} 难度"],["{x}{x} Overshield","{x}{x} 护盾"],["// {x} TECH{x} //","// {x}科技{x} //"],["Overheat - {x}","过热 - {x}"],["RESERVE :: {x}","储备 :: {x}"],["Update to v{x}","更新到 v{x}"],["{x} - bonuses","{x} - 加值"],["{x}{x} Structure","{x}{x} 结构"],["+{x} ACCURACY","+{x} 准度"],["Agility - {x}","敏捷 - {x}"],["Damage - {x}","伤害 - {x}"],["System - {x}","系统 - {x}"],["T {x} DAMAGE","等阶 {x} 伤害"],["{x}{x} Repairs","{x}{x} 维修"],["// RANK {x}","// 等级 {x}"],["{x} damage","{x}伤害"],["{x} DAMAGE","{x}伤害"],["{x}{x} Stress","{x}{x} 压力"],["//RANK {x}","//等级 {x}"],["Grit - {x}","毅力 - {x}"],["Hull - {x}","机体 - {x}"],["Resist {x}","抗性：{x}"],["Scan - {x}","扫描 - {x}"],["Tier - {x}","等阶 - {x}"],["{x} took {x}","{x}受到 {x}"],["TIER {x} {x}","等阶 {x} {x}"],["{x}{x} Burn","{x}{x} 燃烧"],["{x}{x} Heat","{x}{x} 热度"],["Size {x}","大小 {x}"],["Tier {x}","等阶 {x}"],["TIER {x}","等阶 {x}"],["{x}{x} HP","{x}{x} HP"],["by {x}","作者：{x}"],["vs {x}","对 {x}"]],"words":{"Main":"主","Aux":"副","Auxiliary":"副","Flex":"灵活","Heavy":"重型","Superheavy":"超重型","Integrated":"内建","Ship-class":"舰载级","Melee":"近战","CQB":"CQB","Rifle":"步枪","Launcher":"发射器","Cannon":"大炮","Nexus":"巢房","Special":"特殊","Kinetic":"动能","Explosive":"爆炸","Energy":"能量","Heat":"热度","Burn":"燃烧","Variable":"可变","Range":"射程","Threat":"威胁","Blast":"溅射","Burst":"爆发","Line":"线形","Cone":"锥形","Thrown":"投掷","Quick":"快速动作","Full":"完整动作","Quick Tech":"快速科技","Full Tech":"完整科技","Invade":"入侵","Reaction":"反应","Protocol":"协议","Free":"自由动作","Free Action":"自由动作","Passive":"被动","Other":"其他","Movement":"移动","Tech":"科技","Trait":"特征","System":"系统","Weapon":"武器","Systems":"系统","Weapons":"武器","Attack":"攻击","Class":"职业","Template":"模板","Deployable":"部署物","Drone":"无人机","Shield":"护盾","Mech":"机甲","NPC":"NPC","Pilot":"驾驶员","Hull":"机体","Agility":"敏捷","Engineering":"工程","Structure":"结构","Stress":"压力","reactor":"压力","Mod":"改装","Gear":"装备","Armor":"护甲","Reserve":"储备","Talent":"天赋","Frame":"骨架","Status":"状态","Use":"使用"},"context":{".scan-stat-item":{"Armor":"装甲"}}};
+const HARDCODED = {"exact":{"(Optional) Manually adjust numeric stats for any special customizations you want to apply. For NPCs, you would do this by editing the actor's NPC Class item. For PC mechs, you can do this by editing their Frame item from the mech's Inventory.":"（可选）手动调整数值，以应用特殊的定制。NPC 通过编辑该角色的 NPC 职业物品调整；PC 机甲通过机甲物品栏中的骨架物品调整。",", and other information about how to use the system.":"，以及系统使用方法的其他说明。","// ACTIVE":"// 主动","// Bonuses":"// 加值","// CORE SYSTEM":"// 核心系统","// PASSIVE":"// 被动","// TECH //":"// 科技 //","// TECH ATTACK //":"// 科技攻击 //","// Quick TECH //":"// 快速科技 //","// Quick TECH ATTACK //":"// 快速科技攻击 //","// Full TECH //":"// 完整科技 //","// Full TECH ATTACK //":"// 完整科技攻击 //","ACCURACY":"准度","ACTION ID":"动作 ID","ACTION NAME":"动作名称","ACTIONS":"动作","ACTIVATE":"激活","ACTIVATIONS":"激活次数","ACTIVE":"主动","ADDED ACTIONS":"附加动作","ADDED DAMAGE":"附加伤害","ADDED DEPLOYABLES":"附加部署物","ADDED RANGE":"附加射程","ADDED TAGS":"附加标签","AGI":"敏捷","ARMOR":"装甲","ATTACK BONUS":"攻击加值","AUTHOR":"作者","AUX/AUX":"副/副","AVAILABLE":"可用","AVAILABLE WEAPON MOUNTS":"可用武器挂载点","Accuracy":"准度","Accuracy and Difficulty":"准度与难度","Accurate (+1)":"精准（+1）","Action Editing":"编辑动作","Add a base damage type":"添加基础伤害类型","Add a bonus damage type":"添加额外伤害类型","Add a bonus damage type for only this target":"添加仅对该目标生效的额外伤害类型","Add global accuracy":"添加全局准度","Add global difficulty":"添加全局难度","Add new base damage type":"添加新的基础伤害类型","Agility":"敏捷","Allowed Sizes":"允许的武器尺寸","Allowed Types":"允许的武器类型","Apply damage":"施加伤害","Armor":"护甲","Armor Piercing":"穿甲","Armor Piercing (AP)":"穿甲（AP）","Attack Bonus":"攻击加值","Attack bonus":"攻击加值","Author":"作者","Available and Installed Content":"可用与已安装的内容","BASE ACTIONS":"基础动作","BASE FEATURE":"基础特性","BASE FEATURES":"基础特性","BASIC ATTACK":"基础攻击","BONUS":"额外","BURN :: ENG":"燃烧 :: 工程","BURN CLEARED!":"燃烧已清除！","Base Damage":"基础伤害","Basic Workflows":"基本流程","Bonus":"额外","Bonus Damage":"额外伤害","Bonus Editing":"编辑加值","Boon XP from another PC.":"来自其他 PC 的恩惠经验。","Browse":"浏览","Bug reports and enhancement suggestions":"问题报告与改进建议","Burn flow requires the actor to have a token in the scene":"燃烧流程需要该角色在场景中有指示物","CASCADE":"崩溃","CASCADE CHECK":"崩溃检定","CHANGELOG":"更新日志","CHARGED":"已充能","CLASS":"职业","CONSUMABLE":"消耗品","CORE":"核心","COST":"消耗","COUNTERS":"计数器","CURRENT":"当前","Cancel":"取消","Cannot Be Reduced":"不可降低","Cannot Create Actors":"无法创建角色","Cannot Migrate This World":"无法迁移此世界","Cannot be Reduced":"不可降低","Cannot fire a weapon on a non-piloted mech!":"无人驾驶的机甲不能使用武器！","Cannot use a system on a non-piloted mech!":"无人驾驶的机甲不能使用系统！","Cannot use a talent without an active mech!":"没有启用中的机甲，无法使用天赋！","Check out the project wiki for":"项目维基提供了","Clear All":"全部清除","Clear Ally Condition":"清除盟友状况","Clear Burn":"清除燃烧","Clear Compendium Data":"清除合集包数据","Clear Compendiums":"清除合集包","Clear LANCER Compendium Data":"清除 LANCER 合集包数据","Clear Own Condition":"清除自身状况","Clearing all LANCER Compendium data. Please wait.":"正在清除所有 LANCER 合集包数据，请稍候。","Close":"关闭","Configuration":"设置","Crit":"会心","Hit":"命中","Miss":"未命中","No Cover":"无掩护","Soft Cover (-1)":"软性掩护（-1）","Hard Cover (-2)":"硬性掩护（-2）","Confirm":"确认","Consume Lock On (+1)":"消耗锁定（+1）","Contents:":"内容：","Cool Mech":"冷却机甲","Core Bonuses":"核心奖励","Core Data has not been built yet":"核心数据尚未生成","Could not find character to import! No share code entered.":"找不到要导入的角色！未输入分享码。","Could not infer action type":"无法判断动作类型","Counter Editing":"编辑计数器","DAMAGE":"伤害","DAMAGE TYPES":"伤害类型","DEACTIVATE":"停用","DELETE":"删除","DEPLOYABLES":"部署物","DEPRECATED":"已弃用","DESCRIPTION":"说明","DETAILS":"详情","DROP HERE":"拖放到此处","DROP NPC FEATURES HERE":"将 NPC 特性拖放到此处","Damage":"伤害","Damage Roll":"伤害掷骰","Decrease flat bonus":"减少固定加值","Delete Document":"删除条目","Difficulty":"难度","Drag items from the relevant compendiums, such as Mech frames or NPC Features.":"从相应的合集包拖入物品，例如机甲骨架或 NPC 特性。","E-DEF":"电子防御","E-DEFENSE":"电子防御","E-Defense":"电子防御","EFFECT":"效果","EFFICIENCY":"效率","ENG":"工程","ENGINEERING":"工程","EVASION":"回避","Edit":"编辑","Edit Bonus:":"编辑加值：","Edit Field:":"编辑字段：","Edit Text":"编辑文字","Effect":"效果","Empty":"空","Engaged (-1)":"交战（-1）","Engineering":"工程","Equip armor":"装上护甲","Equip gear":"装上装备","Equip reserve":"装上储备","Equip weapon":"装上武器","Error importing from V2 share code. V2 share codes may no longer work, or this share code may need to be refreshed.":"从 V2 分享码导入时出错。V2 分享码可能已失效，或需要刷新该分享码。","Error importing from V3 share code.":"从 V3 分享码导入时出错。","Error rolling tech attack macro (not a valid tech attacker).":"科技攻击宏出错（该角色不能进行科技攻击）。","Evasion":"回避","Export":"导出","Exporting for this version of actor is currently unsupported.":"目前不支持导出此版本的角色。","Exporting ran into an issue, or actor type is not supported.":"导出时出现问题，或不支持该角色类型。","Exposed":"暴露","FAQ":"常见问题","FEATURE TYPE:":"特性类型：","FLEX":"灵活","FREQUENCY":"频率","FULL":"完整动作","FULL REPAIR":"全面维修","Filter Ignore:":"筛选时忽略：","First, make sure you have your LANCER data imported properly via the compendium manager in the \"Compendiums\" tab. If you have non-core content you want to use in your game, this would be the place to do it as well.":"首先，在「合集包」标签页中通过内容包管理器正确导入 LANCER 数据。如果要在游戏中使用核心以外的内容，也在这里导入。","Flat Modifier":"固定调整值","Flat attack bonus":"固定攻击加值","For 'cannot be reduced' effects like the Paracausal mod":"用于「不可降低」的效果，例如非因果律模块","For effects which cause the attacker to deal half damage in addition to resistance, like Heavy Gunner":"用于在抗性之外还让攻击者伤害减半的效果，例如重炮手","Frames":"骨架","Frequency:":"频率：","Full Action":"完整动作","Gear":"装备","Global Accuracy/Difficulty Adjustment":"全局准度／难度调整","HEAT":"热度","HEAT CAP":"热度上限","HEAT COST":"热度消耗","HEAVY":"重型","HISTORY":"经历","HP":"HP","HULL":"机体","Half Damage":"伤害减半","Heat Cap":"热度上限","Helpful Links":"实用链接","Hidden:":"隐藏：","Hull":"机体","ID":"ID","ID:":"ID：","INFLUENCE":"影响力","INIT":"前提","INTEGRATED":"内建","INTEGRATED GEAR":"内建装备","INTEGRATED ITEMS":"内建物品","INVADE":"入侵","IS TECH ATTACK?":"是否为科技攻击？","Icon Preview":"图标预览","Impaired (-1)":"受损（-1）","Import From File":"从文件导入","Import LCP":"导入内容包","Import Selected Loadout":"导入所选配装","Import all necessary LCPs first using the":"请先导入所有需要的内容包，使用","Import/Update LCP":"导入／更新内容包","Import/Update Selected":"导入／更新所选","Imported LCPs":"已导入的内容包","Importing character from V2 share code...":"正在从 V2 分享码导入角色……","Importing character from V3 share code...":"正在从 V3 分享码导入角色……","Inaccurate (-1)":"不准（-1）","Incomplete Pilot Import":"驾驶员导入不完整","Increase accuracy":"增加准度","Increase difficulty":"增加难度","Increase flat bonus":"增加固定加值","Innate Accuracy/Difficulty":"固有准度／难度","Installed LCPs":"已安装的内容包","Invalid Stabilize choice!":"无效的稳住阵脚选项！","Key:":"键：","LANCER Compendium Manager":"LANCER 内容包管理器","LANCER Compendiums cleared.":"LANCER 合集包已清除。","LANCER Help":"LANCER 帮助","LID":"LID","LID:":"LID：","LOADED":"已装填","LOCKED: BRACING":"锁定：受身","Lancer Compendium Manager":"LANCER 内容包管理器","Lancer Condition Icons is Integrated":"Lancer Condition Icons 已整合进系统","Lancer Core Book Data":"LANCER 核心规则书数据","Lancer Data Version":"LANCER 数据版本","Lancer Initiative":"Lancer Initiative","Lancer Initiative Module is not Needed":"不需要 Lancer Initiative 模组","Licenses":"牌照","Loading data, please wait…":"正在载入数据，请稍候…","Lock On (+1)":"锁定（+1）","MAIN":"主","MAIN/AUX":"主/副","MAJOR IDEALS":"主要理想","MAX HP":"HP 上限","MINOR IDEALS":"次要理想","MOUNTED EFFECT":"挂载效果","MOUNTED SYSTEMS":"已装备系统","MOUNTED WEAPONS":"已挂载武器","Manual Adjust":"手动调整","Manufacturer":"厂商","Mark Destroyed":"标记为已摧毁","Mark Repaired":"标记为已修复","Master:":"大师：","Max HP":"HP 上限","Max:":"上限：","Mech has no repairs left. Please try again.":"机甲没有剩余维修次数。请重新选择。","Min:":"下限：","Mods":"改装","Movement":"移动","Multiple pilot loadouts found. Please select a single loadout to import and use:":"找到多套驾驶员配装。请选择一套导入使用：","NOTES":"备注","NPC classes":"NPC 职业","NPC features":"NPC 特性","NPC templates":"NPC 模板","NPC → Deployable Bonuses":"NPC → 部署物加值","Name":"名称","New Counter":"新计数器","New Power":"新能力","New Rank":"新等级","New Trait":"新特征","New action":"新动作","Next, go to the Actors tab and create any PCs you want to use. You can either import from COMP/CON using the RM-4://SYNC tab, or manually build it out yourself. NPCs have to be manually built out for now.":"然后到「角色」标签页创建要用的 PC。可以在 RM-4://SYNC 标签页从伙伴/礼宾导入，也可以自己手动建立。NPC 目前只能手动建立。","No":"否","No License":"无牌照","No Mod Installed":"未安装改装","No core power remaining on this frame!":"该骨架的核心能力已用完！","No damage configured, skipping the roll.":"未设置伤害，跳过掷骰。","No repairs remaining!":"没有剩余维修次数！","No source specified":"未指定来源","No target for damage application":"没有施加伤害的目标","Non-NPC cannot fire an NPC weapon!":"非 NPC 不能使用 NPC 武器！","Non-NPC cannot use an NPC system!":"非 NPC 不能使用 NPC 系统！","Non-mech cannot fire a mech weapon!":"非机甲不能使用机甲武器！","Non-mech cannot use a mech system!":"非机甲不能使用机甲系统！","Non-pilot cannot fire a pilot weapon!":"非驾驶员不能使用驾驶员武器！","Non-pilot cannot use a pilot talent!":"非驾驶员不能使用驾驶员天赋！","ON ATTACK":"攻击时","ON CRIT":"会心一击时","ON HIT":"命中时","ON HIT EFFECT":"命中效果","OPTION 1":"选项 1","OPTION 2":"选项 2","OPTIONAL FEATURE":"可选特性","OPTIONAL FEATURES":"可选特性","OTHER":"其他","Official LANCER Content":"官方 LANCER 内容","On a 1–3, all weapons on one mount of your choice are destroyed":"1–3：选择一个挂载点，其上的所有武器被摧毁","On a 4–6, a system of your choice is destroyed":"4–6：选择一个系统，将其摧毁","Only GM can modify the Compendiums.":"只有 GM 能修改合集包。","Only Mechs and NPCs can take stress damage":"只有机甲和 NPC 会受到压力伤害","Only Mechs and NPCs can take structure damage":"只有机甲和 NPC 会受到结构伤害","Only NPCs can recharge!":"只有 NPC 能充能！","Only mechs and NPCs can tech attack!":"只有机甲和 NPC 能进行科技攻击！","Only mechs can cascade.":"只有机甲会崩溃。","Only mechs can overcharge!":"只有机甲能超频！","Only npcs and mechs can roll overheat.":"只有 NPC 和机甲能进行过热检定。","Only npcs and mechs can roll structure.":"只有 NPC 和机甲能进行结构检定。","Only npcs and mechs can roll structure/overheat.":"只有 NPC 和机甲能进行结构／过热检定。","Organizations":"组织","Origin Name":"来源名称","Overheat":"过热","Overkill":"杀绝","Overwrite":"覆盖","PASSIVE":"被动","POWERS":"能力","PROFILE ACTIONS":"数据组动作","PROTOCOL":"协议","PURPOSE":"宗旨","Pilot → Deployable Bonuses":"驾驶员 → 部署物加值","Pilot → Mech Bonuses":"驾驶员 → 机甲加值","PilotNET Community on Discord":"PilotNET Discord 社区","Please select your two Stabilize actions":"请选择稳住阵脚的两项效果","Please update the Core data before importing LCPs.":"导入内容包前请先更新核心数据。","Powered by Lancer":"Powered by Lancer","Prerequisite":"前置条件","Primary":"主配装","Prone (+1)":"伏卧（+1）","Protocol":"协议","QUESTIONS":"问题","QUICK":"快速动作","Quick Action":"快速动作","RANGE":"射程","RANGES TYPES":"射程类型","RANK:":"等级：","REACTION":"反应","REACTION INIT":"反应前提","REACTION TRIGGER":"反应触发","RECALL":"召回","REDEPLOY":"重新部署","REPAIRS":"维修","RESOURCE LABEL":"资源标签","ROLL DAMAGE":"掷伤害","Rank":"等级","Reaction":"反应","Rebuild Core Data":"重建核心数据","Recharge":"充能","Refresh":"刷新","Refresh Powers":"刷新能力","Reliable":"可靠","Reload":"重新装填","Remove":"移除","Remove this damage type":"移除此伤害类型","Rename":"重命名","Replace":"替换","Reserves":"储备","Reset":"重置","Resist":"抗性","Restore HP":"恢复 HP","Restore a backup of this world and":"请恢复此世界的备份，并","Roll":"掷骰","Roll a basic attack":"进行基础攻击","Roll a burn check and generate damage":"进行燃烧检定并产生伤害","Roll an attack with this system":"用此系统进行攻击","Roll an attack with this weapon":"用此武器进行攻击","Roll damage for this weapon without attacking":"不攻击，直接掷此武器的伤害","SAVE":"豁免","SENSORS":"感应","SIZE":"大小","SOURCE":"来源","SPEED":"速度","STATUS":"状态","STRESS":"压力","STRUCTURE":"结构","SUPERHEAVY":"超重型","SYNERGIES":"协同效果","SYS":"系统","SYS POINTS":"SP","SYSTEM":"系统","SYSTEMS":"系统","Save":"保存","Save Target":"豁免目标","Scan":"扫描","Seeking (*)":"导引（*）","Select LCP file":"选择内容包文件","Select Pilot Loadout":"选择驾驶员配装","Select damage multiplier":"选择伤害倍率","Selected LCPs":"所选内容包","Selected Official Sources":"所选官方内容","Sensor Range":"感应","Skills":"技能触发","Smart (*)":"智慧（*）","Speed":"速度","Stabilize":"稳住阵脚","Standard Move":"标准移动","Standard Profile":"标准数据组","Statuses":"状态","Stress":"压力","Stress Damage":"压力伤害","Structure":"结构","Structure Damage":"结构伤害","Stunned":"晕眩","Submit":"提交","Successfully loaded pilot new state.":"已载入驾驶员的新状态。","Suggested Modules":"推荐模组","Superheavy Bracing":"超重型受身","System Destruction":"系统摧毁","System Migration Version":"系统迁移版本","Systems":"系统","TACTICS":"战术","TAG":"标签","TAG META INFO":"标签元信息","TAGS":"标签","TEAR OFF":"撕下部件","TECH":"科技","TECH ATK":"科技攻击","TECH ATTACK?":"科技攻击？","TECH ATTACKS":"科技攻击","TEMPLATE":"模板","TERSE DESCRIPTION":"简述","TITLE":"标题","TRAIT":"特征","TRAITS":"特征","TRIGGER":"触发","TYPE":"类型","Tag Editing":"编辑标签","Tags":"标签","Talents":"天赋","Tally XP":"统计经验","Targeting":"瞄准","The":"","The following Actors could not be created or updated:":"以下角色无法创建或更新：","The following Items were not found in the compendium and could not be imported:":"以下物品在合集包中找不到，无法导入：","The icons and functionality from Lancer Condition Icons has been integrated with the system, and your settings have been migrated. Lancer Condition Icons will now be disabled, and you can feel free to uninstall it if no other worlds are using it.":"Lancer Condition Icons 的图标和功能已整合进系统，设置也已迁移。Lancer Condition Icons 现在会被停用；如果其他世界没有用到，可以把它卸载。","The mech is at full Stress, no overheat check to roll.":"机甲压力已满，无需进行过热检定。","The mech is at full Structure, no structure check to roll.":"机甲结构已满，无需进行结构检定。","The module has been disabled.":"该模组已停用。","The page must now be refreshed for the module change to take effect.":"需要刷新页面，模组的变更才会生效。","The targeted token has no associated actor.":"选为目标的指示物没有关联角色。","This LCP contains:":"此内容包包含：","This row is bonus damage":"此行为额外伤害","Thrown (*)":"投掷（*）","To manually build out an actor, there are two steps:":"手动建立角色分两步：","Token has hp remaining. No need to roll structure.":"指示物还有剩余 HP，无需进行结构检定。","Token is not at heat cap. No need to roll stress.":"指示物热度未达上限，无需进行压力检定。","Total":"合计","Total:":"合计：","Trying to access tokens from a different scene!":"正在访问另一场景的指示物！","UNKNOWN EXOTIC SYSTEM":"未知异种系统","UNKNOWN EXOTIC TECH ATTACK":"未知异种科技攻击","UNKNOWN EXOTIC TRAIT":"未知异种特征","UNKNOWN EXOTIC WEAPON":"未知异种武器","UNLOCKED RANK:":"已解锁等级：","USE":"使用","USES":"次数","USES:":"次数：","Undo this damage":"撤销此伤害","Unlink":"取消关联","Unselect File":"取消选择文件","Update Core Data":"更新核心数据","Uses":"次数","Value":"数值","Value:":"数值：","Version":"版本","Veteran:":"老手：","View Inventory":"查看物品栏","WEAPON":"武器","WEAPON SIZES":"武器尺寸","WEAPON TYPES":"武器类型","WEAPONS":"武器","Weapon Destruction":"武器摧毁","Weapons":"武器","XP":"经验","Yes":"是","You are not permitted to create actors and no GM's are online, so sync will not produce any new mechs or deployables.":"你没有创建角色的权限，且没有 GM 在线，因此同步不会产生新的机甲或部署物。","You can only scan NPC actors.":"只能扫描 NPC。","You cannot apply damage to an actor you do not own":"你不能对不属于你的角色施加伤害","You cannot undo damage to an actor you do not own":"你不能撤销不属于你的角色受到的伤害","You must enter a Comp/Con pilot share code before downloading!":"下载前必须输入伙伴/礼宾的驾驶员分享码！","You must import the Core Book Data in the Lancer Compendium Manager before importing a pilot.":"导入驾驶员前，必须先在 LANCER 内容包管理器中导入核心规则书数据。","You must select an LCP file before importing.":"导入前必须先选择内容包文件。","You must target a token to scan.":"必须先选定一个指示物作为扫描目标。","Your GM can allow Players/Trusted Players to create actors in Settings->Configure Permissions.":"GM 可以在「设置 → 配置权限」中允许玩家／受信任玩家创建角色。","bonds":"纽带","first.":"，然后再升级。","frames":"骨架","mech systems":"机甲系统","mech weapons":"机甲武器","migrate to Foundry 12.343":"迁移到 Foundry 12.343","module is intended for use in non-Lancer systems to use Lancer-style initiative. Since all of its functionality is already included in the system, enabling the module can cause issues.":"模组用于在非 LANCER 系统中使用 LANCER 式先攻。系统已包含它的全部功能，启用该模组可能导致问题。","pilot gear":"驾驶员装备","pilot skills":"驾驶员技能触发","recommended modules":"推荐模组","reserves":"储备","statuses/conditions":"状态／状况","tags":"标签","talents":"天赋","weapon mods":"武器改装","damage!":"点伤害！"},"patterns":[["Could not import mech '{x}' as you lack the permission to create new actors. Please ask your GM for assistance (either they import for you, or give you permissions)","无法导入机甲“{x}”：你没有创建角色的权限。请让 GM 协助（由 GM 代为导入，或给予你权限）"],["This world is too old to migrate directly to Lancer {x} and Foundry 13. Restore a backup of this world and migrate to Foundry 12.343 first.","此世界版本太旧，无法直接迁移到 Lancer {x} 与 Foundry 13。请恢复此世界的备份，先迁移到 Foundry 12.343。"],["Migration to v{x} in progress. Please do not shut down your world or refresh the page until migration is complete.","正在迁移到 v{x}。迁移完成前请不要关闭世界或刷新页面。"],["Could not import mech '{x}' as you lack the permission to update the actor. Please ask your GM for assistance.","无法导入机甲“{x}”：你没有更新该角色的权限。请让 GM 协助。"],["Journal folder {x} does not exist and must be created by a user with permissions to do so.","日志文件夹 {x} 不存在，需要由有权限的用户创建。"],["Error while migrating unlinked token {x} in scene {x}. Check the console for details.","迁移未关联指示物 {x}（场景 {x}）时出错，详情见控制台。"],["Error while migrating actor compendium {x}. Check the console for details.","迁移角色合集包 {x} 时出错，详情见控制台。"],["Error while migrating item compendium {x}. Check the console for details.","迁移物品合集包 {x} 时出错，详情见控制台。"],["This world is too old to migrate directly to Lancer {x} and Foundry 13.","此世界版本太旧，无法直接迁移到 Lancer {x} 与 Foundry 13。"],["Unresolved deployabled LID \"{x}\". Re-import + Set yourself as its owner","找不到部署物 LID“{x}”。请重新导入，并把自己设为它的所有者"],["Error while migrating actor {x}. Check the console for details.","迁移角色 {x} 时出错，详情见控制台。"],["Error while migrating scene {x}. Check the console for details.","迁移场景 {x} 时出错，详情见控制台。"],["Item {x} is not a mech system, weapon mod, or NPC feature!","物品{x}不是机甲系统、武器改装或 NPC 特性！"],["You do not own {x}, so you cannot roll damage for them","{x}不属于你，你不能为其掷伤害"],["Error in tech attack flow - {x} is an invalid type!","科技攻击流程出错：{x}的类型无效！"],["Item {x} has no actions, how did you even get here?","物品{x}没有动作。"],["Item {x} cannot roll damage as it is not a weapon!","物品{x}不是武器，不能掷伤害！"],["Are you sure you want to fully repair the {x} \"{x}\"?","确定要全面维修{x}“{x}”吗？"],["LANCER System migration to version {x} completed!","LANCER 系统已迁移到 {x} 版！"],["Starting import of {x}, Callsign {x}. Please wait.","开始导入{x}（呼号 {x}），请稍候。"],["Error in attack flow - {x} is an invalid type!","攻击流程出错：{x}的类型无效！"],["Item {x} cannot attack as it is not a system!","物品{x}不是系统，不能攻击！"],["Item {x} cannot attack as it is not a weapon!","物品{x}不是武器，不能攻击！"],["Error - No macro exists for item type \"{x}\"","错误：物品类型“{x}”没有对应的宏"],["{x} has had their actions manually reset.","{x}的动作已手动重置。"],["Could not migrate {x}: unable to unlock","无法迁移 {x}：无法解锁"],["Roll {x}d6 to determine what happens.","掷 {x}d6 决定结果。"],["Notice: {x} has been fully repaired.","注意：{x}已全面维修。"],["Import of {x}, Callsign {x} complete.","{x}（呼号 {x}）导入完成。"],["Reserve {x} has already been used!","储备{x}已经用过了！"],["System {x} has no remaining uses!","系统{x}没有剩余次数！"],["Weapon {x} has no remaining uses!","武器{x}没有剩余次数！"],["Item {x} is not a mech frame!","物品{x}不是机甲骨架！"],["System {x} has not recharged!","系统{x}尚未充能！"],["Weapon {x} has not recharged!","武器{x}尚未充能！"],["Item {x} has no bond powers!","物品{x}没有纽带能力！"],["{x} {x} has no remaining uses!","{x}{x}没有剩余次数！"],["Failed to update pilot: {x}","更新驾驶员失败：{x}"],["Item {x} can't deal damage!","物品{x}不能造成伤害！"],["{x} is starting their turn","{x}开始回合"],["A {x} can't be stabilized!","{x}无法稳住阵脚！"],["Weapon {x} is not loaded!","武器{x}未装填！"],["{x} is ending their turn","{x}结束回合"],["Item {x} is not a skill!","物品{x}不是技能触发！"],["{x} has taken {x} damage!","{x}受到了{x}伤害！"],["CORE ACTIVATION :: {x}","核心激活 :: {x}"],["Failed to load LCP {x}","无法载入内容包 {x}"],["// TALENT :: {x} {x} //","// 天赋 :: {x} {x} //"],["Core Data is at v{x}","核心数据版本 v{x}"],["Could not load {x}: {x}","无法载入 {x}：{x}"],["({x} total) damage!","（共 {x}）点伤害！"],["Basic Attack - {x}","基础攻击 - {x}"],["UNLOCKED RANK: {x}","已解锁等级：{x}"],["{x} SYSTEM POINTS","{x} SP"],["{x} took {x} damage!","{x}受到 {x} 点伤害！"],["Engineering - {x}","工程 - {x}"],["Full Repair - {x}","全面维修 - {x}"],["FULL REPAIR - {x}","全面维修 - {x}"],["Insert {x} weapon","装入{x}武器"],["SCAN // 🞂 {x} 🞀","扫描 // 🞂 {x} 🞀"],["Tech Attack - {x}","科技攻击 - {x}"],["{x} // {x} {x} Feature","{x} // {x}{x}特性"],["{x} Weapon Mount","{x}武器挂载点"],["IMPORT {x} FOR {x}?","要为{2}导入{1}吗？"],["Overcharge - {x}","超频 - {x}"],["{x} - overrides","{x} - 覆盖"],["{x}'s inventory","{x}的物品栏"],["Stabilize - {x}","稳住阵脚 - {x}"],["STABILIZE - {x}","稳住阵脚 - {x}"],["Structure - {x}","结构 - {x}"],["{x} / {x} SP USED","已用 SP：{x} / {x}"],["{x} DIFFICULTY","{x} 难度"],["{x}{x} Overshield","{x}{x} 护盾"],["// {x} TECH{x} //","// {x}科技{x} //"],["Overheat - {x}","过热 - {x}"],["RESERVE :: {x}","储备 :: {x}"],["Update to v{x}","更新到 v{x}"],["{x} - bonuses","{x} - 加值"],["{x}{x} Structure","{x}{x} 结构"],["+{x} ACCURACY","+{x} 准度"],["Agility - {x}","敏捷 - {x}"],["Damage - {x}","伤害 - {x}"],["System - {x}","系统 - {x}"],["T {x} DAMAGE","等阶 {x} 伤害"],["{x}{x} Repairs","{x}{x} 维修"],["// RANK {x}","// 等级 {x}"],["{x} damage","{x}伤害"],["{x} DAMAGE","{x}伤害"],["{x}{x} Stress","{x}{x} 压力"],["//RANK {x}","//等级 {x}"],["Grit - {x}","毅力 - {x}"],["Hull - {x}","机体 - {x}"],["Resist {x}","抗性：{x}"],["Scan - {x}","扫描 - {x}"],["Tier - {x}","等阶 - {x}"],["{x} took {x}","{x}受到 {x}"],["TIER {x} {x}","等阶 {x} {x}"],["{x}{x} Burn","{x}{x} 燃烧"],["{x}{x} Heat","{x}{x} 热度"],["Size {x}","大小 {x}"],["Tier {x}","等阶 {x}"],["TIER {x}","等阶 {x}"],["{x}{x} HP","{x}{x} HP"],["by {x}","作者：{x}"],["vs {x}","对 {x}"]],"words":{"Main":"主","Aux":"副","Auxiliary":"副","Flex":"灵活","Heavy":"重型","Superheavy":"超重型","Integrated":"内建","Ship-class":"舰载级","Melee":"近战","CQB":"CQB","Rifle":"步枪","Launcher":"发射器","Cannon":"大炮","Nexus":"巢房","Special":"特殊","Kinetic":"动能","Explosive":"爆炸","Energy":"能量","Heat":"热度","Burn":"燃烧","Variable":"可变","Range":"射程","Threat":"威胁","Blast":"溅射","Burst":"爆发","Line":"线形","Cone":"锥形","Thrown":"投掷","Quick":"快速动作","Full":"完整动作","Quick Tech":"快速科技","Full Tech":"完整科技","Invade":"入侵","Reaction":"反应","Protocol":"协议","Free":"自由动作","Free Action":"自由动作","Passive":"被动","Other":"其他","Movement":"移动","Tech":"科技","Trait":"特征","System":"系统","Weapon":"武器","Systems":"系统","Weapons":"武器","Attack":"攻击","Class":"职业","Template":"模板","Deployable":"部署物","Drone":"无人机","Shield":"护盾","Mech":"机甲","NPC":"NPC","Pilot":"驾驶员","Hull":"机体","Agility":"敏捷","Engineering":"工程","Structure":"结构","Stress":"压力","reactor":"压力","Mod":"改装","Gear":"装备","Armor":"护甲","Reserve":"储备","Talent":"天赋","Frame":"骨架","Status":"状态","Use":"使用"},"context":{".scan-stat-item":{"Armor":"装甲"}}};
 
 const LETTER = /[A-Za-z]/;
 const norm = s => s.replace(/\s+/g, " ").trim();
@@ -297,7 +297,386 @@ Hooks.once("init", () => {
 	});
 });
 
-globalThis.LancerCN = { translate, walk, importReference, REFERENCE };
+// ---------------------------------------------------------------------------
+// 掩护区：在地图上画一个区域（Region），加上「LANCER 掩护区」行为。
+// 指示物进入区域时自动挂上「掩护 - 软性 / 硬性」状态，离开时去掉；同时处在多个掩护区时取最高的掩护。
+// LANCER 系统的命中面板读取目标身上的这两个状态（cover_soft / cover_hard）计算 -1 / -2。
+const COVER_TYPE = `${MODULE_ID}.cover`;
+const COVER_STATUS = { soft: "cover_soft", hard: "cover_hard" };
+const COVER_RANK = { none: 0, soft: 1, hard: 2 };
+
+// 指示物当前所在的掩护区给出的掩护；exclude 是正在离开的区域，include 是正在进入的区域
+function coverFor(tokenDoc, { exclude, include } = {}) {
+	const regions = new Set(tokenDoc.regions ?? []);
+	if (exclude) regions.delete(exclude);
+	if (include) regions.add(include);
+	let best = "none";
+	for (const region of regions) {
+		for (const b of region.behaviors ?? []) {
+			if (b.type !== COVER_TYPE || b.disabled) continue;
+			const c = b.system?.cover;
+			if (COVER_RANK[c] > COVER_RANK[best]) best = c;
+		}
+	}
+	return best;
+}
+
+async function applyCover(tokenDoc, cover) {
+	const actor = tokenDoc?.actor;
+	if (!actor?.toggleStatusEffect) return;
+	for (const [kind, status] of Object.entries(COVER_STATUS)) {
+		const want = kind === cover;
+		if (actor.statuses?.has(status) !== want) await actor.toggleStatusEffect(status, { active: want });
+	}
+}
+
+function defineCoverBehavior() {
+	const Base = foundry.data?.regionBehaviors?.RegionBehaviorType;
+	if (!Base) return null;
+	const fields = foundry.data.fields;
+	const E = CONST.REGION_EVENTS;
+	// 事件会在每个客户端触发，只由引发事件的用户处理（移动指示物的玩家或 GM），避免重复更新
+	const mine = event => event.user?.isSelf;
+	return class CoverZoneBehavior extends Base {
+		static defineSchema() {
+			return {
+				cover: new fields.StringField({
+					required: true, initial: "soft", choices: { soft: "软性掩护（-1）", hard: "硬性掩护（-2）" },
+					label: "掩护", hint: "区域内的指示物自动获得的掩护。导引武器、科技攻击与非投掷近战攻击按规则忽略掩护。",
+				}),
+			};
+		}
+		static events = {
+			[E.TOKEN_ENTER]: async function (event) {
+				if (!mine(event)) return;
+				const token = event.data.token;
+				await applyCover(token, coverFor(token, { include: this.region }));
+			},
+			[E.TOKEN_EXIT]: async function (event) {
+				if (!mine(event)) return;
+				const token = event.data.token;
+				await applyCover(token, coverFor(token, { exclude: this.region }));
+			},
+			// 画好区域、启用或停用行为时，处理已经在区域里的指示物
+			[E.BEHAVIOR_ACTIVATED]: async function (event) {
+				if (!mine(event)) return;
+				for (const token of this.region.tokens ?? []) await applyCover(token, coverFor(token, { include: this.region }));
+			},
+			[E.BEHAVIOR_DEACTIVATED]: async function (event) {
+				if (!mine(event)) return;
+				for (const token of this.region.tokens ?? []) await applyCover(token, coverFor(token, { exclude: this.region }));
+			},
+		};
+	};
+}
+
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer" || !CONFIG.RegionBehavior) return;
+	const Behavior = defineCoverBehavior();
+	if (!Behavior) return;
+	CONFIG.RegionBehavior.dataModels[COVER_TYPE] = Behavior;
+	if (CONFIG.RegionBehavior.typeIcons) CONFIG.RegionBehavior.typeIcons[COVER_TYPE] = "fa-solid fa-shield-halved";
+});
+// 行为类型的显示名：Foundry 按语言键 TYPES.RegionBehavior.lancer-cn.cover 查（按「.」逐层查找），
+// 写进已载入的译文与英文后备译文，任何界面语言都显示中文名
+const COVER_LABEL_KEY = `TYPES.RegionBehavior.${COVER_TYPE}`;
+Hooks.once("i18nInit", () => {
+	if (game.system?.id !== "lancer") return;
+	for (const t of [game.i18n.translations, game.i18n._fallback]) if (t) foundry.utils.setProperty(t, COVER_LABEL_KEY, "LANCER 掩护区");
+});
+
+// ---------------------------------------------------------------------------
+// 六边形墙体：GM 在「墙壁」工具栏选「六边形墙体」，点击格子放置一整格的墙体，再点一次移除，按住拖动可连续放置。
+// 每格墙体 = 沿格子边缘的 6 段阻挡移动的墙 + 一个所有人可见的实心六边形图形（Foundry 的墙对玩家不可见，图形告诉玩家此处不可通过）。
+// 默认不阻挡视线；模组设置「六边形墙体阻挡视线」可打开。墙体只阻挡移动，掩护按需手动设置或用掩护区。
+const HEX_TOOL = "lancerHexWall";
+const HEX_FLAG = "hexWall";
+
+const hexKey = offset => `${offset.i},${offset.j}`;
+
+// 一格墙体的文档数据：walls（每条边一段）与 drawing（实心多边形，坐标相对左上角）
+function hexWallData(rawVertices, key, { blockSight = false } = {}) {
+	const vertices = rawVertices.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) }));
+	const NONE = CONST.WALL_SENSE_TYPES?.NONE ?? 0;
+	const NORMAL = CONST.WALL_SENSE_TYPES?.NORMAL ?? 20;
+	const MOVE = CONST.WALL_MOVEMENT_TYPES?.NORMAL ?? 20;
+	const flags = { [MODULE_ID]: { [HEX_FLAG]: key } };
+	const walls = vertices.map((p, i) => {
+		const q = vertices[(i + 1) % vertices.length];
+		return { c: [p.x, p.y, q.x, q.y].map(Math.round), move: MOVE, sight: blockSight ? NORMAL : NONE, light: blockSight ? NORMAL : NONE, sound: NONE, flags };
+	});
+	const xs = vertices.map(p => p.x), ys = vertices.map(p => p.y);
+	const x = Math.min(...xs), y = Math.min(...ys);
+	const drawing = {
+		x, y, locked: true, flags,
+		shape: { type: "p", width: Math.max(...xs) - x, height: Math.max(...ys) - y, points: vertices.flatMap(p => [Math.round(p.x - x), Math.round(p.y - y)]) },
+		fillType: CONST.DRAWING_FILL_TYPES?.SOLID ?? 1, fillColor: "#2b2b2b", fillAlpha: 0.85,
+		strokeColor: "#000000", strokeWidth: 4, strokeAlpha: 1,
+	};
+	return { walls, drawing };
+}
+
+const hexDocs = (scene, key) => ({
+	walls: scene.walls.filter(w => w.getFlag?.(MODULE_ID, HEX_FLAG) === key),
+	drawings: scene.drawings.filter(d => d.getFlag?.(MODULE_ID, HEX_FLAG) === key),
+});
+
+// 在某个画布坐标所在的格子放置（mode = "add"）或移除（"remove"）墙体；返回实际做了什么
+async function setHexWall(scene, grid, point, mode) {
+	const offset = grid.getOffset(point);
+	const key = hexKey(offset);
+	const existing = hexDocs(scene, key);
+	const has = existing.walls.length > 0 || existing.drawings.length > 0;
+	if (mode === "remove") {
+		if (!has) return null;
+		if (existing.walls.length) await scene.deleteEmbeddedDocuments("Wall", existing.walls.map(w => w.id));
+		if (existing.drawings.length) await scene.deleteEmbeddedDocuments("Drawing", existing.drawings.map(d => d.id));
+		return "remove";
+	}
+	if (has) return null;
+	const { walls, drawing } = hexWallData(grid.getVertices(offset), key, { blockSight: !!game.settings.get(MODULE_ID, "hexWallBlocksSight") });
+	await scene.createEmbeddedDocuments("Drawing", [drawing]);
+	await scene.createEmbeddedDocuments("Wall", walls);
+	return "add";
+}
+
+// ---------------------------------------------------------------------------
+// 掩护格：Foundry 的区域工具在六角网格上画不出整格的六边形。「区域」工具栏的「软性掩护格 / 硬性掩护格」
+// 点击格子把这一格加进本场景的软性 / 硬性掩护区（一个带「LANCER 掩护区」行为的区域，所有人可见），再点移除。
+const COVER_CELL_FLAG = "coverCells";
+const COVER_CELL_STYLE = {
+	soft: { name: "软性掩护格", color: "#3b82c4" },
+	hard: { name: "硬性掩护格", color: "#c4703b" },
+};
+const cellPoints = vertices => vertices.flatMap(p => [Math.round(p.x), Math.round(p.y)]);
+const samePoints = (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= 1);
+const shapeData = s => (typeof s?.toObject === "function" ? s.toObject() : { ...s });
+const coverRegionOf = (scene, cover) => scene.regions.find(r => r.getFlag?.(MODULE_ID, COVER_CELL_FLAG) === cover);
+
+function coverCellHas(scene, grid, point, cover) {
+	const pts = cellPoints(grid.getVertices(grid.getOffset(point)));
+	const region = coverRegionOf(scene, cover);
+	return !!region?.shapes?.some(s => s.type === "polygon" && samePoints(Array.from(s.points), pts));
+}
+
+async function setCoverCell(scene, grid, point, cover, mode) {
+	const pts = cellPoints(grid.getVertices(grid.getOffset(point)));
+	const region = coverRegionOf(scene, cover);
+	const shapes = (region?.shapes ?? []).map(shapeData);
+	const idx = shapes.findIndex(s => s.type === "polygon" && samePoints(Array.from(s.points), pts));
+	if (mode === "remove") {
+		if (idx < 0) return null;
+		shapes.splice(idx, 1);
+		if (shapes.length) await region.update({ shapes });
+		else await scene.deleteEmbeddedDocuments("Region", [region.id]);
+		return "remove";
+	}
+	if (idx >= 0) return null;
+	const shape = { type: "polygon", points: pts, hole: false };
+	if (region) await region.update({ shapes: [...shapes, shape] });
+	else {
+		const style = COVER_CELL_STYLE[cover];
+		await scene.createEmbeddedDocuments("Region", [{
+			name: style.name, color: style.color, shapes: [shape],
+			visibility: CONST.REGION_VISIBILITY?.ALWAYS ?? 2,
+			flags: { [MODULE_ID]: { [COVER_CELL_FLAG]: cover } },
+			behaviors: [{ name: "LANCER 掩护区", type: COVER_TYPE, system: { cover } }],
+		}]);
+	}
+	return "add";
+}
+
+// ---------------------------------------------------------------------------
+// 按格子涂画的工具：工具启用时拦截画布左键（不让图层开始画墙 / 画区域），按下时所在格子决定放置还是移除，拖动时对经过的格子做同样的事
+const PAINT_TOOLS = {
+	[HEX_TOOL]: {
+		control: "walls", label: "六边形墙体",
+		has: (scene, grid, point) => hexDocs(scene, hexKey(grid.getOffset(point))).walls.length > 0,
+		apply: (scene, grid, point, mode) => setHexWall(scene, grid, point, mode),
+		tool: { title: "六边形墙体：点击格子放置一整格不可通过的墙体，再点移除；按住拖动可连续放置", icon: "fa-solid fa-draw-polygon" },
+	},
+	lancerCoverSoft: {
+		control: "regions", label: "软性掩护格",
+		has: (scene, grid, point) => coverCellHas(scene, grid, point, "soft"),
+		apply: (scene, grid, point, mode) => setCoverCell(scene, grid, point, "soft", mode),
+		tool: { title: "软性掩护格：点击格子加入软性掩护区（进入的指示物获得软性掩护），再点移除；按住拖动可连续操作", icon: "fa-solid fa-shield-halved" },
+	},
+	lancerCoverHard: {
+		control: "regions", label: "硬性掩护格",
+		has: (scene, grid, point) => coverCellHas(scene, grid, point, "hard"),
+		apply: (scene, grid, point, mode) => setCoverCell(scene, grid, point, "hard", mode),
+		tool: { title: "硬性掩护格：点击格子加入硬性掩护区（进入的指示物获得硬性掩护），再点移除；按住拖动可连续操作", icon: "fa-solid fa-shield" },
+	},
+};
+
+function activePaintTool() {
+	const c = ui.controls;
+	const control = c?.control?.name ?? c?.activeControl;
+	const tool = c?.tool?.name ?? c?.activeTool;
+	const def = PAINT_TOOLS[tool];
+	return def && def.control === control ? def : null;
+}
+
+let hexPaint = null;
+function onHexPointer(event) {
+	const def = game.user?.isGM && canvas?.scene ? activePaintTool() : null;
+	if (!def) return;
+	if (event.type === "pointerdown" && event.button !== 0) return;
+	// 松开左键（包括在画布外松开）后不再连续操作
+	if (event.type === "pointerup" || (event.type === "pointermove" && !(event.buttons & 1))) { hexPaint = null; return; }
+	event.stopImmediatePropagation();
+	event.preventDefault();
+	if (canvas.grid.isGridless) { if (event.type === "pointerdown") ui.notifications.warn(`无网格的场景不能使用「${def.label}」。`); return; }
+	const point = canvas.canvasCoordinatesFromClient({ x: event.clientX, y: event.clientY });
+	const key = hexKey(canvas.grid.getOffset(point));
+	if (event.type === "pointerdown") {
+		hexPaint = { def, mode: def.has(canvas.scene, canvas.grid, point) ? "remove" : "add", done: new Set([key]), queue: Promise.resolve() };
+	} else if (!hexPaint || hexPaint.def !== def || hexPaint.done.has(key)) return;
+	else hexPaint.done.add(key);
+	// 依次执行：同一区域的连续更新不能并发，否则后一次会覆盖前一次的形状
+	const { mode } = hexPaint;
+	hexPaint.queue = hexPaint.queue.then(() => def.apply(canvas.scene, canvas.grid, point, mode)).catch(err => console.error(`${MODULE_ID} |`, err));
+}
+
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer") return;
+	game.settings.register(MODULE_ID, "hexWallBlocksSight", {
+		name: "六边形墙体阻挡视线",
+		hint: "开启后，新放置的六边形墙体除了阻挡移动，也阻挡视线与光照。已放置的墙体不受影响。",
+		scope: "world", config: true, type: Boolean, default: false,
+	});
+});
+
+Hooks.on("getSceneControlButtons", controls => {
+	if (game.system?.id !== "lancer" || !game.user?.isGM) return;
+	for (const [name, def] of Object.entries(PAINT_TOOLS)) {
+		const group = controls?.[def.control];
+		if (!group?.tools) continue;
+		group.tools[name] = { name, ...def.tool, order: Object.keys(group.tools).length };
+	}
+});
+
+Hooks.once("canvasReady", () => {
+	const view = canvas.app?.canvas ?? canvas.app?.view;
+	if (!view) return;
+	for (const type of ["pointerdown", "pointermove", "pointerup"]) view.addEventListener(type, onHexPointer, { capture: true });
+});
+
+// ---------------------------------------------------------------------------
+// 命中后一键施加状态：攻击 / 科技攻击的聊天卡下方，按攻击所用物品的命中效果文字列出可施加的状态按钮，
+// 点击后施加到这次被命中（含会心一击）的目标；聊天卡没有目标时用当前选中的目标。
+// LANCER 系统本身不会施加命中效果里的状态（其代码中为 TODO）。是否满足豁免等条件由玩家与 GM 判断。
+// 没有目标角色权限时（玩家打 GM 的 NPC），通过模组 socket 请在线的 GM 施加。
+const STATUS_WORDS = [
+	["固定", "immobilized"], ["受损", "impaired"], ["受扰", "jammed"], ["锁定", "lockon"], ["离散", "shredded"],
+	["缓慢", "slow"], ["晕眩", "stunned"], ["暴露", "exposed"], ["伏卧", "prone"],
+	["Immobilized", "immobilized"], ["Impaired", "impaired"], ["Jammed", "jammed"], ["Lock On", "lockon"], ["Shredded", "shredded"],
+	["Slowed", "slow"], ["Stunned", "stunned"], ["Exposed", "exposed"], ["Prone", "prone"],
+];
+const STATUS_LABEL = { immobilized: "固定", impaired: "受损", jammed: "受扰", lockon: "锁定", shredded: "离散", slow: "缓慢", stunned: "晕眩", exposed: "暴露", prone: "伏卧" };
+// 不是施加给目标的写法：
+// - 消耗 / 移除锁定、免疫缓慢、无法……
+// - 作为条件：「若目标被锁定」「攻击处于伏卧的角色」「具有锁定」
+// - 给自己：「你陷入缓慢」「你会缓慢」
+// - 列举状况：「伏卧、固定或晕眩」
+// - 「可以在受扰下使用」「锁定该武器」「被锁定的所有敌方角色」
+const STATUS_NOT_BEFORE = [
+	/(消耗|移除|清除|解除|结束|免疫|不会|不能|无法|不再|失去|具有|处于|对)\S{0,2}$/,
+	/(若|如果)[^，。；]{0,3}被?$/,
+	/你(会|将|也)?(陷入|变得)?$/,
+	/[、或]$/,
+	/(consume|remove|clear|immune|against|while)\s*\S{0,6}$/i,
+];
+const STATUS_NOT_AFTER = /^(该武器|这把武器|武器|模式|状态的|的|、|或|角色|目标时|下|时(也|仍)?可?以?使用|时也)/;
+// 武器效果说明里，只看与命中、豁免或目标有关的句子（其余多是武器本身的规则）
+const TARGET_SENTENCE = /(命中|会心|豁免|目标|hit|crit|save|target)/i;
+
+function statusesIn(text, { strict = false } = {}) {
+	const plain = String(text || "").replace(/<[^>]+>/g, "");
+	// 针对「攻击者」的句子（如未命中你的攻击者伏卧）不是给这次攻击的目标的
+	const sentences = strict ? plain.split(/[。；;\n]/).filter(s => TARGET_SENTENCE.test(s) && !/攻击者|attacker/i.test(s)) : [plain];
+	const found = [];
+	for (const sentence of sentences) for (const [word, id] of STATUS_WORDS) {
+		if (found.includes(id)) continue;
+		let i = sentence.indexOf(word);
+		while (i >= 0) {
+			const before = sentence.slice(Math.max(0, i - 6), i), after = sentence.slice(i + word.length, i + word.length + 4);
+			// 「锁定」也常作动词或描述（「扫描目标锁定」「当锁定时」），只认「被 / 施加 / 进行 / 获得锁定」
+			const lockOk = id !== "lockon" || /(被|施加|进行|获得|陷入|Lock On)\s*$/i.test(before + (word === "Lock On" ? word : ""));
+			if (lockOk && !STATUS_NOT_BEFORE.some(re => re.test(before)) && !STATUS_NOT_AFTER.test(after)) { found.push(id); break; }
+			i = sentence.indexOf(word, i + word.length);
+		}
+	}
+	return found;
+}
+
+// 攻击所用物品的效果文字：命中 / 会心效果整段都看；一般效果说明只看与命中、豁免、目标有关的句子
+function attackTexts(item) {
+	const s = item?.system;
+	if (!s) return [];
+	const profile = s.active_profile ?? s.profiles?.[s.selected_profile_index ?? 0];
+	const out = [];
+	for (const o of [profile, s]) {
+		for (const f of ["on_hit", "on_crit"]) if (o?.[f]) out.push({ text: o[f], strict: false });
+		for (const f of ["effect", "on_attack"]) if (o?.[f]) out.push({ text: o[f], strict: true });
+	}
+	for (const a of s.actions ?? []) if (a.detail) out.push({ text: a.detail, strict: true });
+	return out.filter(t => typeof t.text === "string" && t.text.trim());
+}
+
+async function applyStatusTo(tokenUuid, status) {
+	const token = fromUuidSync(tokenUuid);
+	const actor = token?.actor;
+	if (!actor) return false;
+	if (actor.isOwner) {
+		if (!actor.statuses?.has(status)) await actor.toggleStatusEffect(status, { active: true });
+		return true;
+	}
+	if (!game.users?.activeGM) { ui.notifications.warn("没有在线的 GM，无法对不属于你的角色施加状态。"); return false; }
+	game.socket.emit(`module.${MODULE_ID}`, { action: "applyStatus", uuid: tokenUuid, status });
+	return true;
+}
+
+function statusButtonsHTML(statuses) {
+	const btn = id => `<button type="button" data-lancer-cn-status="${id}" style="flex:0 0 auto;width:auto;line-height:1.6;padding:0 .6em;margin:0">${STATUS_LABEL[id]}</button>`;
+	return `<div class="lancer-cn-status-row" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px;font-size:var(--font-size-12,12px)"><span>命中效果 · 施加：</span>${statuses.map(btn).join("")}</div>`;
+}
+
+function onRenderChatMessage(message, html) {
+	const root = html instanceof HTMLElement ? html : html?.[0];
+	if (!root || root.querySelector(".lancer-cn-status-row")) return;
+	const attack = message.getFlag?.("lancer", "attackData");
+	if (!attack) return;
+	if (!(game.user?.isGM || message.isAuthor)) return;
+	const item = attack.attackerItemUuid ? fromUuidSync(attack.attackerItemUuid) : null;
+	const statuses = [];
+	for (const t of attackTexts(item)) for (const id of statusesIn(t.text, { strict: t.strict })) if (!statuses.includes(id)) statuses.push(id);
+	if (!statuses.length) return;
+	const content = root.querySelector(".message-content") ?? root;
+	content.insertAdjacentHTML("beforeend", statusButtonsHTML(statuses));
+	content.querySelector(".lancer-cn-status-row").addEventListener("click", async ev => {
+		const status = ev.target.closest?.("[data-lancer-cn-status]")?.dataset.lancerCnStatus;
+		if (!status) return;
+		const hit = (attack.targets ?? []).filter(t => t.hit || t.crit).map(t => t.uuid);
+		const uuids = attack.targets?.length ? hit : [...(game.user?.targets ?? [])].map(t => t.document.uuid);
+		if (!uuids.length) return ui.notifications.warn(attack.targets?.length ? "这次攻击没有命中任何目标。" : "请先选中要施加状态的目标。");
+		let n = 0;
+		for (const uuid of uuids) if (await applyStatusTo(uuid, status)) n++;
+		if (n) ui.notifications.info(`已对 ${n} 个目标施加「${STATUS_LABEL[status]}」。`);
+	});
+}
+
+Hooks.on("renderChatMessageHTML", onRenderChatMessage);
+Hooks.once("ready", () => {
+	if (game.system?.id !== "lancer") return;
+	game.socket?.on(`module.${MODULE_ID}`, async msg => {
+		if (msg?.action !== "applyStatus" || !game.users?.activeGM?.isSelf || !STATUS_LABEL[msg.status]) return;
+		const actor = fromUuidSync(msg.uuid)?.actor;
+		if (actor && !actor.statuses?.has(msg.status)) await actor.toggleStatusEffect(msg.status, { active: true });
+	});
+});
+
+globalThis.LancerCN = { translate, walk, importReference, REFERENCE, coverFor, applyCover, defineCoverBehavior, hexWallData, setHexWall, setCoverCell, coverCellHas, PAINT_TOOLS, statusesIn, attackTexts, onRenderChatMessage };
 
 // 只在界面语言为中文（cn）时启用；语言要在 i18nInit 之后才确定
 Hooks.once("i18nInit", () => {

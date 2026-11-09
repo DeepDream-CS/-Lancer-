@@ -297,7 +297,386 @@ Hooks.once("init", () => {
 	});
 });
 
-globalThis.LancerCN = { translate, walk, importReference, REFERENCE };
+// ---------------------------------------------------------------------------
+// 掩护区：在地图上画一个区域（Region），加上「LANCER 掩护区」行为。
+// 指示物进入区域时自动挂上「掩护 - 软性 / 硬性」状态，离开时去掉；同时处在多个掩护区时取最高的掩护。
+// LANCER 系统的命中面板读取目标身上的这两个状态（cover_soft / cover_hard）计算 -1 / -2。
+const COVER_TYPE = `${MODULE_ID}.cover`;
+const COVER_STATUS = { soft: "cover_soft", hard: "cover_hard" };
+const COVER_RANK = { none: 0, soft: 1, hard: 2 };
+
+// 指示物当前所在的掩护区给出的掩护；exclude 是正在离开的区域，include 是正在进入的区域
+function coverFor(tokenDoc, { exclude, include } = {}) {
+	const regions = new Set(tokenDoc.regions ?? []);
+	if (exclude) regions.delete(exclude);
+	if (include) regions.add(include);
+	let best = "none";
+	for (const region of regions) {
+		for (const b of region.behaviors ?? []) {
+			if (b.type !== COVER_TYPE || b.disabled) continue;
+			const c = b.system?.cover;
+			if (COVER_RANK[c] > COVER_RANK[best]) best = c;
+		}
+	}
+	return best;
+}
+
+async function applyCover(tokenDoc, cover) {
+	const actor = tokenDoc?.actor;
+	if (!actor?.toggleStatusEffect) return;
+	for (const [kind, status] of Object.entries(COVER_STATUS)) {
+		const want = kind === cover;
+		if (actor.statuses?.has(status) !== want) await actor.toggleStatusEffect(status, { active: want });
+	}
+}
+
+function defineCoverBehavior() {
+	const Base = foundry.data?.regionBehaviors?.RegionBehaviorType;
+	if (!Base) return null;
+	const fields = foundry.data.fields;
+	const E = CONST.REGION_EVENTS;
+	// 事件会在每个客户端触发，只由引发事件的用户处理（移动指示物的玩家或 GM），避免重复更新
+	const mine = event => event.user?.isSelf;
+	return class CoverZoneBehavior extends Base {
+		static defineSchema() {
+			return {
+				cover: new fields.StringField({
+					required: true, initial: "soft", choices: { soft: "软性掩护（-1）", hard: "硬性掩护（-2）" },
+					label: "掩护", hint: "区域内的指示物自动获得的掩护。导引武器、科技攻击与非投掷近战攻击按规则忽略掩护。",
+				}),
+			};
+		}
+		static events = {
+			[E.TOKEN_ENTER]: async function (event) {
+				if (!mine(event)) return;
+				const token = event.data.token;
+				await applyCover(token, coverFor(token, { include: this.region }));
+			},
+			[E.TOKEN_EXIT]: async function (event) {
+				if (!mine(event)) return;
+				const token = event.data.token;
+				await applyCover(token, coverFor(token, { exclude: this.region }));
+			},
+			// 画好区域、启用或停用行为时，处理已经在区域里的指示物
+			[E.BEHAVIOR_ACTIVATED]: async function (event) {
+				if (!mine(event)) return;
+				for (const token of this.region.tokens ?? []) await applyCover(token, coverFor(token, { include: this.region }));
+			},
+			[E.BEHAVIOR_DEACTIVATED]: async function (event) {
+				if (!mine(event)) return;
+				for (const token of this.region.tokens ?? []) await applyCover(token, coverFor(token, { exclude: this.region }));
+			},
+		};
+	};
+}
+
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer" || !CONFIG.RegionBehavior) return;
+	const Behavior = defineCoverBehavior();
+	if (!Behavior) return;
+	CONFIG.RegionBehavior.dataModels[COVER_TYPE] = Behavior;
+	if (CONFIG.RegionBehavior.typeIcons) CONFIG.RegionBehavior.typeIcons[COVER_TYPE] = "fa-solid fa-shield-halved";
+});
+// 行为类型的显示名：Foundry 按语言键 TYPES.RegionBehavior.lancer-cn.cover 查（按「.」逐层查找），
+// 写进已载入的译文与英文后备译文，任何界面语言都显示中文名
+const COVER_LABEL_KEY = `TYPES.RegionBehavior.${COVER_TYPE}`;
+Hooks.once("i18nInit", () => {
+	if (game.system?.id !== "lancer") return;
+	for (const t of [game.i18n.translations, game.i18n._fallback]) if (t) foundry.utils.setProperty(t, COVER_LABEL_KEY, "LANCER 掩护区");
+});
+
+// ---------------------------------------------------------------------------
+// 六边形墙体：GM 在「墙壁」工具栏选「六边形墙体」，点击格子放置一整格的墙体，再点一次移除，按住拖动可连续放置。
+// 每格墙体 = 沿格子边缘的 6 段阻挡移动的墙 + 一个所有人可见的实心六边形图形（Foundry 的墙对玩家不可见，图形告诉玩家此处不可通过）。
+// 默认不阻挡视线；模组设置「六边形墙体阻挡视线」可打开。墙体只阻挡移动，掩护按需手动设置或用掩护区。
+const HEX_TOOL = "lancerHexWall";
+const HEX_FLAG = "hexWall";
+
+const hexKey = offset => `${offset.i},${offset.j}`;
+
+// 一格墙体的文档数据：walls（每条边一段）与 drawing（实心多边形，坐标相对左上角）
+function hexWallData(rawVertices, key, { blockSight = false } = {}) {
+	const vertices = rawVertices.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) }));
+	const NONE = CONST.WALL_SENSE_TYPES?.NONE ?? 0;
+	const NORMAL = CONST.WALL_SENSE_TYPES?.NORMAL ?? 20;
+	const MOVE = CONST.WALL_MOVEMENT_TYPES?.NORMAL ?? 20;
+	const flags = { [MODULE_ID]: { [HEX_FLAG]: key } };
+	const walls = vertices.map((p, i) => {
+		const q = vertices[(i + 1) % vertices.length];
+		return { c: [p.x, p.y, q.x, q.y].map(Math.round), move: MOVE, sight: blockSight ? NORMAL : NONE, light: blockSight ? NORMAL : NONE, sound: NONE, flags };
+	});
+	const xs = vertices.map(p => p.x), ys = vertices.map(p => p.y);
+	const x = Math.min(...xs), y = Math.min(...ys);
+	const drawing = {
+		x, y, locked: true, flags,
+		shape: { type: "p", width: Math.max(...xs) - x, height: Math.max(...ys) - y, points: vertices.flatMap(p => [Math.round(p.x - x), Math.round(p.y - y)]) },
+		fillType: CONST.DRAWING_FILL_TYPES?.SOLID ?? 1, fillColor: "#2b2b2b", fillAlpha: 0.85,
+		strokeColor: "#000000", strokeWidth: 4, strokeAlpha: 1,
+	};
+	return { walls, drawing };
+}
+
+const hexDocs = (scene, key) => ({
+	walls: scene.walls.filter(w => w.getFlag?.(MODULE_ID, HEX_FLAG) === key),
+	drawings: scene.drawings.filter(d => d.getFlag?.(MODULE_ID, HEX_FLAG) === key),
+});
+
+// 在某个画布坐标所在的格子放置（mode = "add"）或移除（"remove"）墙体；返回实际做了什么
+async function setHexWall(scene, grid, point, mode) {
+	const offset = grid.getOffset(point);
+	const key = hexKey(offset);
+	const existing = hexDocs(scene, key);
+	const has = existing.walls.length > 0 || existing.drawings.length > 0;
+	if (mode === "remove") {
+		if (!has) return null;
+		if (existing.walls.length) await scene.deleteEmbeddedDocuments("Wall", existing.walls.map(w => w.id));
+		if (existing.drawings.length) await scene.deleteEmbeddedDocuments("Drawing", existing.drawings.map(d => d.id));
+		return "remove";
+	}
+	if (has) return null;
+	const { walls, drawing } = hexWallData(grid.getVertices(offset), key, { blockSight: !!game.settings.get(MODULE_ID, "hexWallBlocksSight") });
+	await scene.createEmbeddedDocuments("Drawing", [drawing]);
+	await scene.createEmbeddedDocuments("Wall", walls);
+	return "add";
+}
+
+// ---------------------------------------------------------------------------
+// 掩护格：Foundry 的区域工具在六角网格上画不出整格的六边形。「区域」工具栏的「软性掩护格 / 硬性掩护格」
+// 点击格子把这一格加进本场景的软性 / 硬性掩护区（一个带「LANCER 掩护区」行为的区域，所有人可见），再点移除。
+const COVER_CELL_FLAG = "coverCells";
+const COVER_CELL_STYLE = {
+	soft: { name: "软性掩护格", color: "#3b82c4" },
+	hard: { name: "硬性掩护格", color: "#c4703b" },
+};
+const cellPoints = vertices => vertices.flatMap(p => [Math.round(p.x), Math.round(p.y)]);
+const samePoints = (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= 1);
+const shapeData = s => (typeof s?.toObject === "function" ? s.toObject() : { ...s });
+const coverRegionOf = (scene, cover) => scene.regions.find(r => r.getFlag?.(MODULE_ID, COVER_CELL_FLAG) === cover);
+
+function coverCellHas(scene, grid, point, cover) {
+	const pts = cellPoints(grid.getVertices(grid.getOffset(point)));
+	const region = coverRegionOf(scene, cover);
+	return !!region?.shapes?.some(s => s.type === "polygon" && samePoints(Array.from(s.points), pts));
+}
+
+async function setCoverCell(scene, grid, point, cover, mode) {
+	const pts = cellPoints(grid.getVertices(grid.getOffset(point)));
+	const region = coverRegionOf(scene, cover);
+	const shapes = (region?.shapes ?? []).map(shapeData);
+	const idx = shapes.findIndex(s => s.type === "polygon" && samePoints(Array.from(s.points), pts));
+	if (mode === "remove") {
+		if (idx < 0) return null;
+		shapes.splice(idx, 1);
+		if (shapes.length) await region.update({ shapes });
+		else await scene.deleteEmbeddedDocuments("Region", [region.id]);
+		return "remove";
+	}
+	if (idx >= 0) return null;
+	const shape = { type: "polygon", points: pts, hole: false };
+	if (region) await region.update({ shapes: [...shapes, shape] });
+	else {
+		const style = COVER_CELL_STYLE[cover];
+		await scene.createEmbeddedDocuments("Region", [{
+			name: style.name, color: style.color, shapes: [shape],
+			visibility: CONST.REGION_VISIBILITY?.ALWAYS ?? 2,
+			flags: { [MODULE_ID]: { [COVER_CELL_FLAG]: cover } },
+			behaviors: [{ name: "LANCER 掩护区", type: COVER_TYPE, system: { cover } }],
+		}]);
+	}
+	return "add";
+}
+
+// ---------------------------------------------------------------------------
+// 按格子涂画的工具：工具启用时拦截画布左键（不让图层开始画墙 / 画区域），按下时所在格子决定放置还是移除，拖动时对经过的格子做同样的事
+const PAINT_TOOLS = {
+	[HEX_TOOL]: {
+		control: "walls", label: "六边形墙体",
+		has: (scene, grid, point) => hexDocs(scene, hexKey(grid.getOffset(point))).walls.length > 0,
+		apply: (scene, grid, point, mode) => setHexWall(scene, grid, point, mode),
+		tool: { title: "六边形墙体：点击格子放置一整格不可通过的墙体，再点移除；按住拖动可连续放置", icon: "fa-solid fa-draw-polygon" },
+	},
+	lancerCoverSoft: {
+		control: "regions", label: "软性掩护格",
+		has: (scene, grid, point) => coverCellHas(scene, grid, point, "soft"),
+		apply: (scene, grid, point, mode) => setCoverCell(scene, grid, point, "soft", mode),
+		tool: { title: "软性掩护格：点击格子加入软性掩护区（进入的指示物获得软性掩护），再点移除；按住拖动可连续操作", icon: "fa-solid fa-shield-halved" },
+	},
+	lancerCoverHard: {
+		control: "regions", label: "硬性掩护格",
+		has: (scene, grid, point) => coverCellHas(scene, grid, point, "hard"),
+		apply: (scene, grid, point, mode) => setCoverCell(scene, grid, point, "hard", mode),
+		tool: { title: "硬性掩护格：点击格子加入硬性掩护区（进入的指示物获得硬性掩护），再点移除；按住拖动可连续操作", icon: "fa-solid fa-shield" },
+	},
+};
+
+function activePaintTool() {
+	const c = ui.controls;
+	const control = c?.control?.name ?? c?.activeControl;
+	const tool = c?.tool?.name ?? c?.activeTool;
+	const def = PAINT_TOOLS[tool];
+	return def && def.control === control ? def : null;
+}
+
+let hexPaint = null;
+function onHexPointer(event) {
+	const def = game.user?.isGM && canvas?.scene ? activePaintTool() : null;
+	if (!def) return;
+	if (event.type === "pointerdown" && event.button !== 0) return;
+	// 松开左键（包括在画布外松开）后不再连续操作
+	if (event.type === "pointerup" || (event.type === "pointermove" && !(event.buttons & 1))) { hexPaint = null; return; }
+	event.stopImmediatePropagation();
+	event.preventDefault();
+	if (canvas.grid.isGridless) { if (event.type === "pointerdown") ui.notifications.warn(`无网格的场景不能使用「${def.label}」。`); return; }
+	const point = canvas.canvasCoordinatesFromClient({ x: event.clientX, y: event.clientY });
+	const key = hexKey(canvas.grid.getOffset(point));
+	if (event.type === "pointerdown") {
+		hexPaint = { def, mode: def.has(canvas.scene, canvas.grid, point) ? "remove" : "add", done: new Set([key]), queue: Promise.resolve() };
+	} else if (!hexPaint || hexPaint.def !== def || hexPaint.done.has(key)) return;
+	else hexPaint.done.add(key);
+	// 依次执行：同一区域的连续更新不能并发，否则后一次会覆盖前一次的形状
+	const { mode } = hexPaint;
+	hexPaint.queue = hexPaint.queue.then(() => def.apply(canvas.scene, canvas.grid, point, mode)).catch(err => console.error(`${MODULE_ID} |`, err));
+}
+
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer") return;
+	game.settings.register(MODULE_ID, "hexWallBlocksSight", {
+		name: "六边形墙体阻挡视线",
+		hint: "开启后，新放置的六边形墙体除了阻挡移动，也阻挡视线与光照。已放置的墙体不受影响。",
+		scope: "world", config: true, type: Boolean, default: false,
+	});
+});
+
+Hooks.on("getSceneControlButtons", controls => {
+	if (game.system?.id !== "lancer" || !game.user?.isGM) return;
+	for (const [name, def] of Object.entries(PAINT_TOOLS)) {
+		const group = controls?.[def.control];
+		if (!group?.tools) continue;
+		group.tools[name] = { name, ...def.tool, order: Object.keys(group.tools).length };
+	}
+});
+
+Hooks.once("canvasReady", () => {
+	const view = canvas.app?.canvas ?? canvas.app?.view;
+	if (!view) return;
+	for (const type of ["pointerdown", "pointermove", "pointerup"]) view.addEventListener(type, onHexPointer, { capture: true });
+});
+
+// ---------------------------------------------------------------------------
+// 命中后一键施加状态：攻击 / 科技攻击的聊天卡下方，按攻击所用物品的命中效果文字列出可施加的状态按钮，
+// 点击后施加到这次被命中（含会心一击）的目标；聊天卡没有目标时用当前选中的目标。
+// LANCER 系统本身不会施加命中效果里的状态（其代码中为 TODO）。是否满足豁免等条件由玩家与 GM 判断。
+// 没有目标角色权限时（玩家打 GM 的 NPC），通过模组 socket 请在线的 GM 施加。
+const STATUS_WORDS = [
+	["固定", "immobilized"], ["受损", "impaired"], ["受扰", "jammed"], ["锁定", "lockon"], ["离散", "shredded"],
+	["缓慢", "slow"], ["晕眩", "stunned"], ["暴露", "exposed"], ["伏卧", "prone"],
+	["Immobilized", "immobilized"], ["Impaired", "impaired"], ["Jammed", "jammed"], ["Lock On", "lockon"], ["Shredded", "shredded"],
+	["Slowed", "slow"], ["Stunned", "stunned"], ["Exposed", "exposed"], ["Prone", "prone"],
+];
+const STATUS_LABEL = { immobilized: "固定", impaired: "受损", jammed: "受扰", lockon: "锁定", shredded: "离散", slow: "缓慢", stunned: "晕眩", exposed: "暴露", prone: "伏卧" };
+// 不是施加给目标的写法：
+// - 消耗 / 移除锁定、免疫缓慢、无法……
+// - 作为条件：「若目标被锁定」「攻击处于伏卧的角色」「具有锁定」
+// - 给自己：「你陷入缓慢」「你会缓慢」
+// - 列举状况：「伏卧、固定或晕眩」
+// - 「可以在受扰下使用」「锁定该武器」「被锁定的所有敌方角色」
+const STATUS_NOT_BEFORE = [
+	/(消耗|移除|清除|解除|结束|免疫|不会|不能|无法|不再|失去|具有|处于|对)\S{0,2}$/,
+	/(若|如果)[^，。；]{0,3}被?$/,
+	/你(会|将|也)?(陷入|变得)?$/,
+	/[、或]$/,
+	/(consume|remove|clear|immune|against|while)\s*\S{0,6}$/i,
+];
+const STATUS_NOT_AFTER = /^(该武器|这把武器|武器|模式|状态的|的|、|或|角色|目标时|下|时(也|仍)?可?以?使用|时也)/;
+// 武器效果说明里，只看与命中、豁免或目标有关的句子（其余多是武器本身的规则）
+const TARGET_SENTENCE = /(命中|会心|豁免|目标|hit|crit|save|target)/i;
+
+function statusesIn(text, { strict = false } = {}) {
+	const plain = String(text || "").replace(/<[^>]+>/g, "");
+	// 针对「攻击者」的句子（如未命中你的攻击者伏卧）不是给这次攻击的目标的
+	const sentences = strict ? plain.split(/[。；;\n]/).filter(s => TARGET_SENTENCE.test(s) && !/攻击者|attacker/i.test(s)) : [plain];
+	const found = [];
+	for (const sentence of sentences) for (const [word, id] of STATUS_WORDS) {
+		if (found.includes(id)) continue;
+		let i = sentence.indexOf(word);
+		while (i >= 0) {
+			const before = sentence.slice(Math.max(0, i - 6), i), after = sentence.slice(i + word.length, i + word.length + 4);
+			// 「锁定」也常作动词或描述（「扫描目标锁定」「当锁定时」），只认「被 / 施加 / 进行 / 获得锁定」
+			const lockOk = id !== "lockon" || /(被|施加|进行|获得|陷入|Lock On)\s*$/i.test(before + (word === "Lock On" ? word : ""));
+			if (lockOk && !STATUS_NOT_BEFORE.some(re => re.test(before)) && !STATUS_NOT_AFTER.test(after)) { found.push(id); break; }
+			i = sentence.indexOf(word, i + word.length);
+		}
+	}
+	return found;
+}
+
+// 攻击所用物品的效果文字：命中 / 会心效果整段都看；一般效果说明只看与命中、豁免、目标有关的句子
+function attackTexts(item) {
+	const s = item?.system;
+	if (!s) return [];
+	const profile = s.active_profile ?? s.profiles?.[s.selected_profile_index ?? 0];
+	const out = [];
+	for (const o of [profile, s]) {
+		for (const f of ["on_hit", "on_crit"]) if (o?.[f]) out.push({ text: o[f], strict: false });
+		for (const f of ["effect", "on_attack"]) if (o?.[f]) out.push({ text: o[f], strict: true });
+	}
+	for (const a of s.actions ?? []) if (a.detail) out.push({ text: a.detail, strict: true });
+	return out.filter(t => typeof t.text === "string" && t.text.trim());
+}
+
+async function applyStatusTo(tokenUuid, status) {
+	const token = fromUuidSync(tokenUuid);
+	const actor = token?.actor;
+	if (!actor) return false;
+	if (actor.isOwner) {
+		if (!actor.statuses?.has(status)) await actor.toggleStatusEffect(status, { active: true });
+		return true;
+	}
+	if (!game.users?.activeGM) { ui.notifications.warn("没有在线的 GM，无法对不属于你的角色施加状态。"); return false; }
+	game.socket.emit(`module.${MODULE_ID}`, { action: "applyStatus", uuid: tokenUuid, status });
+	return true;
+}
+
+function statusButtonsHTML(statuses) {
+	const btn = id => `<button type="button" data-lancer-cn-status="${id}" style="flex:0 0 auto;width:auto;line-height:1.6;padding:0 .6em;margin:0">${STATUS_LABEL[id]}</button>`;
+	return `<div class="lancer-cn-status-row" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px;font-size:var(--font-size-12,12px)"><span>命中效果 · 施加：</span>${statuses.map(btn).join("")}</div>`;
+}
+
+function onRenderChatMessage(message, html) {
+	const root = html instanceof HTMLElement ? html : html?.[0];
+	if (!root || root.querySelector(".lancer-cn-status-row")) return;
+	const attack = message.getFlag?.("lancer", "attackData");
+	if (!attack) return;
+	if (!(game.user?.isGM || message.isAuthor)) return;
+	const item = attack.attackerItemUuid ? fromUuidSync(attack.attackerItemUuid) : null;
+	const statuses = [];
+	for (const t of attackTexts(item)) for (const id of statusesIn(t.text, { strict: t.strict })) if (!statuses.includes(id)) statuses.push(id);
+	if (!statuses.length) return;
+	const content = root.querySelector(".message-content") ?? root;
+	content.insertAdjacentHTML("beforeend", statusButtonsHTML(statuses));
+	content.querySelector(".lancer-cn-status-row").addEventListener("click", async ev => {
+		const status = ev.target.closest?.("[data-lancer-cn-status]")?.dataset.lancerCnStatus;
+		if (!status) return;
+		const hit = (attack.targets ?? []).filter(t => t.hit || t.crit).map(t => t.uuid);
+		const uuids = attack.targets?.length ? hit : [...(game.user?.targets ?? [])].map(t => t.document.uuid);
+		if (!uuids.length) return ui.notifications.warn(attack.targets?.length ? "这次攻击没有命中任何目标。" : "请先选中要施加状态的目标。");
+		let n = 0;
+		for (const uuid of uuids) if (await applyStatusTo(uuid, status)) n++;
+		if (n) ui.notifications.info(`已对 ${n} 个目标施加「${STATUS_LABEL[status]}」。`);
+	});
+}
+
+Hooks.on("renderChatMessageHTML", onRenderChatMessage);
+Hooks.once("ready", () => {
+	if (game.system?.id !== "lancer") return;
+	game.socket?.on(`module.${MODULE_ID}`, async msg => {
+		if (msg?.action !== "applyStatus" || !game.users?.activeGM?.isSelf || !STATUS_LABEL[msg.status]) return;
+		const actor = fromUuidSync(msg.uuid)?.actor;
+		if (actor && !actor.statuses?.has(msg.status)) await actor.toggleStatusEffect(msg.status, { active: true });
+	});
+});
+
+globalThis.LancerCN = { translate, walk, importReference, REFERENCE, coverFor, applyCover, defineCoverBehavior, hexWallData, setHexWall, setCoverCell, coverCellHas, PAINT_TOOLS, statusesIn, attackTexts, onRenderChatMessage };
 
 // 只在界面语言为中文（cn）时启用；语言要在 i18nInit 之后才确定
 Hooks.once("i18nInit", () => {

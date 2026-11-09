@@ -1,0 +1,143 @@
+{
+	"_说明": "Foundry 官方数据中的 NPC 条目待译文字。键为官方 id 与字段路径；只翻译值，保留 HTML 标签、数字和 {VAL} 这类占位符。术语按 source/fvtt/README.md 的对照表（准度、回避、HP、护盾等）。同一模板名（如 Horror）在模板与特性中要译成同一个词。",
+	"npct_horror": {
+		"name": "Horror",
+		"description": "Artificial horrors beyond human comprehension. From biosynth-hybrid mechs and nanite-swarm gestalt-schools to phase-shifted tachyon phantoms. A horror may come in many forms, but those that are forced to face one in combat will always recognize it for what it is."
+	},
+	"npct_industrial_mech": {
+		"name": "Industrial",
+		"description": "Civilian machines built for mining and construction are much more numerous in the galaxy than those purpose-built for combat. Despite their obvious shortcomings, those with little alternatives will often pilot these chassis into battle, turning tools meant to create into tools used to destroy."
+	},
+	"npct_commando_spec_op": {
+		"name": "Spec Op",
+		"description": "Expertly trained and equipped individuals that often deploy in teams to increase their deadly potential even further. Those that end up on the wrong side of such a strike team should exercise extreme caution."
+	},
+	"npcf_abomination_horror": {
+		"name": "Abominable",
+		"effect": "Scan doesn’t reveal any information about the Horror except that they are a Horror."
+	},
+	"npcf_mutations_horror": {
+		"name": "Mutations",
+		"effect": "The Horror may choose 1 option from the Horror Mutations list plus an additional option per tier."
+	},
+	"npcf_disruptor_whip_horror": {
+		"name": "Disruptor Whip",
+		"on_hit": "The target loses all Overshield."
+	},
+	"npcf_quadruped_horror": {
+		"name": "Quadruped",
+		"effect": "The Horror gains Immunity to Prone and may move up to 4 spaces as a protocol."
+	},
+	"npcf_superfluous_extremeties_horror": {
+		"name": "Superfluous Extremities",
+		"effect": "The Horror gains +1 Accuracy to Grapple and may perform Improvised Attack as a quick action."
+	},
+	"npcf_artificial_horror": {
+		"name": "Artificial",
+		"effect": "This trait can only be applied if the Horror is Biological. The Horror is no longer Biological and gains Heat Cap 6."
+	},
+	"npcf_terrifying_horror": {
+		"name": "Terrifying",
+		"effect": "Attacks against the Horror suffer +1 Difficulty if the attacker has line of sight to the target."
+	},
+	"npcf_abhorrent_redundancies_horror": {
+		"name": "Abhorrent Redundancies",
+		"effect": "Whenever the Horror is reduced to 0 HP, they may roll 1d6. On a 5+, they return to 1 HP and gain {3/4/5} Overshield. After this trait triggers once, it only triggers again on a 6+."
+	},
+	"npcf_assimilaiton_maw_horror": {
+		"name": "Assimilation Maw",
+		"effect": "Additionally, if the Horror destroys another character with this weapon, allied or hostile, or hits a wreck, they regain {10/15/20} HP. Wrecks and allies are automatically hit by this weapon. Wrecks hit by this weapon are automatically destroyed.",
+		"on_hit": "If the target is at half or less HP after this attack is resolved, they must succeed on a Hull save or be reduced to 0 HP."
+	},
+	"npcf_phase_shift_generator_horror": {
+		"name": "Phase-Shift Generator",
+		"effect": "As a protocol, the Horror may become Intangible until the start of their next turn. Alternatively they may clear Intangible. The Horror may not become Intangible if they used this system on their last turn."
+	},
+	"npcf_construction_tools_industrial_mech": {
+		"name": "Construction Tools",
+		"effect": "The Industrial may pick a weapon from the Industrial Weapons list. They may take a second but must replace one of their base weapons when doing so."
+	},
+	"npcf_civilian_machine_industrial_mech": {
+		"name": "Civilian Machine",
+		"effect": "The Industrial receives +1 Difficulty on saves and checks. Tech attacks gain +1 Accuracy against the Industrial."
+	},
+	"npcf_bulky_construction_industrial_mech": {
+		"name": "Bulky Construction",
+		"effect": "The Industrial gains +1 Armor but Boost becomes a full action instead of a quick action."
+	},
+	"npcf_rock_drill_industrial_mech": {
+		"name": "Rock Drill",
+		"effect": "Additionally, the Industrial may automatically deal 50 AP kinetic damage to an adjacent piece of terrain as a quick action.",
+		"on_hit": "The target is knocked Prone."
+	},
+	"npcf_fusion_cutter_industrial_mech": {
+		"name": "Fusion Cutter"
+	},
+	"npcf_industrial_clamps_industrial_mech": {
+		"name": "Industrial Clamps",
+		"effect": "The Industrial gains +1 Accuracy to Grapple. This weapon automatically hits Grappled characters."
+	},
+	"npcf_rivet_cannon_industrial_mech": {
+		"name": "Rivet Cannon",
+		"effect": "This Attack can make {1/2/3} attacks. If one of these attacks knocks a character back into a piece of terrain that stops their movement, they become Immobilized until the end of their next turn."
+	},
+	"npcf_buzzsaw_industrial_mech": {
+		"name": "Buzzsaw",
+		"effect": "On critical hit: This weapon’s base damage is doubled."
+	},
+	"npcf_wrecker_industrial_mech": {
+		"name": "Wrecker",
+		"effect": "Whenever this weapon is used to attack it attacks all characters within Threat."
+	},
+	"npcf_operatives_spec_op": {
+		"name": "Operatives",
+		"effect": "When choosing optional systems and traits, the Spec Ops can also choose from the Spec Ops Systems and Traits list. Additionally, the Spec Ops can’t take the Grunt, Elite, or Ultra templates."
+	},
+	"npcf_active_camo_spec_op": {
+		"name": "Active Camo",
+		"effect": "As a protocol, the Spec Ops may expend a charge to become Invisible until the end of their next turn. For the duration of this effect, the Spec Ops’ next melee or ranged attack becomes a critical hit if it hits."
+	},
+	"npcf_deadly_precision_spec_op": {
+		"name": "Deadly Precision",
+		"effect": "The Spec Ops deals +{2/3/3} bonus damage on critical hits."
+	},
+	"npcf_coordinated_carnage_spec_op": {
+		"name": "Coordinated Carnage",
+		"effect": "After all Spec Ops characters have taken their turns in a round, a single Spec Ops character may take an additional turn in the usual turn order."
+	},
+	"npcf_full_spectrum_sensor_suite_spec_op": {
+		"name": "Full-Spectrum Sensor Suite",
+		"effect": "The Spec Ops may Lock On as a protocol. Whenever an allied Spec Ops character within Range 10 consumes any Lock On, their attack is not affected by cover. This system can only be taken by one Spec Ops per combat."
+	},
+	"npcf_automated_battlefield_awareness_node_spec_op": {
+		"name": "Automated Battlefield Awareness Node",
+		"effect": "The Spec Ops gains the Battlefield Awareness reaction, which can be used any number of times per round. This system can only be taken by one Spec Ops per combat. <br><b>Battlefield Awareness </b><br><b>Trigger:</b> An allied Spec Ops character within Range 8 and line of sight would roll a save. <br><b>Effect:</b> They automatically succeed on the save before rolling any dice."
+	},
+	"npcf_serrated_machete_spec_op": {
+		"name": "Serrated Machete",
+		"effect": "On critical hit: The target becomes Shredded until the end of their next turn."
+	},
+	"npcf_special_munitions_spec_op": {
+		"name": "Special Munitions",
+		"effect": "This character’s Ranged Attacks gain “<b>On critical hit:</b> The target is knocked Prone.” <br>Additionally, before making a Ranged Attack that deals Kinetic, Energy, or Explosive Damage, the Spec Ops may swap that damage type for one of the other two."
+	},
+	"npcf_bulwark_mods_spec_op": {
+		"name": "Bulwark Mods",
+		"effect": "The Spec Ops ignores difficult and dangerous terrain."
+	},
+	"npcf_gyrojet_cannon_spec_op": {
+		"name": "Gyro-Jet Cannon"
+	},
+	"npcf_burst_jets_spec_op": {
+		"name": "Jump Packs",
+		"effect": "The Spec Ops can fly whenever it Boosts. It must end this movement on a solid surface or begin falling."
+	},
+	"npcf_null_perception_coating_spec_op": {
+		"name": "Null-Perception Coating",
+		"effect": "The Spec Ops gains Immunity to Lock On."
+	},
+	"npcf_void_rend": {
+		"name": "VOID REND",
+		"effect": "This system creates a tear in reality in an adjacent free space that lasts until the end of the scene. The tear is not an object or character, does not provide obstruction, and cannot be interacted with in any way.<br><br>Characters that enter a space occupied by a tear may choose to leave realspace and enter a strange, gray, interstitial realm in which they can no longer see or interact with the real world. Characters that leave realspace in this way are removed from the battlefield entirely and cannot return for the remainder of the scene."
+	}
+}

@@ -92,6 +92,9 @@ node tools/test-fvtt-module.js      # 模组译文、清单、写死英文翻译
 node tools/test-foundry-export.js   # 导出到 Foundry 的驾驶员 JSON：结构与所有条目 id 都能在 Foundry 中找到
 node tools/scan-fvtt-labels.js ../foundryvtt-lancer [--write]  # 扫描系统模板与代码中写死的英文，对照 / 更新快照
 node tools/export-official-todo.js  # 官方补充书中车卡器未收录条目的清单与待译 JSON
+node tools/export-npc-todo.js       # Foundry 官方数据中的 NPC 职业 / 特性 / 模板待译 JSON（dist/fvtt/zh-npc.todo.json）
+node tools/draft-ext-actions.js [--write]  # 扩展条目正文里的动作 → 按钮草稿（source/fvtt/ext-actions.json，人工核对）
+# source/fvtt/ext-deployables.json：说明文字里写了数值的部署物（人工照原文转录），build-lcp 构建扩展包时套用
 ```
 
 - test-v35 用数值结构摘要锁住核心数据；扩展内容和新增的顶层字段（如 `ext_rules`、`professional_licenses`）要在 `stripExt()` 里剔除，不要改基线。
@@ -138,3 +141,7 @@ node tools/export-official-todo.js  # 官方补充书中车卡器未收录条目
 - 骨架改成中文名后，Foundry 按英文名查插图的地方（新建条目、机甲换骨架）找不到图；覆盖已有条目时图片保留。界面中文模组 `lancer-cn`（源文件 `source/fvtt/module/`）用钩子按骨架 id 补图，并提供系统界面译文（语言代码 `cn`，与 foundry_chn 相同）；清单链接指向 GitHub Pages 上的 `dist/fvtt/lancer-cn/module.json`，改动后要提高 `module.json` 版本号。
 - 系统模板 / 代码里写死的英文不经语言文件，模组在显示时按词典替换（`cn-hardcoded.json`、`cn-words.json`，对照扫描快照 `hardcoded-en.json`），只改文字节点和提示属性，不碰输入框、编辑区和存档数据。系统升级后先运行 `scan-fvtt-labels.js` 看新增条目；不想翻译的调试信息写 `null`。
 - 状态与状况随核心包导出，文字取自术语库（`source/fvtt/statuses-zh.json` 对应）；模组的状态图标名要与之同名（test-lcp 检查）。专业牌照、扩展厂商无法经内容包导入，由模组的 GM 按钮「导入车卡器资料」写入合集包（`importReference`），同时把骨架牌照改为中文名。
+- 模组注册区域行为「LANCER 掩护区」（`lancer-cn.cover`，需在 `module.json` 的 `documentTypes` 声明）：指示物进出区域时切换 `cover_soft` / `cover_hard` 状态，只由触发事件的用户处理。
+- 攻击卡「命中效果 · 施加」状态按钮（`onRenderChatMessage`、`statusesIn`）：按物品文字识别状态，排除条件、自身、列举等写法；无权限时经模组 socket 请 GM 施加（`module.json` 需 `socket: true`）。带附加武器数据的改装另导出「附带武器」（build-lcp）。
+- 「区域」工具栏的 GM 工具「软性 / 硬性掩护格」（`lancerCoverSoft` / `lancerCoverHard`）：点格子加入本场景的掩护区（带 `flags.lancer-cn.coverCells`）；与六边形墙体共用 `PAINT_TOOLS` 涂画逻辑。行为类型显示名写进语言键 `TYPES.RegionBehavior.lancer-cn.cover`。
+- 「墙壁」工具栏的 GM 工具「六边形墙体」（`lancerHexWall`）：点击格子放置 / 移除一整格墙体（6 段阻挡移动的墙 + 玩家可见的实心六边形图形，带 `flags.lancer-cn.hexWall`），设置 `hexWallBlocksSight` 控制是否阻挡视线。

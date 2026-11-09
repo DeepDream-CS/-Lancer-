@@ -1,0 +1,143 @@
+{
+	"_说明": "Foundry 官方数据中的 NPC 条目待译文字。键为官方 id 与字段路径；只翻译值，保留 HTML 标签、数字和 {VAL} 这类占位符。术语按 source/fvtt/README.md 的对照表（准度、回避、HP、护盾等）。同一模板名（如 Horror）在模板与特性中要译成同一个词。",
+	"npct_horror": {
+		"name": "恐怖体",
+		"description": "超越人类理解的人造恐怖之物。从生物合成混种机甲、纳米虫群格式塔集群，到相位偏移的迅子幻影，恐怖体的形态千变万化，但被迫在战场上面对它们的人，总能认清其本质。"
+	},
+	"npct_industrial_mech": {
+		"name": "工业机甲",
+		"description": "银河中为采矿和建筑而制造的民用机械，数量远超专为战斗设计的机器。尽管这些底盘的缺陷显而易见，别无选择的人仍常常驾驶它们投入战斗，将原本用于创造的工具化为毁灭的工具。"
+	},
+	"npct_commando_spec_op": {
+		"name": "特战队员",
+		"description": "这些人员训练精湛、装备精良，通常以小队形式部署，进一步提升其致命的作战能力。任何与这种突击小队为敌的人，都应格外谨慎。"
+	},
+	"npcf_abomination_horror": {
+		"name": "憎恶之物",
+		"effect": "扫描无法揭示恐怖体的任何信息，只能确认其为恐怖体。"
+	},
+	"npcf_mutations_horror": {
+		"name": "变异",
+		"effect": "恐怖体可以从恐怖体变异列表中选择1个选项，并且每个等阶额外选择一个选项。"
+	},
+	"npcf_disruptor_whip_horror": {
+		"name": "扰乱鞭",
+		"on_hit": "目标失去全部护盾。"
+	},
+	"npcf_quadruped_horror": {
+		"name": "四足形态",
+		"effect": "恐怖体免疫伏卧，并可以用协定移动至多4格。"
+	},
+	"npcf_superfluous_extremeties_horror": {
+		"name": "多余肢体",
+		"effect": "恐怖体进行擒拿时获得+1准度，并可以用快速动作进行权宜攻击。"
+	},
+	"npcf_artificial_horror": {
+		"name": "人工构造",
+		"effect": "此特征只能赋予具有生物标签的恐怖体。恐怖体失去生物标签，并获得6热度上限。"
+	},
+	"npcf_terrifying_horror": {
+		"name": "恐怖威仪",
+		"effect": "对恐怖体进行攻击时，如果攻击者对目标具有视线，该攻击受到+1难度。"
+	},
+	"npcf_abhorrent_redundancies_horror": {
+		"name": "可憎冗余",
+		"effect": "每当恐怖体的HP降至0时，可以掷1d6。结果为5+时，其HP恢复至1，并获得{3/4/5}护盾。此特征首次触发后，只有结果为6+时才能再次触发。"
+	},
+	"npcf_assimilaiton_maw_horror": {
+		"name": "同化巨口",
+		"effect": "此外，如果恐怖体用此武器摧毁另一名角色，无论敌我，或命中一具残骸，则恢复{10/15/20} HP。此武器自动命中残骸和友军。被此武器命中的残骸自动被摧毁。",
+		"on_hit": "此次攻击结算后，如果目标的HP不超过一半，则必须通过机体豁免，否则HP降至0。"
+	},
+	"npcf_phase_shift_generator_horror": {
+		"name": "相位偏移发生器",
+		"effect": "恐怖体可以用协定变为无形，直到其下一回合开始；也可以改为清除无形。如果恐怖体在上一回合使用过此系统，则不能变为无形。"
+	},
+	"npcf_construction_tools_industrial_mech": {
+		"name": "施工工具",
+		"effect": "工业机甲可以从工业武器列表中选择一件武器。也可以选择第二件，但必须以其替换一件基础武器。"
+	},
+	"npcf_civilian_machine_industrial_mech": {
+		"name": "民用机械",
+		"effect": "工业机甲的豁免和检定受到+1难度。针对工业机甲的科技攻击获得+1准度。"
+	},
+	"npcf_bulky_construction_industrial_mech": {
+		"name": "笨重构造",
+		"effect": "工业机甲获得+1装甲，但推进由快速动作变为完整动作。"
+	},
+	"npcf_rock_drill_industrial_mech": {
+		"name": "凿岩钻",
+		"effect": "此外，工业机甲可以用快速动作，对一块邻接地形自动造成50穿甲动能伤害。",
+		"on_hit": "目标被击倒伏卧。"
+	},
+	"npcf_fusion_cutter_industrial_mech": {
+		"name": "聚变切割器"
+	},
+	"npcf_industrial_clamps_industrial_mech": {
+		"name": "工业钳夹",
+		"effect": "工业机甲进行擒拿时获得+1准度。此武器自动命中被擒拿的角色。"
+	},
+	"npcf_rivet_cannon_industrial_mech": {
+		"name": "铆钉炮",
+		"effect": "此攻击可以进行{1/2/3}次攻击。如果其中一次攻击将角色击退至使其停止移动的地形上，该角色陷入固定状态，直到其下一回合结束。"
+	},
+	"npcf_buzzsaw_industrial_mech": {
+		"name": "圆锯",
+		"effect": "会心一击时：此武器的基础伤害翻倍。"
+	},
+	"npcf_wrecker_industrial_mech": {
+		"name": "破拆锤",
+		"effect": "每当使用此武器攻击时，都会攻击威胁范围内的所有角色。"
+	},
+	"npcf_operatives_spec_op": {
+		"name": "特战干员",
+		"effect": "选择可选系统和特征时，特战队员也可以从特战队员系统与特征列表中选择。此外，特战队员不能采用杂兵、精英或究极模板。"
+	},
+	"npcf_active_camo_spec_op": {
+		"name": "主动迷彩",
+		"effect": "特战队员可以用协定消耗一次充能，变为隐形，直到其下一回合结束。此效果持续期间，特战队员的下一次近战或远程攻击若命中，则视为会心一击。"
+	},
+	"npcf_deadly_precision_spec_op": {
+		"name": "致命精度",
+		"effect": "特战队员在会心一击时造成+{2/3/3}额外伤害。"
+	},
+	"npcf_coordinated_carnage_spec_op": {
+		"name": "协同杀戮",
+		"effect": "每轮中，所有特战队员角色都完成各自的回合后，一名特战队员角色可以按正常回合顺序额外进行一个回合。"
+	},
+	"npcf_full_spectrum_sensor_suite_spec_op": {
+		"name": "全频谱感应套组",
+		"effect": "特战队员可以用协定进行锁定。每当射程10内的一名友方特战队员角色消耗任意锁定时，其攻击不受掩护影响。每场战斗只有一名特战队员可以携带此系统。"
+	},
+	"npcf_automated_battlefield_awareness_node_spec_op": {
+		"name": "自动战场感知节点",
+		"effect": "特战队员获得战场感知反应，每轮可以使用任意次数。每场战斗只有一名特战队员可以携带此系统。<br><b>战场感知 </b><br><b>触发：</b>射程8内且在视线范围内的一名友方特战队员角色即将进行豁免掷骰。<br><b>效果：</b>在掷出任何骰子之前，该角色自动通过此次豁免。"
+	},
+	"npcf_serrated_machete_spec_op": {
+		"name": "锯齿砍刀",
+		"effect": "会心一击时：目标陷入离散状态，直到其下一回合结束。"
+	},
+	"npcf_special_munitions_spec_op": {
+		"name": "特种弹药",
+		"effect": "此角色的远程攻击获得“<b>会心一击时：</b>目标被击倒伏卧。”<br>此外，在进行造成动能、能量或爆炸伤害的远程攻击之前，特战队员可以将该伤害类型替换为另外两种类型之一。"
+	},
+	"npcf_bulwark_mods_spec_op": {
+		"name": "壁垒模块",
+		"effect": "特战队员无视困难地形和危险地形。"
+	},
+	"npcf_gyrojet_cannon_spec_op": {
+		"name": "旋喷加农炮"
+	},
+	"npcf_burst_jets_spec_op": {
+		"name": "跳跃背包",
+		"effect": "特战队员每次推进时都可以飞行，但必须在坚实表面上结束此次移动，否则开始坠落。"
+	},
+	"npcf_null_perception_coating_spec_op": {
+		"name": "感知屏蔽涂层",
+		"effect": "特战队员免疫锁定。"
+	},
+	"npcf_void_rend": {
+		"name": "虚空撕裂",
+		"effect": "此系统在一个邻接的自由空间中制造一道现实裂隙，持续到场景结束。裂隙既不是物件，也不是角色，不造成阻挡，也无法以任何方式与之互动。<br><br>进入裂隙占据空间的角色可以选择离开现实空间，进入一个奇异、灰暗的间隙领域，在那里无法再看见现实世界，也无法与现实世界互动。以此方式离开现实空间的角色被完全移出战场，且在本场景剩余时间内无法返回。"
+	}
+}

@@ -2,22 +2,24 @@
 
 由 `node tools/build-lcp.js` 生成，请勿手改。
 
-内容包：枪骑兵简易车卡器：扩展内容（中文） 1.0.0
+内容包：枪骑兵简易车卡器：扩展内容（中文） 1.5.0
 
 | 类别 | 条目数 |
 |---|---|
 | frames | 74 |
-| weapons | 117 |
+| weapons | 118 |
 | systems | 187 |
 | mods | 9 |
 | core_bonuses | 21 |
 | talents | 21 |
 | pilot_gear | 1 |
+| npc_templates | 3 |
+| npc_features | 32 |
 
 - 覆盖官方条目：108
-- 新增条目：322
-- 写入的车卡器说明：100 条
-- 补译：252 处
+- 新增条目：323
+- 写入的车卡器说明：99 条
+- 补译：322 处
 
 官方数据版本：@massif/dustgrave-data 1.4.0，@massif/ktb-data 1.2.4，@massif/long-rim-data 1.2.2，@massif/osr-data 1.2.0，@massif/ows-data 1.0.1，@massif/sotw-data 1.0.2，@massif/ssmr-data 1.7.0，@massif/wallflower-data 2.1.0
 
@@ -66,6 +68,133 @@
 - ms_spear_charges 官方数据缺少 license_id，按牌照「Gilgamesh」补为 mf_gilgamesh
 - ms_jäger_kunst_i 官方数据缺少 license_id，按牌照「Atlas」补为 mf_atlas
 - ms_piof_smoke_generator「误导」频率「X/轮」Foundry 无法解析，改写进说明
+
+## 自动生成的动作按钮
+
+说明块直接转换；正文里的动作来自 `source/fvtt/ext-actions.json`（`node tools/draft-ext-actions.js` 生成草稿，人工核对）。
+
+- mf_ext_oleander traits[0]「致命射杀」→ Quick（ext-actions.json）
+- mf_ext_banshee_vine traits[1]「电-心推进」→ Free（ext-actions.json）
+- mf_ext_chimera core_system「回收魔爪无人机」→ Quick（ext-actions.json）
+- mf_ext_chimera core_system「重新部署魔爪无人机」→ Quick（ext-actions.json）
+- mf_ext_habsburg core_system「E-R-桥塔」→ Quick（ext-actions.json）
+- mf_ext_saladin_dread 核心被动「双向屏障」→ Reaction（说明块）
+- mf_ext_bligh core_system「部署船工无人机」→ Free（ext-actions.json）
+- mf_ext_bligh core_system「召回船工无人机」→ Quick（ext-actions.json）
+- mf_ext_red_admiral traits[1]「截剑流拔刀术」→ Reaction（ext-actions.json）
+- mf_ext_ornithoptera traits[0]「丝之舞」→ Reaction（ext-actions.json）
+- mf_ext_ornithoptera core_system「消耗丝线标记」→ Reaction（ext-actions.json）
+- mf_ext_salamander core_system「矿渣爆爆」→ 部署物 Deployable（ext-deployables.json）
+- mf_ext_stetchkin traits[1]「轨迹计算机」→ Quick（ext-actions.json）
+- mf_ext_spectre traits[0]「唯你」→ Reaction（ext-actions.json）
+- mf_ext_pharos traits[1]「天空之眼」→ Quick（ext-actions.json）
+- mf_ext_sicklewing traits[1]「针眼密探」→ Free（ext-actions.json）
+- mf_ext_sicklewing core_system「整合黑猫」→ Quick（ext-actions.json）
+- mf_ext_sicklewing core_system「重新部署黑猫」→ Quick（ext-actions.json）
+- mf_ext_sicklewing core_system「黑猫干涉」→ Quick Tech（ext-actions.json）
+- mf_ext_ifrit core_system「给予同位标记」→ Protocol（ext-actions.json）
+- mf_ext_ifrit core_system「消耗同位标记」→ Reaction（ext-actions.json）
+- mf_ext_agrippa core_system「召回包骡无人机」→ Quick（ext-actions.json）
+- mf_ext_agrippa core_system「重新部署包骡无人机」→ Quick（ext-actions.json）
+- mf_ext_agrippa core_system「展开 / 收起弹道板」→ Protocol（ext-actions.json）
+- mf_kkca_wondrous_sword traits[1]「冲击吸收」→ Reaction（ext-actions.json）
+- mf_kkca_tizona traits[1]「战争领主」→ Reaction（ext-actions.json）
+- mf_kkca_rending_sword core_system「皇家卫队发电机（1）」→ Protocol（ext-actions.json）
+- mf_kkca_rending_sword core_system「皇家卫队发电机（2）」→ Quick（ext-actions.json）
+- mf_piof_basil traits[0]「领班覆写」→ Reaction（ext-actions.json）
+- mf_piof_coriander core_system「遮蔽筒仓」→ Reaction（ext-actions.json）
+- mf_piof_pepper traits[1]「飞车射击」→ Free（ext-actions.json）
+- mf_piof_rosemary traits[0]「碎山者」→ Free（ext-actions.json）
+- mf_piof_mint core_system「冷却喷雾」→ Quick（ext-actions.json）
+- mf_piof_star_anise core_system「部署建筑项目」→ Quick（ext-actions.json）
+- mf_piof_star_anise core_system「藤蔓传送」→ Free（ext-actions.json）
+- mf_piof_star_anise core_system「拆除项目」→ Quick（ext-actions.json）
+- mf_ch_charioteer traits[2]「先锋观测套组」→ Free（ext-actions.json）
+- mf_ch_pesilat core_system「接触入侵」→ Free（ext-actions.json）
+- mf_ch_retiarius traits[0]「纳米织网发射器」→ Free（ext-actions.json）
+- mf_ch_retiarius core_system「锚点装置」→ 部署物 Deployable（ext-deployables.json）
+- mf_ch_pemada traits[0]「反应促动剂」→ Reaction（ext-actions.json）
+- mw_ext_comet_hound「猎兔犬巢房」→ Free（ext-actions.json）
+- mw_kkca_garrison_lance「锁定长矛」→ Quick（ext-actions.json）
+- mw_kkca_garrison_lance「解除锁定」→ Quick（ext-actions.json）
+- mw_piof_grim_harvest_scythe「部署镰刀无人机」→ Free（ext-actions.json）
+- mw_piof_grim_harvest_scythe「召回镰刀无人机」→ Quick（ext-actions.json）
+- mw_piof_furnace_hammer「上泵」→ Quick（ext-actions.json）
+- mw_piof_furnace_hammer「停止上泵」→ Free（ext-actions.json）
+- mw_ch_demons_fang「恶魔之牙」→ Free（ext-actions.json）
+- mw_ch_typhoon「台风空爆投射器」→ Free（ext-actions.json）
+- mw_ch_model96「切换盾炮数据」→ Protocol（ext-actions.json）
+- mw_ch_bull_missile「开启增强追踪」→ Quick（ext-actions.json）
+- mw_ch_bull_missile「关闭增强追踪」→ Protocol（ext-actions.json）
+- mw_ch_explosive_chain「拉回擒拿目标」→ Free（ext-actions.json）
+- mw_ch_explosive_chain「引爆锁链地雷」→ Quick（ext-actions.json）
+- mw_ch_blackjack「张弓」→ Quick（ext-actions.json）
+- ms_ext_unsigned_surrender「插旗坚守」→ Quick（ext-actions.json）
+- ms_ext_unsigned_surrender「停止坚守」→ Protocol（ext-actions.json）
+- ms_ext_cbnrn_sealing「CBNRN 密封技术」→ Protocol（ext-actions.json）
+- ms_ext_gas_grenade_dispenser「瓦斯榴弹抛洒器」→ Quick（ext-actions.json）
+- ms_ext_thresher_drone「长尾鲨无人机」→ Quick（ext-actions.json）
+- ms_ext_boarding_rail「启动导轨」→ Quick（ext-actions.json）
+- ms_ext_boarding_rail「停止导轨」→ Quick（ext-actions.json）
+- ms_ext_boarding_rail「进入导轨（由盟友执行）」→ Quick（ext-actions.json）
+- ms_ext_judas_exploit「犹大漏洞」→ Free（ext-actions.json）
+- ms_ext_evaporative_cooling_plating「蒸发冷却镀层」→ Reaction（ext-actions.json）
+- ms_ext_wodeng_turret_mount「安装 / 拆卸炮塔阵地」→ Quick（ext-actions.json）
+- ms_ext_wodeng_turret_mount「炮塔射击（由操作手执行）」→ Full（ext-actions.json）
+- ms_ext_wodeng_counterfire「反火力套组」→ Reaction（ext-actions.json）
+- ms_ext_comet_sabr「SABR 引擎」→ Protocol（ext-actions.json）
+- ms_ext_comet_white_star「中继协议」→ Invade（说明块）
+- ms_ext_comet_white_star「战术网络回声」→ Invade（说明块）
+- ms_ext_ifrit_entangler「篡改」→ Invade（说明块）
+- ms_ext_ifrit_entangler「莫比乌斯锚定」→ Invade（说明块）
+- ms_ext_agrippa_bridge「可展开桥梁」→ 部署物 Deployable（ext-deployables.json）
+- ms_ext_agrippa_tower「部署休克桥塔」→ Quick（ext-actions.json）
+- ms_ext_agrippa_tower「调整 / 关闭屏障」→ Quick（ext-actions.json）
+- ms_ext_agrippa_tower「休克桥塔」→ 部署物 Deployable（ext-deployables.json）
+- ms_ext_agrippa_crane「扶起 / 搬运盟友」→ Quick（ext-actions.json）
+- ms_ext_agrippa_crane「收起起重装置」→ Protocol（ext-actions.json）
+- ms_kkca_cricket_art_1「蟋蟀印尼术一式」→ Free（ext-actions.json）
+- ms_kkca_transdomain_plating「展开跨域镀层」→ Quick（ext-actions.json）
+- ms_kkca_transdomain_plating「摧毁镀层抵消攻击」→ Reaction（ext-actions.json）
+- ms_kkca_rps_world_guard「RPS：世界卫士」→ Quick（ext-actions.json）
+- ms_piof_carbon_steel_autosaw「加速机械锯」→ Quick（ext-actions.json）
+- ms_piof_carbon_steel_autosaw「切割」→ Full（ext-actions.json）
+- ms_piof_cicada_chatter「激活蝉鸣叨叨」→ Protocol（ext-actions.json）
+- ms_piof_cicada_chatter「集中噪音」→ Quick（ext-actions.json）
+- ms_piof_springlock_seeder「弹簧锁播种机」→ Quick（ext-actions.json）
+- ms_piof_amphora_drone「双耳瓶无人机」→ Quick（ext-actions.json）
+- ms_ext_demolitions_toolkit「引爆远程地雷」→ Quick（ext-actions.json）
+- ms_ch_reactive_armor「爆破/反应装甲（ERA）分层」→ Full（ext-actions.json）
+- ms_ch_spider_bombs「蜘蛛炸弹」→ Protocol（ext-actions.json）
+- ms_ch_saboteur「部署并骑乘」→ Quick（ext-actions.json）
+- ms_ch_saboteur「执行骑乘选项」→ Free（ext-actions.json）
+- ms_ch_saboteur「召回 / 更换目标」→ Quick（ext-actions.json）
+- ms_ch_saboteur「破坏者无人机」→ 部署物 Drone（ext-deployables.json）
+- ms_ch_shadow_fist「孤立编码」→ Invade（说明块）
+- ms_ch_shadow_fist「静滞腔室」→ Invade（说明块）
+- ms_ch_serpent_fang「不确定性陷阱」→ Invade（说明块）
+- ms_ch_serpent_fang「阈限级联」→ Invade（说明块）
+- ms_ch_shatter_palm「释放」→ Invade（说明块）
+- ms_ch_shatter_palm「内伤」→ Invade（说明块）
+- ms_ch_seismic_pulse「激活脉冲场」→ Protocol（ext-actions.json）
+- ms_ch_seismic_pulse「震碎地形」→ Quick（ext-actions.json）
+- ms_ch_shield_array「无人机格挡」→ Reaction（说明块）
+- ms_ch_shield_array「盾牌阵列无人机」→ 部署物 Drone（ext-deployables.json）
+- ms_ch_arcturus「阿尔忒弥斯协定」→ Protocol（说明块）
+- ms_ch_nightjar「部署夜莺无人机」→ Quick（ext-actions.json）
+- ms_ch_nightjar「移动夜莺无人机」→ Quick（ext-actions.json）
+- ms_ch_nightjar「夜莺无人机」→ 部署物 Drone（ext-deployables.json）
+- ms_ch_tactical_shifter「部署传送信标」→ Quick（ext-actions.json）
+- ms_ch_tactical_shifter「传送至信标」→ Free（ext-actions.json）
+- ms_ch_echo_mirage「回声斗篷」→ Protocol（ext-actions.json）
+- ms_pl_disgust_reflex「贱民毒株」→ Invade（说明块）
+- ms_pl_disgust_reflex「//没中/_乐了」→ Invade（说明块）
+- t_ext_blade_dancer ranks[2]「苦行僧步调」→ Free（ext-actions.json）
+- t_ext_blade_dancer ranks[2]「连锁反击」→ Free（ext-actions.json）
+- t_ext_crusher ranks[2]「全力一击」→ Free（ext-actions.json）
+- t_ext_scavenger ranks[1]「使用回收武器攻击」→ Free（ext-actions.json）
+- t_ext_bricklayer ranks[2]「步步为营」→ Protocol（ext-actions.json）
+- wm_pl_underslung → 附带武器「下挂式冲击器（附带武器）」（mw_pl_underslung_data）
 
 ## 覆盖的官方条目
 
@@ -569,3 +698,4 @@
 | talents | t_ext_razorman | 剃刀人 |
 | talents | t_ext_sapper | 工兵 |
 | talents | t_ext_junker | 垃圾佬 |
+| weapons | mw_pl_underslung_data | 下挂式冲击器（附带武器） |

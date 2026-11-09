@@ -32,7 +32,7 @@ const PACKS = {
 		lcp: "lancer-cn-expansions.lcp", audit: "FVTT-LCP-AUDIT.md", todo: "zh-overrides.todo.json",
 		overrides: "zh-overrides.json", baseDirs: ["official"], kinds: KINDS, select: x => x.ext,
 		manifest: {
-			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.0.0",
+			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.5.0",
 			description: "简易车卡器收录的扩展骨架、装备、天赋与核心奖励（中文）。官方补充书条目会覆盖 Foundry 自带的英文版；其余为新增内容。",
 		},
 	},
@@ -175,7 +175,9 @@ function build(packId = "ext") {
 	const Z = D.zh;
 	const nk = s => String(s || "").replace(/’/g, "'");
 	const CJK = /[㐀-鿿]/;
-	const audit = { overlaid: [], added: [], numberDiffs: [], structure: [], english: [], fixes: [], notes: 0, mapErrors: [], overrides: 0 };
+	const audit = { overlaid: [], added: [], numberDiffs: [], structure: [], english: [], fixes: [], notes: 0, mapErrors: [], overrides: 0, autoActions: [] };
+	const EXT_ACTIONS = packId === "ext" && !process.env.LCP_NO_EXT_ACTIONS && fs.existsSync(path.join(FVTT, "ext-actions.json")) ? Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync(path.join(FVTT, "ext-actions.json"), "utf8"))).filter(([k]) => !k.startsWith("_"))) : {};
+	const EXT_DEPLOYABLES = packId === "ext" && fs.existsSync(path.join(FVTT, "ext-deployables.json")) ? Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync(path.join(FVTT, "ext-deployables.json"), "utf8"))).filter(([k]) => !k.startsWith("_"))) : {};
 	const lore = id => {
 		const l = LORE[id];
 		return l && l.lang === "zh" && l.text ? l.text.split(/\n+/).map(s => `<p>${s}</p>`).join("") : "";
@@ -220,7 +222,8 @@ function build(packId = "ext") {
 		if (kind === "frames") {
 			if (x.variant_of) n.push(`变体骨架：沿用${itemName(x.variant_of)}的牌照，牌照等级 2 可用；与原骨架互斥。`);
 			if (x.maker_note) n.push(x.maker_note);
-			if (x.no_grit_hp) n.push("HP 不加毅力（Foundry 会照常加上，需手动扣除）。");
+			// Foundry 对官方帝王蝶（mf_emperor）已自动扣除毅力，其他骨架需要手动扣除
+			if (x.no_grit_hp && outId(x.id) !== "mf_emperor") n.push("HP 不加毅力（Foundry 会照常加上，需手动扣除）。");
 			if (x.required_core_bonus) n.push(`需要核心奖励「${coreBonusName(x.required_core_bonus)}」才能使用，不占牌照。`);
 			if (x.core_system?.efficient) n.push("核心系统带「高效」：在场景结束时，若已使用过此系统，你重新获得 1 CP。");
 		}
@@ -333,6 +336,76 @@ function build(packId = "ext") {
 	}
 
 	// ---- 新条目：车卡器数据 → LCP
+	// ---- 自动生成动作：车卡器把扩展条目的动作写成说明块「名称 + 类型」，或写在正文里（「以一个快速动作……」）。
+	// Foundry 只有结构化的动作才会显示按钮（入侵会自动做科技攻击）。
+	// 说明块：类型含动作词的直接转成动作，并从文字中移除（避免重复）。正文：按 source/fvtt/ext-actions.json 补（工具生成草稿，人工核对）。
+	const ACT_WORDS = [["快速科技", "Quick Tech"], ["完整科技", "Full Tech"], ["入侵", "Invade"], ["快速动作", "Quick"], ["完整动作", "Full"], ["自由动作", "Free"], ["反应", "Reaction"], ["协定", "Protocol"], ["协议", "Protocol"]];
+	const PERIOD_ZH = { 轮: "Round", 回合: "Turn", 场景: "Scene", 任务: "Mission" };
+	function activationOf(label) {
+		const hit = ACT_WORDS.find(([w]) => label.includes(w));
+		return hit ? hit[1] : null;
+	}
+	function frequencyOf(text) {
+		const m = String(text).match(/(\d+)\s*\/\s*(轮|回合|场景|任务)/);
+		return m ? `${m[1]}/${PERIOD_ZH[m[2]]}` : undefined;
+	}
+	function blockActions(text, where) {
+		const actions = [];
+		const rest = String(text || "").replace(/<div class="blk"><div class="blk-h">([\s\S]*?) <span class="muted">([\s\S]*?)<\/span><\/div>([\s\S]*?)<\/div>(?=\s*(?:<div class="blk">|<p|$))/g, (whole, name, label, body) => {
+			const activation = activationOf(strip(label));
+			if (!activation) return whole;
+			let detail = body.trim();
+			const t = detail.match(/<p><b>触发：<\/b>([\s\S]*?)<\/p>/);
+			if (t) detail = detail.replace(t[0], "");
+			detail = detail.replace(/<div><b>效果：<\/b>([\s\S]*?)<\/div>/, "$1").replace(/^<p><b>效果：<\/b>/, "<p>");
+			const a = { name: strip(name).trim(), activation, detail: html(detail.trim()) };
+			if (t) a.trigger = html(t[1].trim());
+			const freq = frequencyOf(label);
+			if (freq) a.frequency = freq;
+			const heat = strip(label).match(/(\d+)\s*热度（自身）/);
+			if (heat) a.heat_cost = Number(heat[1]);
+			actions.push(a);
+			audit.autoActions.push(`${where}「${a.name}」→ ${activation}（说明块）`);
+			return "";
+		});
+		return { actions, rest };
+	}
+	function autoActions(item, kind) {
+		const apply = (holder, textField, actField, where) => {
+			if (!holder || (holder[actField] || []).length || typeof holder[textField] !== "string") return;
+			const { actions, rest } = blockActions(holder[textField], where);
+			if (!actions.length) return;
+			holder[actField] = actions;
+			holder[textField] = rest;
+		};
+		if (["systems", "weapons", "mods"].includes(kind)) apply(item, "effect", "actions", item.id);
+		if (kind === "frames") {
+			(item.traits || []).forEach(t => apply(t, "description", "actions", `${item.id} 特征「${t.name}」`));
+			apply(item.core_system, "passive_effect", "passive_actions", `${item.id} 核心被动`);
+		}
+		if (kind === "talents") item.ranks.forEach((r, i) => apply(r, "description", "actions", `${item.id} 等级${i + 1}`));
+		// 正文里的动作：人工核对过的补充表
+		for (const add of EXT_ACTIONS[item.id] || []) {
+			const holder = add.path ? getPath(item, add.path) : item;
+			if (!holder) { audit.mapErrors.push(`ext-actions.json：${item.id} 的路径 ${add.path} 不存在`); continue; }
+			const field = add.field || "actions";
+			const a = { name: add.name, activation: add.activation, detail: html(add.detail) };
+			for (const k of ["trigger", "frequency", "heat_cost", "tech_attack", "range", "damage"]) if (add[k] !== undefined && add[k] !== "") a[k] = add[k];
+			holder[field] = [...(holder[field] || []), a];
+			audit.autoActions.push(`${item.id}${add.path ? " " + add.path : ""}「${a.name}」→ ${a.activation}（ext-actions.json）`);
+		}
+		// 说明文字里写了数值的部署物：人工转录的补充表（Foundry 可拖出指示物）
+		for (const add of EXT_DEPLOYABLES[item.id] || []) {
+			const holder = add.path ? getPath(item, add.path) : item;
+			if (!holder) { audit.mapErrors.push(`ext-deployables.json：${item.id} 的路径 ${add.path} 不存在`); continue; }
+			const field = add.field || "deployables";
+			const d = { name: add.name, type: add.type || "Deployable", detail: html(add.detail) };
+			for (const k of ["size", "hp", "armor", "evasion", "edef", "heatcap", "save", "speed", "instances", "activation", "recall", "redeploy", "deactivation", "cost", "tags", "actions"]) if (add[k] !== undefined && add[k] !== "") d[k] = add[k];
+			holder[field] = [...(holder[field] || []), d];
+			audit.autoActions.push(`${item.id}${add.path ? " " + add.path : ""}「${d.name}」→ 部署物 ${d.type}（ext-deployables.json）`);
+		}
+	}
+
 	function convert(kind, x) {
 		const item = clone(x);
 		const notes = builderNotes(kind, x);
@@ -357,6 +430,7 @@ function build(packId = "ext") {
 				return rank;
 			});
 		}
+		autoActions(item, kind);
 		appendNotes(item, kind, notes);
 		return finalize(item, kind);
 	}
@@ -532,9 +606,30 @@ function build(packId = "ext") {
 		}
 	}
 	if (!isCore) for (const id of Object.keys(MAP)) if (!KINDS.some(k => D[k].some(y => y.id === id && y.ext))) audit.mapErrors.push(`映射表中的 ${id} 不在车卡器扩展数据里`);
+	// 附带武器数据的改装（如下挂式冲击器）：Foundry 的改装不能带武器数据，也不会随改装加入内建物品。
+	// 另导出一件同牌照的「附带武器」，安装改装后拖到机甲上即可直接攻击（不占挂载点与 SP）。
+	for (const x of D.mods.filter(m => P.select(m) && m.profiles?.length && !MAP[m.id])) {
+		const modName = nameOf("mods", x);
+		const onHit = strip(x.effect).match(/命中：([^。]*。)/);
+		x.profiles.forEach((pf, i) => {
+			const id = `mw_${x.id.replace(/^wm_/, "")}${x.profiles.length > 1 ? `_${i + 1}` : ""}_data`;
+			const w = {
+				id, name: pf.name === modName ? `${modName}（附带武器）` : `${pf.name}（${modName}附带）`, ...licenseFields(x), source: x.source,
+				mount: pf.mount || "Auxiliary", type: pf.type, damage: clone(pf.damage || []), range: clone(pf.range || []), tags: clone(pf.tags || []), sp: 0,
+				on_hit: onHit ? onHit[1] : "", effect: pf.effect || "",
+				description: `<p>【车卡器说明】武器改装「${modName}」附带的武器数据。安装该改装后，把这件武器拖到机甲上即可直接用它攻击；不占挂载点与 SP。${pf.no_bonuses ? "其他改装与核心奖励不适用于它。" : ""}</p>`,
+			};
+			if (pf.no_bonuses) { w.no_bonus = true; w.no_core_bonus = true; }
+			out.weapons.push(finalize(w, "weapons"));
+			audit.added.push({ kind: "weapons", id, name: w.name });
+			audit.autoActions.push(`${x.id} → 附带武器「${w.name}」（${id}）`);
+		});
+	}
 
 	// 状态与状况（核心包）：以 Foundry 的 statuses.json 为底，名称与说明换成车卡器术语库的中文
 	if (isCore) out.statuses = buildStatuses(audit);
+	// NPC 模板与特性（扩展包）：Foundry 自带的官方补充书 NPC 数据，换成 source/fvtt/zh-npc.json 的中文
+	if (!isCore) Object.assign(out, buildNpcs(audit));
 
 	// 手工补译
 	const byId = new Map(kinds.flatMap(k => out[k].map(item => [item.id, item])));
@@ -609,6 +704,39 @@ function buildStatuses(audit) {
 	return out;
 }
 
+// ---- NPC：以官方记录为底（Foundry 按 id 覆盖），只换名称与说明类文字；类型、伤害、射程、标签等英文枚举不动。
+// 特性的 origin.name 是所属模板 / 职业的名字，显示在特性标题上，换成同名模板的中文名。
+const NPC_KINDS = ["npc_templates", "npc_features"];
+function buildNpcs(audit) {
+	const zhFile = path.join(FVTT, "zh-npc.json");
+	const zh = fs.existsSync(zhFile) ? JSON.parse(fs.readFileSync(zhFile, "utf8")) : {};
+	const out = { npc_templates: [], npc_features: [] };
+	const root = path.join(FVTT, "official");
+	for (const pack of fs.readdirSync(root).sort()) for (const kind of NPC_KINDS) {
+		const f = path.join(root, pack, `${kind}.json`);
+		if (fs.existsSync(f)) out[kind].push(...JSON.parse(fs.readFileSync(f, "utf8")));
+	}
+	if (!out.npc_templates.length && !out.npc_features.length) return {};
+	const ids = new Set([...out.npc_templates, ...out.npc_features].map(x => x.id));
+	for (const kind of NPC_KINDS) for (const rec of out[kind]) {
+		for (const [p, v] of Object.entries(zh[rec.id] || {})) {
+			if (setPath(rec, p, v)) audit.overrides++;
+			else audit.mapErrors.push(`zh-npc.json 中 ${rec.id} 的路径 ${p} 不存在`);
+		}
+		if (!CJK_ALL.test(rec.name)) audit.english.push({ id: rec.id, path: "name", text: rec.name, raw: rec.name });
+	}
+	for (const id of Object.keys(zh)) if (!id.startsWith("_") && !ids.has(id)) audit.mapErrors.push(`zh-npc.json 中的 ${id} 不在官方 NPC 数据里`);
+	// 模板英文名 → 中文名（从官方原文取英文名）
+	const enName = {};
+	for (const pack of fs.readdirSync(root)) {
+		const f = path.join(root, pack, "npc_templates.json");
+		if (fs.existsSync(f)) for (const t of JSON.parse(fs.readFileSync(f, "utf8"))) enName[t.name] = out.npc_templates.find(x => x.id === t.id)?.name;
+	}
+	for (const ft of out.npc_features) if (ft.origin?.name && enName[ft.origin.name]) ft.origin.name = enName[ft.origin.name];
+	return out;
+}
+const CJK_ALL = /[㐀-鿿]/;
+
 // ---- 极简 zip 写入（deflate），JSZip 可读
 function zip(files) {
 	const local = [], central = [];
@@ -641,6 +769,7 @@ function lcpFiles(out, P = PACKS.ext) {
 	const files = [["lcp_manifest.json", JSON.stringify(P.manifest, null, 2)]];
 	for (const k of P.kinds) if (out[k]?.length) files.push([`${k}.json`, JSON.stringify(out[k], null, 2)]);
 	if (out.statuses?.length) files.push(["statuses.json", JSON.stringify(out.statuses, null, 2)]);
+	for (const k of ["npc_templates", "npc_features"]) if (out[k]?.length) files.push([`${k}.json`, JSON.stringify(out[k], null, 2)]);
 	return files;
 }
 
@@ -650,7 +779,7 @@ function auditMarkdown({ out, audit, untouched, packs, packId, P }) {
 	const cell = v => String(typeof v === "string" ? v : JSON.stringify(v)).replace(/\|/g, "\\|").replace(/\n/g, " ");
 	L.push(`# Foundry LCP 导出核对表：${isCore ? "核心规则书" : "扩展内容"}`, "", "由 `node tools/build-lcp.js` 生成，请勿手改。", "");
 	L.push(`内容包：${P.manifest.name} ${P.manifest.version}`, "");
-	L.push("| 类别 | 条目数 |", "|---|---|", ...P.kinds.map(k => `| ${k} | ${out[k].length} |`), ...(out.statuses ? [`| statuses | ${out.statuses.length} |`] : []), "");
+	L.push("| 类别 | 条目数 |", "|---|---|", ...P.kinds.map(k => `| ${k} | ${out[k].length} |`), ...(out.statuses ? [`| statuses | ${out.statuses.length} |`] : []), ...["npc_templates", "npc_features"].filter(k => out[k]).map(k => `| ${k} | ${out[k].length} |`), "");
 	L.push(`- 覆盖官方条目：${audit.overlaid.length}`, `- 新增条目：${audit.added.length}`, `- 写入的车卡器说明：${audit.notes} 条`, `- 补译：${audit.overrides} 处`, "");
 	L.push("官方数据版本：" + packs.map(p => `${p.name} ${p.version}`).join("，"), "");
 	if (audit.mapErrors.length) L.push("## 映射错误", "", ...audit.mapErrors.map(s => `- ${s}`), "");
@@ -668,6 +797,7 @@ function auditMarkdown({ out, audit, untouched, packs, packId, P }) {
 	if (audit.english.length) { L.push("| 条目 | 位置 | 英文 |", "|---|---|---|"); for (const e of audit.english) L.push(`| ${e.id} | ${e.path} | ${cell(e.text.length > 160 ? e.text.slice(0, 160) + "…" : e.text)} |`); }
 	else L.push("无。");
 	L.push("", "## 自动修正", "", ...(audit.fixes.length ? audit.fixes.map(s => `- ${s}`) : ["无。"]));
+	if (!isCore) L.push("", "## 自动生成的动作按钮", "", "说明块直接转换；正文里的动作来自 `source/fvtt/ext-actions.json`（`node tools/draft-ext-actions.js` 生成草稿，人工核对）。", "", ...(audit.autoActions.length ? audit.autoActions.map(s => `- ${s}`) : ["无。"]));
 	if (!isCore) {
 		L.push("", "## 覆盖的官方条目", "", "| 类别 | 车卡器 id | 官方 id | 补充书 | 中文名 | 官方名 |", "|---|---|---|---|---|---|");
 		for (const o of audit.overlaid) L.push(`| ${o.kind} | ${o.id} | ${o.target} | ${o.pack} | ${cell(o.name)} | ${cell(o.officialName)} |`);

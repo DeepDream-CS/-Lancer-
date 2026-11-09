@@ -473,6 +473,9 @@
   "Counter Editing": [
     "src/module/apps/counter-editor.ts:17"
   ],
+  "Crit": [
+    "src/module/apps/damage/HitRadio.svelte:17"
+  ],
   "DAMAGE": [
     "public/templates/item/mech_weapon.hbs:76",
     "public/templates/item/pilot_weapon.hbs:33",
@@ -851,6 +854,9 @@
     "src/module/apps/damage/DamageHUD.svelte:81",
     "src/module/helpers/chat.ts:156"
   ],
+  "Hard Cover (-2)": [
+    "src/module/apps/acc_diff/Cover.svelte:19"
+  ],
   "Heat Cap": [
     "public/templates/chat/scan-card.hbs:53",
     "public/templates/journal/scan-entry.hbs:71"
@@ -860,6 +866,9 @@
   ],
   "Hidden:": [
     "public/templates/item/tag.hbs:25"
+  ],
+  "Hit": [
+    "src/module/apps/damage/HitRadio.svelte:18"
   ],
   "Hull": [
     "public/templates/chat/scan-card.hbs:15",
@@ -1146,6 +1155,9 @@
   "Min:": [
     "public/templates/window/counter.hbs:1"
   ],
+  "Miss": [
+    "src/module/apps/damage/HitRadio.svelte:19"
+  ],
   "Mods": [
     "src/module/apps/inventory.ts:79"
   ],
@@ -1198,6 +1210,9 @@
   ],
   "No": [
     "src/module/flows/full-repair.ts:53"
+  ],
+  "No Cover": [
+    "src/module/apps/acc_diff/Cover.svelte:17"
   ],
   "No License": [
     "src/module/helpers/item-editors.ts:294"
@@ -1683,6 +1698,9 @@
   "Smart (*)": [
     "src/module/apps/acc_diff/AccDiffHUD.svelte:339",
     "src/module/apps/acc_diff/AccDiffHUD.svelte:71"
+  ],
+  "Soft Cover (-1)": [
+    "src/module/apps/acc_diff/Cover.svelte:18"
   ],
   "Speed": [
     "public/templates/chat/scan-card.hbs:69",
