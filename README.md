@@ -57,6 +57,7 @@
 - 角色自动保存在当前浏览器（localStorage）。换电脑或换浏览器前，请在「角色卡 / 导出」页导出 JSON。
 - **导入**：「角色管理」菜单的「导入角色 JSON」、新建弹窗里的「导入已有角色」，或直接把 JSON 文件拖进页面。可以是单个角色、角色数组，或「备份全部角色」的文件。导入时会补齐缺的字段，找不到的天赋、装备等会略过并列出来。
 - **导出**：角色卡页可下载驾驶员卡、机甲卡图片（按官方角色卡版式），复制文字角色卡，或下载 JSON。图片卡是固定版式的摘要，完整配置请保留 JSON。
+- **导出到 Foundry**：角色卡页「导出到 Foundry」生成 COMP/CON 格式的驾驶员 JSON，可在 Foundry LANCER 驾驶员表的「文件导入」中读入，见下节。
 - **网页版更新后看不到新内容**：GitHub Pages 会让浏览器缓存脚本约 10 分钟。按 Ctrl + F5（或 Ctrl + Shift + R）强制刷新即可。
 
 ## 扩展内容
@@ -80,6 +81,16 @@
 - **背景**：贵族后嗣、第二顺位者、连队扈从、潘克拉蒂、幼鹿（「随机」仍只掷规则书的 20 个背景）。
 - **驾驶员装备**：个人动能屏障（装甲栏）。
 - **扩展规则**：变体骨架、新标签「高效」、新状态「无形」，收录在术语库，并在用到它们的骨架下方显示「扩展规则说明」。
+
+## Foundry VTT（2026-11-09）
+
+车卡器的内容可以带进 Foundry VTT 的「LANCER」系统（v3.1.3，需 Foundry v13），不修改系统本体：
+
+- **两个中文内容包**：`dist/fvtt/lancer-cn-core.lcp`（核心规则书，含状态与状况）和 `dist/fvtt/lancer-cn-expansions.lcp`（扩展内容与官方补充书 NPC 模板、特性），在 LANCER 内容包管理器中于英文数据之后导入，按 id 覆盖成中文。扩展条目带自动生成的动作按钮（入侵会自动做科技攻击）和可拖出的部署物。
+- **界面中文模组 lancer-cn**：系统界面中文（含模板里写死的英文）、中文名骨架的插图、「区域」工具栏的软性 / 硬性掩护格、「墙壁」工具栏的六边形墙体、攻击卡上的「命中效果 · 施加」状态按钮，以及专业牌照与扩展厂商资料的导入。清单链接：`https://deepdream-cs.github.io/-Lancer-/dist/fvtt/lancer-cn/module.json`。
+- **导出到 Foundry**：车卡器角色导出后，在 Foundry 驾驶员表的「文件导入」中建立驾驶员与机甲。
+
+安装步骤、导入顺序、常见问题和维护方法见 [Foundry 内容包](docs/FVTT-LCP.md)。
 
 ## 数据来源
 
@@ -118,6 +129,9 @@ node tools/test-expansion-copy.js
 | `node tools/extract-en.js` | 从 lancer-data 抽出界面会显示的英文到 `source/i18n/en/` |
 | `node tools/i18n-missing.js [文件名] [条数]` | 列出还没翻译的条目 |
 | `node tools/glossary-audit.js [术语] [条数]` | 列出术语在全部文字中的命中与上下文，检查有没有字面意义的误标 |
+| `node tools/build-lcp.js` / `test-lcp.js` | 生成并检查 Foundry 核心包与扩展包（`dist/fvtt/`）及核对表 |
+| `node tools/build-fvtt-module.js` / `test-fvtt-module.js` | 生成并检查 Foundry 界面中文模组 lancer-cn |
+| `node tools/test-foundry-export.js` | 「导出到 Foundry」的驾驶员 JSON 结构，以及所有条目 id 都能在 Foundry 中找到 |
 
 除系统库浏览器检查外，上述数据与规则检查可直接用 Node.js 运行。`tools/test-system-library.js` 当前使用本机已安装的 Playwright 和 Edge，脚本中的依赖路径需按检查环境调整；运行会在项目根目录写入 `system-library-preview.png`。这些是开发检查所需工具，普通使用车卡器无需安装。
 
@@ -133,6 +147,7 @@ GitHub Pages 使用仓库中的静态成品；修改数据源后应先生成并�
 - [FAQ-TRANSLATION.md](docs/FAQ-TRANSLATION.md)：规则 FAQ 中文译本
 - [UI-UX.md](docs/UI-UX.md)：界面改进
 - [EQUIPMENT-LORE-AUDIT.md](docs/EQUIPMENT-LORE-AUDIT.md)：风味文本覆盖与缺项
+- [FVTT-LCP.md](docs/FVTT-LCP.md)：Foundry 内容包、界面中文模组与导出到 Foundry
 
 ## 资源目录整理（2026-11-04）
 

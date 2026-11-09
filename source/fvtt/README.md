@@ -5,7 +5,7 @@
 | 文件 | 作用 |
 |---|---|
 | `core/` | Foundry 系统使用的 @massif/lancer-data 3.1.7 快照，核心规则书内容包以它为底 |
-| `official/<补充书>/` | Foundry 系统自带的官方补充书数据快照，只保留骨架、武器、系统、改装、核心奖励、天赋、驾驶员装备、标签与清单 |
+| `official/<补充书>/` | Foundry 系统自带的官方补充书数据快照，只保留骨架、武器、系统、改装、核心奖励、天赋、驾驶员装备、NPC 模板与特性（Dustgrave、SotW）、标签与清单 |
 | `official-map.json` | 车卡器扩展条目 id → 官方条目 id，手工维护（核心条目 id 与 lancer-data 相同，不需要映射） |
 | `zh-overrides.json`、`zh-overrides-core.json` | 扩展包、核心包覆盖后仍是英文的文字的补译，手工维护 |
 | `statuses-zh.json` | 核心包的状态与状况：Foundry 状态（按 icon）→ 车卡器术语库条目名，以及中文简述 |

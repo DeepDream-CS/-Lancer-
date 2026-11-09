@@ -1,6 +1,6 @@
 # LANCER 中文（lancer-cn）
 
-Foundry VTT 模组：LANCER 系统（v3.1.3，Foundry v13）界面的简体中文翻译，并为中文名骨架补上骨架插图。由[简易车卡器](https://deepdream-cs.github.io/-Lancer-/)项目维护。
+Foundry VTT 模组：LANCER 系统（v3.1.3，Foundry v13）界面的简体中文翻译，并为中文名骨架补上骨架插图，另提供掩护区、六边形墙体、命中后施加状态等战斗辅助工具。由[简易车卡器](https://deepdream-cs.github.io/-Lancer-/)项目维护。
 
 ## 安装
 
@@ -10,10 +10,14 @@ Foundry VTT 模组：LANCER 系统（v3.1.3，Foundry v13）界面的简体中�
 https://deepdream-cs.github.io/-Lancer-/dist/fvtt/lancer-cn/module.json
 ```
 
-安装后在世界里启用模组，并在「游戏设置 → 配置设置 → 语言」中选「中文」。
+也可以把 `lancer-cn` 文件夹直接放进 Foundry 用户数据的 `Data/modules/`（得到 `Data/modules/lancer-cn/module.json`）。
 
-- 本模组只翻译 LANCER 系统自己的界面文字。Foundry 核心界面的中文请另装核心翻译模组（例如 fvtt-cn 的 foundry_chn，它同样使用语言代码 `cn`）。
-- 骨架、装备、天赋等内容的中文来自简易车卡器导出的内容包 `lancer-cn-core.lcp` 与 `lancer-cn-expansions.lcp`，在系统设置的内容包管理器中导入。
+安装后在世界里启用模组，并在「游戏设置 → 配置设置 → 核心 → 语言」中选「中文」。语言是每个浏览器各自的设置，玩家也要各自切换。模组更新后请**重启 Foundry**：新增的模组设置、区域行为与 socket 只在启动时载入。
+
+- 需要 Foundry v13 与 LANCER 系统 v3.1.3（该系统版本不支持 Foundry v14）。
+- 本模组只翻译 LANCER 系统自己的界面文字。Foundry 核心界面的中文请另装核心翻译模组 fvtt-cn 的 foundry_chn（同样使用语言代码 `cn`）；Foundry v13 要用 13.350 版：`https://github.com/fvtt-cn/foundry_chn/releases/download/13.350/module.json`。
+- 骨架、装备、天赋等内容的中文来自简易车卡器导出的内容包 `lancer-cn-core.lcp` 与 `lancer-cn-expansions.lcp`，在系统设置的内容包管理器中于英文核心数据与官方补充书**之后**导入。之后若再导入英文核心数据，核心条目会变回英文，需要再导入一次中文核心包。
+- 详细步骤与常见问题见简易车卡器的 [Foundry 内容包说明](https://github.com/DeepDream-CS/-Lancer-/blob/main/docs/FVTT-LCP.md)。
 
 ## 内容
 
