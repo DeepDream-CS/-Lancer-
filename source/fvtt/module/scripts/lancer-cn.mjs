@@ -117,8 +117,16 @@ function translate(raw, el) {
 const SKIP = "script, style, textarea, [contenteditable='true'], prose-mirror, .ProseMirror, .editor-content, .journal-page-content, .directory-list";
 const ATTRS = ["title", "placeholder", "data-tooltip", "aria-label", "alt"];
 
+// 系统在目标名两侧用 🞂 / 🞀（Geometric Shapes Extended），常见中文字体没有这两个字形，显示成方框；换成通用的 ▸ / ◂
+const GLYPHS = { "\u{1F782}": "▸", "\u{1F780}": "◂" };
+const GLYPH_RE = /[\u{1F782}\u{1F780}]/gu;
+
 function doText(node) {
-	const v = node.nodeValue;
+	let v = node.nodeValue;
+	if (v && GLYPH_RE.test(v)) {
+		GLYPH_RE.lastIndex = 0;
+		node.nodeValue = v = v.replace(GLYPH_RE, c => GLYPHS[c]);
+	}
 	if (!v || !LETTER.test(v)) return;
 	const el = node.parentElement;
 	if (!el || el.closest(SKIP)) return;
@@ -420,6 +428,11 @@ const hexDocs = (scene, key) => ({
 	walls: scene.walls.filter(w => w.getFlag?.(MODULE_ID, HEX_FLAG) === key),
 	drawings: scene.drawings.filter(d => d.getFlag?.(MODULE_ID, HEX_FLAG) === key),
 });
+// 这一格有墙或图形就算「有墙体」：只剩图形（墙被别的方式删掉）时，点它也是移除
+const hexHas = (scene, key) => { const d = hexDocs(scene, key); return d.walls.length > 0 || d.drawings.length > 0; };
+
+// 正在由本工具移除的格子：deleteWall 钩子跳过它们，避免重复删除同一个图形
+const removingHex = new Set();
 
 // 在某个画布坐标所在的格子放置（mode = "add"）或移除（"remove"）墙体；返回实际做了什么
 async function setHexWall(scene, grid, point, mode) {
@@ -429,8 +442,12 @@ async function setHexWall(scene, grid, point, mode) {
 	const has = existing.walls.length > 0 || existing.drawings.length > 0;
 	if (mode === "remove") {
 		if (!has) return null;
-		if (existing.walls.length) await scene.deleteEmbeddedDocuments("Wall", existing.walls.map(w => w.id));
-		if (existing.drawings.length) await scene.deleteEmbeddedDocuments("Drawing", existing.drawings.map(d => d.id));
+		removingHex.add(key);
+		try {
+			// 先删图形（玩家看得到的部分），再删墙
+			if (existing.drawings.length) await scene.deleteEmbeddedDocuments("Drawing", existing.drawings.map(d => d.id));
+			if (existing.walls.length) await scene.deleteEmbeddedDocuments("Wall", existing.walls.map(w => w.id));
+		} finally { removingHex.delete(key); }
 		return "remove";
 	}
 	if (has) return null;
@@ -491,7 +508,7 @@ async function setCoverCell(scene, grid, point, cover, mode) {
 const PAINT_TOOLS = {
 	[HEX_TOOL]: {
 		control: "walls", label: "六边形墙体",
-		has: (scene, grid, point) => hexDocs(scene, hexKey(grid.getOffset(point))).walls.length > 0,
+		has: (scene, grid, point) => hexHas(scene, hexKey(grid.getOffset(point))),
 		apply: (scene, grid, point, mode) => setHexWall(scene, grid, point, mode),
 		tool: { title: "六边形墙体：点击格子放置一整格不可通过的墙体，再点移除；按住拖动可连续放置", icon: "fa-solid fa-draw-polygon" },
 	},
@@ -517,15 +534,29 @@ function activePaintTool() {
 	return def && def.control === control ? def : null;
 }
 
+// 画布元素：只拦截落在画布上的按下，界面按钮等不受影响
+const canvasView = () => canvas?.app?.canvas ?? canvas?.app?.view;
+
 let hexPaint = null;
+// 在 window 的捕获阶段处理。PIXI 在画布元素上监听 pointerdown、在 document / window 上监听 pointermove / pointerup
+// （都是捕获阶段）；window 的捕获最先执行，在这里拦下，墙壁图层就不会把拖动当成画一道直线墙。
 function onHexPointer(event) {
+	const stop = () => { event.stopImmediatePropagation(); event.preventDefault(); };
+	// 松开左键（包括在画布外松开）后结束这一次涂画；涂画中的松开也拦下，不让图层收到
+	if (event.type === "pointerup" || event.type === "pointercancel") {
+		if (hexPaint) { hexPaint = null; stop(); }
+		return;
+	}
 	const def = game.user?.isGM && canvas?.scene ? activePaintTool() : null;
-	if (!def) return;
-	if (event.type === "pointerdown" && event.button !== 0) return;
-	// 松开左键（包括在画布外松开）后不再连续操作
-	if (event.type === "pointerup" || (event.type === "pointermove" && !(event.buttons & 1))) { hexPaint = null; return; }
-	event.stopImmediatePropagation();
-	event.preventDefault();
+	if (!def) { hexPaint = null; return; }
+	if (event.type === "pointerdown") {
+		if (event.button !== 0 || event.target !== canvasView()) return;
+	} else {
+		// 移动：只在按住左键涂画时接管
+		if (!hexPaint) return;
+		if (!(event.buttons & 1)) { hexPaint = null; return; }
+	}
+	stop();
 	if (canvas.grid.isGridless) { if (event.type === "pointerdown") ui.notifications.warn(`无网格的场景不能使用「${def.label}」。`); return; }
 	const point = canvas.canvasCoordinatesFromClient({ x: event.clientX, y: event.clientY });
 	const key = hexKey(canvas.grid.getOffset(point));
@@ -556,11 +587,264 @@ Hooks.on("getSceneControlButtons", controls => {
 	}
 });
 
-Hooks.once("canvasReady", () => {
-	const view = canvas.app?.canvas ?? canvas.app?.view;
-	if (!view) return;
-	for (const type of ["pointerdown", "pointermove", "pointerup"]) view.addEventListener(type, onHexPointer, { capture: true });
+// 在 init 时注册（早于画布建立），保证排在 PIXI 的 window 监听之前
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer") return;
+	for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel"]) globalThis.addEventListener(type, onHexPointer, { capture: true });
 });
+
+// 用 Foundry 自己的墙壁工具删掉某格的最后一段墙时，顺带删掉这一格的六边形图形，不留下删不掉的色块
+Hooks.on("deleteWall", (wall, _options, userId) => {
+	if (userId !== game.user?.id) return;
+	const key = wall.getFlag?.(MODULE_ID, HEX_FLAG);
+	const scene = wall.parent;
+	if (!key || !scene || removingHex.has(key)) return;
+	const left = hexDocs(scene, key);
+	if (left.walls.length || !left.drawings.length) return;
+	// 一次删掉多段墙时钩子会触发多次，只删一次
+	removingHex.add(key);
+	scene.deleteEmbeddedDocuments("Drawing", left.drawings.map(d => d.id))
+		.catch(err => console.error(`${MODULE_ID} |`, err))
+		.finally(() => removingHex.delete(key));
+});
+
+// ---------------------------------------------------------------------------
+// 攻击时选目标：开始攻击、科技攻击（或不是从攻击卡发起的掷伤害）时，在 LANCER 的准度面板旁边弹出目标面板。
+// - 列出场上的指示物（敌方 / 中立 / 友方），按距离排序，标出是否在武器射程（科技攻击为感应）内；点一行锁定 / 取消锁定。
+// - 面板开着时，左键点地图上的指示物就是锁定 / 取消锁定（攻击者自己的指示物除外），不用按 T 或切换工具。
+// - 开始新攻击时，若锁定的还是上一次攻击的那几个目标（之后没改过），先清掉；射程内只有一个敌人时自动选上。
+// LANCER 的准度面板在目标变化时会自己刷新（targetToken 钩子），所以先开面板再选目标也可以。
+// 开关时机用系统公开的 flow 钩子 lancer.preFlow.<类名> / lancer.postFlow.<类名>（系统构建保留类名）。
+const TARGET_FLOWS = ["BasicAttackFlow", "WeaponAttackFlow", "TechAttackFlow", "DamageRollFlow"];
+const RANGE_ZH = { Range: "射程", Threat: "威胁", Thrown: "投掷", Line: "线形", Cone: "锥形", Blast: "溅射", Burst: "爆发" };
+const REACH_TYPES = ["Range", "Threat", "Thrown", "Line", "Cone", "Burst"];
+let targetSession = null;
+let lastAttackTargets = null; // 上一次攻击结束时锁定的指示物 id（排序后用逗号连接）
+
+const targetIdsKey = () => Array.from(game.user?.targets ?? []).map(t => t.id).sort().join(",");
+
+// 武器的射程（科技攻击用感应），返回可达格数与显示文字
+function attackReach(flow) {
+	const item = flow?.state?.item, actor = flow?.state?.actor;
+	if (flow?.constructor?.name === "TechAttackFlow") {
+		const s = actor?.system?.sensor_range;
+		return Number.isFinite(s) ? { reach: s, label: `感应 ${s}` } : { reach: null, label: "" };
+	}
+	let ranges = [];
+	try { ranges = item?.currentProfile?.()?.range ?? []; } catch { ranges = []; }
+	const vals = ranges.filter(r => REACH_TYPES.includes(r.type)).map(r => Number(r.val)).filter(Number.isFinite);
+	return { reach: vals.length ? Math.max(...vals) : null, label: ranges.map(r => `${RANGE_ZH[r.type] ?? r.type} ${r.val}`).join(" / ") };
+}
+
+const occupied = token => {
+	try { const s = token.document.getOccupiedGridSpaceOffsets(); if (s?.length) return s; } catch { /* 旧版本没有这个方法 */ }
+	return [canvas.grid.getOffset(token.center)];
+};
+// 两个指示物之间的格数：取双方所占格子之间最近的距离（与 LANCER 从指示物边缘量射程一致）
+function tokenDistance(a, b) {
+	const grid = canvas?.grid;
+	if (!grid || !a || !b) return null;
+	const measure = (p, q) => { const r = grid.measurePath([p, q]); return r.spaces ?? Math.round(r.distance / (grid.distance || 1)); };
+	if (grid.isGridless) return measure(a.center, b.center);
+	let best = Infinity;
+	for (const oa of occupied(a)) for (const ob of occupied(b)) best = Math.min(best, measure(grid.getCenterPoint(oa), grid.getCenterPoint(ob)));
+	return Number.isFinite(best) ? best : null;
+}
+
+// 攻击者的指示物：优先当前控制的那个
+function attackerToken(actor) {
+	if (!actor) return null;
+	return canvas?.tokens?.controlled?.find(t => t.actor === actor) ?? actor.getActiveTokens?.(true)?.[0] ?? null;
+}
+
+// 候选目标：同场景、自己看得见的指示物，按敌方 / 中立 / 友方分组，组内按距离排序
+function targetCandidates(session) {
+	const D = CONST.TOKEN_DISPOSITIONS ?? { SECRET: -2, HOSTILE: -1, NEUTRAL: 0, FRIENDLY: 1 };
+	const self = session.token;
+	const mine = self?.document?.disposition ?? (game.user?.isGM ? D.HOSTILE : D.FRIENDLY);
+	const side = disp => {
+		if (disp === D.NEUTRAL || disp === D.SECRET) return "neutral";
+		if (mine === D.NEUTRAL || mine === D.SECRET) return "enemy";
+		return Math.sign(disp) === Math.sign(mine) ? "ally" : "enemy";
+	};
+	const list = (canvas?.tokens?.placeables ?? [])
+		.filter(t => t !== self && t.actor && (game.user?.isGM || (t.visible && !t.document.hidden)))
+		.map(t => {
+			const distance = self ? tokenDistance(self, t) : null;
+			return {
+				token: t, id: t.id, name: t.document?.name ?? t.name, img: t.document?.texture?.src ?? t.actor.img,
+				side: side(t.document?.disposition), distance,
+				inRange: session.reach == null || distance == null ? null : distance <= session.reach,
+				targeted: !!game.user?.targets?.has(t), last: !!session.lastIds?.includes(t.id),
+			};
+		});
+	const order = { enemy: 0, neutral: 1, ally: 2 };
+	return list.sort((x, y) => order[x.side] - order[y.side] || (x.distance ?? 999) - (y.distance ?? 999) || String(x.name).localeCompare(String(y.name)));
+}
+
+const SIDE_ZH = { enemy: "敌方", neutral: "中立", ally: "友方" };
+
+function targetPanelHTML(session, rows) {
+	const picked = rows.filter(r => r.targeted).length;
+	const head = `<header><strong>${escHtml(session.title)}</strong>${session.rangeLabel ? `<span class="lcn-tp-range">${escHtml(session.rangeLabel)}</span>` : ""}
+		<button type="button" data-act="collapse" title="${session.collapsed ? "展开" : "收起"}">${session.collapsed ? "▴" : "▾"}</button></header>`;
+	if (session.collapsed) return head + `<p class="lcn-tp-hint">已选 ${picked} 个目标</p>`;
+	const groups = ["enemy", "neutral", "ally"].map(side => {
+		const list = rows.filter(r => r.side === side);
+		if (!list.length) return "";
+		return `<h4>${SIDE_ZH[side]}</h4><ul>${list.map(r => `<li data-token="${escHtml(r.id)}" class="${r.targeted ? "is-targeted" : ""}${r.inRange === false ? " is-out" : ""}">
+			<span class="lcn-tp-check">${r.targeted ? "◉" : "○"}</span><img src="${escHtml(r.img)}" alt=""><span class="lcn-tp-name">${escHtml(r.name)}</span>
+			${r.last ? '<span class="lcn-tp-badge">上次</span>' : ""}
+			<span class="lcn-tp-dist">${r.distance == null ? "" : `${r.distance} 格`}${r.inRange === true ? " · 射程内" : r.inRange === false ? " · 射程外" : ""}</span></li>`).join("")}</ul>`;
+	}).join("");
+	return head + (groups || `<p class="lcn-tp-hint">场上没有可选的指示物。</p>`) +
+		`<footer><span>已选 ${picked} 个 · 也可以直接点地图上的指示物</span><button type="button" data-act="clear"${picked ? "" : " disabled"}>清除</button></footer>`;
+}
+
+const TARGET_STYLE = `
+#lancer-cn-targets { position: fixed; z-index: 100; width: 300px; max-height: 60vh; display: flex; flex-direction: column; background: rgba(20, 22, 28, 0.95);
+	color: #e6e8ee; border: 1px solid #7a6a4f; border-radius: 6px; box-shadow: 0 4px 16px #000a; font-size: 13px; pointer-events: auto; }
+#lancer-cn-targets header { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid #444b58; }
+#lancer-cn-targets header strong { flex: 1; color: #edc383; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#lancer-cn-targets .lcn-tp-range { font-size: 12px; color: #b6c1d3; }
+#lancer-cn-targets button { width: auto; min-height: 0; height: 22px; line-height: 20px; padding: 0 8px; flex: 0 0 auto; font-size: 12px; }
+#lancer-cn-targets h4 { margin: 6px 8px 2px; font-size: 12px; color: #9aa6ba; border: 0; }
+#lancer-cn-targets ul { list-style: none; margin: 0; padding: 0 4px; overflow-y: auto; }
+#lancer-cn-targets li { display: flex; align-items: center; gap: 6px; padding: 3px 4px; border-radius: 4px; cursor: pointer; }
+#lancer-cn-targets li:hover { background: #ffffff14; }
+#lancer-cn-targets li.is-targeted { background: #edc38326; }
+#lancer-cn-targets li.is-out .lcn-tp-name { color: #9aa0aa; }
+#lancer-cn-targets li img { width: 26px; height: 26px; object-fit: cover; border: 0; border-radius: 3px; flex: 0 0 auto; }
+#lancer-cn-targets .lcn-tp-check { color: #edc383; width: 1em; }
+#lancer-cn-targets .lcn-tp-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#lancer-cn-targets .lcn-tp-dist { font-size: 11px; color: #b6c1d3; white-space: nowrap; }
+#lancer-cn-targets li.is-out .lcn-tp-dist { color: #e08a7a; }
+#lancer-cn-targets .lcn-tp-badge { font-size: 11px; padding: 0 4px; border: 1px solid #7a6a4f; border-radius: 8px; color: #edc383; }
+#lancer-cn-targets .lcn-tp-hint { margin: 6px 8px; color: #b6c1d3; }
+#lancer-cn-targets footer { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-top: 1px solid #444b58; font-size: 12px; color: #b6c1d3; }
+#lancer-cn-targets footer span { flex: 1; }`;
+
+// 面板放在 LANCER 准度面板（#hudzone）左边；找不到时放在右下角侧栏旁
+function placeTargetPanel(el) {
+	const hud = document.getElementById("hudzone");
+	const r = hud?.getBoundingClientRect?.();
+	if (r && r.width) { el.style.right = `${Math.max(8, window.innerWidth - r.left + 8)}px`; el.style.bottom = `${Math.max(8, window.innerHeight - r.bottom)}px`; }
+	else { el.style.right = "320px"; el.style.bottom = "10px"; }
+}
+
+function renderTargetPanel() {
+	const s = targetSession;
+	if (!s || typeof document === "undefined") return;
+	if (!document.getElementById("lancer-cn-target-style")) {
+		const st = document.createElement("style");
+		st.id = "lancer-cn-target-style";
+		st.textContent = TARGET_STYLE;
+		document.head.append(st);
+	}
+	let el = document.getElementById("lancer-cn-targets");
+	if (!el) {
+		el = document.createElement("section");
+		el.id = "lancer-cn-targets";
+		el.addEventListener("click", onTargetPanelClick);
+		el.addEventListener("mouseover", ev => hoverToken(ev, true));
+		el.addEventListener("mouseout", ev => hoverToken(ev, false));
+		document.body.append(el);
+	}
+	s.rows = targetCandidates(s);
+	el.innerHTML = targetPanelHTML(s, s.rows);
+	placeTargetPanel(el);
+	// 准度面板滑入有动画，稍后再对齐一次
+	setTimeout(() => document.getElementById("lancer-cn-targets") === el && placeTargetPanel(el), 400);
+}
+
+function hoverToken(ev, on) {
+	const li = ev.target.closest?.("li[data-token]");
+	const t = li && canvas?.tokens?.get(li.dataset.token);
+	try { if (t) on ? t._onHoverIn?.(ev, { hoverOutOthers: true }) : t._onHoverOut?.(ev); } catch { /* 仅为高亮，失败不影响 */ }
+}
+
+function toggleTarget(token) {
+	if (!token) return;
+	token.setTarget(!game.user.targets.has(token), { releaseOthers: false });
+}
+function clearTargets() {
+	for (const t of Array.from(game.user?.targets ?? [])) t.setTarget(false, { releaseOthers: false });
+}
+
+function onTargetPanelClick(ev) {
+	const btn = ev.target.closest?.("button[data-act]");
+	if (btn?.dataset.act === "clear") { clearTargets(); return; }
+	if (btn?.dataset.act === "collapse") { targetSession.collapsed = !targetSession.collapsed; renderTargetPanel(); return; }
+	const li = ev.target.closest?.("li[data-token]");
+	if (li) toggleTarget(canvas.tokens.get(li.dataset.token));
+}
+
+function openTargetPicker(flow) {
+	if (!game.settings.get(MODULE_ID, "targetPicker")) return;
+	const kind = flow?.constructor?.name;
+	// 从攻击卡掷伤害时目标已经确定（系统按命中结果锁定），不打扰
+	if (kind === "DamageRollFlow" && flow.state?.data?.hit_results?.length) return;
+	const actor = flow?.state?.actor;
+	const { reach, label } = attackReach(flow);
+	const attack = kind !== "DamageRollFlow";
+	const session = {
+		flow, kind, actor, token: attackerToken(actor), reach, rangeLabel: label, collapsed: false,
+		title: `${kind === "DamageRollFlow" ? "掷伤害" : kind === "TechAttackFlow" ? "科技攻击" : "攻击"}：${flow?.state?.item?.name ?? flow?.state?.data?.title ?? "选择目标"}`,
+		lastIds: lastAttackTargets ? lastAttackTargets.split(",") : [],
+	};
+	targetSession = session;
+	if (attack) {
+		// 锁定的还是上一次攻击的目标（之后没改过）：多半是忘了清，先清掉
+		if (game.settings.get(MODULE_ID, "targetClearStale") && lastAttackTargets && targetIdsKey() === lastAttackTargets) clearTargets();
+		// 一个目标都没有、射程内只有一个敌人：直接选上
+		if (game.settings.get(MODULE_ID, "targetAutoPick") && !game.user.targets.size && reach != null) {
+			const inRange = targetCandidates(session).filter(r => r.side === "enemy" && r.inRange);
+			if (inRange.length === 1) toggleTarget(inRange[0].token);
+		}
+	}
+	renderTargetPanel();
+}
+
+function closeTargetPicker(flow, success) {
+	if (!targetSession || targetSession.flow !== flow) return;
+	if (success && targetSession.kind !== "DamageRollFlow" && game.user?.targets?.size) lastAttackTargets = targetIdsKey();
+	targetSession = null;
+	if (typeof document !== "undefined") document.getElementById("lancer-cn-targets")?.remove();
+}
+
+// 面板开着时：左键点地图上的指示物 = 锁定 / 取消锁定（与六边形墙体一样在 window 捕获阶段拦截，图层收不到这次点击）
+function onTargetPointer(event) {
+	const s = targetSession;
+	if (!s || event.type !== "pointerdown" || event.button !== 0 || event.target !== canvasView()) return;
+	if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+	const p = canvas.canvasCoordinatesFromClient({ x: event.clientX, y: event.clientY });
+	const hits = (canvas.tokens?.placeables ?? []).filter(t => t !== s.token && t.actor && t.visible && t.bounds?.contains?.(p.x, p.y));
+	if (!hits.length) return;
+	event.stopImmediatePropagation();
+	event.preventDefault();
+	toggleTarget(hits[hits.length - 1]); // 叠在一起时取最上面的
+}
+
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer") return;
+	const opt = (key, name, hint) => game.settings.register(MODULE_ID, key, { name, hint, scope: "client", config: true, type: Boolean, default: true });
+	opt("targetPicker", "攻击时显示目标选择面板", "开始攻击、科技攻击时，在准度面板旁列出场上的指示物（按距离排序、标出是否在射程内），点一下即可锁定；面板开着时也可以直接点地图上的指示物锁定。");
+	opt("targetClearStale", "开始新攻击时清除上一次的目标", "如果锁定的仍是上一次攻击的目标（之后没有改动），开始新攻击时先清除。");
+	opt("targetAutoPick", "射程内只有一个敌人时自动选中", "开始攻击时没有锁定目标、而射程内恰好只有一个敌方指示物时，自动锁定它。");
+	globalThis.addEventListener?.("pointerdown", onTargetPointer, { capture: true });
+	for (const name of TARGET_FLOWS) {
+		Hooks.on(`lancer.preFlow.${name}`, flow => { try { openTargetPicker(flow); } catch (err) { console.error(`${MODULE_ID} |`, err); } });
+		Hooks.on(`lancer.postFlow.${name}`, (flow, success) => closeTargetPicker(flow, success));
+	}
+});
+let targetRefreshTimer = null;
+const refreshTargetPanel = () => {
+	if (!targetSession) return;
+	clearTimeout(targetRefreshTimer);
+	targetRefreshTimer = setTimeout(renderTargetPanel, 50);
+};
+Hooks.on("targetToken", user => { if (user?.isSelf ?? user === game.user) refreshTargetPanel(); });
+for (const h of ["updateToken", "createToken", "deleteToken", "controlToken"]) Hooks.on(h, refreshTargetPanel);
 
 // ---------------------------------------------------------------------------
 // 命中后一键施加状态：攻击 / 科技攻击的聊天卡下方，按攻击所用物品的命中效果文字列出可施加的状态按钮，
@@ -676,11 +960,32 @@ Hooks.once("ready", () => {
 	});
 });
 
-globalThis.LancerCN = { translate, walk, importReference, REFERENCE, coverFor, applyCover, defineCoverBehavior, hexWallData, setHexWall, setCoverCell, coverCellHas, PAINT_TOOLS, statusesIn, attackTexts, onRenderChatMessage };
+globalThis.LancerCN = { translate, walk, importReference, REFERENCE, coverFor, applyCover, defineCoverBehavior, hexWallData, setHexWall, setCoverCell, coverCellHas, PAINT_TOOLS, statusesIn, attackTexts, onRenderChatMessage, attackReach, tokenDistance, targetCandidates, targetPanelHTML, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession };
+
+// 中文界面的版面修正。系统样式都在 @layer lancer 里，这里不分层，优先级自然更高。
+// - 伤害面板：伤害类型下拉框原本固定 12ch 宽（按英文 Explosive 定），中文只需约 5em，省下的宽度给数值框（原来会被挤成「1(」）。
+// - 命中 / 会心 / 未命中：中文标签不换行，三项排在一行（「未命中」原来会折成两行）。
+const UI_FIX_STYLE = `
+.damage-input-container { grid-template-columns: min-content minmax(4em, 4.8em) minmax(4em, 1fr) min-content; column-gap: 2px; }
+.damage-input-container .damage-input-type { width: 100%; min-width: 0; }
+.damage-input-container .damage-input-val { width: 100%; min-width: 4em; padding: 0 2px; text-align: center; }
+.lancer-hit-quality-radio { flex-wrap: nowrap; gap: 0.2em; }
+.lancer-hit-quality-radio-label { white-space: nowrap; }
+.damage-hud-target-card .lancer-hit-quality-radio-label { font-size: 0.92em; }
+.damage-hud-target-card .target-bonus-damage { min-width: 0; }`;
+
+function injectStyle(id, css) {
+	if (typeof document === "undefined" || document.getElementById(id)) return;
+	const st = document.createElement("style");
+	st.id = id;
+	st.textContent = css;
+	document.head.append(st);
+}
 
 // 只在界面语言为中文（cn）时启用；语言要在 i18nInit 之后才确定
 Hooks.once("i18nInit", () => {
 	if (game.system?.id !== "lancer" || game.i18n?.lang !== "cn") return;
+	injectStyle("lancer-cn-ui-fix", UI_FIX_STYLE);
 	patchScrollingText();
 	walk(document.body);
 	observer.observe(document.body, {

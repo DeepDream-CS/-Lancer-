@@ -7,20 +7,20 @@
 ## 项目目录
 
 - `index.html`：打开车卡器的入口。
-- `assets/js/`：网页脚本及生成数据；保持 `index.html` 中的加载顺序。
-- `assets/css/`：网页样式。
+- `assets/js/`、`assets/css/`：网页脚本、生成数据和样式；保持 `index.html` 中的加载顺序。`assets/npc/` 是 NPC 库的原书页图。
 - `docs/`：规则校准、翻译、功能与核对记录，见 [文档目录](docs/README.md)。
 - `source/`：原始资料、中文译文与扩展数据。
 - `tools/`：数据生成、本地预览与检查工具。
+- `dist/fvtt/`：Foundry VTT 的中文内容包与界面中文模组（生成结果）。
 - `CLAUDE.md`：开发约定。
 
-修改数据后请运行生成工具；不要用历史工作副本覆盖当前项目。角色与地图存档保存在浏览器，整理文件不会迁移这些存档。
+页面使用相对路径，兼容 GitHub Pages 的仓库子路径，无需安装、打包或联网。修改数据后请运行生成工具；不要用历史工作副本覆盖当前项目。角色、NPC 与地图存档保存在浏览器，整理文件不会迁移这些存档。
 
-## 当前收录（2026-11-04）
+## 当前收录
 
-当前生成数据含 103 个骨架、202 件武器、311 个系统、17 个武器改装、50 项天赋和 51 项核心奖励。数量包含变体、天赋及内建条目，不代表每个角色都能安装或选择。
-
-装备风味文本已覆盖 489 项中文条目；41 项尚未可靠匹配独立段落，详见[缺项清单](docs/EQUIPMENT-LORE-AUDIT.md)。这些是当前资料的覆盖情况，不表示原书一定没有对应内容。
+- 角色（2026-11-04）：103 个骨架、202 件武器、311 个系统、17 个武器改装、50 项天赋和 51 项核心奖励。数量包含变体、天赋及内建条目，不代表每个角色都能安装或选择。
+- 装备风味文本：已覆盖 489 项中文条目；41 项尚未可靠匹配独立段落，详见[缺项清单](docs/EQUIPMENT-LORE-AUDIT.md)。这是当前资料的覆盖情况，不表示原书一定没有对应内容。
+- NPC（2026-11-09）：NPC 库编目 24 本资料的 271 个参考页；NPC 构筑收录 85 个职业、25 个模板。
 
 ## 使用
 
@@ -49,15 +49,38 @@
 - **术语库**：顶部「术语库」按钮打开，约 130 条手写规则术语，另自动并入全部标签说明与扩展规则，可搜索、按分类查看。页面正文中的术语会高亮（包括装备卡的动作、可展开物数值行），鼠标悬停显示含义，点击跳到术语库对应条目。等级成长页「牌照内容」里的装备悬停显示完整效果（含命中效果、多模式、动作与可展开物）。多义词（如「强化」「反应」「结构」「锁定」）只在规则意义下标记。
 - **武器表**：顶部「武器表」按钮打开，列出全部 202 件机甲武器（含扩展、专业牌照、天赋武器与骨架内建武器）的来源牌照、尺寸、类型、射程、伤害、标签、SP 和完整效果。可搜索，按尺寸、类型、来源筛选，或只看当前角色可用的武器；效果与标签里的术语同样可悬停查看。
 - **系统库**：顶部「系统库」查询 311 个系统和 17 个武器改装，支持中英文名称、效果、标签、牌照与风味文本搜索；可按类别、类型、来源、动作、SP 和当前可用内容筛选。库内显示基础 SP、基础标签和基础受限次数；工程、核心奖励等加成请看机甲配装。查询不会安装装备或更改角色。
+- **NPC 库**：按来源 / 类别筛选、全文搜索，显示原书数值表大图和可复制文字，覆盖用户提供的 24 本资料，编目 271 个参考页。模组正文包含剧透；参考页号采用 PDF 文件实际页序。独立海战《战斗群》属于另一套规则，正文可检索，不混入机甲 NPC 职业列表。
+- **判定速查**：结构伤害、过热（压力）两张表及结算步骤，依据核心规则书 v3.5 PDF 第 75–76 页；支持手机与离线查询，Esc 关闭，不改角色或地图存档。
 - **规则 FAQ**：顶部「规则 FAQ」按钮打开 LANCER Rules FAQ & Errata 的完整中文译本（184 条问答），支持中英文搜索、章节与来源筛选、英文对照。详见 [FAQ-TRANSLATION.md](docs/FAQ-TRANSLATION.md)。
 - **⑤ 战斗地图**：GM 本机使用的六角格地图，可涂地形、标注、画线测距、放置单位并记录 HP、装甲和状态。大小 2、3、4 的单位按规则占 3、7、12 格（大小 4 规则书未画图，按常见的截角三角）。地图单独保存在浏览器，可导入导出备份，与角色存档互不影响。
+
+### NPC 构筑
+
+顶部「NPC 构筑」参照 COMP/CON 的 NPC 名册，按核心规则书 v3.5 的步骤组合 NPC。
+
+- **收录**（85 个职业、25 个模板）：
+  - 核心规则书：30 个机甲职业，人类、班组、怪形 3 个特殊职业，12 个模板（指挥官、RPV、精英、异种、低等兵、雇佣兵、海盗、飞船、太空民、超体、老兵、载具）；
+  - Foundry 官方《尘墓》3 个模板（恐怖体、工业机甲、特战队员）；
+  - 官方模组的 7 个职业和 1 个模板：《塞壬之歌》水蛭、暴风雨，《壁花不容》潜伏者、神行客、怨恨者，《冬痕行动》主战坦克与海军陆战队模板，模组资源合集的复仇者；
+  - 第三方书 45 个职业、9 个模板：《苏丹》《卡斯特与帕勒克》《冷核圆形竞技场》《强化战斗》《午夜伊菲革涅亚》《天堂末班车》《浴金焰》《军团》。冷核竞技场的 5 个标志性 NPC 各带一个「标志性超体」附加，作为模板列出。
+  - 职业选单中核心规则书按角色分组，其他书按书分组，第三方书注明「第三方」。
+- **构筑**：
+  - 选择职业和层级（T1–T3）后，数值、攻击加值、伤害和效果文字里的「x/y/z」都按层级显示。
+  - 勾选模板和可选系统。模板的数值加成（如强化 +1 结构 / 压力、超体韧性 +5 HP、低等兵 1 HP）自动计入。
+  - 可以从其他职业添加系统（原书允许在职业之间交换系统），各项数值也可以手动加减。
+  - 原书写明的互斥（精英与超体、低等兵与老兵等，班组和人类的模板限制）以及可选系统超出建议数量时，页面会提示，但不阻止。
+- **保存与导出**：
+  - NPC 存在当前浏览器（localStorage 的 `lancer-npc-builder-v1`），可备份全部、导入备份，也可以复制文字版。
+  - 「导出到 Foundry」生成 LANCER 系统的 NPC 角色 JSON，见下文 Foundry VTT 一节。
+
+数据由 `tools/parse-npc-core.js`（核心规则书 PDF 第 278–325 页）和 `tools/parse-npc-books.js`（其他书）从 NPC 库的原书文字解析而来，写在 `source/npc/core-npcs.json`、`source/npc/books-npcs.json`。说明与待核对项见 [source/npc/README.md](source/npc/README.md)。
 
 ### 保存、导入与导出
 
 - 角色自动保存在当前浏览器（localStorage）。换电脑或换浏览器前，请在「角色卡 / 导出」页导出 JSON。
 - **导入**：「角色管理」菜单的「导入角色 JSON」、新建弹窗里的「导入已有角色」，或直接把 JSON 文件拖进页面。可以是单个角色、角色数组，或「备份全部角色」的文件。导入时会补齐缺的字段，找不到的天赋、装备等会略过并列出来。
 - **导出**：角色卡页可下载驾驶员卡、机甲卡图片（按官方角色卡版式），复制文字角色卡，或下载 JSON。图片卡是固定版式的摘要，完整配置请保留 JSON。
-- **导出到 Foundry**：角色卡页「导出到 Foundry」生成 COMP/CON 格式的驾驶员 JSON，可在 Foundry LANCER 驾驶员表的「文件导入」中读入，见下节。
+- **导出到 Foundry**：角色卡页与 NPC 构筑各有「导出到 Foundry」，见下文。
 - **网页版更新后看不到新内容**：GitHub Pages 会让浏览器缓存脚本约 10 分钟。按 Ctrl + F5（或 Ctrl + Shift + R）强制刷新即可。
 
 ## 扩展内容
@@ -82,15 +105,16 @@
 - **驾驶员装备**：个人动能屏障（装甲栏）。
 - **扩展规则**：变体骨架、新标签「高效」、新状态「无形」，收录在术语库，并在用到它们的骨架下方显示「扩展规则说明」。
 
-## Foundry VTT（2026-11-09）
+## Foundry VTT
 
 车卡器的内容可以带进 Foundry VTT 的「LANCER」系统（v3.1.3，需 Foundry v13），不修改系统本体：
 
-- **两个中文内容包**：`dist/fvtt/lancer-cn-core.lcp`（核心规则书，含状态与状况）和 `dist/fvtt/lancer-cn-expansions.lcp`（扩展内容与官方补充书 NPC 模板、特性），在 LANCER 内容包管理器中于英文数据之后导入，按 id 覆盖成中文。扩展条目带自动生成的动作按钮（入侵会自动做科技攻击）和可拖出的部署物。
-- **界面中文模组 lancer-cn**：系统界面中文（含模板里写死的英文）、中文名骨架的插图、「区域」工具栏的软性 / 硬性掩护格、「墙壁」工具栏的六边形墙体、攻击卡上的「命中效果 · 施加」状态按钮，以及专业牌照与扩展厂商资料的导入。清单链接：`https://deepdream-cs.github.io/-Lancer-/dist/fvtt/lancer-cn/module.json`。
-- **导出到 Foundry**：车卡器角色导出后，在 Foundry 驾驶员表的「文件导入」中建立驾驶员与机甲。
+- **两个中文内容包**：`dist/fvtt/lancer-cn-core.lcp`（核心规则书，含状态与状况、核心 NPC 职业与模板）和 `dist/fvtt/lancer-cn-expansions.lcp`（扩展内容、官方补充书 NPC 模板与特性、官方模组与第三方书的 NPC 职业与模板），在 LANCER 内容包管理器中于英文数据之后导入，按 id 覆盖成中文。扩展条目带自动生成的动作按钮（入侵会自动做科技攻击）和可拖出的部署物。
+- **界面中文模组 lancer-cn**：系统界面中文（含模板里写死的英文与中文版面修正）、中文名骨架的插图、专业牌照与扩展厂商资料的导入，以及战斗工具：攻击时选目标、攻击卡上的「命中效果 · 施加」状态按钮、「区域」工具栏的软性 / 硬性掩护格、「墙壁」工具栏的六边形墙体。清单链接：`https://deepdream-cs.github.io/-Lancer-/dist/fvtt/lancer-cn/module.json`。
+- **导出角色**：角色卡页「导出到 Foundry」生成 COMP/CON 格式的驾驶员 JSON，在 Foundry 驾驶员表的「文件导入」中建立驾驶员与机甲。
+- **导出 NPC**：NPC 构筑的「导出到 Foundry」生成 NPC 角色 JSON；在 Foundry 新建一个 NPC 角色，右键选「导入数据」，再选择这个文件，层级可以在角色表上切换。
 
-安装步骤、导入顺序、常见问题和维护方法见 [Foundry 内容包](docs/FVTT-LCP.md)。
+安装步骤、导入顺序、常见问题、模组更新记录和维护方法见 [Foundry 内容包](docs/FVTT-LCP.md)。
 
 ## 数据来源
 
@@ -102,6 +126,8 @@
 - **规则 FAQ**：`source/faq/`，来自 [aritsune/lancer-faq](https://github.com/aritsune/lancer-faq)（GPL-3.0），说明见 `source/faq/README.md`。
 - **术语库**：手写术语在 `assets/js/glossary.js`。
 - **装备风味文本**：`source/lore/zh.json` 保存中文、出处和页码；生成 `assets/js/equipment-lore.js`，缺项清单输出到 `docs/EQUIPMENT-LORE-AUDIT.md`。详见[维护说明](source/lore/README.md)。
+- **NPC**：用户提供的 24 本中文资料。`source/npc/` 有资料目录（`catalog.json`）与结构化的职业 / 模板数据，原书页图在 `assets/npc/`，文字索引在 `assets/js/npc-data.js`，见 [source/npc/README.md](source/npc/README.md)。
+- **Foundry**：`source/fvtt/`，Foundry 官方数据快照、id 映射与补译，见 [source/fvtt/README.md](source/fvtt/README.md)；模组源文件在 `source/fvtt/module/`。
 
 ## 开发
 
@@ -129,63 +155,17 @@ node tools/test-expansion-copy.js
 | `node tools/extract-en.js` | 从 lancer-data 抽出界面会显示的英文到 `source/i18n/en/` |
 | `node tools/i18n-missing.js [文件名] [条数]` | 列出还没翻译的条目 |
 | `node tools/glossary-audit.js [术语] [条数]` | 列出术语在全部文字中的命中与上下文，检查有没有字面意义的误标 |
-| `node tools/build-lcp.js` / `test-lcp.js` | 生成并检查 Foundry 核心包与扩展包（`dist/fvtt/`）及核对表 |
-| `node tools/build-fvtt-module.js` / `test-fvtt-module.js` | 生成并检查 Foundry 界面中文模组 lancer-cn |
-| `node tools/test-foundry-export.js` | 「导出到 Foundry」的驾驶员 JSON 结构，以及所有条目 id 都能在 Foundry 中找到 |
 | `node tools/parse-npc-core.js [--text] [--write]` | 从 NPC 库的原书文字解析核心 NPC 职业与模板，`--write` 写入 `source/npc/core-npcs.json` |
 | `node tools/parse-npc-books.js [--text] [--empty] [--write]` | 解析官方模组与第三方书的 NPC；`--empty` 列出没有文字的特性及其原书上下文，`--write` 写入 `source/npc/books-npcs.json` |
 | `node tools/build-npc-classes.js` / `test-npc-builder.js` | 生成 NPC 构筑数据 `assets/js/npc-classes.js`；检查数据结构、解析回归、数值计算，以及全部职业与模板导出 Foundry NPC 的合法性 |
+| `node tools/build-lcp.js` / `test-lcp.js` | 生成并检查 Foundry 核心包与扩展包（`dist/fvtt/`，含 NPC）及核对表 |
+| `node tools/build-fvtt-module.js` / `test-fvtt-module.js` | 生成并检查 Foundry 界面中文模组 lancer-cn |
+| `node tools/test-foundry-export.js` | 「导出到 Foundry」的驾驶员 JSON 结构，以及所有条目 id 都能在 Foundry 中找到 |
+
+NPC 数据有改动时，依次运行 `build-npc-classes.js`、`build-lcp.js`，再运行 `test-npc-builder.js` 与 `test-lcp.js`。
 
 除系统库浏览器检查外，上述数据与规则检查可直接用 Node.js 运行。`tools/test-system-library.js` 当前使用本机已安装的 Playwright 和 Edge，脚本中的依赖路径需按检查环境调整；运行会在项目根目录写入 `system-library-preview.png`。这些是开发检查所需工具，普通使用车卡器无需安装。
 
 GitHub Pages 使用仓库中的静态成品；修改数据源后应先生成并检查，再一并提交数据源、生成文件和相关文档。文档移动也要包含旧路径删除与新路径文件。发布后角色不会随仓库同步，仍保存在各自浏览器里。
 
-开发约定、文件结构与扩展内容的写法见 [CLAUDE.md](CLAUDE.md)。其他记录：
-
-- [VALIDATION.md](docs/VALIDATION.md)：规则与译文校准
-- [TRANSLATION-V35.md](docs/TRANSLATION-V35.md)：v3.5 译名对照
-- [GLOSSARY-REVISION.md](docs/GLOSSARY-REVISION.md)：术语库修订
-- [EXPANSION-TRANSLATION-REVIEW.md](docs/EXPANSION-TRANSLATION-REVIEW.md)：扩展文案核对
-- [PROFESSIONAL-LICENSES.md](docs/PROFESSIONAL-LICENSES.md)：专业牌照
-- [FAQ-TRANSLATION.md](docs/FAQ-TRANSLATION.md)：规则 FAQ 中文译本
-- [UI-UX.md](docs/UI-UX.md)：界面改进
-- [EQUIPMENT-LORE-AUDIT.md](docs/EQUIPMENT-LORE-AUDIT.md)：风味文本覆盖与缺项
-- [FVTT-LCP.md](docs/FVTT-LCP.md)：Foundry 内容包、界面中文模组与导出到 Foundry
-
-## 资源目录整理（2026-11-04）
-
-网页脚本和样式已分别集中到 `assets/js/`、`assets/css/`。仍从根目录 `index.html` 打开，或从根目录运行 `node tools/serve.js`；无需安装、打包或联网。生成工具也直接写入新目录，不会在根目录重新产生旧 JS 文件。页面使用相对路径，兼容 GitHub Pages 的仓库子路径。
-
-本次保持存档键和页面入口不变。推送时应同时包含根目录旧资源删除、assets 中的新资源、页面、工具及文档修改。
-
-
-## 判定速查（2026-11-05）
-
-顶部“判定速查”可打开结构伤害、过热（压力）两张表及结算步骤，支持手机、离线查询、Esc 关闭。依据用户提供的《枪骑兵》核心规则书 v3.5 PDF 第 75–76 页。只读查询，不改角色或战斗地图存档。实现位于 `assets/js/damage-reference.js` 与 `assets/css/damage-reference.css`，由 `index.html` 加载。
-
-
-## NPC 查看板块
-
-顶部 NPC 库提供来源／类别筛选、规则全文搜索、原书数值表大图和可复制文字。当前覆盖用户提供的 24 本资料正文，编目 271 个参考页。此为原书查询库；可套模板、切换层级的结构化构筑见下节「NPC 构筑」。模组正文包含剧透；参考页号采用 PDF 文件实际页序。独立海战《战斗群》属于另一套规则，正文可检索，不混入机甲 NPC 职业列表。
-
-## NPC 构筑（2026-11-09）
-
-顶部「NPC 构筑」参照 COMP/CON 的 NPC 名册，按核心规则书 v3.5 的步骤组合 NPC。共 85 个职业、25 个模板：
-
-- **内容**：
-  - 30 个机甲职业，以及人类、班组、怪形 3 个特殊职业；
-  - 核心规则书 12 个模板（指挥官、RPV、精英、异种、低等兵、雇佣兵、海盗、飞船、太空民、超体、老兵、载具）；
-  - Foundry 官方《尘墓》3 个模板（恐怖体、工业机甲、特战队员）；
-  - 官方模组的 7 个新职业和 1 个模板：《塞壬之歌》水蛭、暴风雨，《壁花不容》潜伏者、神行客、怨恨者，《冬痕行动》主战坦克与海军陆战队模板，模组资源合集的复仇者；
-  - 第三方书 45 个职业、9 个模板：《苏丹》《卡斯特与帕勒克》《冷核圆形竞技场》《强化战斗》《午夜伊菲革涅亚》《天堂末班车》《浴金焰》《军团》。冷核竞技场的 5 个标志性 NPC 各带一个「标志性超体」附加，作为模板列出；
-  - 职业选单中核心规则书按角色分组，其他书按书分组，第三方书注明「第三方」。
-- **构筑**：
-  - 选择职业和层级（T1–T3）后，数值、攻击加值、伤害和效果文字里的「x/y/z」都按层级显示。
-  - 勾选模板和可选系统。模板的数值加成（如强化 +1 结构 / 压力、超体韧性 +5 HP、低等兵 1 HP）自动计入。
-  - 可以从其他职业添加系统（原书允许在职业之间交换系统），各项数值也可以手动加减。
-  - 原书写明的互斥（精英与超体、低等兵与老兵等，班组和人类的模板限制）以及可选系统超出建议数量时，页面会提示，但不阻止。
-- **保存与导出**：
-  - NPC 存在当前浏览器（localStorage 的 `lancer-npc-builder-v1`），可备份全部、导入备份，也可以复制文字版。
-  - 「导出到 Foundry」生成 LANCER 系统的 NPC 角色 JSON，包括职业、模板和全部特性。在 Foundry 中新建一个 NPC 角色，右键选「导入数据」，再选择这个文件；层级可以在角色表上切换。
-
-数据由 `tools/parse-npc-core.js`（核心规则书 PDF 第 278–325 页）和 `tools/parse-npc-books.js`（其他书）从 NPC 库的原书文字解析而来，写在 `source/npc/core-npcs.json`、`source/npc/books-npcs.json`。说明与待核对项见 [source/npc/README.md](source/npc/README.md)。
+开发约定、文件结构与扩展内容的写法见 [CLAUDE.md](CLAUDE.md)，其他记录见[文档目录](docs/README.md)。

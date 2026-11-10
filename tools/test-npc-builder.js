@@ -156,6 +156,16 @@ const ctx = { window: { LANCER_NPC_CLASSES: data, LANCER_DATA: { tags: [] } }, c
 vm.runInNewContext(fs.readFileSync(path.join(ROOT, "assets/js/npc-builder.js"), "utf8"), ctx);
 const B = ctx.window.NPCBuilder;
 ok(B && typeof B.toFoundry === "function", "NPCBuilder 接口");
+ok(B.tierHtml("<b>触发：</b><br>承受 1/2/3 热度", 2).includes('<b>触发：</b><br>承受 <span'), "NPC 规则保留加粗、换行与层级提示");
+ok(B.tierHtml('<img src=x onerror=alert(1)><b onclick=alert(1)>文字</b>', 1).includes('&lt;img'), "未知标签不可执行");
+ok(!B.tierHtml('<b onclick=alert(1)>文字</b>', 1).includes('<b onclick'), "格式标签上的属性不可执行");
+const formatted = [...B.FEATURES.values()].find(x => x.f.name === "自动战场感知节点");
+ok(formatted, "截图中的系统存在");
+const formattedNpc = { ...B.newNpc(data.classes[0].id), picks: [formatted.f.id] };
+ok(!/<br>|<b>/.test(B.npcText(formattedNpc)), "文字导出没有格式标签");
+const exportedFeature = B.toFoundry(formattedNpc).items.find(x => x.name === formatted.f.name);
+ok(exportedFeature.system.effect.includes('<b>') && !exportedFeature.system.effect.includes('&lt;br&gt;'), "Foundry 导出保留规则排版");
+
 const npc = (classId, tier, templates = [], picks = [], adjust = {}) => ({ ...B.newNpc(classId), tier, templates, picks, adjust });
 let s = B.npcStats(npc("npcc_cn_assault", 2, ["npct_cn_elite"]));
 eq([s.hp, s.structure, s.stress, s.activations, s.save], [18, 2, 2, 2, 12], "突击手 T2 精英");

@@ -42,6 +42,9 @@
 | `source/expansions/all-expansions.js` | 扩展内容（PDF 与截图转录，原文即中文） |
 | `source/expansions/professional-licenses.js` | 专业牌照（见 `docs/PROFESSIONAL-LICENSES.md`） |
 | `source/faq/` | FAQ 英文快照、中文译文与许可（见该目录 README） |
+| `source/npc/` | NPC 库资料目录与结构化 NPC 数据（`core-npcs.json`、`books-npcs.json`，由解析工具生成；见该目录 README） |
+| `source/fvtt/` | Foundry 官方数据快照、id 映射、补译、动作与部署物数据；`source/fvtt/module/` 是界面中文模组源文件 |
+| `dist/fvtt/` | **生成结果**：两个中文内容包、模组 `lancer-cn/` 与 zip、待译清单；`lancer-cn-bundle.zip` 是本机测试用打包 |
 
 注意：`assets/js/ui.js` 在 `assets/js/app.js` 之前载入，`esc`、`plain`、`T`、`tagText` 等此时还不存在；assets/js/ui.js 里用到它们的初始化要延后到首次调用（参照 `getGlossary()` 的写法）。`assets/js/app.js` 里读档时就会用到的函数要写成函数声明（例如 `licenseFrames`、`talentBudget`），不能用 `const`。
 
@@ -136,23 +139,36 @@ node tools/draft-ext-actions.js [--write]  # 扩展条目正文里的动作 → 
 顶部“判定速查”可打开结构伤害、过热（压力）两张表及结算步骤，支持手机、离线查询、Esc 关闭。依据用户提供的《枪骑兵》核心规则书 v3.5 PDF 第 75–76 页。只读查询，不改角色或战斗地图存档。实现位于 `assets/js/damage-reference.js` 与 `assets/css/damage-reference.css`，由 `index.html` 加载。
 
 
-## Foundry 内容包（2026-11-07）
+## Foundry 内容包与模组（2026-11-07 起）
 
-`tools/build-lcp.js` 把 `assets/js/data.js` 导出为 Foundry VTT LANCER 系统（v3.1.3）可导入的两个 v2 LCP（`PACKS`：`core` 核心规则书、`ext` 扩展内容），见 [Foundry 内容包](docs/FVTT-LCP.md)。用户的系统 fork 在 `../foundryvtt-lancer`，仅作对照，不改系统本体。
+见 [Foundry 内容包](docs/FVTT-LCP.md)。用户的系统 fork 在 `../foundryvtt-lancer`，仅作对照，不改系统本体。Foundry 相关的改动要在实际 Foundry 中由用户确认；模拟测试通过不等于实际可用，汇报时分开说。
+
+### 内容包（`tools/build-lcp.js`）
+
+把 `assets/js/data.js` 导出为 LANCER 系统（v3.1.3）可导入的两个 v2 LCP（`PACKS`：`core` 核心规则书、`ext` 扩展内容）。内容变化后提高 `PACKS` 里的版本号。
 
 - 两个包都以 Foundry 自带数据为底（核心包 `source/fvtt/core/` 的 lancer-data 3.1.7，扩展包 `source/fvtt/official/`），按 id 覆盖英文版，换成车卡器文本与数值；只采用含汉字的车卡器文字。
 - 核心包只采用车卡器有意改过的数值（data.js 与 `source/lancer-data/` 副本不同）；那份副本比 3.1.7 旧，不要直接拿它的数值覆盖。
 - 扩展条目与官方补充书重复时按 `source/fvtt/official-map.json` 改用官方 id；新增扩展条目若对应官方补充书，要在映射表补上，否则会与英文版重复。
 - 新的车卡器专用字段要加进 `BUILDER_ONLY`，需要 GM 手动处理的写进 `builderNotes()`。Foundry 枚举或频率不合法会让整批导入失败，`test-lcp.js` 会检查。
 - 仍为英文的文字在 `dist/fvtt/zh-overrides*.todo.json`，补译写到 `source/fvtt/zh-overrides*.json`。
-- 骨架改成中文名后，Foundry 按英文名查插图的地方（新建条目、机甲换骨架）找不到图；覆盖已有条目时图片保留。界面中文模组 `lancer-cn`（源文件 `source/fvtt/module/`）用钩子按骨架 id 补图，并提供系统界面译文（语言代码 `cn`，与 foundry_chn 相同）；清单链接指向 GitHub Pages 上的 `dist/fvtt/lancer-cn/module.json`，改动后要提高 `module.json` 版本号。
-- 系统模板 / 代码里写死的英文不经语言文件，模组在显示时按词典替换（`cn-hardcoded.json`、`cn-words.json`，对照扫描快照 `hardcoded-en.json`），只改文字节点和提示属性，不碰输入框、编辑区和存档数据。系统升级后先运行 `scan-fvtt-labels.js` 看新增条目；不想翻译的调试信息写 `null`。
-- 状态与状况随核心包导出，文字取自术语库（`source/fvtt/statuses-zh.json` 对应）；模组的状态图标名要与之同名（test-lcp 检查）。专业牌照、扩展厂商无法经内容包导入，由模组的 GM 按钮「导入车卡器资料」写入合集包（`importReference`），同时把骨架牌照改为中文名。
-- 模组注册区域行为「LANCER 掩护区」（`lancer-cn.cover`，需在 `module.json` 的 `documentTypes` 声明）：指示物进出区域时切换 `cover_soft` / `cover_hard` 状态，只由触发事件的用户处理。
-- 攻击卡「命中效果 · 施加」状态按钮（`onRenderChatMessage`、`statusesIn`）：按物品文字识别状态，排除条件、自身、列举等写法；无权限时经模组 socket 请 GM 施加（`module.json` 需 `socket: true`）。带附加武器数据的改装另导出「附带武器」（build-lcp）。
-- 「区域」工具栏的 GM 工具「软性 / 硬性掩护格」（`lancerCoverSoft` / `lancerCoverHard`）：点格子加入本场景的掩护区（带 `flags.lancer-cn.coverCells`）；与六边形墙体共用 `PAINT_TOOLS` 涂画逻辑。行为类型显示名写进语言键 `TYPES.RegionBehavior.lancer-cn.cover`。
-- 「墙壁」工具栏的 GM 工具「六边形墙体」（`lancerHexWall`）：点击格子放置 / 移除一整格墙体（6 段阻挡移动的墙 + 玩家可见的实心六边形图形，带 `flags.lancer-cn.hexWall`），设置 `hexWallBlocksSight` 控制是否阻挡视线。
+- 状态与状况随核心包导出，文字取自术语库（`source/fvtt/statuses-zh.json` 对应）；模组的状态图标名要与之同名（test-lcp 检查）。
+- 带附加武器数据的改装另导出「附带武器」；正文里的动作按 `source/fvtt/ext-actions.json` 生成按钮，部署物数值按 `source/fvtt/ext-deployables.json`。
+- NPC 职业 / 模板 / 特性由 `buildBuilderNpcs` 从 `assets/js/npc-classes.js` 写入（核心规则书 → 核心包，其他书 → 扩展包；尘墓用官方数据，见下节）。
 
+### 界面中文模组 lancer-cn（`source/fvtt/module/`，`tools/build-fvtt-module.js`）
+
+清单链接指向 GitHub Pages 上的 `dist/fvtt/lancer-cn/module.json`。每次改动都要提高 `module.json` 版本号，并在 `source/fvtt/module/README.md` 与 `docs/FVTT-LCP.md` 的「模组更新记录」里加一行；用户更新后要重启 Foundry。
+
+- **界面译文**：语言代码 `cn`（与 foundry_chn 相同）。系统模板 / 代码里写死的英文不经语言文件，模组在显示时按词典替换（`cn-hardcoded.json`、`cn-words.json`，对照扫描快照 `hardcoded-en.json`），只改文字节点和提示属性，不碰输入框、编辑区和存档数据。系统升级后先运行 `scan-fvtt-labels.js` 看新增条目；不想翻译的调试信息写 `null`。
+- **中文版面修正**：`UI_FIX_STYLE`（中文界面启用时注入，系统样式在 `@layer lancer` 里，不分层即可覆盖）；中文字体没有的字形在 `GLYPHS` 里替换。用户截图反馈的版面问题加在这里。
+- **骨架插图**：骨架改成中文名后，Foundry 按英文名查插图的地方找不到图，模组用钩子按骨架 id 补图。
+- **车卡器资料**：专业牌照、扩展厂商无法经内容包导入，由 GM 按钮「导入车卡器资料」写入合集包（`importReference`），同时把骨架牌照改为中文名。
+- **攻击时选目标**：`lancer.preFlow.*` / `lancer.postFlow.*` 钩子开关目标面板（`openTargetPicker`）；客户端设置 `targetPicker`、`targetClearStale`、`targetAutoPick`。
+- **命中后施加状态**：攻击卡按钮（`onRenderChatMessage`、`statusesIn`），按物品文字识别状态，排除条件、自身、列举等写法；无权限时经模组 socket 请 GM 施加（`module.json` 需 `socket: true`）。
+- **掩护区**：区域行为「LANCER 掩护区」（`lancer-cn.cover`，需在 `module.json` 的 `documentTypes` 声明，显示名写进语言键 `TYPES.RegionBehavior.lancer-cn.cover`）：指示物进出区域时切换 `cover_soft` / `cover_hard`，只由触发事件的用户处理。「区域」工具栏的 GM 工具「软性 / 硬性掩护格」（`lancerCoverSoft` / `lancerCoverHard`）点格子加入本场景的掩护区（`flags.lancer-cn.coverCells`）。
+- **六边形墙体**：「墙壁」工具栏的 GM 工具（`lancerHexWall`），每格 6 段阻挡移动的墙 + 玩家可见的六边形图形（都带 `flags.lancer-cn.hexWall`）；有墙或图形任一样都算有墙体；`deleteWall` 钩子在墙删光时删图形；设置 `hexWallBlocksSight` 控制是否阻挡视线。
+- **画布指针拦截**：涂画工具（`PAINT_TOOLS`、`onHexPointer`）与点地图锁定（`onTargetPointer`）都在 window 的捕获阶段、init 时注册。PIXI 在画布元素与 document / window 上监听，拦在画布元素上不够（墙壁图层会把拖动画成直线墙）。
 
 ## NPC 构筑（2026-11-09）
 
@@ -168,5 +184,5 @@ node tools/draft-ext-actions.js [--write]  # 扩展条目正文里的动作 → 
   逐条修正写在 `FEATURE_PATCHES`：改为可选、并入其他特性、删除、在开头加原文说明。同样只用 `--write` 重新生成 `source/npc/books-npcs.json`，不要手改。
 - 模板加成只填原文写明的数字；原文的互斥（精英 / 超体 / 低等兵、班组、人类）只提示，不阻止。
 - 导出格式按 foundryvtt-lancer 3.1.3 的 `npc`、`npc_class`、`npc_template`、`npc_feature` 数据模型：层级数值是三个元素的数组，层级标签值写成 `{a/b/c}`，物品带 16 位 `_id`。
-- 待核对的原文写法列在 `source/npc/README.md`。
-- NPC 职业 / 模板 / 特性也由 `build-lcp.js` 的 `buildBuilderNpcs` 写进内容包（核心规则书 → 核心包，其他书 → 扩展包；尘墓用官方数据）。NPC 数据变了要重新运行 `build-npc-classes.js` 再 `build-lcp.js`，并提高内容包版本号；`test-lcp.js` 检查格式与引用。
+- 已确认与待核对的原文写法列在 `source/npc/README.md`；用户确认后从「待核对」移到「已确认」，并在 `test-npc-builder.js` 锁住数值。
+- NPC 数据变了要依次重新运行 `build-npc-classes.js`、`build-lcp.js`，并提高内容包版本号；`test-npc-builder.js` 与 `test-lcp.js` 检查格式与引用。

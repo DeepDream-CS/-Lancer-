@@ -63,6 +63,11 @@ ok(!art.mf_ext_hubble, "没有官方插图的扩展骨架不应分配插图");
 // ---- 钩子脚本：模拟 Foundry
 const script = file("scripts/lancer-cn.mjs");
 ok(script && !script.includes("/*FRAME_ART*/"), "插图表应已写入脚本");
+// 中文界面的版面修正（2026-11-09 用户截图：伤害面板目标卡）
+ok(/injectStyle\("lancer-cn-ui-fix", UI_FIX_STYLE\)/.test(script), "中文界面启用时注入版面修正样式");
+ok(/\.damage-input-container \{ grid-template-columns: min-content minmax\(4em, 4\.8em\) minmax\(4em, 1fr\)/.test(script), "伤害类型下拉框不再固定 12ch，数值框至少 4em");
+ok(/\.lancer-hit-quality-radio-label \{ white-space: nowrap; \}/.test(script), "会心 / 命中 / 未命中不换行");
+ok(script.includes('"\\u{1F782}": "▸", "\\u{1F780}": "◂"'), "目标名两侧的 🞂 / 🞀 换成常见字形 ▸ / ◂（中文字体没有原字形，显示成方框）");
 let ctx;
 function runHooks() {
 	const hooks = {};
@@ -71,6 +76,9 @@ function runHooks() {
 		game: { user: { id: "u1" } },
 		foundry: { utils: { hasProperty: (o, p) => p.split(".").reduce((x, k) => (x && k in x ? x[k] : undefined), o) !== undefined } },
 		MutationObserver: class { observe() {} },
+		// window 级监听（六边形墙体 / 掩护格的涂画）
+		windowListeners: {},
+		addEventListener(type, fn, opts) { (ctx.windowListeners[type] ||= []).push({ fn, opts }); },
 	};
 	vm.createContext(ctx);
 	vm.runInContext(script, ctx);
@@ -328,6 +336,60 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		ok(!playerControls.walls.tools.lancerHexWall, "玩家没有这个工具");
 		ctx.game.user.isGM = true;
 
+		// 涂画的指针处理：在 window 捕获阶段拦截，墙壁图层收不到按下 / 拖动 / 松开（否则会拉出一道直线墙）
+		for (const t of ["pointerdown", "pointermove", "pointerup", "pointercancel"]) {
+			const l = (ctx.windowListeners[t] || [])[0];
+			ok(l && l.opts?.capture === true, `${t} 应在 window 上以捕获阶段监听`);
+		}
+		const view = { id: "board" };
+		ctx.canvas = { scene, grid, app: { canvas: view }, canvasCoordinatesFromClient: p => ({ x: p.x, y: p.y }) };
+		ctx.ui = { ...(ctx.ui || {}), controls: { control: { name: "walls" }, tool: { name: "lancerHexWall" } } };
+		const fire = (type, x, y, extra = {}) => {
+			const ev = { type, clientX: x, clientY: y, button: 0, buttons: type === "pointerup" ? 0 : 1, target: view, stopped: false, prevented: false,
+				stopImmediatePropagation() { this.stopped = true; }, preventDefault() { this.prevented = true; }, ...extra };
+			for (const { fn } of ctx.windowListeners[type]) fn(ev);
+			return ev;
+		};
+		const settle = () => new Promise(r => setTimeout(r, 0));
+		scene.walls = []; scene.drawings = [];
+		const down = fire("pointerdown", 100, 100);
+		const move = fire("pointermove", 200, 100);
+		const up = fire("pointerup", 200, 100);
+		await settle(); await settle();
+		ok(down.stopped && down.prevented && move.stopped && up.stopped, "涂画中的按下、拖动、松开都被拦下，墙壁图层不会开始画直线墙");
+		ok(scene.walls.length === 12 && scene.drawings.length === 2, "按住拖动：经过的两格各放一整格墙体，没有多出的直线墙");
+		ok(!fire("pointermove", 300, 100, { buttons: 0 }).stopped, "松开后的移动不再拦截");
+		ok(!fire("pointerdown", 300, 100, { target: { id: "sidebar" } }).stopped, "按在界面上（不是画布）时不拦截");
+		ok(!fire("pointerdown", 300, 100, { button: 2 }).stopped, "右键（平移视图）不拦截");
+		// 只剩图形的格子（墙被别的方式删掉）：点它就移除图形，而不是当作空格子
+		scene.walls = scene.walls.filter(w => w.flags["lancer-cn"].hexWall !== "1,1");
+		ok(scene.drawings.some(d => d.flags["lancer-cn"].hexWall === "1,1"), "准备：1,1 只剩图形");
+		fire("pointerdown", 100, 100); fire("pointerup", 100, 100);
+		await settle(); await settle();
+		ok(!scene.drawings.some(d => d.flags["lancer-cn"].hexWall === "1,1"), "点只剩图形的格子：图形被移除");
+		// 拖动移除：从有墙体的格子按下，经过的格子都移除墙和图形
+		fire("pointerdown", 100, 100); fire("pointerup", 100, 100); await settle(); await settle();
+		ok(scene.walls.length === 12 && scene.drawings.length === 2, "准备：两格墙体");
+		fire("pointerdown", 100, 100); fire("pointermove", 200, 100); fire("pointerup", 200, 100);
+		await settle(); await settle();
+		ok(scene.walls.length === 0 && scene.drawings.length === 0, "从墙体按下拖动：经过的格子墙和图形都删掉");
+		// 用 Foundry 自己的墙壁工具删掉一格的墙：最后一段删掉时顺带删图形
+		await ctx.LancerCN.setHexWall(scene, grid, { x: 100, y: 100 }, "add");
+		const removed = scene.walls.splice(0, 6);
+		ok(typeof hooks.deleteWall === "function", "应注册 deleteWall 钩子");
+		for (const w of removed) hooks.deleteWall({ ...w, parent: scene }, {}, "u1");
+		await settle();
+		ok(scene.drawings.length === 0, "墙被别的方式删光时，图形一起删掉，不留色块");
+		await ctx.LancerCN.setHexWall(scene, grid, { x: 100, y: 100 }, "add");
+		hooks.deleteWall({ ...scene.walls[0], parent: scene }, {}, "u1");
+		await settle();
+		ok(scene.drawings.length === 1, "还剩其他墙段时不删图形");
+		hooks.deleteWall({ ...scene.walls[0], parent: scene }, {}, "other");
+		ok(scene.drawings.length === 1, "别的用户删的墙由那位用户处理");
+		scene.walls = []; scene.drawings = [];
+		ctx.ui.controls = { control: { name: "tokens" }, tool: { name: "select" } };
+		ok(!fire("pointerdown", 100, 100).stopped, "没选涂画工具时不拦截");
+
 		// 掩护格：点击格子加入本场景的软性 / 硬性掩护区
 		ctx.CONST.REGION_VISIBILITY = { LAYER: 0, GAMEMASTER: 1, ALWAYS: 2 };
 		scene.regions = [];
@@ -358,6 +420,111 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		hooks.getSceneControlButtons(regionControls);
 		ok(/软性掩护格/.test(regionControls.regions.tools.lancerCoverSoft?.title) && /硬性掩护格/.test(regionControls.regions.tools.lancerCoverHard?.title), "GM 的「区域」工具栏应有软性 / 硬性掩护格工具");
 		ok(regionControls.walls.tools.lancerHexWall && !regionControls.walls.tools.lancerCoverSoft, "墙体工具在墙壁栏，掩护格工具在区域栏");
+	}
+
+	// ---- 攻击时选目标
+	{
+		const L = ctx.LancerCN;
+		const view = { id: "board" };
+		for (const k of ["targetPicker", "targetClearStale", "targetAutoPick"]) {
+			const s = log.settings[`lancer-cn.${k}`];
+			ok(s && s.scope === "client" && s.default === true && /[一-鿿]/.test(s.name), `应注册客户端设置 ${k}（默认开启）`);
+		}
+		for (const n of ["BasicAttackFlow", "WeaponAttackFlow", "TechAttackFlow", "DamageRollFlow"])
+			ok(typeof hooks[`lancer.preFlow.${n}`] === "function" && typeof hooks[`lancer.postFlow.${n}`] === "function", `应监听 ${n} 的开始与结束`);
+		ok((ctx.windowListeners.pointerdown || []).length >= 2 && ctx.windowListeners.pointerdown.every(l => l.opts?.capture), "点地图锁定也在 window 捕获阶段");
+
+		// 场景：方格，每格 100；指示物所占格子 → 中心点
+		const cells = (i, j, n = 1) => { const r = []; for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) r.push({ i: i + a, j: j + b }); return r; };
+		ctx.CONST.TOKEN_DISPOSITIONS = { SECRET: -2, HOSTILE: -1, NEUTRAL: 0, FRIENDLY: 1 };
+		const targets = new Set();
+		ctx.game.user.targets = targets;
+		ctx.game.user.isGM = false;
+		const mkTok = (id, disp, i, j, n = 1, extra = {}) => {
+			const t = {
+				id, name: id, actor: { img: id + ".png" }, visible: true, center: { x: j * 100 + 50, y: i * 100 + 50 },
+				document: { name: id, disposition: disp, hidden: false, texture: { src: id + ".webp" }, getOccupiedGridSpaceOffsets: () => cells(i, j, n) },
+				bounds: { contains: (x, y) => x >= j * 100 && x < (j + n) * 100 && y >= i * 100 && y < (i + n) * 100 },
+				setTarget(on) { on ? targets.add(t) : targets.delete(t); },
+				...extra,
+			};
+			return t;
+		};
+		const me = mkTok("我", 1, 0, 0);
+		const near = mkTok("近敌", -1, 0, 3);
+		const far = mkTok("远敌", -1, 0, 12);
+		const big = mkTok("大型敌", -1, 5, 0, 2); // 占 5..6 行
+		const ally = mkTok("友军", 1, 1, 1);
+		const hiddenFoe = mkTok("隐藏敌", -1, 0, 2, 1, { visible: false });
+		const placeables = [me, near, far, big, ally, hiddenFoe];
+		ctx.canvas = {
+			scene: {}, app: { canvas: view },
+			grid: {
+				isGridless: false, distance: 1,
+				getCenterPoint: o => ({ x: o.j * 100, y: o.i * 100 }), getOffset: p => ({ i: Math.floor(p.y / 100), j: Math.floor(p.x / 100) }),
+				measurePath: ([p, q]) => ({ spaces: Math.max(Math.abs(p.x - q.x), Math.abs(p.y - q.y)) / 100 }),
+			},
+			tokens: { placeables, controlled: [me], get: id => placeables.find(t => t.id === id) },
+			canvasCoordinatesFromClient: p => ({ x: p.x, y: p.y }),
+		};
+		const actor = { system: { sensor_range: 8 } };
+		me.actor = actor;
+		ok(L.tokenDistance(me, near) === 3 && L.tokenDistance(me, big) === 5, "距离按双方所占格子最近的一格算（大型单位按最近的格子）");
+		class WeaponAttackFlow { constructor(range) { this.state = { actor, item: { name: "重型突击步枪", currentProfile: () => ({ range }) }, data: {} }; } }
+		class TechAttackFlow { constructor() { this.state = { actor, item: null, data: { title: "科技攻击" } }; } }
+		class DamageRollFlow { constructor(hits) { this.state = { actor, item: { name: "链斧" }, data: { hit_results: hits } }; } }
+		const r = L.attackReach(new WeaponAttackFlow([{ type: "Range", val: 10 }, { type: "Blast", val: 1 }]));
+		ok(r.reach === 10 && r.label === "射程 10 / 溅射 1", "武器射程取射程 / 威胁等的最大值，溅射不算可达距离");
+		ok(L.attackReach(new WeaponAttackFlow([{ type: "Threat", val: 1 }])).reach === 1, "近战按威胁");
+		ok(L.attackReach(new TechAttackFlow()).reach === 8 && L.attackReach(new TechAttackFlow()).label === "感应 8", "科技攻击按感应");
+		const rows = L.targetCandidates({ token: me, reach: 10, lastIds: [] });
+		ok(rows.map(x => x.name).join(",") === "近敌,大型敌,远敌,友军", "候选：敌方在前按距离排序，友方在后；看不见的指示物不列出");
+		ok(rows.find(x => x.name === "近敌").inRange === true && rows.find(x => x.name === "远敌").inRange === false, "标出是否在射程内");
+		const html = L.targetPanelHTML({ title: "攻击：重型突击步枪", rangeLabel: "射程 10" }, rows);
+		ok(/敌方/.test(html) && /友方/.test(html) && /射程外/.test(html) && /3 格/.test(html) && /已选 0 个/.test(html), "面板分组、距离、射程与已选数量");
+		ok(L.targetPanelHTML({ title: "<b>x</b>" }, []).includes("&lt;b&gt;"), "面板文字已转义");
+
+		// 开始攻击：射程内恰好一个敌人时自动选中
+		const f1 = new WeaponAttackFlow([{ type: "Range", val: 4 }]);
+		hooks["lancer.preFlow.WeaponAttackFlow"](f1);
+		ok(L.targetSession()?.flow === f1, "开始攻击时打开目标面板");
+		ok(targets.size === 1 && targets.has(near), "射程内只有一个敌人：自动选中");
+		// 点地图：面板开着时点指示物 = 锁定 / 取消锁定
+		const click = (x, y, extra = {}) => { const ev = { type: "pointerdown", button: 0, clientX: x, clientY: y, target: view, stopped: false, stopImmediatePropagation() { this.stopped = true; }, preventDefault() {}, ...extra }; L.onTargetPointer(ev); return ev; };
+		const c1 = click(1250, 50);
+		ok(c1.stopped && targets.has(far), "点地图上的指示物：锁定，图层收不到这次点击");
+		ok(click(1250, 50).stopped && !targets.has(far), "再点一次：取消锁定");
+		ok(!click(50, 50).stopped && !targets.has(me), "点自己的指示物：照常选中，不锁定");
+		ok(!click(950, 950).stopped, "点空地：照常处理");
+		ok(!click(1250, 50, { shiftKey: true }).stopped, "按住修饰键时不接管");
+		hooks["lancer.postFlow.WeaponAttackFlow"](f1, true);
+		ok(L.targetSession() === null, "攻击结束后关闭面板");
+		ok(!click(350, 50).stopped, "面板关闭后点地图照常处理");
+		// 下一次攻击：目标还是上次那几个 → 清掉；射程内有两个敌人 → 不自动选
+		const f2 = new WeaponAttackFlow([{ type: "Range", val: 10 }]);
+		hooks["lancer.preFlow.WeaponAttackFlow"](f2);
+		ok(targets.size === 0, "锁定的仍是上一次攻击的目标：开始新攻击时清除；射程内有多个敌人时不自动选");
+		ok(L.targetCandidates(L.targetSession()).find(x => x.name === "近敌").last, "上一次攻击的目标标为「上次」");
+		hooks["lancer.postFlow.WeaponAttackFlow"](f2, false);
+		// 玩家改过目标后不清
+		targets.add(far);
+		const f3 = new WeaponAttackFlow([{ type: "Range", val: 10 }]);
+		hooks["lancer.preFlow.WeaponAttackFlow"](f3);
+		ok(targets.size === 1 && targets.has(far), "目标在上次攻击后改过：不清除");
+		hooks["lancer.postFlow.WeaponAttackFlow"](f3, true);
+		// 从攻击卡掷伤害：已有命中结果，不弹面板；单独掷伤害时弹
+		hooks["lancer.preFlow.DamageRollFlow"](new DamageRollFlow([{ target: near }]));
+		ok(L.targetSession() === null, "从攻击卡掷伤害（已有命中结果）不弹面板");
+		const fd = new DamageRollFlow([]);
+		hooks["lancer.preFlow.DamageRollFlow"](fd);
+		ok(L.targetSession()?.kind === "DamageRollFlow" && targets.has(far), "单独掷伤害时弹面板，不清除、不自动选");
+		hooks["lancer.postFlow.DamageRollFlow"](fd, true);
+		// 关闭设置
+		log.settingValues["lancer-cn.targetPicker"] = false;
+		hooks["lancer.preFlow.TechAttackFlow"](new TechAttackFlow());
+		ok(L.targetSession() === null, "关闭设置后不弹面板");
+		log.settingValues["lancer-cn.targetPicker"] = true;
+		ctx.game.user.isGM = true;
 	}
 
 	// ---- 命中后一键施加状态

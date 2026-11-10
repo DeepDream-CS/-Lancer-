@@ -91,15 +91,26 @@
     return { msgs, clsPicks, max };
   }
 
-  // 「6/8/10」这类按层级的数值：显示本层级的值，悬停看全部
-  function tierHtml(text, tier) {
-    return esc(text)
-      .replace(/(\+?)(\d+)\/(\+?)(\d+)\/(\+?)(\d+)/g, (m, s1, a, s2, b, s3, c) => {
+  // Only restore known formatting tags without attributes; other markup stays escaped.
+  const RULE_TAG = /(<\/?(?:b|strong|i|em|u|s|p|ul|ol|li|sup|sub)\s*>|<br\s*\/?\s*>)/gi;
+  function rulesHtml(text, tier) {
+    return String(text ?? "").split(RULE_TAG).map((part, i) => {
+      if (i % 2) return part.toLowerCase().startsWith("<br") ? "<br>" : part.toLowerCase().replace(/\s+>/g, ">");
+      let out = esc(part);
+      if (tier) out = out.replace(/(\+?)(\d+)\/(\+?)(\d+)\/(\+?)(\d+)/g, (m, s1, a, s2, b, s3, c) => {
         const v = [[s1, a], [s2, b], [s3, c]][tier - 1];
         return `<span class="nb-tv" title="T1/T2/T3：${m}">${v[0]}${v[1]}</span>`;
-      })
-      .replace(/\n/g, "<br>");
+      });
+      return out.replace(/\n/g, "<br>");
+    }).join("");
   }
+  function rulesText(text) {
+    return String(text ?? "").replace(/<br\s*\/?\s*>/gi, "\n")
+      .replace(/<\/(?:p|li|ul|ol)\s*>/gi, "\n")
+      .replace(/<\/?(?:b|strong|i|em|u|s|p|ul|ol|li|sup|sub)\s*>/gi, "");
+  }
+  // Tier values retain their complete progression in a hover hint.
+  function tierHtml(text, tier) { return rulesHtml(text, tier); }
 
   function tagName(t, tier) {
     const tags = (window.LANCER_DATA && window.LANCER_DATA.tags) || [];
@@ -134,7 +145,7 @@
 
   // ---------- 文字版 ----------
   function plainTier(text, tier) {
-    return String(text || "").replace(/(\+?)(\d+)\/(\+?)(\d+)\/(\+?)(\d+)/g, (m, s1, a, s2, b, s3, c) => [s1 + a, s2 + b, s3 + c][tier - 1]);
+    return rulesText(text).replace(/(\+?)(\d+)\/(\+?)(\d+)\/(\+?)(\d+)/g, (m, s1, a, s2, b, s3, c) => [s1 + a, s2 + b, s3 + c][tier - 1]);
   }
   function npcText(npc) {
     const cls = classById(npc.classId), tier = npc.tier || 1, s = npcStats(npc);
@@ -160,7 +171,7 @@
   const FVTT_KEYS = ["activations", "armor", "hp", "evasion", "edef", "heatcap", "speed", "sensor_range", "save", "hull", "agi", "sys", "eng", "size", "structure", "stress"];
   const ID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const foundryId = () => Array.from({ length: 16 }, () => ID_CHARS[Math.floor(Math.random() * ID_CHARS.length)]).join("");
-  const html = s => (s ? "<p>" + esc(s).replace(/\n/g, "<br>") + "</p>" : "");
+  const html = s => (s ? "<div>" + rulesHtml(s) + "</div>" : "");
   function nullBlock(src, tier) {
     if (!src) return null;
     const b = Object.fromEntries(FVTT_KEYS.map(k => [k, null]));
@@ -332,7 +343,7 @@
     const tier = npc.tier;
     return `<fieldset class="nb-picks"><legend>${esc(label)}</legend>${owner.optional.map(f => {
       const on = (npc.picks || []).includes(f.id);
-      const hint = (f.effect || f.on_hit || f.trigger || "").replace(/\n/g, " ").slice(0, 90);
+      const hint = rulesText(f.effect || f.on_hit || f.trigger || "").replace(/\n/g, " ").slice(0, 90);
       return `<label title="${esc(plainTier(hint, tier))}"><input type="checkbox" data-pick="${f.id}"${on ? " checked" : ""}> ${esc(f.name)} <small>${TYPE_ZH[f.type]}</small></label>`;
     }).join("")}</fieldset>`;
   }
@@ -366,13 +377,13 @@
 <p class="nb-meta">${esc(cls.role)}${cls.special ? "（" + esc(cls.special) + "）" : ""} · ${esc(packInfo(cls.pack).book || cls.pack)}${packInfo(cls.pack).official ? "" : "（第三方）"} PDF 第 ${cls.pages.join("、")} 页 · <a href="assets/npc/${cls.source || 1}-${cls.page}.jpg" target="_blank" rel="noopener">查看原书页</a>${cls.size_note ? ` · 大小：${esc(cls.size_note[tier - 1])}` : ""}</p>
 <div class="nb-stats">${statCells}</div>
 ${chk.msgs.length ? `<ul class="nb-warn">${chk.msgs.map(m => `<li>${esc(m)}</li>`).join("")}</ul>` : ""}
-<details class="nb-about"><summary>职业说明与战术</summary><p>${esc(cls.flavor)}</p><p><b>战术：</b>${esc(cls.tactics)}</p>${cls.custom_note ? `<p><b>定制：</b>${esc(cls.custom_note)}</p>` : ""}</details>
+<details class="nb-about"><summary>职业说明与战术</summary><p>${rulesHtml(cls.flavor)}</p><p><b>战术：</b>${rulesHtml(cls.tactics)}</p>${cls.custom_note ? `<p><b>定制：</b>${rulesHtml(cls.custom_note)}</p>` : ""}</details>
 <fieldset class="nb-templates"><legend>模板</legend>${packs.map(p => `<div><span class="nb-pack">${esc(p)}</span>${C.templates.filter(t => t.pack === p).map(t => `<label title="${esc((t.description || "").slice(0, 120))}"><input type="checkbox" data-template="${t.id}"${(npc.templates || []).includes(t.id) ? " checked" : ""}> ${esc(t.name)}</label>`).join("")}</div>`).join("")}</fieldset>
 ${pickList(cls, npc, `${cls.name}的可选系统（已选 ${chk.clsPicks}，建议 0~${chk.max}）`)}
 ${tpls.map(t => pickList(t, npc, `${t.name}的可选项`)).join("")}
 <label class="nb-extra">从其他职业添加系统<select class="nb-in-extra"><option value="">选择…</option>${otherOptions}</select></label>
 <div class="nb-feats">${feats.map(e => featureCard(e, tier, e.how !== "base")).join("")}</div>
-${tpls.length ? `<details class="nb-about"><summary>模板说明</summary>${tpls.map(t => `<p><b>${esc(t.name)}：</b>${esc(t.description)}</p>`).join("")}</details>` : ""}
+${tpls.length ? `<details class="nb-about"><summary>模板说明</summary>${tpls.map(t => `<p><b>${esc(t.name)}：</b>${rulesHtml(t.description)}</p>`).join("")}</details>` : ""}
 <label class="nb-notes">备注<textarea class="nb-in-notes" rows="3">${esc(npc.notes)}</textarea></label>
 <div class="nb-actions"><button class="primary nb-foundry" title="Foundry：新建 NPC 角色 → 右键 → 导入数据">导出到 Foundry</button><button class="nb-copytext">复制文字版</button><button class="nb-dup">复制此 NPC</button><button class="danger nb-del">删除</button><span class="nb-status" role="status"></span></div>
 <p class="nb-help">导出的文件在 Foundry 中这样导入：在角色目录新建一个 <b>NPC</b> 类型的角色 → 右键该角色 → 「导入数据」→ 选择文件。职业、模板与全部特性会一起导入，层级可在角色表上切换。</p>`;
