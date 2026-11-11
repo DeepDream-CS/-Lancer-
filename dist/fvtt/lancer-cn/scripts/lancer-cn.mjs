@@ -164,12 +164,19 @@ const observer = new MutationObserver(muts => {
 	}
 });
 
-// 画布上的浮动数字（「-5 HP」「+2 Heat」）不在 DOM 里，包装系统调用的 createScrollingText
+// 画布上的浮动数字（「-5 HP」「+2 Heat」）不在 DOM 里，包装系统调用的 createScrollingText。
+// Foundry 加上 / 去掉状态时飘出的「+(缓慢)」「-(缓慢)」改成更大、带颜色的「+ 缓慢」「- 缓慢」。
+const STATUS_SCROLL = /^([+-])\((.+)\)$/s;
 function patchScrollingText() {
 	const proto = foundry?.canvas?.groups?.InterfaceCanvasGroup?.prototype;
 	if (!proto?.createScrollingText || proto.createScrollingText.lancerCn) return;
 	const orig = proto.createScrollingText;
 	proto.createScrollingText = function (origin, content, options) {
+		const st = typeof content === "string" ? STATUS_SCROLL.exec(content) : null;
+		if (st) {
+			const on = st[1] === "+";
+			return orig.call(this, origin, `${on ? "+" : "-"} ${st[2]}`, { ...options, fontSize: 32, fill: on ? 0xffd34d : 0xb4b4b4, stroke: 0x000000, strokeThickness: 5 });
+		}
 		const t = typeof content === "string" ? translate(content) : null;
 		return orig.call(this, origin, t ?? content, options);
 	};
@@ -626,6 +633,8 @@ const targetIdsKey = () => Array.from(game.user?.targets ?? []).map(t => t.id).s
 // 武器的射程（科技攻击用感应），返回可达格数与显示文字
 function attackReach(flow) {
 	const item = flow?.state?.item, actor = flow?.state?.actor;
+	const basic = BASIC_ACTIONS[flow?.lancerCnBasic];
+	if (basic?.reach) return { reach: basic.reach, label: "邻接" };
 	if (flow?.constructor?.name === "TechAttackFlow") {
 		const s = actor?.system?.sensor_range;
 		return Number.isFinite(s) ? { reach: s, label: `感应 ${s}` } : { reach: null, label: "" };
@@ -847,6 +856,68 @@ Hooks.on("targetToken", user => { if (user?.isSelf ?? user === game.user) refres
 for (const h of ["updateToken", "createToken", "deleteToken", "controlToken"]) Hooks.on(h, refreshTargetPanel);
 
 // ---------------------------------------------------------------------------
+// 指示物名字与浮动文字
+// - 名字：放上地图的指示物按模组设置显示名字（Foundry 指示物的「显示名称」），默认始终显示。
+//   第一次启用模组、或 GM 改这项设置时，各场景里已有的指示物也一起改。
+// - 伤害 / 热度：LANCER 系统自带「浮动伤害数字」（HP、热度、结构、压力、燃烧、护盾变化时在指示物上飘字，所有人都看得到），
+//   但这个客户端设置默认关闭。模组在每个客户端第一次载入时替玩家打开一次，之后按各人自己的设置。
+// - 状态：Foundry 加上 / 去掉状态时会飘出「+(名称)」，中文界面下改成更醒目的「+ 缓慢」「- 缓慢」（见 patchScrollingText）。
+const NAME_MODES = { keep: "不改（按各角色的指示物设置）", hover: "鼠标悬停时显示", always: "始终显示" };
+function tokenNameMode() {
+	let mode;
+	try { mode = game.settings.get(MODULE_ID, "tokenNames"); } catch { return undefined; }
+	const M = globalThis.CONST?.TOKEN_DISPLAY_MODES ?? {};
+	return { hover: M.HOVER ?? 30, always: M.ALWAYS ?? 50 }[mode];
+}
+
+function onPreCreateToken(doc) {
+	const mode = tokenNameMode();
+	if (mode !== undefined && doc.displayName !== mode) doc.updateSource({ displayName: mode });
+}
+
+// 由在线的 GM（只一位）把各场景已有指示物改成当前设置；返回改动的指示物数
+async function applyTokenNames() {
+	const mode = tokenNameMode();
+	if (mode === undefined || !game.users?.activeGM?.isSelf) return 0;
+	let n = 0;
+	for (const scene of game.scenes ?? []) {
+		const updates = scene.tokens.filter(t => t.displayName !== mode).map(t => ({ _id: t.id, displayName: mode }));
+		if (!updates.length) continue;
+		await scene.updateEmbeddedDocuments("Token", updates);
+		n += updates.length;
+	}
+	return n;
+}
+
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer") return;
+	game.settings.register(MODULE_ID, "tokenNames", {
+		name: "指示物显示名字",
+		hint: "放上地图的指示物是否显示名字（所有人可见）。修改时，各场景里已放好的指示物也会一起改。选「不改」则按各角色自己的指示物设置。",
+		scope: "world", config: true, type: String, choices: NAME_MODES, default: "always",
+		onChange: () => applyTokenNames().catch(err => console.error(`${MODULE_ID} |`, err)),
+	});
+	game.settings.register(MODULE_ID, "tokenNamesApplied", { scope: "world", config: false, type: Boolean, default: false });
+	game.settings.register(MODULE_ID, "floatingNumbersOn", { scope: "client", config: false, type: Boolean, default: false });
+});
+Hooks.on("preCreateToken", onPreCreateToken);
+
+async function setupNamesAndNumbers() {
+	if (!game.settings.get(MODULE_ID, "floatingNumbersOn")) {
+		await game.settings.set("lancer", "floatingNumbers", true);
+		await game.settings.set(MODULE_ID, "floatingNumbersOn", true);
+	}
+	if (game.users?.activeGM?.isSelf && !game.settings.get(MODULE_ID, "tokenNamesApplied")) {
+		await applyTokenNames();
+		await game.settings.set(MODULE_ID, "tokenNamesApplied", true);
+	}
+}
+Hooks.once("ready", () => {
+	if (game.system?.id !== "lancer") return;
+	return setupNamesAndNumbers().catch(err => console.error(`${MODULE_ID} |`, err));
+});
+
+// ---------------------------------------------------------------------------
 // 命中后一键施加状态：攻击 / 科技攻击的聊天卡下方，按攻击所用物品的命中效果文字列出可施加的状态按钮，
 // 点击后施加到这次被命中（含会心一击）的目标；聊天卡没有目标时用当前选中的目标。
 // LANCER 系统本身不会施加命中效果里的状态（其代码中为 TODO）。是否满足豁免等条件由玩家与 GM 判断。
@@ -933,7 +1004,7 @@ function onRenderChatMessage(message, html) {
 	if (!attack) return;
 	if (!(game.user?.isGM || message.isAuthor)) return;
 	const item = attack.attackerItemUuid ? fromUuidSync(attack.attackerItemUuid) : null;
-	const statuses = [];
+	const statuses = [...(BASIC_ACTIONS[message.getFlag?.(MODULE_ID, "basicAction")]?.statuses ?? [])];
 	for (const t of attackTexts(item)) for (const id of statusesIn(t.text, { strict: t.strict })) if (!statuses.includes(id)) statuses.push(id);
 	if (!statuses.length) return;
 	const content = root.querySelector(".message-content") ?? root;
@@ -960,7 +1031,451 @@ Hooks.once("ready", () => {
 	});
 });
 
-globalThis.LancerCN = { translate, walk, importReference, REFERENCE, coverFor, applyCover, defineCoverBehavior, hexWallData, setHexWall, setCoverCell, coverCellHas, PAINT_TOOLS, statusesIn, attackTexts, onRenderChatMessage, attackReach, tokenDistance, targetCandidates, targetPanelHTML, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession };
+// ---------------------------------------------------------------------------
+// 基础动作：机甲表「装配」页、NPC 表「战斗工具」下方加一排按钮。
+// LANCER 系统只有不带说明的「基础攻击」「科技攻击」，这里用同样的 flow（BasicAttackFlow / TechAttackFlow / StatRollFlow）
+// 带上动作名称和规则说明发起；聊天卡按动作补上状态按钮（入侵：受损 / 缓慢，冲撞：伏卧），权宜攻击掷伤害时预填伤害。
+// 入侵命中后的 2 热度由系统的伤害按钮负责。NPC 的近战加值 +1/2/3 即层级，系统对 NPC 的基础攻击本来就用层级作加值；
+// NPC 的科技攻击用系统值。
+// 规则文字：机甲依核心规则书 v3.5 第 65–66 页（与车卡器术语库一致），NPC 依第 272–273 页「非玩家角色 · 动作」。
+// type：attack（攻击 flow）、lockon（给当前目标加锁定）、hide（自己匿迹）、check（系统检定）、stabilize（NPC 稳住阵脚）
+const BASIC_ACTIONS = {
+	fragment: {
+		actors: ["mech"], type: "attack", name: "破碎讯号", title: "入侵 // 破碎讯号", kind: "快速科技", flow: "TechAttackFlow", invade: true, icon: "cci cci-tech-quick",
+		statuses: ["impaired", "slow"],
+		effect: "<p><b>入侵</b>（快速科技）：对视线与感应内的一个角色进行科技攻击；成功时造成 2 热度，并应用一个入侵选项。</p><p><b>破碎讯号</b>：目标<b>受损</b>且<b>缓慢</b>，直到其下一回合结束。</p><p>对自愿的盟友使用时自动成功，不视为攻击，也不造成热度。</p>",
+	},
+	lockon: {
+		actors: ["mech"], type: "lockon", name: "锁定", title: "锁定", kind: "快速科技", icon: "mdi mdi-crosshairs-gps",
+		effect: "<p><b>锁定</b>（快速科技）：对感应及视线内的目标施加<b>锁定</b>。任何角色攻击被锁定的目标时，可以消耗锁定让这次攻击 +1 准度。</p>",
+	},
+	grapple: {
+		actors: ["mech"], type: "attack", name: "擒拿", title: "擒拿", kind: "快速动作", flow: "BasicAttackFlow", reach: 1, icon: "cci cci-weapon", statuses: [],
+		effect: "<p><b>擒拿</b>（快速动作）：对邻接目标进行近战攻击。命中后双方交战，<b>不能推进或反应</b>；较小方固定并随较大方移动。同体型时可在任一方回合开始进行机体对抗检定决定谁视为较大方。</p><p>攻击者可用自由动作结束擒拿；防御者可用快速动作进行机体对抗检定逃脱；双方不再邻接时也会结束。</p>",
+	},
+	ram: {
+		actors: ["mech"], type: "attack", name: "冲撞", title: "冲撞", kind: "快速动作", flow: "BasicAttackFlow", reach: 1, icon: "cci cci-weapon", statuses: ["prone"],
+		effect: "<p><b>冲撞</b>（快速动作）：对大小不大于你的邻接目标进行近战攻击。命中时目标被击倒<b>伏卧</b>，你也可以将其<b>击退1</b>。</p>",
+	},
+	improvised: {
+		actors: ["mech"], type: "attack", name: "权宜攻击", title: "权宜攻击", kind: "完整动作", flow: "BasicAttackFlow", reach: 1, icon: "cci cci-weapon", statuses: [],
+		damage: () => [{ type: "Kinetic", val: "1d6" }],
+		effect: "<p><b>权宜攻击</b>（完整动作）：对邻接目标进行近战攻击，命中造成 <b>1d6 动能伤害</b>。受扰时仍可以进行。</p>",
+	},
+	npcInvade: {
+		actors: ["npc"], type: "attack", name: "入侵", title: "入侵", kind: "快速科技", flow: "TechAttackFlow", invade: true, icon: "cci cci-tech-quick",
+		statuses: ["impaired"],
+		effect: "<p><b>入侵</b>（快速科技）：NPC 对感应内一个角色进行科技攻击，以系统对抗电子防御。若成功，目标受到 2 热度并<b>受损</b>直到对方下一回合结束。</p>",
+	},
+	npcLockon: {
+		actors: ["npc"], type: "lockon", name: "锁定", title: "锁定", kind: "快速科技", icon: "mdi mdi-crosshairs-gps",
+		effect: "<p><b>锁定</b>（快速科技）：NPC 在视线感应内选择一个角色：对方被<b>锁定</b>。</p>",
+	},
+	npcGrapple: {
+		actors: ["npc"], type: "attack", name: "擒拿", title: "擒拿", kind: "快速动作", flow: "BasicAttackFlow", reach: 1, icon: "cci cci-weapon", statuses: [],
+		effect: "<p><b>擒拿</b>（快速动作）：NPC 对其邻近角色进行近战攻击并获得 +1/2/3 加值，若成功则擒住对方。</p>",
+	},
+	npcRam: {
+		actors: ["npc"], type: "attack", name: "冲撞", title: "冲撞", kind: "快速动作", flow: "BasicAttackFlow", reach: 1, icon: "cci cci-weapon", statuses: ["prone"],
+		effect: "<p><b>冲撞</b>（快速动作）：NPC 对与自己大小相同或更小的邻近角色进行近战攻击并获得 +1/2/3 加值。成功后击倒目标<b>伏卧</b>，也可以将目标向后击退 1 空间。</p>",
+	},
+	npcHide: {
+		actors: ["npc"], type: "hide", name: "躲藏", title: "躲藏", kind: "快速动作", icon: "mdi mdi-eye-off-outline",
+		effect: "<p><b>躲藏</b>（快速动作）：NPC <b>匿迹</b>。</p>",
+	},
+	npcSearch: {
+		actors: ["npc"], type: "check", name: "搜索", title: "搜索（系统检定）", kind: "快速动作", path: "system.sys", icon: "mdi mdi-magnify",
+		effect: "<p><b>搜索</b>（快速动作）：NPC 进行系统检定，对抗感应内匿迹角色的敏捷。成功后目标不再匿迹。</p>",
+	},
+	npcImprovised: {
+		actors: ["npc"], type: "attack", name: "权宜攻击", title: "权宜攻击", kind: "完整动作", flow: "BasicAttackFlow", reach: 1, icon: "cci cci-weapon", statuses: [],
+		// 原文「造成 3/4/6 伤害」没写类型，2026-11-11 用户确认按动能（与机甲的权宜攻击一致）
+		damage: actor => [{ type: "Kinetic", val: String([3, 4, 6][Math.min(3, Math.max(1, Number(actor?.system?.tier) || 1)) - 1]) }],
+		effect: "<p><b>权宜攻击</b>（完整动作）：NPC 的近战攻击基于其层级会获得 +1/2/3 加值和造成 3/4/6 伤害。</p>",
+	},
+	npcStabilize: {
+		actors: ["npc"], type: "stabilize", name: "稳住阵脚", title: "稳住阵脚", kind: "完整动作", icon: "cci cci-repair",
+		effect: "<p><b>稳住阵脚</b>（完整动作）：NPC 清除所有热度和<b>暴露</b>状况，并填装所有装填武器。</p>",
+	},
+};
+
+// 发起中的基础动作：preCreateChatMessage 时给这次的攻击卡记上动作（attackData 本身不带标题）
+let pendingBasic = null;
+
+// 不掷骰的动作：发一张说明卡
+async function basicCard(actor, def, extra = "") {
+	const content = `<div class="card clipped-bot" style="margin:0"><div class="lancer-header lancer-primary">// ${escHtml(def.title)} //</div><div class="effect-text">${def.effect}${extra}</div></div>`;
+	return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content });
+}
+
+async function beginBasicAction(actor, key) {
+	const def = BASIC_ACTIONS[key];
+	if (!def || !actor) return false;
+	if (def.type === "lockon") {
+		const targets = [...(game.user?.targets ?? [])];
+		if (!targets.length) { ui.notifications.warn("请先选中要锁定的目标（按 T 或用目标面板）。"); return false; }
+		let n = 0;
+		for (const t of targets) if (await applyStatusTo(t.document.uuid, "lockon")) n++;
+		await basicCard(actor, def, `<p>目标：${targets.map(t => escHtml(t.name)).join("、")}</p>`);
+		return n > 0;
+	}
+	if (def.type === "hide") {
+		if (!actor.statuses?.has("hidden")) await actor.toggleStatusEffect("hidden", { active: true });
+		await basicCard(actor, def);
+		return true;
+	}
+	if (def.type === "stabilize") return npcStabilize(actor, def);
+	const Cls = game.lancer?.flows?.get?.(def.type === "check" ? "StatRollFlow" : def.flow);
+	if (!Cls) return false;
+	if (def.type === "check") {
+		const flow = new Cls(actor.uuid, { title: def.title, path: def.path });
+		return flow.begin({ ...flow.state.data, title: def.title, path: def.path });
+	}
+	const flow = new Cls(actor.uuid, { title: def.title, invade: !!def.invade, effect: def.effect });
+	flow.lancerCnBasic = key;
+	// Flow.begin(data) 用 data 取代整个状态，并把它当作各步骤的选项：标题要从这里传，否则会被换成 BASIC ATTACK / TECH ATTACK
+	const data = { ...flow.state.data, title: def.title, effect: def.effect };
+	if (def.invade) data.invade = true;
+	pendingBasic = { actorUuid: actor.uuid, key };
+	try { return await flow.begin(data); }
+	finally { if (pendingBasic?.key === key) pendingBasic = null; }
+}
+
+// NPC 稳住阵脚：清除热度与暴露，填装装填武器（NPC 不能借此恢复 HP 或清除其他状态）
+async function npcStabilize(actor, def) {
+	const done = [];
+	if (Number(actor.system?.heat?.value) > 0) { await actor.update({ "system.heat.value": 0 }); done.push("热度归零"); }
+	if (actor.statuses?.has("exposed")) { await actor.toggleStatusEffect("exposed", { active: false }); done.push("清除暴露"); }
+	const reload = (actor.items ?? []).filter(i => i.type === "npc_feature" && i.system?.loaded === false && (i.system.tags ?? []).some(t => t.is_loading || t.lid === "tg_loading"));
+	if (reload.length) {
+		await actor.updateEmbeddedDocuments("Item", reload.map(i => ({ _id: i.id, "system.loaded": true })));
+		done.push(`填装：${reload.map(i => escHtml(i.name)).join("、")}`);
+	}
+	await basicCard(actor, def, `<p>${done.length ? done.join("；") : "没有需要清除或填装的。"}</p>`);
+	return true;
+}
+
+function onPreCreateBasicCard(message) {
+	const atk = message.flags?.lancer?.attackData;
+	if (!pendingBasic || !atk || atk.attackerItemUuid || atk.attackerUuid !== pendingBasic.actorUuid) return;
+	message.updateSource({ [`flags.${MODULE_ID}.basicAction`]: pendingBasic.key });
+}
+Hooks.on("preCreateChatMessage", onPreCreateBasicCard);
+
+function basicActionsHTML(actorType = "mech") {
+	const btn = ([key, d]) => `<button type="button" class="lancer-flow-button lancer-button lancer-secondary" data-lancer-cn-basic="${key}" title="${d.kind}">
+		<i class="${d.icon} i--4"></i> ${d.name}<span style="opacity:.7;font-size:.85em;margin-left:.3em">${d.kind}</span></button>`;
+	const list = Object.entries(BASIC_ACTIONS).filter(([, d]) => d.actors.includes(actorType));
+	return `<div class="card clipped lancer-cn-basic">
+		<span class="lancer-header lancer-primary submajor">基础动作</span>
+		<div class="lancer-flow-button-grid" style="flex-wrap:wrap">${list.map(btn).join("")}</div></div>`;
+}
+
+// 权宜攻击：系统从攻击卡掷伤害时不知道伤害（没有武器），这里拦下按钮，预填 1d6 动能后照系统的方式发起伤害
+async function rollBasicDamage(message, def) {
+	const atk = message.getFlag("lancer", "attackData");
+	const actor = await fromUuid(atk.attackerUuid);
+	if (!actor?.isOwner) return ui.notifications.error(`你不拥有 ${actor?.name ?? "攻击者"}，不能为其掷伤害。`);
+	const hit_results = [];
+	for (const t of atk.targets ?? []) {
+		const target = fromUuidSync(t.uuid);
+		if (!target?.object) continue;
+		hit_results.push({ target: target.object, total: t.total, usedLockOn: t.setConditions?.lockon === false, hit: t.hit, crit: t.crit });
+	}
+	const Cls = game.lancer.flows.get("DamageRollFlow");
+	const flow = new Cls(actor.uuid, {
+		title: `${def.name} 伤害`, configurable: true, invade: false, hit_results,
+		has_normal_hit: hit_results.some(h => h.hit && !h.crit), has_crit_hit: hit_results.some(h => h.crit),
+		damage: def.damage(actor).map(d => ({ ...d })), bonus_damage: [],
+	});
+	return flow.begin();
+}
+
+function onBasicDamageClick(event) {
+	const btn = event.target?.closest?.(".lancer-damage-flow");
+	if (!btn) return;
+	const id = btn.closest(".chat-message")?.dataset?.messageId;
+	const message = id && game.messages?.get(id);
+	const def = BASIC_ACTIONS[message?.getFlag?.(MODULE_ID, "basicAction")];
+	if (!def?.damage) return;
+	event.preventDefault();
+	event.stopPropagation();
+	event.stopImmediatePropagation();
+	rollBasicDamage(message, def).catch(err => console.error(`${MODULE_ID} |`, err));
+}
+
+// ---------------------------------------------------------------------------
+// 受限次数
+// 1. 受限值是掷骰式的武器（原型武器 I / II 受限 1d6+2、III 受限 2d6）：系统按 parseInt 读成 1 次。
+//    这里改成按掷出的结果（存在物品 flags.lancer-cn.limitedRoll）计算上限，再加机甲的受限加值；
+//    「USES」格子旁加「掷 1d6+2」按钮；全面维修后自动重掷。没掷过时上限为 0，提示先掷。
+// 2. 只写在文字里的受限（骨架特性、系统动作、天赋等，Foundry 没有次数栏）：机甲表上另列「受限次数」卡片，
+//    次数存在机甲的 flags.lancer-cn.counters，全面维修后回满。
+const DICE_FORMULA = /^\s*\d*d\d+(?:\s*[+-]\s*\d+)?\s*$/i;
+const isDiceFormula = v => typeof v === "string" && DICE_FORMULA.test(v);
+const limitedTag = item => { try { return item?.getTags?.()?.find(t => t.is_limited) ?? null; } catch { return null; } };
+const diceLimited = item => { const t = limitedTag(item); return t && isDiceFormula(String(t.val)) ? String(t.val).replace(/\s+/g, "") : null; };
+const limitedBonus = actor => (actor?.type === "mech" ? Number(actor.system?.loadout?.limited_bonus) || 0 : 0);
+
+function patchLimitedMax() {
+	const proto = CONFIG?.Item?.documentClass?.prototype;
+	if (!proto?.prepareFinalAttributes || proto.prepareFinalAttributes.lancerCn) return;
+	const orig = proto.prepareFinalAttributes;
+	proto.prepareFinalAttributes = function (...args) {
+		const r = orig.apply(this, args);
+		try {
+			if (diceLimited(this) && this.system?.uses) {
+				const rolled = Number(this.getFlag?.(MODULE_ID, "limitedRoll")) || 0;
+				this.system.uses.max = rolled ? rolled + limitedBonus(this.actor) : 0;
+			}
+		} catch (err) { console.error(`${MODULE_ID} |`, err); }
+		return r;
+	};
+	proto.prepareFinalAttributes.lancerCn = true;
+}
+
+async function rollLimited(item, { quiet = false } = {}) {
+	const formula = diceLimited(item);
+	if (!formula) return null;
+	const roll = await new Roll(formula).evaluate();
+	await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: item.actor }), flavor: `${item.name}：受限次数（${formula}）` }, quiet ? { rollMode: "selfroll" } : undefined);
+	const max = roll.total + limitedBonus(item.actor);
+	await item.update({ [`flags.${MODULE_ID}.limitedRoll`]: roll.total, "system.uses": max });
+	return max;
+}
+
+// 文字里的受限：「受限3」「受限 1」；「受限1/回合」这类写法有歧义，不计（见文档）
+const TEXT_LIMITED = /受限\s*(\d+d\d+(?:[+-]\d+)?|\d+)(?!\s*[/／\d])/g;
+const stripTags = s => String(s ?? "").replace(/<[^>]+>/g, "");
+function textLimitedOf(item) {
+	if (limitedTag(item)) return []; // 系统已经计数
+	const s = item.system ?? {};
+	const sources = [];
+	if (item.type === "frame") {
+		const cs = s.core_system ?? {};
+		const passive = stripTags(cs.passive_name).replace(/（.*$/, "").trim() || item.name;
+		sources.push([passive, cs.passive_name, cs.passive_effect]);
+		for (const t of s.traits ?? []) sources.push([t.name, t.description]);
+	} else if (item.type === "talent") {
+		// 天赋文字里括号中的「（0 SP、受限6……）」是所给装备的摘要，装备本身是单独的物品、由系统计数
+		for (const r of (s.ranks ?? []).slice(0, s.curr_rank ?? 0)) sources.push([r.name, stripTags(r.description).replace(/（[^）]*）|\([^)]*\)/g, "")]);
+	} else {
+		sources.push([item.name, s.effect]);
+	}
+	for (const a of s.actions ?? []) sources.push([a.name, a.detail]);
+	const out = [];
+	for (const [label, ...texts] of sources) {
+		for (const t of texts) {
+			const plain = stripTags(t);
+			for (const m of plain.matchAll(TEXT_LIMITED)) {
+				const max = m[1];
+				if (out.some(o => o.max === max)) continue; // 同一物品重复写的同一个受限
+				out.push({ key: `${item.id}_${out.length}`, item, label: label && label !== item.name ? `${item.name} · ${label}` : item.name, max });
+			}
+		}
+	}
+	return out;
+}
+
+function textCounters(mech) {
+	const items = [...(mech.items ?? [])];
+	const pilot = mech.system?.pilot?.value;
+	for (const t of pilot?.itemTypes?.talent ?? []) items.push(t);
+	return items.flatMap(textLimitedOf);
+}
+
+function counterState(mech, c) {
+	const saved = mech.getFlag?.(MODULE_ID, `counters.${c.key}`) ?? {};
+	const max = isDiceFormula(c.max) ? Number(saved.max) || 0 : Number(c.max);
+	const value = Math.min(max, Number.isFinite(saved.value) ? saved.value : max);
+	return { max, value };
+}
+
+function countersHTML(mech, counters) {
+	const rows = counters.map(c => {
+		const { max, value } = counterState(mech, c);
+		const hexes = Array.from({ length: max }, (_, i) => `<a data-lancer-cn-counter="${c.key}" data-available="${i < value}"><i class="mdi ${i < value ? "mdi-hexagon-slice-6" : "mdi-hexagon-outline"} theme--light"></i></a>`).join("");
+		const dice = isDiceFormula(c.max) ? `<button type="button" data-lancer-cn-counter-roll="${c.key}" style="flex:0 0 auto;width:auto;line-height:1.4;padding:0 .5em;margin:0">掷 ${c.max}</button>` : "";
+		return `<div style="display:flex;align-items:center;gap:6px;padding:2px 6px"><span style="flex:1">${escHtml(c.label)}</span><span>${hexes || (dice ? "未掷" : "")}</span>${dice}<span style="opacity:.7">${value} / ${max}</span></div>`;
+	}).join("");
+	return `<div class="card clipped lancer-cn-counters">
+		<span class="lancer-header lancer-primary submajor">受限次数（文字中的受限，系统不计数）</span>${rows}
+		<div style="text-align:right;padding:2px 6px"><button type="button" data-lancer-cn-counter-reset style="width:auto;line-height:1.4;padding:0 .6em">全部回满</button></div></div>`;
+}
+
+async function setCounter(mech, c, value, max) {
+	const st = counterState(mech, c);
+	await mech.setFlag(MODULE_ID, `counters.${c.key}`, { value: Math.max(0, Math.min(max ?? st.max, value)), ...(max !== undefined ? { max } : isDiceFormula(c.max) ? { max: st.max } : {}) });
+}
+
+async function rollCounter(mech, c) {
+	const roll = await new Roll(c.max).evaluate();
+	await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: mech }), flavor: `${c.label}：受限次数（${c.max}）` });
+	await setCounter(mech, c, roll.total, roll.total);
+}
+
+async function resetCounters(mech, { roll = true } = {}) {
+	for (const c of textCounters(mech)) {
+		if (isDiceFormula(c.max)) { if (roll) await rollCounter(mech, c); }
+		else await mech.unsetFlag(MODULE_ID, `counters.${c.key}`);
+	}
+}
+
+// 全面维修：重掷掷骰式受限，回满文字受限
+async function onFullRepair(flow, success) {
+	if (!success) return;
+	const actor = flow?.state?.actor;
+	const actors = [actor, actor?.system?.active_mech?.value].filter((a, i, arr) => a && arr.indexOf(a) === i);
+	for (const a of actors) {
+		if (!a.isOwner) continue;
+		for (const item of a.items ?? []) if (diceLimited(item)) await rollLimited(item);
+		if (a.type === "mech") await resetCounters(a);
+	}
+}
+
+// 机甲表：基础动作卡、文字受限卡、掷骰式受限按钮
+function onRenderActorSheet(app, html) {
+	const root = html instanceof HTMLElement ? html : html?.[0];
+	const actor = app?.actor;
+	if (!root || !actor) return;
+	// 掷骰式受限：在物品的 USES 格子旁加按钮（机甲、驾驶员、NPC 都适用）
+	for (const card of root.querySelectorAll(".limited-card")) {
+		if (card.querySelector("[data-lancer-cn-limited]")) continue;
+		const uuid = card.closest(".set[data-uuid*='Item']")?.dataset.uuid;
+		const item = uuid ? fromUuidSync(uuid) : null;
+		const formula = diceLimited(item);
+		if (!formula || !card.querySelector(".uses-hex, span")) continue;
+		if (!/USES|次数/.test(card.textContent ?? "")) continue;
+		card.insertAdjacentHTML("beforeend", `<button type="button" data-lancer-cn-limited="${uuid}" title="掷受限次数（全面维修后会自动重掷）" style="flex:0 0 auto;width:auto;line-height:1.4;padding:0 .4em;margin:0 0 0 4px"><i class="fas fa-dice"></i> ${formula}</button>`);
+	}
+	if ((actor.type === "mech" || actor.type === "npc") && actor.isOwner && !root.querySelector(".lancer-cn-basic")) {
+		// 系统「战斗工具」卡片（机甲在「装配」页，NPC 在主页）：以其中的「基础攻击」按钮定位
+		const anchor = root.querySelector('[data-flow-type="BasicAttack"]')?.closest(".card");
+		if (anchor) {
+			anchor.insertAdjacentHTML("afterend", basicActionsHTML(actor.type));
+			const counters = actor.type === "mech" ? textCounters(actor) : [];
+			if (counters.length) root.querySelector(".lancer-cn-basic").insertAdjacentHTML("afterend", countersHTML(actor, counters));
+		}
+	}
+	if (root.dataset.lancerCnBound) return;
+	root.dataset.lancerCnBound = "1";
+	root.addEventListener("click", async ev => {
+		const t = ev.target;
+		const basic = t.closest?.("[data-lancer-cn-basic]");
+		const lim = t.closest?.("[data-lancer-cn-limited]");
+		const hex = t.closest?.("[data-lancer-cn-counter]");
+		const croll = t.closest?.("[data-lancer-cn-counter-roll]");
+		const reset = t.closest?.("[data-lancer-cn-counter-reset]");
+		if (!(basic || lim || hex || croll || reset)) return;
+		ev.preventDefault();
+		ev.stopPropagation();
+		try {
+			const a = app.actor;
+			if (basic) return await beginBasicAction(a, basic.dataset.lancerCnBasic);
+			if (lim) return await rollLimited(fromUuidSync(lim.dataset.lancerCnLimited));
+			if (reset) return await resetCounters(a, { roll: false });
+			const key = (hex ?? croll).dataset[hex ? "lancerCnCounter" : "lancerCnCounterRoll"];
+			const c = textCounters(a).find(x => x.key === key);
+			if (!c) return;
+			if (croll) return await rollCounter(a, c);
+			const { value } = counterState(a, c);
+			await setCounter(a, c, hex.dataset.available === "true" ? value - 1 : value + 1);
+		} catch (err) { console.error(`${MODULE_ID} |`, err); ui.notifications.error(String(err.message ?? err)); }
+	}, true);
+}
+
+// ---------------------------------------------------------------------------
+// 文字里的骰子：系统 / 武器 / 天赋等说明里的「1d6」「1d6+2」变成可点的链接，点了以该角色名义掷骰
+// （例如定制涂装作业「掷1d6，结果为6……」）。只处理说明文字（.effect-text、.desc-text），不碰伤害栏、编辑区。
+const DICE_IN_TEXT = /(?<![A-Za-z0-9])(\d*)d(3|4|6|8|10|12|20|100)(?:\s*([+-])\s*(\d+))?(?![A-Za-z0-9])/gi;
+const DICE_SCOPE = ".effect-text, .desc-text";
+const DICE_SKIP = "a, button, input, textarea, select, .lancer-cn-roll, [contenteditable='true'], prose-mirror, .ProseMirror, .editor-content, .dice-roll, .inline-roll";
+
+function linkDiceIn(el) {
+	const doc = el.ownerDocument ?? globalThis.document;
+	const walker = doc.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */);
+	const nodes = [];
+	// 只用不带 g 的副本判断：matchAll 会沿用 g 正则的 lastIndex，test 之后直接 matchAll 会漏掉第一个骰子
+	const has = new RegExp(DICE_IN_TEXT.source, "i");
+	for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+		if (has.test(n.nodeValue) && !n.parentElement?.closest(DICE_SKIP)) nodes.push(n);
+	}
+	DICE_IN_TEXT.lastIndex = 0;
+	for (const n of nodes) {
+		const frag = doc.createDocumentFragment();
+		let last = 0;
+		const text = n.nodeValue;
+		for (const m of text.matchAll(DICE_IN_TEXT)) {
+			if (m.index > last) frag.append(text.slice(last, m.index));
+			const formula = `${m[1] || 1}d${m[2]}${m[3] ? m[3] + m[4] : ""}`;
+			const a = doc.createElement("a");
+			a.className = "lancer-cn-roll";
+			a.dataset.formula = formula;
+			a.title = `点击掷 ${formula}`;
+			a.innerHTML = `<i class="fas fa-dice-d6"></i>`;
+			a.append(m[0]);
+			frag.append(a);
+			last = m.index + m[0].length;
+		}
+		if (last < text.length) frag.append(text.slice(last));
+		n.replaceWith(frag);
+	}
+	return nodes.length;
+}
+
+function linkDice(root) {
+	if (!root?.querySelectorAll) return 0;
+	let n = 0;
+	if (root.matches?.(DICE_SCOPE)) n += linkDiceIn(root);
+	for (const el of root.querySelectorAll(DICE_SCOPE)) n += linkDiceIn(el);
+	return n;
+}
+
+// 掷骰的名义：所在物品的拥有者 → 聊天消息的发言者 → 所在角色表的角色
+function diceContext(el) {
+	const uuid = el.closest("[data-uuid]")?.dataset.uuid;
+	const doc = uuid ? fromUuidSync(uuid) : null;
+	if (doc?.documentName === "Item") return { actor: doc.actor, flavor: doc.name };
+	if (doc?.documentName === "Actor") return { actor: doc, flavor: "" };
+	const msg = game.messages?.get(el.closest(".chat-message")?.dataset?.messageId);
+	if (msg) return { speaker: msg.speaker, flavor: "" };
+	const appId = el.closest(".window-app, .application")?.dataset?.appid;
+	const app = appId ? ui.windows?.[appId] : null;
+	return { actor: app?.actor ?? null, flavor: app?.item?.name ?? "" };
+}
+
+function onDiceClick(event) {
+	const a = event.target?.closest?.(".lancer-cn-roll");
+	if (!a) return;
+	event.preventDefault();
+	event.stopPropagation();
+	const ctx = diceContext(a);
+	const speaker = ctx.speaker ?? ChatMessage.getSpeaker(ctx.actor ? { actor: ctx.actor } : {});
+	new Roll(a.dataset.formula).toMessage({ speaker, flavor: ctx.flavor ? `${ctx.flavor}：${a.dataset.formula}` : a.dataset.formula }).catch(err => console.error(`${MODULE_ID} |`, err));
+}
+
+const diceObserver = typeof MutationObserver === "function" ? new MutationObserver(muts => {
+	for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) linkDice(n);
+}) : null;
+
+Hooks.once("setup", () => {
+	if (game.system?.id !== "lancer") return;
+	patchLimitedMax();
+});
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer") return;
+	globalThis.addEventListener?.("click", onBasicDamageClick, { capture: true });
+	globalThis.addEventListener?.("click", onDiceClick, { capture: true });
+	Hooks.on("lancer.postFlow.FullRepairFlow", (flow, success) => onFullRepair(flow, success).catch(err => console.error(`${MODULE_ID} |`, err)));
+});
+Hooks.on("renderActorSheet", onRenderActorSheet);
+Hooks.once("ready", () => {
+	if (game.system?.id !== "lancer" || typeof document === "undefined") return;
+	linkDice(document.body);
+	diceObserver?.observe(document.body, { childList: true, subtree: true });
+});
+
+globalThis.LancerCN = { translate, walk, importReference, REFERENCE, coverFor, applyCover, defineCoverBehavior, hexWallData, setHexWall, setCoverCell, coverCellHas, PAINT_TOOLS, statusesIn, attackTexts, onRenderChatMessage, attackReach, tokenDistance, targetCandidates, targetPanelHTML, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession, tokenNameMode, onPreCreateToken, applyTokenNames, setupNamesAndNumbers, patchScrollingText, BASIC_ACTIONS, beginBasicAction, onPreCreateBasicCard, basicActionsHTML, onBasicDamageClick, patchLimitedMax, rollLimited, diceLimited, isDiceFormula, textLimitedOf, textCounters, counterState, resetCounters, onFullRepair, onRenderActorSheet, linkDice, onDiceClick };
 
 // 中文界面的版面修正。系统样式都在 @layer lancer 里，这里不分层，优先级自然更高。
 // - 伤害面板：伤害类型下拉框原本固定 12ch 宽（按英文 Explosive 定），中文只需约 5em，省下的宽度给数值框（原来会被挤成「1(」）。

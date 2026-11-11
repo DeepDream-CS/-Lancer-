@@ -593,6 +593,254 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		ok(!inserted, "不是攻击者也不是 GM 时不显示按钮");
 	}
 
+	// ---- 指示物名字与浮动文字（2026-11-11）
+	{
+		const L = ctx.LancerCN;
+		const s = log.settings["lancer-cn.tokenNames"];
+		ok(s && s.scope === "world" && s.config && s.default === "always" && s.choices?.keep && s.choices.hover && s.choices.always, "应注册世界设置「指示物显示名字」，默认始终显示");
+		ok(log.settings["lancer-cn.floatingNumbersOn"]?.scope === "client" && log.settings["lancer-cn.floatingNumbersOn"].config === false, "浮动伤害数字的一次性开启标记是隐藏的客户端设置");
+		ok(typeof hooks.preCreateToken === "function", "应监听 preCreateToken");
+		ctx.CONST.TOKEN_DISPLAY_MODES = { NONE: 0, CONTROL: 10, OWNER_HOVER: 20, HOVER: 30, OWNER: 40, ALWAYS: 50 };
+		const mkDoc = displayName => ({ displayName, updateSource(d) { Object.assign(this, d); } });
+		let d = mkDoc(0);
+		hooks.preCreateToken(d);
+		ok(d.displayName === 50, "默认：新放上的指示物始终显示名字");
+		log.settingValues["lancer-cn.tokenNames"] = "hover";
+		d = mkDoc(0); hooks.preCreateToken(d);
+		ok(d.displayName === 30, "选「悬停时」：显示模式为 HOVER");
+		log.settingValues["lancer-cn.tokenNames"] = "keep";
+		d = mkDoc(10); hooks.preCreateToken(d);
+		ok(d.displayName === 10, "选「不改」：保留角色的指示物设置");
+
+		// 已放好的指示物：只由在线的 GM 改，只改不一致的
+		log.settingValues["lancer-cn.tokenNames"] = "always";
+		const sceneUpdates = [];
+		const mkScene = (id, list) => ({ id, tokens: list, updateEmbeddedDocuments: async (t, u) => {
+			sceneUpdates.push([id, t, JSON.parse(JSON.stringify(u))]);
+			for (const x of u) Object.assign(list.find(tk => tk.id === x._id), { displayName: x.displayName });
+		} });
+		ctx.game.scenes = [mkScene("s1", [{ id: "a", displayName: 0 }, { id: "b", displayName: 50 }]), mkScene("s2", [{ id: "c", displayName: 30 }]), mkScene("s3", [])];
+		ctx.game.users = { activeGM: { isSelf: false } };
+		ok(await L.applyTokenNames() === 0 && !sceneUpdates.length, "不是负责的 GM 时不改已有指示物");
+		ctx.game.users.activeGM.isSelf = true;
+		const n = await L.applyTokenNames();
+		ok(n === 2 && sceneUpdates.length === 2 && sceneUpdates.every(([, t]) => t === "Token") && JSON.stringify(sceneUpdates.map(([id, , u]) => [id, u])) === JSON.stringify([["s1", [{ _id: "a", displayName: 50 }]], ["s2", [{ _id: "c", displayName: 50 }]]]), "GM 把各场景里不一致的指示物改成始终显示");
+		log.settingValues["lancer-cn.tokenNames"] = "keep";
+		sceneUpdates.length = 0;
+		ok(await L.applyTokenNames() === 0 && !sceneUpdates.length, "「不改」时不动已有指示物");
+		ok(typeof s.onChange === "function", "改设置时同步已有指示物");
+
+		// 第一次载入：打开 LANCER 的浮动伤害数字（只一次），GM 同步已有指示物（只一次）
+		log.settingValues["lancer-cn.tokenNames"] = "always";
+		ctx.game.scenes[0].tokens[0].displayName = 0;
+		sceneUpdates.length = 0;
+		const sets = [];
+		ctx.game.settings.set = async (m, k, v) => { sets.push(`${m}.${k}=${v}`); log.settingValues[`${m}.${k}`] = v; };
+		await L.setupNamesAndNumbers();
+		ok(sets.includes("lancer.floatingNumbers=true") && sets.includes("lancer-cn.floatingNumbersOn=true"), "第一次载入时打开 LANCER 的浮动伤害数字");
+		ok(sets.includes("lancer-cn.tokenNamesApplied=true") && sceneUpdates.length === 1, "第一次启用时 GM 同步已有指示物");
+		log.settingValues["lancer.floatingNumbers"] = false; // 玩家之后自己关掉
+		sets.length = 0; sceneUpdates.length = 0;
+		await L.setupNamesAndNumbers();
+		ok(!sets.length && !sceneUpdates.length, "之后不再改玩家的设置，也不再批量改指示物");
+
+		// 浮动文字：状态改成醒目的样式，数值照旧翻译
+		const shown = [];
+		class InterfaceCanvasGroup { createScrollingText(o, c, opt) { shown.push([c, opt]); } }
+		ctx.foundry.canvas = { groups: { InterfaceCanvasGroup } };
+		L.patchScrollingText();
+		L.patchScrollingText();
+		const ig = new InterfaceCanvasGroup();
+		ig.createScrollingText({}, "+(缓慢)", { fontSize: 28, direction: 1 });
+		ig.createScrollingText({}, "-(掩护 - 软性)", { fontSize: 28 });
+		ig.createScrollingText({}, "+2 Heat", { fontSize: 28 });
+		ok(shown.length === 3, "重复包装不会重复显示");
+		ok(shown[0][0] === "+ 缓慢" && shown[0][1].fontSize === 32 && shown[0][1].fill === 0xffd34d && shown[0][1].direction === 1, "获得状态：「+ 缓慢」，加大、黄色，保留原来的方向");
+		ok(shown[1][0] === "- 掩护 - 软性" && shown[1][1].fill === 0xb4b4b4, "去掉状态：「- 掩护 - 软性」，灰色");
+		ok(shown[2][0] === "+2 热度" && shown[2][1].fontSize === 28, "数值变化照旧翻译，不改样式");
+	}
+
+	// ---- 基础动作、受限次数、文字里的骰子（2026-11-11）
+	{
+		const L = ctx.LancerCN;
+		const B = L.BASIC_ACTIONS;
+		const keysOf = t => Object.keys(B).filter(k => B[k].actors.includes(t)).join();
+		ok(keysOf("mech") === "fragment,lockon,grapple,ram,improvised", "机甲的基础动作：破碎讯号、锁定、擒拿、冲撞、权宜攻击");
+		ok(keysOf("npc") === "npcInvade,npcLockon,npcGrapple,npcRam,npcHide,npcSearch,npcImprovised,npcStabilize", "NPC 的基础动作：入侵、锁定、擒拿、冲撞、躲藏、搜索、权宜攻击、稳住阵脚（规则书第 272–273 页）");
+		ok(B.npcInvade.flow === "TechAttackFlow" && B.npcInvade.invade && B.npcInvade.statuses.join() === "impaired" && /以系统对抗电子防御/.test(B.npcInvade.effect), "NPC 入侵：只有受损，没有缓慢");
+		ok(["npcGrapple", "npcRam", "npcImprovised"].every(k => B[k].effect.includes("+1/2/3 加值")) && B.npcRam.statuses.join() === "prone", "NPC 擒拿、冲撞、权宜攻击照录 +1/2/3 加值");
+		ok([1, 2, 3, 9].map(t => B.npcImprovised.damage({ system: { tier: t } })[0].val).join() === "3,4,6,6", "NPC 权宜攻击按层级 3/4/6 伤害");
+		ok(B.npcImprovised.kind === "完整动作" && B.npcStabilize.kind === "完整动作" && ["npcHide", "npcSearch", "npcGrapple", "npcRam"].every(k => B[k].kind === "快速动作"), "NPC 动作的快速 / 完整分类");
+		ok(!/npcStabilize|npcHide/.test(L.basicActionsHTML("mech")) && /data-lancer-cn-basic="npcStabilize"/.test(L.basicActionsHTML("npc")) && !/data-lancer-cn-basic="fragment"/.test(L.basicActionsHTML("npc")), "机甲与 NPC 各显示自己的按钮");
+		ok(B.fragment.flow === "TechAttackFlow" && B.fragment.invade && B.fragment.statuses.join() === "impaired,slow" && /受损/.test(B.fragment.effect) && /2 热度/.test(B.fragment.effect), "破碎讯号：入侵（科技攻击），命中受损且缓慢");
+		ok(B.grapple.kind === "快速动作" && B.ram.kind === "快速动作" && B.improvised.kind === "完整动作", "擒拿、冲撞是快速动作，权宜攻击是完整动作");
+		ok(B.ram.statuses.join() === "prone" && B.grapple.statuses.length === 0 && B.improvised.damage()[0].val === "1d6" && B.improvised.damage()[0].type === "Kinetic", "冲撞施加伏卧；权宜攻击 1d6 动能");
+		ok([B.grapple, B.ram, B.improvised].every(d => d.flow === "BasicAttackFlow" && d.reach === 1), "擒拿、冲撞、权宜攻击是邻接的近战攻击");
+		ok(L.attackReach({ lancerCnBasic: "ram", state: {} }).reach === 1, "目标面板按邻接标射程");
+		const html = L.basicActionsHTML();
+		ok(["fragment", "lockon", "grapple", "ram", "improvised"].every(k => html.includes(`data-lancer-cn-basic="${k}"`)) && /基础动作/.test(html), "机甲表的基础动作卡片");
+
+		// 发起：标题经 begin(data) 传入；攻击卡记上动作
+		const begun = [];
+		class FakeFlow {
+			constructor(uuid, data) { this.uuid = uuid; this.state = { data: { title: data.title, invade: !!data.invade, effect: data.effect, extra: 1 } }; }
+			async begin(data) { begun.push({ name: this.constructor.name, flow: this, data }); L.onPreCreateBasicCard(this.msg); return true; }
+		}
+		class TechAttackFlow extends FakeFlow {}
+		class BasicAttackFlow extends FakeFlow {}
+		const damageFlows = [];
+		class DamageRollFlow { constructor(uuid, data) { damageFlows.push({ uuid, data }); } async begin() { return true; } }
+		ctx.game.lancer = { flows: new Map([["TechAttackFlow", TechAttackFlow], ["BasicAttackFlow", BasicAttackFlow], ["DamageRollFlow", DamageRollFlow]]) };
+		const mech = { uuid: "Actor.m", type: "mech", name: "测试机甲", isOwner: true };
+		const sourced = [];
+		const mkMsg = (attackerUuid, item) => ({ flags: { lancer: { attackData: { attackerUuid, attackerItemUuid: item } } }, updateSource(u) { sourced.push(u); } });
+		FakeFlow.prototype.msg = mkMsg("Actor.m");
+		await L.beginBasicAction(mech, "fragment");
+		let b = begun.at(-1);
+		ok(b.name === "TechAttackFlow" && b.data.title === "入侵 // 破碎讯号" && b.data.invade === true && /破碎讯号/.test(b.data.effect) && b.data.extra === 1, "破碎讯号以科技攻击发起，begin 时带标题、入侵与说明");
+		ok(b.flow.lancerCnBasic === "fragment", "flow 上记下基础动作");
+		ok(sourced.length === 1 && sourced[0]["flags.lancer-cn.basicAction"] === "fragment", "攻击卡记上基础动作");
+		await L.beginBasicAction(mech, "improvised");
+		b = begun.at(-1);
+		ok(b.name === "BasicAttackFlow" && b.data.title === "权宜攻击" && !b.data.invade, "权宜攻击以基础攻击发起");
+		sourced.length = 0;
+		L.onPreCreateBasicCard(mkMsg("Actor.m"));
+		ok(!sourced.length, "动作结束后不再给其他卡片记标记");
+		FakeFlow.prototype.msg = mkMsg("Actor.m", "Item.w");
+		await L.beginBasicAction(mech, "ram");
+		ok(!sourced.length, "带物品的攻击卡不记基础动作");
+
+		// 聊天卡：冲撞给伏卧按钮
+		let inserted = "";
+		const content = { insertAdjacentHTML: (pos, h) => { inserted = h; }, querySelector: sel => (sel === ".lancer-cn-status-row" ? { addEventListener() {} } : null) };
+		const root = { querySelector: sel => (sel === ".message-content" ? content : null) };
+		ctx.game.user = { isGM: true };
+		const ramMsg = { isAuthor: true, getFlag: (s, k) => (s === "lancer" && k === "attackData" ? { attackerUuid: "Actor.m", targets: [] } : s === "lancer-cn" && k === "basicAction" ? "ram" : undefined) };
+		L.onRenderChatMessage(ramMsg, [root]);
+		ok(/data-lancer-cn-status="prone"/.test(inserted), "冲撞的攻击卡出现「伏卧」按钮");
+		inserted = "";
+		L.onRenderChatMessage({ ...ramMsg, getFlag: (s, k) => (s === "lancer-cn" ? "fragment" : ramMsg.getFlag(s, k)) }, [root]);
+		ok(/data-lancer-cn-status="impaired"/.test(inserted) && /data-lancer-cn-status="slow"/.test(inserted), "破碎讯号的攻击卡出现「受损」「缓慢」按钮");
+
+		// NPC：锁定当前目标、躲藏、搜索、稳住阵脚
+		{
+			const cards = [];
+			ctx.ChatMessage = { getSpeaker: o => ({ actor: o?.actor?.name }), create: async d => cards.push(d) };
+			ctx.escHtml = undefined;
+			const statusesOf = {};
+			const mkTokActor = (id, owner) => { const a = { isOwner: owner, statuses: new Set() }; a.toggleStatusEffect = async (sid, { active }) => { active ? a.statuses.add(sid) : a.statuses.delete(sid); }; statusesOf[id] = a; return a; };
+			const tA = mkTokActor("Scene.s.Token.x", true), tB = mkTokActor("Scene.s.Token.y", false);
+			const prevSync = ctx.fromUuidSync;
+			ctx.fromUuidSync = uuid => (statusesOf[uuid] ? { actor: statusesOf[uuid] } : prevSync(uuid));
+			const emitted = [];
+			ctx.game.socket = { emit: (ch, m) => emitted.push(m) };
+			ctx.game.users = { activeGM: { isSelf: false } };
+			ctx.ui = { notifications: { info() {}, warn: w => cards.push({ warn: w }), error() {} } };
+			const npc = mkTokActor("npc", true);
+			Object.assign(npc, { uuid: "Actor.n", type: "npc", name: "NPC", system: { tier: 2, heat: { value: 3 } } });
+			ctx.game.user = { isGM: true, targets: new Set() };
+			ok(await L.beginBasicAction(npc, "npcLockon") === false && cards.at(-1).warn, "没有目标时提示先选目标");
+			ctx.game.user.targets = new Set([{ name: "甲", document: { uuid: "Scene.s.Token.x" } }, { name: "乙", document: { uuid: "Scene.s.Token.y" } }]);
+			await L.beginBasicAction(npc, "npcLockon");
+			ok(tA.statuses.has("lockon") && emitted.some(m => m.uuid === "Scene.s.Token.y" && m.status === "lockon"), "锁定：自己的目标直接加，别人的请 GM 加");
+			ok(/锁定/.test(cards.at(-1).content) && /甲、乙/.test(cards.at(-1).content), "锁定发说明卡，列出目标");
+			await L.beginBasicAction(npc, "npcHide");
+			ok(npc.statuses.has("hidden") && /匿迹/.test(cards.at(-1).content), "躲藏：自己获得匿迹");
+			const statFlows = [];
+			ctx.game.lancer.flows.set("StatRollFlow", class { constructor(u, d) { this.state = { data: { ...d, roll_str: "1d20" } }; } async begin(d) { statFlows.push(d); return true; } });
+			await L.beginBasicAction(npc, "npcSearch");
+			ok(statFlows.at(-1)?.path === "system.sys" && /搜索/.test(statFlows.at(-1).title), "搜索：系统检定");
+			// 稳住阵脚
+			npc.statuses.add("exposed");
+			const updates = [];
+			npc.update = async u => { updates.push(u); npc.system.heat.value = 0; };
+			npc.items = [
+				{ id: "w1", name: "加农炮", type: "npc_feature", system: { loaded: false, tags: [{ is_loading: true }] } },
+				{ id: "w2", name: "步枪", type: "npc_feature", system: { loaded: true, tags: [{ is_loading: true }] } },
+				{ id: "w3", name: "刀", type: "npc_feature", system: { loaded: false, tags: [] } },
+			];
+			npc.updateEmbeddedDocuments = async (t, u) => updates.push([t, u]);
+			await L.beginBasicAction(npc, "npcStabilize");
+			ok(updates[0]["system.heat.value"] === 0 && !npc.statuses.has("exposed"), "稳住阵脚：热度归零、清除暴露");
+			ok(JSON.stringify(updates[1]) === JSON.stringify(["Item", [{ _id: "w1", "system.loaded": true }]]), "稳住阵脚：只填装未填装的装填武器");
+			ok(/加农炮/.test(cards.at(-1).content) && /热度归零/.test(cards.at(-1).content), "稳住阵脚发说明卡");
+			ctx.fromUuidSync = prevSync;
+			ctx.game.user = { isGM: true };
+		}
+
+		// 权宜攻击掷伤害：拦下系统按钮，预填 1d6 动能
+		const tokenObj = { id: "tok" };
+		const impMsg = { getFlag: (s, k) => (s === "lancer" ? { attackerUuid: "Actor.m", targets: [{ uuid: "Scene.s.Token.t", hit: true, total: 15 }] } : k === "basicAction" ? "improvised" : undefined) };
+		ctx.game.messages = { get: id => (id === "M1" ? impMsg : id === "M2" ? ramMsg : null) };
+		ctx.fromUuid = async uuid => (uuid === "Actor.m" ? mech : null);
+		ctx.fromUuidSync = uuid => (uuid === "Scene.s.Token.t" ? { object: tokenObj } : null);
+		let stopped = 0;
+		const ev = id => ({ target: { closest: sel => (sel === ".lancer-damage-flow" ? { closest: () => ({ dataset: { messageId: id } }) } : null) }, preventDefault() {}, stopPropagation() { stopped++; }, stopImmediatePropagation() {} });
+		L.onBasicDamageClick(ev("M1"));
+		await new Promise(r => setTimeout(r, 0));
+		const df = damageFlows.at(-1);
+		ok(stopped === 1 && df && df.data.damage[0].val === "1d6" && df.data.damage[0].type === "Kinetic" && df.data.hit_results[0].target === tokenObj && df.data.has_normal_hit, "权宜攻击的伤害按钮预填 1d6 动能，命中目标照旧");
+		L.onBasicDamageClick(ev("M2"));
+		ok(stopped === 1, "其他攻击卡的伤害按钮交给系统");
+		ok((ctx.windowListeners.click || []).filter(l => l.opts?.capture).length >= 2, "伤害按钮与骰子链接在 window 捕获阶段监听");
+
+		// 掷骰式受限：上限按掷出的结果 + 受限加值
+		ok(script.includes('const has = new RegExp(DICE_IN_TEXT.source, "i")'), "骰子链接：判断用不带 g 的正则（matchAll 沿用 lastIndex 会漏掉第一个骰子，2026-11-11 浏览器检查发现）");
+		ok(L.isDiceFormula("1d6+2") && L.isDiceFormula("2d6") && !L.isDiceFormula("3") && !L.isDiceFormula(3), "识别掷骰式受限值");
+		class Item { prepareFinalAttributes() { this.system.uses.max = 1; } getTags() { return this.tags; } getFlag(m, k) { return this.flags?.[m]?.[k]; } }
+		ctx.CONFIG = { ...ctx.CONFIG, Item: { ...ctx.CONFIG?.Item, documentClass: Item } };
+		hooks["once:setup"]();
+		L.patchLimitedMax();
+		const proto = new Item();
+		Object.assign(proto, { name: "原型武器 I", tags: [{ is_limited: true, val: "1d6+2" }], system: { uses: { value: 0, max: 0 } }, actor: { type: "mech", system: { loadout: { limited_bonus: 2 } } } });
+		proto.prepareFinalAttributes();
+		ok(proto.system.uses.max === 0, "没掷过时上限为 0");
+		proto.flags = { "lancer-cn": { limitedRoll: 5 } };
+		proto.prepareFinalAttributes();
+		ok(proto.system.uses.max === 7, "上限 = 掷出的 5 + 受限加值 2");
+		const plain = Object.assign(new Item(), { tags: [{ is_limited: true, val: "3" }], system: { uses: { max: 0 } } });
+		plain.prepareFinalAttributes();
+		ok(plain.system.uses.max === 1, "数字受限值不改（交给系统）");
+		const rolls = [];
+		ctx.Roll = class { constructor(f) { this.formula = f; } async evaluate() { this.total = 4; return this; } async toMessage(d) { rolls.push([this.formula, d.flavor]); } };
+		ctx.ChatMessage = { getSpeaker: o => ({ actor: o?.actor?.name }) };
+		const upd = [];
+		proto.update = async u => upd.push(u);
+		ok(await L.rollLimited(proto) === 6 && rolls.at(-1)[0] === "1d6+2" && /原型武器 I/.test(rolls.at(-1)[1]) && upd.at(-1)["flags.lancer-cn.limitedRoll"] === 4 && upd.at(-1)["system.uses"] === 6, "掷受限次数：记下结果并回满（4 + 2）");
+
+		// 文字里的受限
+		const frame = { id: "F", type: "frame", name: "孙子", system: { core_system: { passive_name: "霎间锚点（快速动作，受限3）", passive_effect: "霎间锚点（大小1/2，标签：可展开，受限3）。" }, traits: [] }, getTags: () => [] };
+		const sys = { id: "S", type: "mech_system", name: "“诡术师”干扰套组", system: { effect: "", actions: [{ name: "隐没", detail: "（受限 1）你消失在全息编码中。" }] }, getTags: () => [] };
+		const tagged = { id: "T", type: "mech_system", name: "猎犬", system: { effect: "群聚动力学 完整动作，受限 1" }, getTags: () => [{ is_limited: true, val: "1" }] };
+		const talent = { id: "K", type: "talent", name: "工兵", system: { curr_rank: 2, ranks: [{ name: "一", description: "<p><b>弹药库</b>（0 SP、受限6、每回合1次）</p>" }, { name: "二", description: "爆破者工具箱 0SP，4 受限1/回合" }, { name: "三", description: "受限2" }] }, getTags: () => null };
+		const fc = L.textLimitedOf(frame);
+		ok(fc.length === 1 && fc[0].label === "孙子 · 霎间锚点" && fc[0].max === "3", "骨架核心系统的受限：一个计数器（重复写的合并）");
+		const sc = L.textLimitedOf(sys);
+		ok(sc.length === 1 && sc[0].label === "“诡术师”干扰套组 · 隐没" && sc[0].max === "1", "系统动作的受限");
+		ok(L.textLimitedOf(tagged).length === 0, "已有受限标签的物品由系统计数");
+		ok(L.textLimitedOf(talent).length === 0, "天赋里的装备摘要与「受限1/回合」不计；未解锁的等级不计");
+		const flags = {};
+		const mech2 = { type: "mech", items: [frame, sys, tagged], system: { pilot: { value: { itemTypes: { talent: [talent] } } } },
+			getFlag: (m, k) => k.split(".").reduce((o, x) => o?.[x], flags[m]), setFlag: async (m, k, v) => { const [a, b] = k.split("."); ((flags[m] ||= {})[a] ||= {})[b] = v; },
+			unsetFlag: async (m, k) => { const [a, b] = k.split("."); delete flags[m]?.[a]?.[b]; } };
+		const counters = L.textCounters(mech2);
+		ok(counters.length === 2, "机甲的文字受限：骨架与系统各一个");
+		ok(JSON.stringify(L.counterState(mech2, counters[0])) === '{"max":3,"value":3}', "默认回满");
+		await mech2.setFlag("lancer-cn", `counters.${counters[0].key}`, { value: 1 });
+		ok(L.counterState(mech2, counters[0]).value === 1, "记下剩余次数");
+		await L.resetCounters(mech2);
+		ok(L.counterState(mech2, counters[0]).value === 3, "全部回满");
+
+		// 全面维修：重掷掷骰式受限、回满文字受限
+		const pilotActor = { type: "pilot", isOwner: true, items: [], system: { active_mech: { value: { ...mech2, isOwner: true, items: [proto, frame, sys] } } } };
+		await pilotActor.system.active_mech.value.setFlag("lancer-cn", `counters.${counters[1].key}`, { value: 0 });
+		const nRolls = rolls.length;
+		await L.onFullRepair({ state: { actor: pilotActor } }, true);
+		ok(rolls.length === nRolls + 1 && L.counterState(mech2, counters[1]).value === 1, "全面维修后重掷原型武器的受限，文字受限回满");
+		await L.onFullRepair({ state: { actor: pilotActor } }, false);
+		ok(rolls.length === nRolls + 1, "全面维修取消时不处理");
+	}
+
 	// ---- zip 与 dist
 	const zipPath = path.join(ROOT, "dist/fvtt/lancer-cn.zip");
 	ok(fs.existsSync(zipPath), "缺少 dist/fvtt/lancer-cn.zip，请运行 node tools/build-fvtt-module.js");

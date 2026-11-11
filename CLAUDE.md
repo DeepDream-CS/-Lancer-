@@ -165,6 +165,8 @@ node tools/draft-ext-actions.js [--write]  # 扩展条目正文里的动作 → 
 - **骨架插图**：骨架改成中文名后，Foundry 按英文名查插图的地方找不到图，模组用钩子按骨架 id 补图。
 - **车卡器资料**：专业牌照、扩展厂商无法经内容包导入，由 GM 按钮「导入车卡器资料」写入合集包（`importReference`），同时把骨架牌照改为中文名。
 - **攻击时选目标**：`lancer.preFlow.*` / `lancer.postFlow.*` 钩子开关目标面板（`openTargetPicker`）；客户端设置 `targetPicker`、`targetClearStale`、`targetAutoPick`。
+- **指示物名字与飘字**：世界设置 `tokenNames`（`preCreateToken` 设显示名称，`applyTokenNames` 由在线 GM 同步已有指示物）；第一次载入时打开系统设置 `lancer.floatingNumbers`（伤害飘字由系统负责）；状态飘字「+(名称)」在 `patchScrollingText` 里改样式。
+- **基础动作与受限计数**：机甲与 NPC 表的「基础动作」卡（`BASIC_ACTIONS`，`actors` 区分机甲 / NPC，NPC 文字依规则书第 272–273 页；`begin(data)` 传标题；攻击卡用 `flags.lancer-cn.basicAction` 标记）；掷骰式受限包装 `prepareFinalAttributes`；文字受限计数器存机甲 `flags.lancer-cn.counters`；说明里的骰子由 `linkDice` 变成链接。
 - **命中后施加状态**：攻击卡按钮（`onRenderChatMessage`、`statusesIn`），按物品文字识别状态，排除条件、自身、列举等写法；无权限时经模组 socket 请 GM 施加（`module.json` 需 `socket: true`）。
 - **掩护区**：区域行为「LANCER 掩护区」（`lancer-cn.cover`，需在 `module.json` 的 `documentTypes` 声明，显示名写进语言键 `TYPES.RegionBehavior.lancer-cn.cover`）：指示物进出区域时切换 `cover_soft` / `cover_hard`，只由触发事件的用户处理。「区域」工具栏的 GM 工具「软性 / 硬性掩护格」（`lancerCoverSoft` / `lancerCoverHard`）点格子加入本场景的掩护区（`flags.lancer-cn.coverCells`）。
 - **六边形墙体**：「墙壁」工具栏的 GM 工具（`lancerHexWall`），每格 6 段阻挡移动的墙 + 玩家可见的六边形图形（都带 `flags.lancer-cn.hexWall`）；有墙或图形任一样都算有墙体；`deleteWall` 钩子在墙删光时删图形；设置 `hexWallBlocksSight` 控制是否阻挡视线。
