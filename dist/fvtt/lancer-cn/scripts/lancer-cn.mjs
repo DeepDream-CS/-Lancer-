@@ -385,19 +385,95 @@ function defineCoverBehavior() {
 	};
 }
 
+// 危险地形：区域行为 lancer-cn.dangerous。指示物移入区域或在区域内结束回合时，由触发事件的一方发送工程检定提醒卡。
+const DANGEROUS_TYPE = `${MODULE_ID}.dangerous`;
+const DANGEROUS_DMG_ZH = { Kinetic: "动能", Energy: "能量", Explosive: "爆炸", Burn: "燃烧", Heat: "热度" };
+
+function defineDangerousBehavior() {
+	const Base = foundry.data?.regionBehaviors?.RegionBehaviorType;
+	if (!Base) return null;
+	const fields = foundry.data.fields;
+	const NumberField = fields.NumberField ?? fields.StringField;
+	const E = CONST.REGION_EVENTS ?? {};
+	const moveIn = E.TOKEN_MOVE_IN ?? "tokenMoveIn";
+	const turnEnd = E.TOKEN_TURN_END ?? "tokenTurnEnd";
+	const notify = async function (event) {
+		if (!event.user?.isSelf) return;
+		const token = event.data?.token;
+		const actor = token?.actor;
+		if (!actor) return;
+		const rawDmg = this.damage ?? this.system?.damage;
+		const dmg = Number.isFinite(Number(rawDmg)) ? Number(rawDmg) : 5;
+		const dtype = this.damageType ?? this.system?.damageType ?? "Kinetic";
+		const dmgText = dtype === "Heat" ? `${dmg} 点热度` : `${dmg} 点${DANGEROUS_DMG_ZH[dtype] ?? "动能"}伤害`;
+		const reason = event.name === turnEnd ? "在危险地形中结束回合" : "进入了危险地形";
+		const btn = actor.uuid ? `<div style="margin-top:4px"><button type="button" data-lancer-cn-eng-check="${escHtml(actor.uuid)}" style="width:auto;line-height:1.6;padding:0 .6em;margin:0"><i class="fas fa-dice-d20"></i> 工程检定</button></div>` : "";
+		const content = `<div class="card clipped-bot" style="margin:0"><div class="lancer-header lancer-primary">// 危险地形 //</div><div class="effect-text"><p><b>${escHtml(token.name ?? actor.name ?? "角色")}</b> ${reason}。</p><p>每轮仅触发一次：进行<b>工程检定</b>（目标 10），失败受到 <b>${dmgText}</b>。</p>${btn}</div></div>`;
+		return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor, token }), content });
+	};
+	return class DangerousTerrainBehavior extends Base {
+		static defineSchema() {
+			return {
+				damage: new NumberField({
+					required: true, initial: 5, min: 0, integer: true,
+					label: "失败伤害", hint: "工程检定失败时受到的伤害或热度点数（核心规则默认为 5）。",
+				}),
+				damageType: new fields.StringField({
+					required: true, initial: "Kinetic",
+					choices: { Kinetic: "动能", Energy: "能量", Explosive: "爆炸", Burn: "燃烧", Heat: "热度" },
+					label: "伤害类型", hint: "由 GM 指定的危险地形伤害类型。",
+				}),
+			};
+		}
+		static events = {
+			[moveIn]: notify,
+			[turnEnd]: notify,
+		};
+	};
+}
+
+async function runDangerousEngCheck(uuid) {
+	const actor = uuid ? (typeof fromUuid === "function" ? await fromUuid(uuid) : fromUuidSync?.(uuid)) : null;
+	if (!actor?.isOwner) return ui.notifications.warn("你不拥有该角色，请由拥有者或 GM 进行工程检定。");
+	const Cls = game.lancer?.flows?.get?.("StatRollFlow");
+	if (!Cls) return false;
+	const flow = new Cls(actor.uuid, { title: "危险地形 // 工程检定", path: "system.eng" });
+	return flow.begin({ ...flow.state?.data, title: "危险地形 // 工程检定", path: "system.eng" });
+}
+
+function onDangerousCheckClick(event) {
+	const btn = event.target?.closest?.("[data-lancer-cn-eng-check]");
+	if (!btn) return;
+	event.preventDefault?.();
+	event.stopPropagation?.();
+	event.stopImmediatePropagation?.();
+	runDangerousEngCheck(btn.dataset.lancerCnEngCheck).catch(err => reportError("危险地形工程检定", err));
+}
+
 Hooks.once("init", () => {
 	if (game.system?.id !== "lancer" || !CONFIG.RegionBehavior) return;
-	const Behavior = defineCoverBehavior();
-	if (!Behavior) return;
-	CONFIG.RegionBehavior.dataModels[COVER_TYPE] = Behavior;
-	if (CONFIG.RegionBehavior.typeIcons) CONFIG.RegionBehavior.typeIcons[COVER_TYPE] = "fa-solid fa-shield-halved";
+	const Cover = defineCoverBehavior();
+	if (Cover) {
+		CONFIG.RegionBehavior.dataModels[COVER_TYPE] = Cover;
+		if (CONFIG.RegionBehavior.typeIcons) CONFIG.RegionBehavior.typeIcons[COVER_TYPE] = "fa-solid fa-shield-halved";
+	}
+	const Dangerous = defineDangerousBehavior();
+	if (Dangerous) {
+		CONFIG.RegionBehavior.dataModels[DANGEROUS_TYPE] = Dangerous;
+		if (CONFIG.RegionBehavior.typeIcons) CONFIG.RegionBehavior.typeIcons[DANGEROUS_TYPE] = "fa-solid fa-triangle-exclamation";
+	}
 });
-// 行为类型的显示名：Foundry 按语言键 TYPES.RegionBehavior.lancer-cn.cover 查（按「.」逐层查找），
+// 行为类型的显示名：Foundry 按语言键 TYPES.RegionBehavior.lancer-cn.* 查（按「.」逐层查找），
 // 写进已载入的译文与英文后备译文，任何界面语言都显示中文名
 const COVER_LABEL_KEY = `TYPES.RegionBehavior.${COVER_TYPE}`;
+const DANGEROUS_LABEL_KEY = `TYPES.RegionBehavior.${DANGEROUS_TYPE}`;
 Hooks.once("i18nInit", () => {
 	if (game.system?.id !== "lancer") return;
-	for (const t of [game.i18n.translations, game.i18n._fallback]) if (t) foundry.utils.setProperty(t, COVER_LABEL_KEY, "LANCER 掩护区");
+	for (const t of [game.i18n.translations, game.i18n._fallback]) {
+		if (!t) continue;
+		foundry.utils.setProperty(t, COVER_LABEL_KEY, "LANCER 掩护区");
+		foundry.utils.setProperty(t, DANGEROUS_LABEL_KEY, "LANCER 危险地形");
+	}
 });
 
 // ---------------------------------------------------------------------------
@@ -410,12 +486,12 @@ const HEX_FLAG = "hexWall";
 const hexKey = offset => `${offset.i},${offset.j}`;
 
 // 一格墙体的文档数据：walls（每条边一段）与 drawing（实心多边形，坐标相对左上角）
-function hexWallData(rawVertices, key, { blockSight = false } = {}) {
+function hexWallData(rawVertices, key, { blockSight = false, mapImport = false } = {}) {
 	const vertices = rawVertices.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) }));
 	const NONE = CONST.WALL_SENSE_TYPES?.NONE ?? 0;
 	const NORMAL = CONST.WALL_SENSE_TYPES?.NORMAL ?? 20;
 	const MOVE = CONST.WALL_MOVEMENT_TYPES?.NORMAL ?? 20;
-	const flags = { [MODULE_ID]: { [HEX_FLAG]: key } };
+	const flags = { [MODULE_ID]: mapImport ? { [HEX_FLAG]: key, mapImport: true } : { [HEX_FLAG]: key } };
 	const walls = vertices.map((p, i) => {
 		const q = vertices[(i + 1) % vertices.length];
 		return { c: [p.x, p.y, q.x, q.y].map(Math.round), move: MOVE, sight: blockSight ? NORMAL : NONE, light: blockSight ? NORMAL : NONE, sound: NONE, flags };
@@ -465,27 +541,57 @@ async function setHexWall(scene, grid, point, mode) {
 }
 
 // ---------------------------------------------------------------------------
-// 掩护格：Foundry 的区域工具在六角网格上画不出整格的六边形。「区域」工具栏的「软性掩护格 / 硬性掩护格」
-// 点击格子把这一格加进本场景的软性 / 硬性掩护区（一个带「LANCER 掩护区」行为的区域，所有人可见），再点移除。
+// 掩护格与地形格：Foundry 的区域工具在六角网格上画不出整格的六边形。「区域」工具栏提供四把涂画工具：
+// - 软性掩护格 / 硬性掩护格：带「LANCER 掩护区」行为（进入自动挂上软性 / 硬性掩护）
+// - 困难地形格：带 Foundry v13 原生 modifyMovementCost 行为（步行每格消耗 2 点移动力，飞行与「无视地形」仍为 1 点）
+// - 危险地形格：带「LANCER 危险地形」行为（移入或结束回合时发送带一键工程检定按钮的提醒卡）
 const COVER_CELL_FLAG = "coverCells";
-const COVER_CELL_STYLE = {
-	soft: { name: "软性掩护格", color: "#3b82c4" },
-	hard: { name: "硬性掩护格", color: "#c4703b" },
+const TERRAIN_CELL_FLAG = "terrainCells";
+const REGION_CELL_DEFS = {
+	soft: { flag: COVER_CELL_FLAG, value: "soft", name: "软性掩护格", color: "#3b82c4", behavior: () => ({ name: "LANCER 掩护区", type: COVER_TYPE, system: { cover: "soft" } }) },
+	hard: { flag: COVER_CELL_FLAG, value: "hard", name: "硬性掩护格", color: "#c4703b", behavior: () => ({ name: "LANCER 掩护区", type: COVER_TYPE, system: { cover: "hard" } }) },
+	difficult: { flag: TERRAIN_CELL_FLAG, value: "difficult", name: "困难地形格", color: "#7d8c38", behavior: () => ({ name: "困难地形", type: "modifyMovementCost", system: { difficulties: { walk: 2 } } }) },
+	dangerous: { flag: TERRAIN_CELL_FLAG, value: "dangerous", name: "危险地形格", color: "#c93b3b", behavior: () => ({ name: "LANCER 危险地形", type: DANGEROUS_TYPE, system: { damage: 5, damageType: "Kinetic" } }) },
 };
 const cellPoints = vertices => vertices.flatMap(p => [Math.round(p.x), Math.round(p.y)]);
-const samePoints = (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= 1);
+function polyMetrics(pts) {
+	let sx = 0, sy = 0, minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+	const n = pts.length >> 1;
+	for (let i = 0; i < pts.length; i += 2) {
+		const x = pts[i], y = pts[i + 1];
+		sx += x; sy += y;
+		if (x < minX) minX = x; if (x > maxX) maxX = x;
+		if (y < minY) minY = y; if (y > maxY) maxY = y;
+	}
+	return { cx: sx / n, cy: sy / n, w: maxX - minX, h: maxY - minY };
+}
+// 比较两个六角格多边形是否同一格：除了逐顶点对齐，也兼容从车卡器静态场景 JSON 导入（起始顶点顺序可能不同）的六边形
+function samePoints(a, b) {
+	if (a.length !== b.length) return false;
+	if (a.every((v, i) => Math.abs(v - b[i]) <= 1)) return true;
+	if (a.length === 12) {
+		const ma = polyMetrics(a), mb = polyMetrics(b);
+		return Math.abs(ma.cx - mb.cx) <= 3 && Math.abs(ma.cy - mb.cy) <= 3 && Math.abs(ma.w - mb.w) <= 4 && Math.abs(ma.h - mb.h) <= 4;
+	}
+	return false;
+}
 const shapeData = s => (typeof s?.toObject === "function" ? s.toObject() : { ...s });
-const coverRegionOf = (scene, cover) => scene.regions.find(r => r.getFlag?.(MODULE_ID, COVER_CELL_FLAG) === cover);
+const cellRegionOf = (scene, kind) => {
+	const def = REGION_CELL_DEFS[kind];
+	return def ? scene.regions.find(r => r.getFlag?.(MODULE_ID, def.flag) === def.value) : undefined;
+};
 
-function coverCellHas(scene, grid, point, cover) {
+function regionCellHas(scene, grid, point, kind) {
 	const pts = cellPoints(grid.getVertices(grid.getOffset(point)));
-	const region = coverRegionOf(scene, cover);
+	const region = cellRegionOf(scene, kind);
 	return !!region?.shapes?.some(s => s.type === "polygon" && samePoints(Array.from(s.points), pts));
 }
 
-async function setCoverCell(scene, grid, point, cover, mode) {
+async function setRegionCell(scene, grid, point, kind, mode) {
+	const def = REGION_CELL_DEFS[kind];
+	if (!def) return null;
 	const pts = cellPoints(grid.getVertices(grid.getOffset(point)));
-	const region = coverRegionOf(scene, cover);
+	const region = cellRegionOf(scene, kind);
 	const shapes = (region?.shapes ?? []).map(shapeData);
 	const idx = shapes.findIndex(s => s.type === "polygon" && samePoints(Array.from(s.points), pts));
 	if (mode === "remove") {
@@ -499,16 +605,20 @@ async function setCoverCell(scene, grid, point, cover, mode) {
 	const shape = { type: "polygon", points: pts, hole: false };
 	if (region) await region.update({ shapes: [...shapes, shape] });
 	else {
-		const style = COVER_CELL_STYLE[cover];
 		await scene.createEmbeddedDocuments("Region", [{
-			name: style.name, color: style.color, shapes: [shape],
+			name: def.name, color: def.color, shapes: [shape],
 			visibility: CONST.REGION_VISIBILITY?.ALWAYS ?? 2,
-			flags: { [MODULE_ID]: { [COVER_CELL_FLAG]: cover } },
-			behaviors: [{ name: "LANCER 掩护区", type: COVER_TYPE, system: { cover } }],
+			flags: { [MODULE_ID]: { [def.flag]: def.value } },
+			behaviors: [def.behavior()],
 		}]);
 	}
 	return "add";
 }
+
+const coverCellHas = (scene, grid, point, cover) => regionCellHas(scene, grid, point, cover);
+const setCoverCell = (scene, grid, point, cover, mode) => setRegionCell(scene, grid, point, cover, mode);
+const terrainCellHas = (scene, grid, point, terrain) => regionCellHas(scene, grid, point, terrain);
+const setTerrainCell = (scene, grid, point, terrain, mode) => setRegionCell(scene, grid, point, terrain, mode);
 
 // ---------------------------------------------------------------------------
 // 按格子涂画的工具：工具启用时拦截画布左键（不让图层开始画墙 / 画区域），按下时所在格子决定放置还是移除，拖动时对经过的格子做同样的事
@@ -530,6 +640,18 @@ const PAINT_TOOLS = {
 		has: (scene, grid, point) => coverCellHas(scene, grid, point, "hard"),
 		apply: (scene, grid, point, mode) => setCoverCell(scene, grid, point, "hard", mode),
 		tool: { title: "硬性掩护格：点击格子加入硬性掩护区（进入的指示物获得硬性掩护），再点移除；按住拖动可连续操作", icon: "fa-solid fa-shield" },
+	},
+	lancerTerrainDifficult: {
+		control: "regions", label: "困难地形格",
+		has: (scene, grid, point) => terrainCellHas(scene, grid, point, "difficult"),
+		apply: (scene, grid, point, mode) => setTerrainCell(scene, grid, point, "difficult", mode),
+		tool: { title: "困难地形格：点击格子加入困难地形区（步行移动每空间消耗 2 点移动力），再点移除；按住拖动可连续操作", icon: "fa-solid fa-mountain" },
+	},
+	lancerTerrainDangerous: {
+		control: "regions", label: "危险地形格",
+		has: (scene, grid, point) => terrainCellHas(scene, grid, point, "dangerous"),
+		apply: (scene, grid, point, mode) => setTerrainCell(scene, grid, point, "dangerous", mode),
+		tool: { title: "危险地形格：点击格子加入危险地形区（移入或结束回合时发送工程检定提醒卡），再点移除；按住拖动可连续操作", icon: "fa-solid fa-triangle-exclamation" },
 	},
 };
 
@@ -614,6 +736,510 @@ Hooks.on("deleteWall", (wall, _options, userId) => {
 		.catch(err => console.error(`${MODULE_ID} |`, err))
 		.finally(() => removingHex.delete(key));
 });
+
+// ---------------------------------------------------------------------------
+// 导入车卡器战斗地图：兼容车卡器「导出地图」备份（Lancer-战斗地图.json）与「导出到 Foundry」场景文件（*-foundry.json）。
+// 支持两种导入方式：
+// 1. 新建独立场景：按地图尺寸与列奇偶建立平顶六角格场景，写入障碍物墙体、掩护区、困难/危险地形区、涂色格、标注、画线与部署位置标记。
+// 2. 铺到当前场景：保留当前场景的背景底图、光照与已有指示物，对齐场景六角网格写入地形与标记（重复导入可自动替换上次导入的内容）。
+const BM_SHAPES = { 2: [1, 0, 0, false], 3: [3, 1, 1, true], 4: [4, 1, 1, true] };
+
+function bmClamp(n, a, b) {
+	const v = Math.round(Number(n) || 0);
+	return Math.max(a, Math.min(b, v));
+}
+
+function battleMapFootprint(u) {
+	const uq = Math.round(Number(u?.q) || 0), ur = Math.round(Number(u?.r) || 0);
+	const sh = BM_SHAPES[u?.size];
+	if (!sh) return [{ q: uq, r: ur }];
+	const [k, ca, cb, cut] = sh;
+	const ar = ur - (uq - (uq & 1)) / 2;
+	const out = [];
+	for (let a = 0; a <= k; a++) {
+		for (let b = 0; a + b <= k; b++) {
+			if (cut && (a + b === 0 || a === k || b === k)) continue;
+			const q = uq + a - ca;
+			out.push({ q, r: ar + b - cb + (q - (q & 1)) / 2 });
+		}
+	}
+	return out;
+}
+
+// 后备平顶六角网格几何（测试环境或无网格场景回退用；Foundry 实机优先使用 scene.grid）
+function makeHexGrid(gridType = 4, gridSize = 100) {
+	const even = gridType === (CONST.GRID_TYPES?.HEXEVENQ ?? 5);
+	const sizeY = gridSize;
+	const sizeX = (2 / Math.sqrt(3)) * sizeY;
+	const colStep = 0.75 * sizeX;
+	const shiftOf = i => ((((i & 1) === 0) === even) ? 0.5 : 0);
+	const topLeft = ({ i, j }) => ({ x0: i * colStep, y0: (j + shiftOf(i)) * sizeY });
+	return {
+		type: gridType, size: gridSize, columns: true, even, isGridless: false,
+		getVertices(off) {
+			const { x0, y0 } = topLeft(off);
+			return [
+				{ x: x0 + 0.25 * sizeX, y: y0 },
+				{ x: x0 + 0.75 * sizeX, y: y0 },
+				{ x: x0 + sizeX, y: y0 + 0.5 * sizeY },
+				{ x: x0 + 0.75 * sizeX, y: y0 + sizeY },
+				{ x: x0 + 0.25 * sizeX, y: y0 + sizeY },
+				{ x: x0, y: y0 + 0.5 * sizeY },
+			];
+		},
+		getCenterPoint(off) {
+			const { x0, y0 } = topLeft(off);
+			return { x: x0 + 0.5 * sizeX, y: y0 + 0.5 * sizeY };
+		},
+		getOffset({ x, y }) {
+			const i = Math.round((x - 0.5 * sizeX) / colStep);
+			const j = Math.round((y - 0.5 * sizeY) / sizeY - shiftOf(i));
+			return { i, j };
+		},
+	};
+}
+
+function parseBattleMap(input) {
+	const raw = typeof input === "string" ? JSON.parse(input) : input;
+	if (!raw || typeof raw !== "object") throw new Error("不是有效的 JSON 对象");
+	const embedded = raw.flags?.[MODULE_ID]?.battlemap;
+	const src = embedded ?? raw;
+	if (!src || typeof src !== "object" || src.v !== 1 || !src.cells || typeof src.cells !== "object" || !Array.isArray(src.units) || !Array.isArray(src.lines)) {
+		throw new Error("不是有效的车卡器战斗地图文件");
+	}
+	const round = Math.max(1, Math.round(Number(src.round) || 1));
+	const map = {
+		v: 1,
+		minQ: bmClamp(src.minQ ?? 0, -200, 200),
+		minR: bmClamp(src.minR ?? 0, -200, 200),
+		w: bmClamp(src.w ?? 16, 2, 60),
+		h: bmClamp(src.h ?? 10, 2, 60),
+		round,
+		cells: src.cells,
+		units: src.units,
+		lines: src.lines,
+	};
+	const name = (typeof raw.name === "string" && raw.name.trim()) ? raw.name.trim() : `Lancer 战斗地图（第 ${round} 轮）`;
+	return { map, name };
+}
+
+async function clearImportedMapDocs(scene) {
+	if (!scene) return { drawings: 0, walls: 0, regions: 0 };
+	const drawings = (scene.drawings ?? []).filter(d => d.getFlag?.(MODULE_ID, "mapImport"));
+	const walls = (scene.walls ?? []).filter(w => w.getFlag?.(MODULE_ID, "mapImport"));
+	const regions = (scene.regions ?? []).filter(r => r.getFlag?.(MODULE_ID, "mapImport"));
+	const keys = new Set(walls.map(w => w.getFlag?.(MODULE_ID, HEX_FLAG)).filter(Boolean));
+	for (const k of keys) removingHex.add(k);
+	try {
+		if (drawings.length) await scene.deleteEmbeddedDocuments("Drawing", drawings.map(d => d.id));
+		if (walls.length) await scene.deleteEmbeddedDocuments("Wall", walls.map(w => w.id));
+		if (regions.length) await scene.deleteEmbeddedDocuments("Region", regions.map(r => r.id));
+	} finally {
+		for (const k of keys) removingHex.delete(k);
+	}
+	return { drawings: drawings.length, walls: walls.length, regions: regions.length };
+}
+
+async function clearUnitMarkers(scene = canvas?.scene) {
+	if (!game.user?.isGM || !scene) return 0;
+	const markers = (scene.drawings ?? []).filter(d => d.getFlag?.(MODULE_ID, "unitMarker"));
+	if (!markers.length) {
+		ui.notifications?.info("当前场景没有车卡器部署位置标记。");
+		return 0;
+	}
+	await scene.deleteEmbeddedDocuments("Drawing", markers.map(d => d.id));
+	ui.notifications?.info(`已清除 ${markers.length} 个部署位置标记图形。`);
+	return markers.length;
+}
+
+function polyDrawingFromVerts(verts, extra) {
+	const xs = verts.map(p => Math.round(p.x)), ys = verts.map(p => Math.round(p.y));
+	const x = Math.min(...xs), y = Math.min(...ys);
+	return {
+		x, y, locked: true,
+		shape: { type: "p", width: Math.max(1, Math.max(...xs) - x), height: Math.max(1, Math.max(...ys) - y), points: verts.flatMap(p => [Math.round(p.x) - x, Math.round(p.y) - y]) },
+		...extra,
+	};
+}
+
+function buildSceneMapDocs(map, grid, origin, { includeUnits = true, includeLines = true, blockSight = false, existingScene = null } = {}) {
+	const inB = (q, r) => q >= map.minQ && q < map.minQ + map.w && r >= map.minR && r < map.minR + map.h;
+	const hexColor = (s, d) => (typeof s === "string" && /^#[0-9a-f]{6}$/i.test(s) ? s : d);
+	const sizeY = grid.size || 100;
+	const sizeX = (2 / Math.sqrt(3)) * sizeY;
+	const geomOf = (q, r) => {
+		const off = { i: origin.i + (q - map.minQ), j: origin.j + (r - map.minR) };
+		const verts = grid.getVertices(off);
+		const pts = cellPoints(verts);
+		const center = grid.getCenterPoint ? grid.getCenterPoint(off) : (() => { const m = polyMetrics(pts); return { x: m.cx, y: m.cy }; })();
+		return { off, key: hexKey(off), verts, pts, cx: center.x, cy: center.y };
+	};
+	const walls = [], drawings = [];
+	const regionShapes = { soft: [], hard: [], difficult: [], dangerous: [] };
+	const counts = { obstacle: 0, soft: 0, hard: 0, difficult: 0, dangerous: 0, tint: 0, text: 0, lines: 0, units: 0 };
+	const croppedCells = {};
+	const SOLID = CONST.DRAWING_FILL_TYPES?.SOLID ?? 1;
+	const NONE_FILL = CONST.DRAWING_FILL_TYPES?.NONE ?? 0;
+
+	for (let q = map.minQ; q < map.minQ + map.w; q++) {
+		for (let r = map.minR; r < map.minR + map.h; r++) {
+			const raw = map.cells[`${q},${r}`];
+			if (!raw) continue;
+			croppedCells[`${q},${r}`] = raw;
+			const g = geomOf(q, r);
+			const t = raw.terrain || "";
+			if (t === "障碍物") {
+				if (!existingScene || !hexHas(existingScene, g.key)) {
+					const hw = hexWallData(g.verts, g.key, { blockSight, mapImport: true });
+					walls.push(...hw.walls);
+					drawings.push({ ...hw.drawing, sort: 0 });
+				}
+				counts.obstacle++;
+			} else if (t === "软性掩护") { regionShapes.soft.push({ type: "polygon", points: g.pts, hole: false }); counts.soft++; }
+			else if (t === "硬性掩护") { regionShapes.hard.push({ type: "polygon", points: g.pts, hole: false }); counts.hard++; }
+			else if (t === "困难地形") { regionShapes.difficult.push({ type: "polygon", points: g.pts, hole: false }); counts.difficult++; }
+			else if (t === "危险地形") { regionShapes.dangerous.push({ type: "polygon", points: g.pts, hole: false }); counts.dangerous++; }
+			else if ((!t || t === "自定义") && /^#[0-9a-f]{6}$/i.test(raw.color) && (t === "自定义" || raw.color.toLowerCase() !== "#202a38")) {
+				const col = hexColor(raw.color, "#506f46");
+				drawings.push(polyDrawingFromVerts(g.verts, {
+					sort: -20, fillType: SOLID, fillColor: col, fillAlpha: 0.45,
+					strokeColor: col, strokeWidth: 2, strokeAlpha: 0.7,
+					flags: { [MODULE_ID]: { mapImport: true, cellTint: g.key } },
+				}));
+				counts.tint++;
+			}
+			if (typeof raw.text === "string" && raw.text.trim()) {
+				const wBox = Math.round(sizeX * 0.9), hBox = Math.round(sizeY * 0.5);
+				drawings.push({
+					x: Math.round(g.cx - wBox / 2), y: Math.round(g.cy - hBox / 2), sort: 10, locked: true,
+					shape: { type: "r", width: wBox, height: hBox },
+					fillType: NONE_FILL, fillAlpha: 0, strokeWidth: 0, strokeAlpha: 0,
+					text: raw.text.trim().slice(0, 120), fontSize: 22, textColor: "#ffffff", textAlpha: 1,
+					flags: { [MODULE_ID]: { mapImport: true, cellText: g.key } },
+				});
+				counts.text++;
+			}
+		}
+	}
+
+	const visLines = map.lines.filter(l => l?.a && l?.b && inB(l.a.q, l.a.r) && inB(l.b.q, l.b.r) && (l.a.q !== l.b.q || l.a.r !== l.b.r));
+	if (includeLines) {
+		for (const l of visLines) {
+			const a = geomOf(l.a.q, l.a.r), b = geomOf(l.b.q, l.b.r);
+			const x = Math.round(Math.min(a.cx, b.cx)), y = Math.round(Math.min(a.cy, b.cy));
+			const col = hexColor(l.color, "#ffd166");
+			drawings.push({
+				x, y, sort: 5, locked: true,
+				shape: { type: "p", width: Math.max(1, Math.round(Math.abs(b.cx - a.cx))), height: Math.max(1, Math.round(Math.abs(b.cy - a.cy))), points: [Math.round(a.cx) - x, Math.round(a.cy) - y, Math.round(b.cx) - x, Math.round(b.cy) - y] },
+				fillType: NONE_FILL, fillAlpha: 0, strokeColor: col, strokeWidth: 5, strokeAlpha: 0.85,
+				flags: { [MODULE_ID]: { mapImport: true, mapLine: true } },
+			});
+			counts.lines++;
+		}
+	}
+
+	const visUnits = map.units.filter(u => inB(Math.round(Number(u?.q) || 0), Math.round(Number(u?.r) || 0)));
+	if (includeUnits) {
+		for (const u of visUnits) {
+			const fp = battleMapFootprint(u);
+			const col = hexColor(u.color, "#529be8");
+			const uFlag = { [MODULE_ID]: { mapImport: true, unitMarker: String(u.id ?? counts.units) } };
+			if (fp.length > 1) {
+				for (const c of fp) {
+					if (!inB(c.q, c.r)) continue;
+					drawings.push(polyDrawingFromVerts(geomOf(c.q, c.r).verts, {
+						sort: -8, fillType: SOLID, fillColor: col, fillAlpha: 0.2,
+						strokeColor: col, strokeWidth: 2, strokeAlpha: 0.75, flags: uFlag,
+					}));
+				}
+			}
+			const cs = fp.map(c => geomOf(c.q, c.r));
+			const uq = Math.round(Number(u.q) || 0), ur = Math.round(Number(u.r) || 0);
+			const stack = Math.max(0, visUnits.filter(v => Math.round(Number(v.q) || 0) === uq && Math.round(Number(v.r) || 0) === ur).indexOf(u));
+			const ux = cs.reduce((s, c) => s + c.cx, 0) / cs.length + (stack % 2) * 18;
+			const uy = cs.reduce((s, c) => s + c.cy, 0) / cs.length + Math.floor(stack / 2) * 18;
+			const diam = Math.round(sizeY * ({ 2: 0.85, 3: 0.95, 4: 1.05 }[u.size] || 0.72));
+			const label = ((u.name || "单位").trim().slice(0, 16)) + (u.size && String(u.size) !== "1" ? ` (S${u.size})` : "");
+			drawings.push({
+				x: Math.round(ux - diam / 2), y: Math.round(uy - diam / 2), sort: -5, locked: true,
+				shape: { type: "e", width: diam, height: diam },
+				fillType: SOLID, fillColor: col, fillAlpha: 0.4,
+				strokeColor: col, strokeWidth: 3, strokeAlpha: 0.95,
+				text: label, fontSize: 18, textColor: "#ffffff", textAlpha: 1, flags: uFlag,
+			});
+			counts.units++;
+		}
+	}
+
+	const croppedMap = {
+		v: 1, minQ: map.minQ, minR: map.minR, w: map.w, h: map.h, round: map.round,
+		cells: croppedCells, units: includeUnits ? visUnits : [], lines: includeLines ? visLines : [],
+	};
+	return { walls, drawings, regionShapes, counts, croppedMap };
+}
+
+function formatMapCounts(counts) {
+	const parts = [
+		["障碍物", counts.obstacle], ["软性掩护", counts.soft], ["硬性掩护", counts.hard],
+		["困难地形", counts.difficult], ["危险地形", counts.dangerous], ["涂色格", counts.tint],
+		["标注", counts.text], ["画线", counts.lines], ["部署标记", counts.units],
+	].filter(([, n]) => n > 0).map(([k, n]) => `${k} ${n}`);
+	return parts.length ? parts.join("、") : "空白网格";
+}
+
+async function importBattleMap(input, opts = {}) {
+	if (!game.user?.isGM) {
+		ui.notifications?.warn("只有 GM 可以导入车卡器地图。");
+		return null;
+	}
+	const { map, name: parsedName } = parseBattleMap(input);
+	const mode = opts.mode === "current" ? "current" : "new";
+	const sceneName = (opts.name || "").trim() || parsedName;
+	const gridSize = bmClamp(opts.gridSize || 100, 50, 300);
+	const includeUnits = opts.includeUnits !== false;
+	const includeLines = opts.includeLines !== false;
+	const blockSight = opts.blockSight !== undefined ? !!opts.blockSight : !!game.settings?.get?.(MODULE_ID, "hexWallBlocksSight");
+	const VIS_ALWAYS = CONST.REGION_VISIBILITY?.ALWAYS ?? 2;
+	const HEXODDQ = CONST.GRID_TYPES?.HEXODDQ ?? 4;
+	const HEXEVENQ = CONST.GRID_TYPES?.HEXEVENQ ?? 5;
+	const wantType = (map.minQ & 1) !== 0 ? HEXEVENQ : HEXODDQ;
+
+	if (mode === "new") {
+		const sizeY = gridSize, sizeX = (2 / Math.sqrt(3)) * sizeY;
+		const width = Math.ceil(((map.w - 1) * 0.75 + 1) * sizeX);
+		const height = Math.ceil((map.h + 0.5) * sizeY);
+		const SceneCls = CONFIG.Scene?.documentClass ?? globalThis.Scene;
+		const fallbackGrid = makeHexGrid(wantType, gridSize);
+		const preview = buildSceneMapDocs(map, fallbackGrid, { i: 0, j: 0 }, { includeUnits, includeLines, blockSight });
+		const scene = await SceneCls.create({
+			name: sceneName, navigation: true, width, height, padding: 0, backgroundColor: "#18202b",
+			grid: { type: wantType, size: gridSize, color: "#60768b", alpha: 0.6, distance: 1, units: "空间" },
+			tokenVision: false, fog: { exploration: false }, environment: { globalLight: { enabled: true } },
+			flags: { [MODULE_ID]: { battlemap: preview.croppedMap } },
+		});
+		const grid = (scene.grid?.getVertices && !scene.grid?.isGridless) ? scene.grid : fallbackGrid;
+		const { walls, drawings, regionShapes, counts } = grid === fallbackGrid
+			? preview
+			: buildSceneMapDocs(map, grid, { i: 0, j: 0 }, { includeUnits, includeLines, blockSight });
+		const regions = [];
+		for (const [kind, shapes] of Object.entries(regionShapes)) {
+			if (!shapes.length) continue;
+			const def = REGION_CELL_DEFS[kind];
+			regions.push({
+				name: def.name, color: def.color, shapes, visibility: VIS_ALWAYS,
+				flags: { [MODULE_ID]: { [def.flag]: def.value, mapImport: true } },
+				behaviors: [def.behavior()],
+			});
+		}
+		if (drawings.length) await scene.createEmbeddedDocuments("Drawing", drawings);
+		if (walls.length) await scene.createEmbeddedDocuments("Wall", walls);
+		if (regions.length) await scene.createEmbeddedDocuments("Region", regions);
+		if (opts.activate !== false) await scene.view?.();
+		ui.notifications?.info(`已导入场景「${scene.name}」（${map.w} × ${map.h} 格：${formatMapCounts(counts)}）。`);
+		return { scene, counts };
+	}
+
+	const scene = opts.scene ?? canvas?.scene;
+	if (!scene) throw new Error("当前没有打开的场景，请选择「新建独立场景」或先打开目标场景。");
+	const curType = scene.grid?.type ?? scene._source?.grid?.type ?? 1;
+	const switchedGrid = opts.setHexGrid !== false && curType !== HEXODDQ && curType !== HEXEVENQ;
+	if (switchedGrid) await scene.update?.({ "grid.type": wantType, "grid.distance": 1, "grid.units": "空间" });
+	if (opts.replaceImported !== false) await clearImportedMapDocs(scene);
+
+	const effType = switchedGrid ? wantType : (scene.grid?.type ?? curType);
+	const effSize = scene.grid?.size || gridSize;
+	const grid = (scene.grid?.getVertices && !scene.grid?.isGridless)
+		? scene.grid
+		: makeHexGrid(effType === HEXODDQ || effType === HEXEVENQ ? effType : wantType, effSize);
+
+	let origin = opts.origin ? { ...opts.origin } : null;
+	if (!origin) {
+		const sx = scene.dimensions?.sceneX || 0, sy = scene.dimensions?.sceneY || 0;
+		origin = (sx || sy) && grid.getOffset ? grid.getOffset({ x: sx + effSize * 0.5, y: sy + effSize * 0.5 }) : { i: 0, j: 0 };
+	}
+	const isColHex = grid.columns === true || effType === HEXODDQ || effType === HEXEVENQ;
+	if (isColHex) {
+		const evenShifted = grid.even !== undefined ? !!grid.even : effType === HEXEVENQ;
+		const shiftAt = col => ((((col & 1) === 0) === evenShifted) ? 1 : 0);
+		if (shiftAt(origin.i) !== (map.minQ & 1)) origin = { i: origin.i + 1, j: origin.j };
+	}
+
+	const { walls, drawings, regionShapes, counts, croppedMap } = buildSceneMapDocs(map, grid, origin, {
+		includeUnits, includeLines, blockSight, existingScene: scene,
+	});
+	if (scene.setFlag) await scene.setFlag(MODULE_ID, "battlemap", croppedMap);
+	else await scene.update?.({ [`flags.${MODULE_ID}.battlemap`]: croppedMap });
+
+	if (drawings.length) await scene.createEmbeddedDocuments("Drawing", drawings);
+	if (walls.length) await scene.createEmbeddedDocuments("Wall", walls);
+	const newRegions = [];
+	for (const [kind, shapes] of Object.entries(regionShapes)) {
+		if (!shapes.length) continue;
+		const existing = cellRegionOf(scene, kind);
+		if (existing) {
+			const cur = (existing.shapes ?? []).map(shapeData);
+			const added = shapes.filter(ns => !cur.some(cs => cs.type === "polygon" && samePoints(Array.from(cs.points), ns.points)));
+			if (added.length) await existing.update({ shapes: [...cur, ...added] });
+		} else {
+			const def = REGION_CELL_DEFS[kind];
+			newRegions.push({
+				name: def.name, color: def.color, shapes, visibility: VIS_ALWAYS,
+				flags: { [MODULE_ID]: { [def.flag]: def.value, mapImport: true } },
+				behaviors: [def.behavior()],
+			});
+		}
+	}
+	if (newRegions.length) await scene.createEmbeddedDocuments("Region", newRegions);
+	ui.notifications?.info(`已将车卡器地图铺到场景「${scene.name}」（${formatMapCounts(counts)}）。`);
+	return { scene, counts };
+}
+
+function openBattleMapImportDialog() {
+	if (!game.user?.isGM) {
+		ui.notifications?.warn("只有 GM 可以导入车卡器地图。");
+		return null;
+	}
+	const Dialog = foundry.applications?.api?.DialogV2;
+	if (!Dialog) return null;
+	const curScene = canvas?.scene ?? null;
+	const curMarkers = curScene ? (curScene.drawings ?? []).filter(d => d.getFlag?.(MODULE_ID, "unitMarker")).length : 0;
+	const defaultSight = !!game.settings?.get?.(MODULE_ID, "hexWallBlocksSight");
+	const content = `
+<div class="lancer-cn-bm-dialog" style="display:flex;flex-direction:column;gap:8px">
+	<p style="margin:0;font-size:.9em;opacity:.85">支持车卡器<b>「导出地图」</b>备份（<code>Lancer-战斗地图.json</code>）与<b>「导出到 Foundry」</b>场景文件（<code>*-foundry.json</code>）。</p>
+	<label style="display:flex;flex-direction:column;gap:4px"><span>选择地图 JSON 文件</span><input type="file" name="bmFile" accept=".json,application/json"></label>
+	<div data-bm-preview style="font-size:.85em;opacity:.85;min-height:1.2em"></div>
+	<label style="display:flex;flex-direction:column;gap:4px"><span>导入方式</span>
+		<select name="bmMode">
+			<option value="new">新建独立六角格场景</option>
+			<option value="current" ${curScene ? "" : "disabled"}>铺到当前场景${curScene ? `（${escHtml(curScene.name)}）` : "（当前未打开场景）"}</option>
+		</select>
+	</label>
+	<label data-bm-name-row style="display:flex;flex-direction:column;gap:4px"><span>新场景名称（留空使用文件中的名称）</span><input type="text" name="bmName" maxlength="80" placeholder="Lancer 战斗地图"></label>
+	<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" name="bmUnits" checked><span>将车卡器单位导入为底层「部署位置标记」图形</span></label>
+	<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" name="bmLines" checked><span>包含画线</span></label>
+	<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" name="bmSight" ${defaultSight ? "checked" : ""}><span>障碍物（六边形墙体）同时阻挡视线与光照</span></label>
+	<label data-bm-cur-row style="display:none;align-items:center;gap:6px"><input type="checkbox" name="bmReplace" checked><span>铺到当前场景时，先替换此前导入过的车卡器地形与标记</span></label>
+	<label data-bm-grid-row style="display:none;align-items:center;gap:6px"><input type="checkbox" name="bmSetHex" checked><span>若当前场景不是平顶六角格，自动切换为平顶六角格</span></label>
+</div>`;
+	const buttons = [
+		{
+			action: "import",
+			label: "导入地图",
+			icon: "fas fa-file-import",
+			default: true,
+			callback: async (event, button, dialog) => {
+				const root = dialog?.element ?? button?.form ?? event?.currentTarget?.closest?.("form, .application");
+				const file = root?.querySelector?.('input[name="bmFile"]')?.files?.[0];
+				if (!file) {
+					ui.notifications?.warn("请先选择车卡器导出的地图 JSON 文件。");
+					return;
+				}
+				try {
+					const text = await file.text();
+					await importBattleMap(text, {
+						mode: root.querySelector('select[name="bmMode"]')?.value || "new",
+						name: root.querySelector('input[name="bmName"]')?.value || "",
+						includeUnits: !!root.querySelector('input[name="bmUnits"]')?.checked,
+						includeLines: !!root.querySelector('input[name="bmLines"]')?.checked,
+						blockSight: !!root.querySelector('input[name="bmSight"]')?.checked,
+						replaceImported: !!root.querySelector('input[name="bmReplace"]')?.checked,
+						setHexGrid: !!root.querySelector('input[name="bmSetHex"]')?.checked,
+					});
+				} catch (err) {
+					console.error(`${MODULE_ID} |`, err);
+					ui.notifications?.error(`导入车卡器地图失败：${err.message ?? err}`);
+				}
+			},
+		},
+	];
+	if (curMarkers > 0) {
+		buttons.push({
+			action: "clearMarkers",
+			label: `清除部署标记（${curMarkers}）`,
+			icon: "fas fa-eraser",
+			callback: async () => { await clearUnitMarkers(curScene); },
+		});
+	}
+	buttons.push({ action: "cancel", label: "取消", icon: "fas fa-times" });
+	const dlg = new Dialog({
+		window: { title: "导入车卡器战斗地图", icon: "fas fa-map-location-dot" },
+		position: { width: 460 },
+		content,
+		buttons,
+	});
+	dlg.addEventListener?.("render", () => {
+		const el = dlg.element;
+		if (!el?.querySelector) return;
+		const modeSel = el.querySelector('select[name="bmMode"]');
+		const nameRow = el.querySelector("[data-bm-name-row]");
+		const curRow = el.querySelector("[data-bm-cur-row]");
+		const gridRow = el.querySelector("[data-bm-grid-row]");
+		const fileInp = el.querySelector('input[name="bmFile"]');
+		const nameInp = el.querySelector('input[name="bmName"]');
+		const previewEl = el.querySelector("[data-bm-preview]");
+		const syncMode = () => {
+			const isCur = modeSel?.value === "current";
+			if (nameRow) nameRow.style.display = isCur ? "none" : "flex";
+			if (curRow) curRow.style.display = isCur ? "flex" : "none";
+			if (gridRow) gridRow.style.display = isCur ? "flex" : "none";
+		};
+		modeSel?.addEventListener("change", syncMode);
+		fileInp?.addEventListener("change", async () => {
+			const f = fileInp.files?.[0];
+			if (!f || !previewEl) return;
+			try {
+				const { map, name } = parseBattleMap(await f.text());
+				const { counts } = buildSceneMapDocs(map, makeHexGrid((map.minQ & 1) ? 5 : 4, 100), { i: 0, j: 0 }, {});
+				previewEl.textContent = `已识别：${map.w} × ${map.h} 格 · ${formatMapCounts(counts)}`;
+				if (nameInp && !nameInp.value.trim()) nameInp.value = name;
+			} catch (err) {
+				previewEl.textContent = `文件无法解析：${err.message ?? err}`;
+			}
+		});
+		syncMode();
+	});
+	dlg.render(true);
+	return dlg;
+}
+
+class ImportBattleMapMenu {
+	render() {
+		openBattleMapImportDialog();
+		return this;
+	}
+}
+
+function addMapImportButton(app, html) {
+	if (game.system?.id !== "lancer" || !game.user?.isGM) return;
+	const root = html?.querySelector ? html : html?.[0] ?? app?.element;
+	const buttons = root?.querySelector?.(".header-actions");
+	if (!buttons || buttons.querySelector(".lancer-cn-import-map")) return;
+	const doc = buttons.ownerDocument ?? globalThis.document;
+	const btn = doc.createElement("button");
+	btn.type = "button";
+	btn.className = "lancer-cn-import-map";
+	btn.style.cssText = "flex-basis: 100%; margin-top: 5px;";
+	btn.innerHTML = `<i class="fas fa-map-location-dot"></i> 导入车卡器地图`;
+	btn.addEventListener("click", ev => {
+		ev.preventDefault();
+		openBattleMapImportDialog();
+	});
+	buttons.append(btn);
+}
+
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer") return;
+	game.settings.registerMenu(MODULE_ID, "importBattleMap", {
+		name: "车卡器战斗地图",
+		label: "导入车卡器地图",
+		hint: "从车卡器导出的战斗地图 JSON 新建六角格场景，或将墙体、掩护区、困难/危险地形与部署标记铺到当前场景。",
+		icon: "fas fa-map-location-dot",
+		type: ImportBattleMapMenu,
+		restricted: true,
+	});
+});
+Hooks.on("renderSceneDirectory", addMapImportButton);
 
 // ---------------------------------------------------------------------------
 // 攻击时选目标：开始攻击、科技攻击（或不是从攻击卡发起的掷伤害）时，在 LANCER 的准度面板旁边弹出目标面板。
@@ -1228,10 +1854,20 @@ function patchLimitedMax() {
 				const rolled = Number(this.getFlag?.(MODULE_ID, "limitedRoll")) || 0;
 				this.system.uses.max = rolled ? rolled + limitedBonus(this.actor) : 0;
 			}
-		} catch (err) { console.error(`${MODULE_ID} |`, err); }
+		} catch (err) { reportError("计算受限次数", err); }
 		return r;
 	};
 	proto.prepareFinalAttributes.lancerCn = true;
+}
+
+// 载入时已经算过的物品按新的上限重算，并刷新打开的角色表
+function refreshDiceLimited() {
+	const actors = [...(game.actors ?? [])];
+	for (const scene of game.scenes ?? []) for (const t of scene.tokens ?? []) if (t.actor && !t.actorLink) actors.push(t.actor);
+	for (const a of actors) {
+		if (!(a.items ?? []).some(diceLimited)) continue;
+		try { a.reset?.(); if (a.sheet?.rendered) a.sheet.render(false); } catch (err) { reportError("重算受限次数", err); }
+	}
 }
 
 async function rollLimited(item, { quiet = false } = {}) {
@@ -1334,6 +1970,7 @@ async function onFullRepair(flow, success) {
 }
 
 // 机甲表：基础动作卡、文字受限卡、掷骰式受限按钮
+const BASIC_ANCHOR = '.lancer-flow-button-grid [data-flow-type="BasicAttack"]';
 function onRenderActorSheet(app, html) {
 	const root = html instanceof HTMLElement ? html : html?.[0];
 	const actor = app?.actor;
@@ -1349,39 +1986,51 @@ function onRenderActorSheet(app, html) {
 		card.insertAdjacentHTML("beforeend", `<button type="button" data-lancer-cn-limited="${uuid}" title="掷受限次数（全面维修后会自动重掷）" style="flex:0 0 auto;width:auto;line-height:1.4;padding:0 .4em;margin:0 0 0 4px"><i class="fas fa-dice"></i> ${formula}</button>`);
 	}
 	if ((actor.type === "mech" || actor.type === "npc") && actor.isOwner && !root.querySelector(".lancer-cn-basic")) {
-		// 系统「战斗工具」卡片（机甲在「装配」页，NPC 在主页）：以其中的「基础攻击」按钮定位
-		const anchor = root.querySelector('[data-flow-type="BasicAttack"]')?.closest(".card");
+		// 系统「战斗工具」卡片（机甲在「装配」页，NPC 在主页）：以其按钮栏里的「基础攻击」按钮定位。
+		// 机甲「数值」页的毅力卡片也有一个基础攻击按钮（不在按钮栏里），不能用它定位（1.8.0 的问题）
+		const anchor = root.querySelector(BASIC_ANCHOR)?.closest(".card");
 		if (anchor) {
 			anchor.insertAdjacentHTML("afterend", basicActionsHTML(actor.type));
 			const counters = actor.type === "mech" ? textCounters(actor) : [];
 			if (counters.length) root.querySelector(".lancer-cn-basic").insertAdjacentHTML("afterend", countersHTML(actor, counters));
 		}
 	}
-	if (root.dataset.lancerCnBound) return;
-	root.dataset.lancerCnBound = "1";
-	root.addEventListener("click", async ev => {
-		const t = ev.target;
-		const basic = t.closest?.("[data-lancer-cn-basic]");
-		const lim = t.closest?.("[data-lancer-cn-limited]");
-		const hex = t.closest?.("[data-lancer-cn-counter]");
-		const croll = t.closest?.("[data-lancer-cn-counter-roll]");
-		const reset = t.closest?.("[data-lancer-cn-counter-reset]");
-		if (!(basic || lim || hex || croll || reset)) return;
+	// 直接绑在各个按钮上（1.8.2 起；之前在表单根元素上委托，实际 Foundry 中点击无反应）
+	const handler = ev => {
 		ev.preventDefault();
 		ev.stopPropagation();
-		try {
-			const a = app.actor;
-			if (basic) return await beginBasicAction(a, basic.dataset.lancerCnBasic);
-			if (lim) return await rollLimited(fromUuidSync(lim.dataset.lancerCnLimited));
-			if (reset) return await resetCounters(a, { roll: false });
-			const key = (hex ?? croll).dataset[hex ? "lancerCnCounter" : "lancerCnCounterRoll"];
-			const c = textCounters(a).find(x => x.key === key);
-			if (!c) return;
-			if (croll) return await rollCounter(a, c);
-			const { value } = counterState(a, c);
-			await setCounter(a, c, hex.dataset.available === "true" ? value - 1 : value + 1);
-		} catch (err) { console.error(`${MODULE_ID} |`, err); ui.notifications.error(String(err.message ?? err)); }
-	}, true);
+		onSheetButton(app, ev.currentTarget).catch(err => reportError("按钮", err));
+	};
+	for (const el of root.querySelectorAll("[data-lancer-cn-basic], [data-lancer-cn-limited], [data-lancer-cn-counter], [data-lancer-cn-counter-roll], [data-lancer-cn-counter-reset]")) el.onclick = handler;
+}
+
+async function onSheetButton(app, el) {
+	const a = app.actor;
+	const d = el.dataset;
+	console.info(`${MODULE_ID} | 点击`, { ...d });
+	if (d.lancerCnBasic) return beginBasicAction(a, d.lancerCnBasic);
+	if (d.lancerCnLimited) {
+		const item = fromUuidSync(d.lancerCnLimited);
+		if (!item) throw new Error(`找不到物品 ${d.lancerCnLimited}`);
+		return rollLimited(item);
+	}
+	if ("lancerCnCounterReset" in d) return resetCounters(a, { roll: false });
+	const key = d.lancerCnCounter ?? d.lancerCnCounterRoll;
+	const c = textCounters(a).find(x => x.key === key);
+	if (!c) return;
+	if (d.lancerCnCounterRoll) return rollCounter(a, c);
+	const { value } = counterState(a, c);
+	return setCounter(a, c, d.available === "true" ? value - 1 : value + 1);
+}
+
+// 出错时在界面上提示（每种只提示一次），便于反馈
+const reported = new Set();
+function reportError(what, err) {
+	console.error(`${MODULE_ID} | ${what}`, err);
+	const msg = `LANCER 中文模组：${what}出错：${err?.message ?? err}`;
+	if (reported.has(msg)) return;
+	reported.add(msg);
+	globalThis.ui?.notifications?.error(msg);
 }
 
 // ---------------------------------------------------------------------------
@@ -1410,6 +2059,7 @@ function linkDiceIn(el) {
 			const formula = `${m[1] || 1}d${m[2]}${m[3] ? m[3] + m[4] : ""}`;
 			const a = doc.createElement("a");
 			a.className = "lancer-cn-roll";
+			a.onclick = onDiceClick;
 			a.dataset.formula = formula;
 			a.title = `点击掷 ${formula}`;
 			a.innerHTML = `<i class="fas fa-dice-d6"></i>`;
@@ -1446,36 +2096,40 @@ function diceContext(el) {
 
 function onDiceClick(event) {
 	const a = event.target?.closest?.(".lancer-cn-roll");
-	if (!a) return;
+	if (!a || event.lancerCnDice) return;
+	event.lancerCnDice = true;
 	event.preventDefault();
 	event.stopPropagation();
-	const ctx = diceContext(a);
-	const speaker = ctx.speaker ?? ChatMessage.getSpeaker(ctx.actor ? { actor: ctx.actor } : {});
-	new Roll(a.dataset.formula).toMessage({ speaker, flavor: ctx.flavor ? `${ctx.flavor}：${a.dataset.formula}` : a.dataset.formula }).catch(err => console.error(`${MODULE_ID} |`, err));
+	console.info(`${MODULE_ID} | 掷骰`, a.dataset.formula);
+	try {
+		const ctx = diceContext(a);
+		const speaker = ctx.speaker ?? ChatMessage.getSpeaker(ctx.actor ? { actor: ctx.actor } : {});
+		new Roll(a.dataset.formula).toMessage({ speaker, flavor: ctx.flavor ? `${ctx.flavor}：${a.dataset.formula}` : a.dataset.formula }).catch(err => reportError("掷骰", err));
+	} catch (err) { reportError("掷骰", err); }
 }
 
 const diceObserver = typeof MutationObserver === "function" ? new MutationObserver(muts => {
 	for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) linkDice(n);
 }) : null;
 
-Hooks.once("setup", () => {
-	if (game.system?.id !== "lancer") return;
-	patchLimitedMax();
-});
+for (const h of ["init", "setup"]) Hooks.once(h, () => { if (game.system?.id === "lancer") patchLimitedMax(); });
 Hooks.once("init", () => {
 	if (game.system?.id !== "lancer") return;
 	globalThis.addEventListener?.("click", onBasicDamageClick, { capture: true });
+	globalThis.addEventListener?.("click", onDangerousCheckClick, { capture: true });
 	globalThis.addEventListener?.("click", onDiceClick, { capture: true });
 	Hooks.on("lancer.postFlow.FullRepairFlow", (flow, success) => onFullRepair(flow, success).catch(err => console.error(`${MODULE_ID} |`, err)));
 });
 Hooks.on("renderActorSheet", onRenderActorSheet);
 Hooks.once("ready", () => {
 	if (game.system?.id !== "lancer" || typeof document === "undefined") return;
+	patchLimitedMax();
+	refreshDiceLimited();
 	linkDice(document.body);
 	diceObserver?.observe(document.body, { childList: true, subtree: true });
 });
 
-globalThis.LancerCN = { translate, walk, importReference, REFERENCE, coverFor, applyCover, defineCoverBehavior, hexWallData, setHexWall, setCoverCell, coverCellHas, PAINT_TOOLS, statusesIn, attackTexts, onRenderChatMessage, attackReach, tokenDistance, targetCandidates, targetPanelHTML, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession, tokenNameMode, onPreCreateToken, applyTokenNames, setupNamesAndNumbers, patchScrollingText, BASIC_ACTIONS, beginBasicAction, onPreCreateBasicCard, basicActionsHTML, onBasicDamageClick, patchLimitedMax, rollLimited, diceLimited, isDiceFormula, textLimitedOf, textCounters, counterState, resetCounters, onFullRepair, onRenderActorSheet, linkDice, onDiceClick };
+globalThis.LancerCN = { translate, walk, importReference, REFERENCE, coverFor, applyCover, defineCoverBehavior, defineDangerousBehavior, onDangerousCheckClick, hexWallData, setHexWall, setCoverCell, coverCellHas, setTerrainCell, terrainCellHas, PAINT_TOOLS, makeHexGrid, parseBattleMap, importBattleMap, clearImportedMapDocs, clearUnitMarkers, addMapImportButton, openBattleMapImportDialog, statusesIn, attackTexts, onRenderChatMessage, attackReach, tokenDistance, targetCandidates, targetPanelHTML, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession, tokenNameMode, onPreCreateToken, applyTokenNames, setupNamesAndNumbers, patchScrollingText, BASIC_ACTIONS, beginBasicAction, onPreCreateBasicCard, basicActionsHTML, onBasicDamageClick, patchLimitedMax, rollLimited, diceLimited, isDiceFormula, textLimitedOf, textCounters, counterState, resetCounters, onFullRepair, onRenderActorSheet, onSheetButton, refreshDiceLimited, linkDice, onDiceClick };
 
 // 中文界面的版面修正。系统样式都在 @layer lancer 里，这里不分层，优先级自然更高。
 // - 伤害面板：伤害类型下拉框原本固定 12ch 宽（按英文 Explosive 定），中文只需约 5em，省下的宽度给数值框（原来会被挤成「1(」）。

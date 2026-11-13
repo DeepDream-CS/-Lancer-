@@ -163,5 +163,71 @@ ok(appJs.includes('data-act="exportFoundry"'), "角色卡页应有「导出到 F
 ok(appJs.includes('case "exportFoundry": exportFoundryJson(p); return;'), "「导出到 Foundry」按钮应调用 exportFoundryJson");
 ok(fs.readFileSync(path.join(ROOT, "index.html"), "utf8").includes('<script src="assets/js/app.js"></script><script src="assets/js/foundry-export.js"></script>'), "index.html 应在 app.js 之后载入 foundry-export.js");
 
+// ---- 5. 战斗地图导出到 Foundry（BattleMap.toFoundry / summary）
+{
+	const bmJs = fs.readFileSync(path.join(ROOT, "assets/js/battlemap.js"), "utf8");
+	ok(bmJs.includes('data-bm="foundry"') && bmJs.includes(">导出到 Foundry</button>"), "战斗地图页应有「导出到 Foundry」按钮");
+	const sampleMap = {
+		v: 1, minQ: 0, minR: 0, w: 8, h: 6, round: 3,
+		cells: {
+			"1,1": { terrain: "障碍物", color: "#202a38" },
+			"2,1": { terrain: "软性掩护", color: "#3b82c4" },
+			"2,2": { terrain: "硬性掩护", color: "#c4703b" },
+			"3,1": { terrain: "困难地形", color: "#7d8c38" },
+			"3,2": { terrain: "危险地形", color: "#c93b3b", text: "熔岩" },
+			"4,1": { terrain: "", color: "#506f46", text: "撤离区" },
+			"4,2": { terrain: "自定义", color: "#9944cc" },
+			"4,3": { terrain: "", color: "#202a38" }, // 默认空地底色，不应生成涂色格
+			"12,1": { terrain: "障碍物", color: "#202a38" }, // 可见范围外，应裁剪
+		},
+		units: [
+			{ id: "u1", name: "珠穆朗玛", side: "玩家", color: "#529be8", size: "1", q: 1, r: 2, hp: 12, max: 12, armor: 0, height: 0, states: [], owner: "", note: "" },
+			{ id: "u2", name: "巴巴罗萨", side: "敌人", color: "#e06d53", size: "3", q: 5, r: 2, hp: 20, max: 20, armor: 2, height: 0, states: [], owner: "", note: "" },
+			{ id: "u3", name: "界外单位", side: "中立", color: "#7dcfb6", size: "1", q: 15, r: 2, hp: 10, max: 10, armor: 0, height: 0, states: [], owner: "", note: "" },
+		],
+		lines: [
+			{ a: { q: 0, r: 0 }, b: { q: 5, r: 4 }, color: "#ffd166" },
+			{ a: { q: 0, r: 0 }, b: { q: 14, r: 4 }, color: "#ffd166" }, // 端点越界，应裁剪
+		],
+	};
+	const sum = JSON.parse(run(`JSON.stringify(BattleMap.summary(${JSON.stringify(sampleMap)}))`));
+	ok(sum.obstacle === 1 && sum.soft === 1 && sum.hard === 1 && sum.difficult === 1 && sum.dangerous === 1 && sum.tint === 2 && sum.text === 2 && sum.units === 2 && sum.lines === 1,
+		"BattleMap.summary 应只统计当前可见范围内的地形、涂色、标注、单位与画线：" + JSON.stringify(sum));
+
+	const scene = JSON.parse(run(`JSON.stringify(BattleMap.toFoundry(${JSON.stringify(sampleMap)}, { name: "测试战场" }))`));
+	ok(scene.name === "测试战场" && scene.padding === 0 && scene.tokenVision === false && scene.fog?.exploration === false && scene.environment?.globalLight?.enabled === true,
+		"导出场景应默认关闭迷雾与指示物视野、开启全局照明且边距为 0");
+	ok(scene.grid?.type === 4 && scene.grid.size === 100 && scene.grid.distance === 1 && scene.grid.units === "空间",
+		"minQ 为偶数时应导出为平顶奇数列下移六角格（type=4）");
+	ok(Array.isArray(scene.tokens) && scene.tokens.length === 0, "不应生成无 Actor 的损坏 Token");
+	ok(scene.walls.length === 6 && scene.walls.every(w => /^[A-Za-z0-9]{16}$/.test(w._id) && w.move === 20 && w.sight === 0 && w.flags?.["lancer-cn"]?.hexWall === "1,1"),
+		"障碍物应导出为 6 段只阻挡移动的六边形墙体（越界障碍物不导出）");
+	ok(scene.regions.length === 4 && scene.regions.every(r => /^[A-Za-z0-9]{16}$/.test(r._id) && r.visibility === 2 && r.behaviors?.length === 1 && /^[A-Za-z0-9]{16}$/.test(r.behaviors[0]._id)),
+		"软/硬掩护、困难地形、危险地形应导出为 4 个所有人可见的区域，且带 16 位 _id");
+	const byName = Object.fromEntries(scene.regions.map(r => [r.name, r]));
+	ok(byName["软性掩护格"]?.behaviors[0].type === "lancer-cn.cover" && byName["软性掩护格"].behaviors[0].system.cover === "soft", "软性掩护区行为");
+	ok(byName["硬性掩护格"]?.behaviors[0].type === "lancer-cn.cover" && byName["硬性掩护格"].behaviors[0].system.cover === "hard", "硬性掩护区行为");
+	ok(byName["困难地形格"]?.behaviors[0].type === "modifyMovementCost" && byName["困难地形格"].behaviors[0].system.difficulties.walk === 2, "困难地形区使用 Foundry 原生 modifyMovementCost（walk: 2）");
+	ok(byName["危险地形格"]?.behaviors[0].type === "lancer-cn.dangerous" && byName["危险地形格"].behaviors[0].system.damage === 5, "危险地形区使用 lancer-cn.dangerous");
+	// Drawings: 1 obstacle hex + 2 tints + 2 texts + 1 line + (1 marker for S1 + 7 footprint + 1 marker for S3 = 9) = 15
+	ok(scene.drawings.every(d => /^[A-Za-z0-9]{16}$/.test(d._id) && d.locked === true), "所有图形应锁定且带 16 位 _id");
+	ok(scene.drawings.filter(d => d.flags?.["lancer-cn"]?.cellTint).length === 2, "自定义涂色与非默认底色空地导出为底层色块，默认底色空地不导出");
+	ok(scene.drawings.filter(d => d.flags?.["lancer-cn"]?.cellText).map(d => d.text).sort().join(",") === "撤离区,熔岩", "格子文字标注导出为文字图形，不把地形名印成文字");
+	ok(scene.drawings.filter(d => d.flags?.["lancer-cn"]?.mapLine).length === 1, "可见范围内的画线导出为折线图形");
+	const uMarkers = scene.drawings.filter(d => d.flags?.["lancer-cn"]?.unitMarker);
+	ok(uMarkers.some(d => d.text === "珠穆朗玛") && uMarkers.some(d => d.text === "巴巴罗萨 (S3)") && uMarkers.length === 9,
+		"单位导出为底层部署位置标记（S3 额外包含 7 格占地轮廓）");
+	// 选项关闭与奇数列 minQ=1（向左扩展 3 列后 minQ=-3）
+	const oddMap = { ...sampleMap, minQ: -3 };
+	const oddScene = JSON.parse(run(`JSON.stringify(BattleMap.toFoundry(${JSON.stringify(oddMap)}, { includeUnits: false, includeLines: false, blockSight: true }))`));
+	ok(oddScene.grid.type === 5, "minQ 为奇数（如 -3）时应导出为平顶偶数列下移六角格（type=5）");
+	ok(!oddScene.drawings.some(d => d.flags?.["lancer-cn"]?.unitMarker || d.flags?.["lancer-cn"]?.mapLine), "取消勾选单位与画线时不导出对应图形");
+	ok(oddScene.walls.every(w => w.sight === 20 && w.light === 20), "勾选阻挡视线后障碍物墙体同时阻挡视线与光照");
+	// 场景内嵌 flags["lancer-cn"].battlemap 可被 BattleMap.valid 还原
+	const roundtrip = JSON.parse(run(`JSON.stringify(BattleMap.valid(${JSON.stringify(scene.flags["lancer-cn"].battlemap)}))`));
+	ok(roundtrip.w === 8 && roundtrip.h === 6 && !roundtrip.cells["12,1"] && roundtrip.units.length === 2 && roundtrip.lines.length === 1,
+		"内嵌 flags['lancer-cn'].battlemap 应保留裁剪后的原始地图并能被车卡器重新读取");
+}
+
 console.log(`test-foundry-export：${checks} 项检查，${failures ? failures + " 项失败" : "全部通过"}（骨架 ${frameIds.length} 个）`);
 process.exitCode = failures ? 1 : 0;

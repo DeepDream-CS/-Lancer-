@@ -200,7 +200,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		foundry: { ...ctx.foundry, documents: { collections: { CompendiumCollection: { createCompendium: async meta => { journalPack = mkPack(`world.${meta.name}`, []); journalPack.meta = meta; packs.set(journalPack.collection, journalPack); return journalPack; } } } } },
 	});
 	hooks["once:init"]();
-	ok(log.menus.length === 1 && log.menus[0].m === "lancer-cn" && log.menus[0].cfg.restricted && typeof log.menus[0].cfg.type === "function", "应注册仅 GM 可用的「导入车卡器资料」设置按钮");
+	ok(log.menus.length === 2 && log.menus.map(m => m.k).sort().join(",") === "importBattleMap,importReference" && log.menus.every(m => m.m === "lancer-cn" && m.cfg.restricted && typeof m.cfg.type === "function"), "应注册仅 GM 可用的「导入车卡器资料」与「导入车卡器地图」设置按钮");
 	const importReference = ctx.LancerCN.importReference;
 	ctx.game.user.isGM = false;
 	await importReference();
@@ -235,28 +235,34 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 	await importReference();
 	ok(log.create.length === n && /内容包/.test(log.notes.at(-1)?.[1]), "没有导入内容包时提示先导入");
 
-	// ---- 掩护区（区域行为）：模拟 Foundry 的 RegionBehaviorType 与区域事件
+	// ---- 掩护区与危险地形（区域行为）：模拟 Foundry 的 RegionBehaviorType 与区域事件
 	ok(manifest.documentTypes?.RegionBehavior?.cover && typeof manifest.documentTypes.RegionBehavior.cover === "object", "清单应声明区域行为子类型 cover（lancer-cn.cover）");
+	ok(manifest.documentTypes?.RegionBehavior?.dangerous && typeof manifest.documentTypes.RegionBehavior.dangerous === "object", "清单应声明区域行为子类型 dangerous（lancer-cn.dangerous）");
 	{
 		class FakeField { constructor(o) { Object.assign(this, o); } }
 		Object.assign(ctx, {
-			CONST: { REGION_EVENTS: { TOKEN_ENTER: "tokenEnter", TOKEN_EXIT: "tokenExit", BEHAVIOR_ACTIVATED: "behaviorActivated", BEHAVIOR_DEACTIVATED: "behaviorDeactivated" } },
-			foundry: { ...ctx.foundry, data: { fields: { StringField: FakeField }, regionBehaviors: { RegionBehaviorType: class {} } } },
+			CONST: { REGION_EVENTS: { TOKEN_ENTER: "tokenEnter", TOKEN_EXIT: "tokenExit", TOKEN_MOVE_IN: "tokenMoveIn", TOKEN_TURN_END: "tokenTurnEnd", BEHAVIOR_ACTIVATED: "behaviorActivated", BEHAVIOR_DEACTIVATED: "behaviorDeactivated" } },
+			foundry: { ...ctx.foundry, data: { fields: { StringField: FakeField, NumberField: FakeField }, regionBehaviors: { RegionBehaviorType: class {} } } },
 		});
 		ctx.CONFIG.RegionBehavior = { dataModels: {}, typeIcons: {}, typeLabels: {} };
 		hooks["once:init"]();
 		const Behavior = ctx.CONFIG.RegionBehavior.dataModels["lancer-cn.cover"];
-		ok(typeof Behavior === "function", "init 时应注册区域行为 lancer-cn.cover");
-		ok(ctx.CONFIG.RegionBehavior.typeIcons["lancer-cn.cover"], "区域行为应有图标");
-		// 显示名：Foundry 按语言键 TYPES.RegionBehavior.lancer-cn.cover 逐层查找；当前语言与英文后备都要有
+		const Dangerous = ctx.CONFIG.RegionBehavior.dataModels["lancer-cn.dangerous"];
+		ok(typeof Behavior === "function" && typeof Dangerous === "function", "init 时应注册区域行为 lancer-cn.cover 与 lancer-cn.dangerous");
+		ok(ctx.CONFIG.RegionBehavior.typeIcons["lancer-cn.cover"] && ctx.CONFIG.RegionBehavior.typeIcons["lancer-cn.dangerous"], "区域行为应有图标");
+		// 显示名：Foundry 按语言键 TYPES.RegionBehavior.lancer-cn.<type> 逐层查找；当前语言与英文后备都要有
 		const setProperty = (o, key, v) => { const ks = key.split("."); let x = o; for (const k of ks.slice(0, -1)) x = x[k] ??= {}; x[ks.at(-1)] = v; };
 		ctx.game.i18n = { lang: "en", translations: {}, _fallback: {} };
 		ctx.foundry.utils = { ...ctx.foundry.utils, setProperty };
 		hooks["once:i18nInit"]();
 		const label = t => t?.TYPES?.RegionBehavior?.["lancer-cn"]?.cover;
+		const dLabel = t => t?.TYPES?.RegionBehavior?.["lancer-cn"]?.dangerous;
 		ok(label(ctx.game.i18n.translations) === "LANCER 掩护区" && label(ctx.game.i18n._fallback) === "LANCER 掩护区", "区域行为类型的中文名应写入语言键 TYPES.RegionBehavior.lancer-cn.cover");
+		ok(dLabel(ctx.game.i18n.translations) === "LANCER 危险地形" && dLabel(ctx.game.i18n._fallback) === "LANCER 危险地形", "危险地形中文名应写入语言键 TYPES.RegionBehavior.lancer-cn.dangerous");
 		const schema = Behavior.defineSchema();
 		ok(schema.cover && Object.keys(schema.cover.choices).join() === "soft,hard" && schema.cover.initial === "soft", "掩护区可选软性 / 硬性，默认软性");
+		const dSchema = Dangerous.defineSchema();
+		ok(dSchema.damage?.initial === 5 && dSchema.damageType?.initial === "Kinetic" && Object.keys(dSchema.damageType.choices).join() === "Kinetic,Energy,Explosive,Burn,Heat", "危险地形默认 5 点动能伤害，可选动能 / 能量 / 爆炸 / 燃烧 / 热度");
 		const mkActor = () => { const a = { statuses: new Set(), calls: 0 }; a.toggleStatusEffect = async (id, { active }) => { a.calls++; if (active) a.statuses.add(id); else a.statuses.delete(id); }; return a; };
 		const mkRegion = (cover, disabled = false) => ({ behaviors: [{ type: "lancer-cn.cover", disabled, system: { cover } }], tokens: [] });
 		const me = { isSelf: true }, other = { isSelf: false };
@@ -296,6 +302,29 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		await ev("behaviorDeactivated", null, hard);
 		ok(!a2.statuses.size && !a3.statuses.size, "停用掩护区时去掉区域内指示物的掩护");
 		ok(await ev("tokenEnter", { actor: null, regions: new Set() }, soft) === undefined, "没有角色的指示物不报错");
+
+		// 危险地形事件与一键工程检定
+		const chatCards = [];
+		const prevCM = ctx.ChatMessage;
+		ctx.ChatMessage = { getSpeaker: ({ actor: a }) => ({ alias: a?.name }), create: async d => { chatCards.push(d); return d; } };
+		const dActor = { uuid: "Actor.M1", name: "珠穆朗玛", isOwner: true };
+		const dTok = { name: "珠穆朗玛", actor: dActor };
+		await Dangerous.events.tokenMoveIn.call({ damage: 5, damageType: "Kinetic" }, { name: "tokenMoveIn", data: { token: dTok }, user: me });
+		ok(chatCards.length === 1 && /进入了危险地形/.test(chatCards[0].content) && /5 点动能伤害/.test(chatCards[0].content) && chatCards[0].content.includes('data-lancer-cn-eng-check="Actor.M1"'), "进入危险地形发送提醒卡与工程检定按钮");
+		await Dangerous.events.tokenTurnEnd.call({ damage: 4, damageType: "Heat" }, { name: "tokenTurnEnd", data: { token: dTok }, user: me });
+		ok(chatCards.length === 2 && /结束回合/.test(chatCards[1].content) && /4 点热度/.test(chatCards[1].content), "在危险地形结束回合可提示热度");
+		await Dangerous.events.tokenMoveIn.call({ damage: 5, damageType: "Kinetic" }, { name: "tokenMoveIn", data: { token: dTok }, user: other });
+		ok(chatCards.length === 2, "其他客户端收到危险地形事件不重复发卡");
+		let engFlowArgs = null;
+		ctx.fromUuid = async u => (u === "Actor.M1" ? dActor : null);
+		ctx.game.lancer = { flows: new Map([["StatRollFlow", class { constructor(uuid, args) { this.state = { data: {} }; engFlowArgs = { uuid, args }; } async begin(d) { engFlowArgs.began = d; } }]]) };
+		ctx.LancerCN.onDangerousCheckClick({
+			target: { closest: sel => (sel === "[data-lancer-cn-eng-check]" ? { dataset: { lancerCnEngCheck: "Actor.M1" } } : null) },
+			preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {},
+		});
+		await new Promise(r => setTimeout(r, 0));
+		ok(engFlowArgs?.uuid === "Actor.M1" && engFlowArgs.began?.path === "system.eng", "点击工程检定按钮发起 StatRollFlow(system.eng)");
+		ctx.ChatMessage = prevCM;
 	}
 
 	// ---- 六边形墙体：模拟场景与六角网格
@@ -416,10 +445,149 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		ok(await setCoverCell(scene, grid, { x: 100, y: 100 }, "soft", "remove") === "remove" && softRegion.shapes.length === 1, "移除一个软性掩护格，只删这一格");
 		await setCoverCell(scene, grid, { x: 200, y: 100 }, "soft", "remove");
 		ok(scene.regions.length === 1 && scene.regions[0].behaviors[0].system.cover === "hard", "软性掩护格全部移除后删除该区域，硬性区域保留");
+		// 困难地形格与危险地形格 + 顶点顺序不同的同格多边形识别
+		const { setTerrainCell, terrainCellHas } = ctx.LancerCN;
+		ok(await setTerrainCell(scene, grid, { x: 100, y: 100 }, "difficult", "add") === "add", "点击格子加入困难地形区");
+		const diffReg = scene.regions.find(r => r.getFlag("lancer-cn", "terrainCells") === "difficult");
+		ok(diffReg && diffReg.behaviors[0].type === "modifyMovementCost" && diffReg.behaviors[0].system.difficulties.walk === 2, "困难地形格使用 modifyMovementCost（walk: 2）");
+		ok(await setTerrainCell(scene, grid, { x: 200, y: 100 }, "dangerous", "add") === "add", "点击格子加入危险地形区");
+		const dangReg = scene.regions.find(r => r.getFlag("lancer-cn", "terrainCells") === "dangerous");
+		ok(dangReg && dangReg.behaviors[0].type === "lancer-cn.dangerous" && dangReg.behaviors[0].system.damage === 5, "危险地形格使用 lancer-cn.dangerous");
+		// 把顶点循环移位（模拟车卡器静态场景 JSON 不同的起始顶点顺序）：仍应识别为同一格并能移除
+		const p0 = diffReg.shapes[0].points;
+		diffReg.shapes[0].points = [...p0.slice(4), ...p0.slice(0, 4)];
+		ok(terrainCellHas(scene, grid, { x: 100, y: 100 }, "difficult"), "起始顶点顺序不同的同一六角格也能识别");
+		ok(await setTerrainCell(scene, grid, { x: 100, y: 100 }, "difficult", "remove") === "remove" && !scene.regions.some(r => r.getFlag("lancer-cn", "terrainCells") === "difficult"), "可正常移除静态导入的困难地形格");
+
 		const regionControls = { walls: { tools: {} }, regions: { tools: { select: {} } } };
 		hooks.getSceneControlButtons(regionControls);
 		ok(/软性掩护格/.test(regionControls.regions.tools.lancerCoverSoft?.title) && /硬性掩护格/.test(regionControls.regions.tools.lancerCoverHard?.title), "GM 的「区域」工具栏应有软性 / 硬性掩护格工具");
-		ok(regionControls.walls.tools.lancerHexWall && !regionControls.walls.tools.lancerCoverSoft, "墙体工具在墙壁栏，掩护格工具在区域栏");
+		ok(/困难地形格/.test(regionControls.regions.tools.lancerTerrainDifficult?.title) && /危险地形格/.test(regionControls.regions.tools.lancerTerrainDangerous?.title), "GM 的「区域」工具栏应有困难 / 危险地形格工具");
+		ok(regionControls.walls.tools.lancerHexWall && !regionControls.walls.tools.lancerCoverSoft && !regionControls.walls.tools.lancerTerrainDifficult, "墙体工具在墙壁栏，掩护与地形工具在区域栏");
+	}
+
+	// ---- 导入车卡器战斗地图（parseBattleMap / importBattleMap / clearUnitMarkers / addMapImportButton）
+	{
+		const L = ctx.LancerCN;
+		ctx.CONST.GRID_TYPES = { GRIDLESS: 0, SQUARE: 1, HEXODDR: 2, HEXEVENR: 3, HEXODDQ: 4, HEXEVENQ: 5 };
+		const rawMap = {
+			v: 1, minQ: 0, minR: 0, w: 6, h: 5, round: 2,
+			cells: {
+				"1,1": { terrain: "障碍物", color: "#202a38" },
+				"2,1": { terrain: "软性掩护", color: "#3b82c4" },
+				"2,2": { terrain: "硬性掩护", color: "#c4703b" },
+				"3,1": { terrain: "困难地形", color: "#7d8c38" },
+				"3,2": { terrain: "危险地形", color: "#c93b3b", text: "电弧池" },
+				"4,1": { terrain: "自定义", color: "#44aa88" },
+				"9,9": { terrain: "障碍物", color: "#202a38" }, // 范围外
+			},
+			units: [
+				{ id: "u1", name: "黑胡子", kind: "玩家", color: "#529be8", size: "1", q: 0, r: 1, hp: 12, max: 12, armor: 1, states: [] },
+				{ id: "u2", name: "巨像", kind: "敌方", color: "#d95b68", size: "2", q: 4, r: 2, hp: 20, max: 20, armor: 2, states: [] },
+			],
+			lines: [{ a: { q: 0, r: 0 }, b: { q: 3, r: 3 }, color: "#ffd166" }],
+		};
+		// 同时校验车卡器 BattleMap.toFoundry 产出的场景 JSON 也能被 parseBattleMap 读取
+		const bmCtx = vm.createContext({
+			console, setTimeout, clearTimeout, Blob, URL,
+			localStorage: { getItem: () => null, setItem() {} },
+			document: { body: { append() {} }, addEventListener() {}, getElementById: () => ({ value: "10" }), querySelectorAll: () => [], createElement: () => ({ addEventListener() {}, click() {} }) },
+			window: { addEventListener() {} }, confirm: () => true,
+		});
+		vm.runInContext("var E = s => String(s ?? ''), P = () => ({ mechs: [{}], activeMech: 0 }), mechStats = () => ({ hp: 10, armor: 0, size: 1 });", bmCtx);
+		const BattleMap = vm.runInContext(fs.readFileSync(path.join(ROOT, "assets/js/battlemap.js"), "utf8") + "\nBattleMap;", bmCtx);
+		const exportedSceneJson = JSON.stringify(BattleMap.toFoundry(rawMap, { name: "车卡器直出场景" }));
+
+		const p1 = L.parseBattleMap(JSON.stringify(rawMap));
+		const p2 = L.parseBattleMap(exportedSceneJson);
+		ok(p1.map.w === 6 && p1.map.round === 2 && /第 2 轮/.test(p1.name), "parseBattleMap 可解析车卡器原始地图备份 JSON");
+		ok(p2.name === "车卡器直出场景" && p2.map.w === 6 && !p2.map.cells["9,9"], "parseBattleMap 可解析车卡器「导出到 Foundry」生成的场景 JSON");
+		let badThrew = false;
+		try { L.parseBattleMap('{"hello":1}'); } catch { badThrew = true; }
+		ok(badThrew, "无效 JSON 结构应报错拒绝");
+
+		const mkSceneObj = init => {
+			const s = {
+				...init, walls: [], drawings: [], regions: [], n: 1, viewed: false,
+				grid: L.makeHexGrid(init.grid?.type ?? 4, init.grid?.size ?? 100),
+				getFlag(m, k) { return this.flags?.[m]?.[k]; },
+				async setFlag(m, k, v) { this.flags ??= {}; this.flags[m] ??= {}; this.flags[m][k] = v; },
+				async update(u) {
+					if ("grid.type" in u) { this.grid = L.makeHexGrid(u["grid.type"], this.grid?.size || 100); }
+					Object.assign(this, u);
+				},
+				async view() { this.viewed = true; },
+				async createEmbeddedDocuments(type, list) {
+					const key = type === "Wall" ? "walls" : type === "Drawing" ? "drawings" : "regions";
+					for (const d of list) {
+						const doc = { ...d, id: `${type}_${this.n++}`, getFlag: (m, fk) => d.flags?.[m]?.[fk] };
+						if (type === "Region") doc.update = async u => { Object.assign(doc, u); };
+						this[key].push(doc);
+					}
+				},
+				async deleteEmbeddedDocuments(type, ids) {
+					const key = type === "Wall" ? "walls" : type === "Drawing" ? "drawings" : "regions";
+					this[key] = this[key].filter(d => !ids.includes(d.id));
+				},
+			};
+			return s;
+		};
+		const createdScenes = [];
+		ctx.CONFIG.Scene = { documentClass: { create: async data => { const s = mkSceneObj(data); createdScenes.push(s); return s; } } };
+
+		ctx.game.user.isGM = false;
+		ok(await L.importBattleMap(rawMap) === null && log.notes.at(-1)?.[0] === "warn", "非 GM 不能导入车卡器地图");
+		ctx.game.user.isGM = true;
+
+		// 1. 新建独立场景
+		const rNew = await L.importBattleMap(exportedSceneJson, { mode: "new" });
+		const sc = rNew?.scene;
+		ok(sc && sc.name === "车卡器直出场景" && sc.viewed && sc.grid.type === 4 && sc.padding === 0 && sc.tokenVision === false, "新建场景模式：按文件名称建立平顶六角格场景并切换视图");
+		ok(sc.walls.length === 6 && sc.regions.length === 4, "新建场景包含 6 段障碍物墙体与 4 类地形/掩护区域");
+		// 涂画工具与导入的场景无缝衔接：点 (3,1) 中心能识别困难地形格
+		const pt31 = sc.grid.getCenterPoint({ i: 3, j: 1 });
+		ok(L.terrainCellHas(sc, sc.grid, pt31, "difficult") && !L.terrainCellHas(sc, sc.grid, pt31, "dangerous"), "导入后的区域可直接用涂画工具继续编辑");
+		// 部署标记清除：只删单位标记（1 个 S1 + 3 格 S2 占地 + 1 个 S2 圆标 = 5 个），保留墙体图形、涂色格、标注和画线
+		const drawBefore = sc.drawings.length;
+		const cleared = await L.clearUnitMarkers(sc);
+		ok(cleared === 5 && sc.drawings.length === drawBefore - 5 && !sc.drawings.some(d => d.getFlag("lancer-cn", "unitMarker")) && sc.drawings.some(d => d.getFlag("lancer-cn", "cellText")), "clearUnitMarkers 只清除单位部署标记，保留地形色块、文字标注与画线");
+
+		// 2. 铺到当前场景（含底图保留、手动区域合并、奇数列 minQ=-3 奇偶对齐与重复导入替换）
+		const bgScene = mkSceneObj({ name: "带底图的战场", grid: { type: 1, size: 120 }, flags: {} });
+		// GM 手工放一个非导入图形与一个已有软性掩护格
+		await bgScene.createEmbeddedDocuments("Drawing", [{ x: 10, y: 10, shape: { type: "r", width: 20, height: 20 }, flags: {} }]);
+		const hex120 = L.makeHexGrid(5, 120);
+		await L.setCoverCell({ ...bgScene, grid: hex120 }, hex120, hex120.getCenterPoint({ i: 5, j: 4 }), "soft", "add");
+		const oddMap = { ...rawMap, minQ: -3 }; // 奇数列起始
+		await L.importBattleMap(oddMap, { mode: "current", scene: bgScene, setHexGrid: true, includeUnits: true });
+		ok(bgScene.grid.type === 5, "铺到方格场景且勾选自动切换时，网格按 minQ=-3 切为偶数列下移平顶六角格（type=5）");
+		const softReg = bgScene.regions.find(r => r.getFlag("lancer-cn", "coverCells") === "soft");
+		ok(softReg && softReg.shapes.length === 2, "已有手动软性掩护区时，把导入的掩护格合并进同一区域而不丢失原格子");
+		// 再铺到奇数列下移（HEXODDQ=4）的场景且不切换网格：origin.i 应自动偏移 +1 以保持相邻列上下错位一致
+		const fixedHexScene = mkSceneObj({ name: "固定 HEXODDQ 底图", grid: { type: 4, size: 100 }, flags: {} });
+		await L.importBattleMap(oddMap, { mode: "current", scene: fixedHexScene, setHexGrid: false });
+		// oddMap 中障碍物在 q=1,r=1，minQ=-3 → q-minQ=4；因 HEXODDQ 在 i=0 时不移、而 minQ=-3 在车卡器中下移，origin.i 应偏移为 1，故障碍物落在 i=5,j=1
+		ok(fixedHexScene.walls.length === 6 && fixedHexScene.walls[0].getFlag("lancer-cn", "hexWall") === "5,1", "在 HEXODDQ 场景铺奇数列地图时自动偏移 1 列对齐六角格上下错位：" + fixedHexScene.walls[0]?.getFlag("lancer-cn", "hexWall"));
+		// 重复导入并开启 replaceImported：旧导入内容被替换，不会翻倍，GM 手工图形保留
+		await L.importBattleMap({ ...oddMap, cells: { "1,1": { terrain: "障碍物", color: "#202a38" } }, units: [], lines: [] }, { mode: "current", scene: bgScene, setHexGrid: false, replaceImported: true });
+		ok(bgScene.walls.length === 6 && bgScene.drawings.filter(d => !d.getFlag("lancer-cn", "mapImport")).length === 1 && !bgScene.drawings.some(d => d.getFlag("lancer-cn", "unitMarker")), "重复导入替换旧导入内容，不重复叠加墙体且保留 GM 手工图形");
+
+		// 3. 场景侧栏按钮（renderSceneDirectory）
+		const headerActions = {
+			kids: [],
+			ownerDocument: { createElement: tag => ({ tag, style: {}, dataset: {}, listeners: {}, addEventListener(t, fn) { this.listeners[t] = fn; } }) },
+			querySelector(sel) { return sel === ".lancer-cn-import-map" ? this.kids.find(k => k.className === "lancer-cn-import-map") : null; },
+			append(el) { this.kids.push(el); },
+		};
+		const dirHtml = { querySelector: sel => (sel === ".header-actions" ? headerActions : null) };
+		hooks.renderSceneDirectory({}, dirHtml);
+		hooks.renderSceneDirectory({}, dirHtml);
+		ok(headerActions.kids.length === 1 && /导入车卡器地图/.test(headerActions.kids[0].innerHTML), "GM 的场景目录顶部应插入一个「导入车卡器地图」按钮且不重复插入");
+		const playerHeader = { ...headerActions, kids: [] };
+		ctx.game.user.isGM = false;
+		hooks.renderSceneDirectory({}, { querySelector: sel => (sel === ".header-actions" ? playerHeader : null) });
+		ok(playerHeader.kids.length === 0, "非 GM 不显示场景目录导入按钮");
+		ctx.game.user.isGM = true;
 	}
 
 	// ---- 攻击时选目标
@@ -679,6 +847,25 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		ok(L.attackReach({ lancerCnBasic: "ram", state: {} }).reach === 1, "目标面板按邻接标射程");
 		const html = L.basicActionsHTML();
 		ok(["fragment", "lockon", "grapple", "ram", "improvised"].every(k => html.includes(`data-lancer-cn-basic="${k}"`)) && /基础动作/.test(html), "机甲表的基础动作卡片");
+
+		// 卡片位置：只认「战斗工具」按钮栏里的基础攻击按钮（毅力卡片上也有一个，1.8.0 曾插到那里）
+		{
+			const placed = [];
+			const mkCard = name => ({ insertAdjacentHTML: (pos, h) => placed.push([name, pos, h]) });
+			const gritBtn = { closest: () => mkCard("毅力") }, gridBtn = { closest: () => mkCard("战斗工具") };
+			const btnEl = { dataset: { lancerCnBasic: "npcHide" }, onclick: null };
+			const sheetRoot = {
+				dataset: {}, addEventListener() {}, querySelectorAll: sel => (sel.includes("[data-lancer-cn-basic]") ? [btnEl] : []),
+				querySelector: sel => (sel === ".lancer-cn-basic" ? (placed.length ? { insertAdjacentHTML() {} } : null)
+					: sel.includes('[data-flow-type="BasicAttack"]') ? (sel.includes(".lancer-flow-button-grid") ? gridBtn : gritBtn) : null),
+			};
+			ctx.HTMLElement = class {};
+			L.onRenderActorSheet({ actor: { type: "npc", isOwner: true } }, [sheetRoot]);
+			ok(placed.length === 1 && placed[0][0] === "战斗工具" && placed[0][1] === "afterend" && /npcStabilize/.test(placed[0][2]), "基础动作卡片插在「战斗工具」卡片之后，不在毅力卡片");
+			ok(typeof btnEl.onclick === "function", "按钮直接绑定点击（1.8.2：表单根元素上的委托在实际 Foundry 中无反应）");
+			ok(/a\.onclick = onDiceClick/.test(script) && /event\.lancerCnDice/.test(script), "骰子链接自己也绑定点击，与 window 监听不会重复掷");
+			ok(/for \(const h of \["init", "setup"\]\) Hooks\.once\(h/.test(script) && /refreshDiceLimited\(\);/.test(script), "受限上限补丁在 init / setup / ready 都会套用，ready 时重算");
+		}
 
 		// 发起：标题经 begin(data) 传入；攻击卡记上动作
 		const begun = [];

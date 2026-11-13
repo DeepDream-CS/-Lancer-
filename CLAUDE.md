@@ -27,7 +27,7 @@
 | `assets/js/ui.js` | 纯界面状态：天赋/系统/骨架筛选、系统搜索（`systemSearchText`）、切换骨架确认、术语高亮与术语库、武器表 |
 | `assets/js/frame-catalog.js` / `assets/css/frame-catalog.css` | 骨架目录：浏览、预览后再确认使用 |
 | `assets/js/faq.js` / `assets/css/faq.css`、`assets/js/faq-data.js` | 规则 FAQ 面板；`assets/js/faq-data.js` 由 `tools/build-faq.js` 生成 |
-| `assets/js/battlemap.js` / `assets/css/battlemap.css` | GM 本机六角格战斗地图，存档与角色独立 |
+| `assets/js/battlemap.js` / `assets/css/battlemap.css` | GM 本机六角格战斗地图，存档与角色独立；`BattleMap.toFoundry` 导出 Foundry v13 场景 JSON |
 | `assets/js/glossary.js` | 手写术语（`GLOSSARY_SRC`）；标签说明与扩展规则在运行时并入 |
 | `assets/js/cardexport.js` | 角色卡图片（canvas）与文字卡 |
 | `assets/js/foundry-export.js` | 导出到 Foundry：角色转为 COMP/CON v2 驾驶员 JSON（Foundry 驾驶员表「文件导入」），扩展条目按 `D.fvtt_map` 改用官方 id |
@@ -168,7 +168,8 @@ node tools/draft-ext-actions.js [--write]  # 扩展条目正文里的动作 → 
 - **指示物名字与飘字**：世界设置 `tokenNames`（`preCreateToken` 设显示名称，`applyTokenNames` 由在线 GM 同步已有指示物）；第一次载入时打开系统设置 `lancer.floatingNumbers`（伤害飘字由系统负责）；状态飘字「+(名称)」在 `patchScrollingText` 里改样式。
 - **基础动作与受限计数**：机甲与 NPC 表的「基础动作」卡（`BASIC_ACTIONS`，`actors` 区分机甲 / NPC，NPC 文字依规则书第 272–273 页；`begin(data)` 传标题；攻击卡用 `flags.lancer-cn.basicAction` 标记）；掷骰式受限包装 `prepareFinalAttributes`；文字受限计数器存机甲 `flags.lancer-cn.counters`；说明里的骰子由 `linkDice` 变成链接。
 - **命中后施加状态**：攻击卡按钮（`onRenderChatMessage`、`statusesIn`），按物品文字识别状态，排除条件、自身、列举等写法；无权限时经模组 socket 请 GM 施加（`module.json` 需 `socket: true`）。
-- **掩护区**：区域行为「LANCER 掩护区」（`lancer-cn.cover`，需在 `module.json` 的 `documentTypes` 声明，显示名写进语言键 `TYPES.RegionBehavior.lancer-cn.cover`）：指示物进出区域时切换 `cover_soft` / `cover_hard`，只由触发事件的用户处理。「区域」工具栏的 GM 工具「软性 / 硬性掩护格」（`lancerCoverSoft` / `lancerCoverHard`）点格子加入本场景的掩护区（`flags.lancer-cn.coverCells`）。
+- **掩护区、困难与危险地形**：区域行为「LANCER 掩护区」（`lancer-cn.cover`）与「LANCER 危险地形」（`lancer-cn.dangerous`，均在 `module.json` 的 `documentTypes` 声明，显示名写进语言键 `TYPES.RegionBehavior.lancer-cn.*`）：掩护区切换 `cover_soft` / `cover_hard`；危险地形在移入或回合结束时发送带一键工程检定按钮的提醒卡；困难地形用系统与 Foundry v13 原生的 `modifyMovementCost`（`walk: 2`）。「区域」工具栏提供四把涂画工具（`lancerCoverSoft` / `lancerCoverHard` / `lancerTerrainDifficult` / `lancerTerrainDangerous`）。
+- **导入车卡器战斗地图**：侧栏「场景」顶部与模组设置的 GM 按钮「导入车卡器地图」（`importBattleMap`、`parseBattleMap`），兼容车卡器备份与 `BattleMap.toFoundry` 导出的场景 JSON，支持新建独立六角格场景或铺到当前场景（自动处理奇偶列错位对齐，并可一键 `clearUnitMarkers` 清除底层部署位置标记）。
 - **六边形墙体**：「墙壁」工具栏的 GM 工具（`lancerHexWall`），每格 6 段阻挡移动的墙 + 玩家可见的六边形图形（都带 `flags.lancer-cn.hexWall`）；有墙或图形任一样都算有墙体；`deleteWall` 钩子在墙删光时删图形；设置 `hexWallBlocksSight` 控制是否阻挡视线。
 - **画布指针拦截**：涂画工具（`PAINT_TOOLS`、`onHexPointer`）与点地图锁定（`onTargetPointer`）都在 window 的捕获阶段、init 时注册。PIXI 在画布元素与 document / window 上监听，拦在画布元素上不够（墙壁图层会把拖动画成直线墙）。
 
