@@ -234,5 +234,32 @@ test('Wizard license step includes professionals and uses the shared paid-rank b
 test('Weapon pod preserves the modular rifle printed profile through exchange and import',()=>assert(run(`{p=fixture(6);m=p.mechs[0];addCatalogProfessional(p,'pl_ha_workshop');m.systems=['ms_pl_weapon_pod'];m.podMode='Main';m.podWeapon1='mw_pl_modular_rifle';m.podProfile1=1;const mt=mountsOf(p,m).find(x=>x.type==='Main');m.loadout[mt.key]={slots:[{w:'mw_assault_rifle'}],link:''};swapPodWeapons(p,m,mt.key);const first=equippedWeapons(p,m)[0].w.selected_profile==='DMR';swapPodWeapons(p,m,mt.key);const q=normalizePilot(JSON.parse(JSON.stringify(p)),[]);first&&m.podProfile1===1&&q.mechs[0].podProfile1===1}`)));
 test('Confirmed linear-field and Mitra wording is present',()=>assert(run(`WEAPONS.mw_pl_kinetic_driver.profiles[1].on_hit.includes('每有 1 点装甲')&&SYSTEMS.ms_pl_mitra.actions[0].detail.includes('任选两项')`)));
 test('Tawa Heavy Blaster keeps its name instead of the crit term',()=>assert.equal(run(`plain('item',WEAPONS.mw_pl_heavy_blaster)`),'重击炮'));
+test('Tactical belt recognizes Deployable type and dual-mode Grenade/Mine systems',()=>assert(run(`{
+  const ok=['ms_ext_informant_vald','ms_pattern_a_jericho_deployable_cover','ms_aegis_shield_generator','ms_portable_bunker','ms_ch_spider_bombs','ms_ch_sling_bombs','ms_ch_holo_bombs','ms_pl_scan_bombs','ms_ext_spear_charges','ms_ext_spike_charges','ms_ext_blink_charges','ms_piof_overgrowth_explosives','ms_kkca_suppression_explosives'];
+  const no=['ms_pl_tactical_belt','ms_ext_accelerate','ms_ext_demolitions_toolkit','ms_clamp_bombs','ms_pl_atg_bombs'];
+  ok.every(id=>beltEligible(SYSTEMS[id]))&&no.every(id=>!beltEligible(SYSTEMS[id]))
+}`)));
+test('Tactical belt discounts Informant VALD, locks empty mount and blocks occupied mount discount',()=>assert(run(`{
+  p=fixture(6);addCatalogProfessional(p,'pl_ch_shepherd');p.licenses.mf_ext_amber_phantom=3;m=p.mechs[0];
+  m.systems=['ms_pl_tactical_belt','ms_ext_informant_vald'];m.beltMount='m1';m.beltSystem1='ms_ext_informant_vald';
+  const parts=mechParts(p);
+  const active=tacticalBeltDiscount(p,m)===2&&mechStats(p,m).spUsed===0&&professionalLoadoutChecks(p,m).length===0&&parts.weapons.includes('被战术带占用')&&parts.systems.includes('告密者 VALD');
+  m.loadout.m1={slots:[{w:'mw_assault_rifle'}],link:''};
+  const blocked=tacticalBeltDiscount(p,m)===0&&mechStats(p,m).spUsed===2&&professionalLoadoutChecks(p,m).some(x=>x[1].includes('不能安装武器'));
+  active&&blocked
+}`)));
+test('Tactical belt allows two copies of non-unique system and cleans stale references on delete',()=>assert(run(`{
+  p=fixture(6);m=p.mechs[0];const dup=D.systems.find(s=>beltEligible(s)&&!isUnique(s)&&(s.sp||0)>0);
+  m.systems=['ms_pl_tactical_belt',dup.id,dup.id];m.beltMount='m0';m.beltSystem1=dup.id;m.beltSystem2=dup.id;
+  const twoOk=beltSystems(m).length===2&&tacticalBeltDiscount(p,m)===Math.min(4,(dup.sp||0)*2)&&professionalLoadoutChecks(p,m).length===0;
+  m.systems.pop();
+  const oneErr=professionalLoadoutChecks(p,m).some(x=>x[1].includes('不能重复指定'));
+  cleanMechSystemRefs(m);
+  const cleanedOne=m.beltSystem1===dup.id&&m.beltSystem2===''&&professionalLoadoutChecks(p,m).length===0;
+  m.systems=['ms_pl_tactical_belt'];cleanMechSystemRefs(m);
+  const cleanedAll=m.beltSystem1===''&&m.beltSystem2==='';
+  m.systems=[];cleanMechSystemRefs(m);
+  twoOk&&oneErr&&cleanedOne&&cleanedAll&&m.beltMount===''
+}`)));
 
 console.log(passed+' regression checks passed.');

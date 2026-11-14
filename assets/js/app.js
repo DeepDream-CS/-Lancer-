@@ -614,10 +614,13 @@ function mechParts(p) {
 	const linkedBy = Object.fromEntries(linkedMounts(p, m));
 	const mountHtml = mounts.map(mt => {
 		const sst = slotState(m, mt.key);
-		const beltNotice=m.systems.includes("ms_pl_tactical_belt")&&m.beltMount===mt.key ? "（战术带占用，请清空武器）" : "";
+		const hasBelt = m.systems.includes("ms_pl_tactical_belt") && m.beltMount === mt.key && mt.type !== "Integrated";
+		const hasWeapon = sst.slots.some(sl => sl && sl.w);
+		const beltNotice = hasBelt && hasWeapon ? "（战术带占用，请清空武器）" : "";
 		const title = `${beltNotice}${T.mount[mt.type] || mt.type}挂载点${mt.retro ? "（挂载点改装）" : ""}${mt.note ? "（" + mt.note + "）" : ""}`;
-		const stab = mt.type !== "Integrated" && hasCB(p, "cb_auto_stabilizing_hardpoints") ? `<label class="chk"><input type="radio" name="stab" data-act="stab" data-arg="${mt.key}" ${m.stabilized === mt.key ? "checked" : ""}> 自动稳定（+1准度）</label>` : "";
-		if (linkedBy[mt.key]) return `<div class="mount"><div class="mount-h">${title}</div><div class="muted">被超重型武器占用</div></div>`;
+		if (linkedBy[mt.key]) return `<div class="mount"><div class="mount-h">${title}</div><div class="muted">被超重型武器占用${hasBelt ? "（与战术带冲突，请调整挂载点）" : ""}</div></div>`;
+		if (hasBelt && !hasWeapon) return `<div class="mount"><div class="mount-h"><span>${title}</span></div><div class="muted">被战术带占用</div></div>`;
+		const stab = mt.type !== "Integrated" && !hasBelt && hasCB(p, "cb_auto_stabilizing_hardpoints") ? `<label class="chk"><input type="radio" name="stab" data-act="stab" data-arg="${mt.key}" ${m.stabilized === mt.key ? "checked" : ""}> 自动稳定（+1准度）</label>` : "";
 		const slots = MOUNT_SLOTS[mt.type].map((acc, i) => {
 			const s = sst.slots[i] || {};
 			const first = sst.slots[0] && WEAPONS[sst.slots[0].w];
@@ -630,7 +633,7 @@ function mechParts(p) {
             if(w?.select_profile) html += '<label>打印数据 <select data-act="slotProfile" data-arg="'+mt.key+'|'+i+'">'+w.profiles.map((pf,n)=>opt(n,esc(pf.name),n===(s.profile||0))).join('')+'</select></label>';
             if (w) html += weaponInfo(w, combinedWeaponMod(w,s), p, m) + `<p class="muted">${esc(buildWeaponNote(p, m, {w, mount:mt, i}))}</p>`;
 			if (w && w.mount === "Superheavy") {
-				const others = superheavyLinkTargets(mounts, mt).filter(o => (!linkedBy[o.key] || linkedBy[o.key] === mt.key) && WEAPONS[m.loadout[o.key]?.slots?.[0]?.w]?.mount !== "Superheavy");
+				const others = superheavyLinkTargets(mounts, mt).filter(o => (!linkedBy[o.key] || linkedBy[o.key] === mt.key) && WEAPONS[m.loadout[o.key]?.slots?.[0]?.w]?.mount !== "Superheavy" && (!(m.systems.includes("ms_pl_tactical_belt") && m.beltMount === o.key) || sst.link === o.key));
 				html += `<div class="row"><span class="muted">超重型武器需同时占用另一个挂载点${mt.type === "Superheavy" && others.some(o => o.type === "Heavy") ? "（超重挂载：必须是重型挂载点）" : ""}：</span><select data-act="link" data-arg="${mt.key}"><option value="">— 选择 —</option>${others.map(o => opt(o.key, `${T.mount[o.type]}挂载点`, sst.link === o.key)).join("")}</select></div>`;
 			}
 			return html;
@@ -883,7 +886,7 @@ document.addEventListener("click", e => {
 		}
 		case "delMech": if (!confirm(`删除机甲「${m.name}」？`)) return; p.mechs.splice(p.activeMech, 1); p.activeMech = 0; break;
 		case "addSys": { const v = document.getElementById("sysAdd").value; if (v) m.systems.push(v); break; }
-		case "delSys": m.systems.splice(+arg, 1); break;
+		case "delSys": m.systems.splice(+arg, 1); cleanMechSystemRefs(m); break;
 		case "delPortrait": delete p.portrait; break;
 		case "copySheet":
 			if(!navigator.clipboard) { openSet.add('sheet-text'); tab='sheet'; return notify('此浏览器不支持自动复制。请展开文字角色卡，选中后手动复制。','warn'); }
@@ -1115,18 +1118,57 @@ function combinedWeaponMod(w,sl) {
   tags:mods.flatMap(x=>x.tags||[]),added_tags:mods.flatMap(x=>x.added_tags||[]),added_range:mods.flatMap(x=>x.added_range||[]),
   stack_tags:mods.some(x=>x.stack_tags),effect:mods.map(x=>`<b>${esc(plain('item',x))}</b>：${x.effect||''}`).join('<hr>'),actions:mods.flatMap(x=>x.actions||[])};
 }
-function beltEligible(s) { return !!s && s.id!=='ms_pl_tactical_belt' && (s.tags||[]).some(t=>['tg_grenade','tg_mine','tg_deployable'].includes(t.id)); }
-function beltSystems(m) { return [...new Set([m.beltSystem1,m.beltSystem2].filter(Boolean))].filter(id=>m.systems.includes(id)&&beltEligible(SYSTEMS[id])); }
+function beltEligible(s) { return !!s && s.id!=='ms_pl_tactical_belt' && systemCategories(s).some(t=>['Grenade','Mine','Deployable'].includes(t)); }
+function beltSystems(m) {
+ const counts={};
+ for(const id of m.systems) counts[id]=(counts[id]||0)+1;
+ const out=[];
+ for(const id of [m.beltSystem1,m.beltSystem2].filter(Boolean)) {
+  if(counts[id]>0 && beltEligible(SYSTEMS[id])) { out.push(id); counts[id]--; }
+ }
+ return out;
+}
+function beltMountActive(p,m) {
+ if(!m.systems.includes('ms_pl_tactical_belt')||!m.beltMount)return false;
+ const mt=mountsOf(p,m).find(x=>x.key===m.beltMount&&x.type!=='Integrated');
+ return !!mt && !slotState(m,mt.key).slots.some(sl=>sl&&sl.w) && !linkedMounts(p,m).has(mt.key);
+}
 function tacticalBeltDiscount(p,m) {
- if(!m.systems.includes('ms_pl_tactical_belt')||!mountsOf(p,m).some(mt=>mt.key===m.beltMount&&mt.type!=='Integrated'))return 0;
- const selected=beltSystems(m),cost=selected.reduce((n,id)=>n+(SYSTEMS[id].sp||0),0)-(selected.includes(m.signature)?signatureDiscount(p,m):0);
+ if(!beltMountActive(p,m))return 0;
+ const selected=beltSystems(m),sigOverlap=selected.includes(m.signature)&&selected.filter(id=>id===m.signature).length>=m.systems.filter(id=>id===m.signature).length;
+ const cost=selected.reduce((n,id)=>n+(SYSTEMS[id].sp||0),0)-(sigOverlap?signatureDiscount(p,m):0);
  return Math.min(4,Math.max(0,cost));
+}
+function cleanMechSystemRefs(m) {
+ if(m.signature&&!m.systems.includes(m.signature))m.signature='';
+ if(!m.systems.includes('ms_pl_tactical_belt')) { m.beltMount=''; m.beltSystem1=''; m.beltSystem2=''; return; }
+ const counts={};
+ for(const id of m.systems) counts[id]=(counts[id]||0)+1;
+ for(const k of ['beltSystem1','beltSystem2']) {
+  const id=m[k];
+  if(!id)continue;
+  if(!counts[id]||!beltEligible(SYSTEMS[id]))m[k]='';
+  else counts[id]--;
+ }
 }
 function sentryWeapons(p,m) { return equippedWeapons(p,m).filter(e=>e.mount.type!=='Integrated'&&e.w.mount!=='Superheavy'&&['CQB','Rifle'].includes(e.w.type)); }
 function professionalSystemSetup(p,m,s) {
  const sel=(key,options)=>`<select data-k="mech.${key}"><option value="">— 选择 —</option>${options.map(([id,name])=>opt(id,esc(name),String(m[key]??'')===String(id))).join('')}</select>`;
  if(s.id==='ms_pl_sentry_drone')return `<label>部署时交给哨兵的已安装武器 ${sel('sentryWeapon',sentryWeapons(p,m).map(e=>[e.mount.key+'|'+e.i,plain('item',e.w)]))}</label><p class="muted">部署后该武器由无人机使用；回收后返回机甲。</p>`;
- if(s.id==='ms_pl_tactical_belt')return `<div class="blk"><label>战术带占用挂载点 ${sel('beltMount',mountsOf(p,m).filter(mt=>mt.type!=='Integrated').map(mt=>[mt.key,(T.mount[mt.type]||mt.type)+' '+mt.key]))}</label>${[1,2].map(i=>`<label>装载系统 ${i} ${sel('beltSystem'+i,m.systems.filter(id=>beltEligible(SYSTEMS[id])).map(id=>[id,plain('item',SYSTEMS[id])]))}</label>`).join('')}<p>总计减少 ${tacticalBeltDiscount(p,m)} SP（最高 4 SP）。</p></div>`;
+ if(s.id==='ms_pl_tactical_belt') {
+  const linked=linkedMounts(p,m),mt=mountsOf(p,m).find(x=>x.key===m.beltMount&&x.type!=='Integrated');
+  const mtConflict=mt&&(slotState(m,mt.key).slots.some(sl=>sl&&sl.w)||linked.has(mt.key));
+  const mtOpts=mountsOf(p,m).filter(x=>x.type!=='Integrated').map(x=>{
+   const busy=slotState(m,x.key).slots.some(sl=>sl&&sl.w)||linked.has(x.key);
+   return [x.key,`${T.mount[x.type]||x.type} ${x.key}${busy?'（已装武器）':''}`];
+  });
+  const sysOpts=i=>{
+   const cur=m['beltSystem'+i],other=m['beltSystem'+(i===1?2:1)];
+   return [...new Set(m.systems)].filter(id=>beltEligible(SYSTEMS[id])&&(cur===id||other!==id||m.systems.filter(x=>x===id).length>=2)).map(id=>[id,`${plain('item',SYSTEMS[id])} [${SYSTEMS[id].sp||0}SP]`]);
+  };
+  const hint=!mt?'<p class="muted">请先选择要占用的非内置挂载点（装载系统最多减免 4 SP）。</p>':mtConflict?'<p class="muted">所选挂载点仍有武器或被超重型武器占用，清空后减免生效（最高 4 SP）。</p>':`<p>总计减少 ${tacticalBeltDiscount(p,m)} SP（最高 4 SP）。</p>`;
+  return `<div class="blk"><div class="row"><label>战术带占用挂载点</label>${sel('beltMount',mtOpts)}</div>${[1,2].map(i=>`<div class="row"><label>装载系统 ${i}</label>${sel('beltSystem'+i,sysOpts(i))}</div>`).join('')}${hint}</div>`;
+ }
  if(s.id==='ms_pl_weapon_pod') {
   const mode=m.podMode==='Auxiliary'?'Auxiliary':'Main';
   const stored=Array.from({length:mode==='Main'?1:2},(_,i)=>{const w=WEAPONS[m['podWeapon'+(i+1)]];return `<label>舱内武器 ${i+1} ${sel('podWeapon'+(i+1),D.weapons.filter(w=>itemAvailable(p,w)&&w.mount===mode).map(w=>[w.id,plain('item',w)]))}</label>${w?.select_profile?'<label>打印数据 '+sel('podProfile'+(i+1),w.profiles.map((pf,n)=>[n,pf.name]))+'</label>':''}`;}).join('');
@@ -1153,8 +1195,8 @@ function professionalLoadoutChecks(p,m) {
  if(m.systems.includes('ms_pl_tactical_belt')) {
   const mt=mountsOf(p,m).find(x=>x.key===m.beltMount&&x.type!=='Integrated');
   if(!mt)err('战术带需要占用一个非内置挂载点');
-  if(mt&&(slotState(m,mt.key).slots.some(sl=>sl.w)||linkedMounts(p,m).has(mt.key)))err('战术带占用的挂载点不能安装武器或供超重型武器占用');
-  if(m.beltSystem1&&m.beltSystem1===m.beltSystem2)err('战术带的两个系统不能重复指定同一件');
+  if(mt&&(slotState(m,mt.key).slots.some(sl=>sl&&sl.w)||linkedMounts(p,m).has(mt.key)))err('战术带占用的挂载点不能安装武器或供超重型武器占用');
+  if(m.beltSystem1&&m.beltSystem1===m.beltSystem2&&m.systems.filter(id=>id===m.beltSystem1).length<2)err('战术带的两个系统不能重复指定同一件');
   for(const id of [m.beltSystem1,m.beltSystem2].filter(Boolean))if(!m.systems.includes(id)||!beltEligible(SYSTEMS[id]))err('战术带只能装载已安装且带榴弹、地雷或可展开标签的系统');
  }
  if(m.systems.includes('ms_pl_weapon_pod')) {

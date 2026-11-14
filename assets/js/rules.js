@@ -173,7 +173,7 @@ function loadoutChecks(p, m) {
   for (const id of m.systems) if (SYSTEMS[id] && !itemAvailable(p,SYSTEMS[id])) error(`${plain('item',SYSTEMS[id])} 未解锁或已由天赋内建提供`);
   const families = all.filter(x=>x.talent_item).map(x=>x.talent_id);
   if (new Set(families).size < families.length) error('同一天赋提供的装备不能重复安装或同时安装多个等级');
-  if (hasCB(p,'cb_auto_stabilizing_hardpoints') && !mounts.some(mt=>mt.key===m.stabilized && !links.has(mt.key) && mt.type!=='Integrated')) error('请为自稳定承力点选择一个可用的普通挂载点');
+  if (hasCB(p,'cb_auto_stabilizing_hardpoints') && !mounts.some(mt=>mt.key===m.stabilized && !links.has(mt.key) && !(m.systems.includes('ms_pl_tactical_belt') && m.beltMount===mt.key) && mt.type!=='Integrated')) error('请为自稳定承力点选择一个可用的普通挂载点');
   if (hasCB(p,'cb_mount_retrofitting') && !mounts.some(mt=>mt.retro)) error('请指定挂载点改装的目标');
   if (hasCB(p,'cb_kkca_signature_move') && !(m.systems.includes(m.signature) && SYSTEMS[m.signature])) error('请为招牌动作指定一个已安装的系统');
   if (hasCB(p,'cb_overpower_caliber') && !eq.some(e=>`${e.mount.key}|${e.i}`===m.overpower && e.mount.type!=='Integrated' && !e.w.no_core_bonus)) error('请为超功率口径指定一件可用武器');
@@ -211,4 +211,23 @@ function prototypeEditor(p,m) {
   const select = (key, options, current) => `<select data-k="mech.${key}">${options.map(([id,label])=>opt(id,label,id===current)).join('')}</select>`;
   const choices = [['Melee','近战'],['CQB','CQB'],['Rifle','步枪'],['Cannon','大炮'],['Launcher','发射器'],['Nexus','巢房']];
   return `<div class="blk"><b>原型武器配置（全面维修时选择）</b><div class="row">${select('prototypeType',choices,m.prototypeType || 'Rifle')}${select('prototypeDamage',[['Kinetic','动能'],['Explosive','爆炸'],['Energy','能量']],m.prototypeDamage || 'Kinetic')}</div>${p.talents.t_engineer>=2 ? ['Optics','Smart','Reactor'].map((k,i)=>`<label>${['调整光学（+1准度）','调整电脑（智慧）','移除反应炉屏蔽（可选范围攻击，承受2热度）'][i]} ${select('prototype'+k,[['no','未选'],['yes','选择']],m['prototype'+k] || 'no')}</label>`).join('<br>') : ''}</div>`;
+}
+const SYSTEM_SUBMODE_TYPES = [
+  ['Grenade', /(?:[（(]|<span class="muted">|<div class="wstat">|<i>)\s*(?:<(?:b|i)>)*\s*(?:榴弹|手榴弹)\s*(?:<\/(?:b|i)>)*\s*[，,）)<]/],
+  ['Mine', /(?:[（(]|<span class="muted">|<div class="wstat">|<i>)\s*(?:<(?:b|i)>)*\s*地雷\s*(?:<\/(?:b|i)>)*\s*[，,）)<]/],
+  ['Deployable', /(?:[（(]|<span class="muted">|<div class="wstat">|<i>)\s*(?:<(?:b|i)>)*\s*可展开(?:物)?\s*(?:<\/(?:b|i)>)*\s*[，,）)<]/],
+];
+function systemCategories(it) {
+  if (!it) return [];
+  if (MODS[it.id]) return ['Mod'];
+  const types = new Set(), mapping = { tg_ai: 'AI', tg_drone: 'Drone', tg_shield: 'Shield', tg_deployable: 'Deployable', tg_mine: 'Mine', tg_grenade: 'Grenade' };
+  for (const tag of [...(it.tags || []), ...systemTags(it)]) if (mapping[tag.id]) types.add(mapping[tag.id]);
+  if (['AI', 'Drone', 'Shield', 'Deployable', 'Mine', 'Grenade'].includes(it.type)) types.add(it.type);
+  for (const dep of asList(it.deployables)) {
+    if (['AI', 'Drone', 'Shield', 'Deployable', 'Mine', 'Grenade'].includes(dep.type)) types.add(dep.type);
+    for (const tag of (dep.tags || [])) if (mapping[tag.id]) types.add(mapping[tag.id]);
+  }
+  const text = [it.effect || '', ...asList(it.actions).map(a => `${a.name || ''} ${a.detail || ''}`), ...asList(it.deployables).map(d => `${d.name || ''} ${d.detail || ''}`)].join('\n');
+  for (const [kind, re] of SYSTEM_SUBMODE_TYPES) if (re.test(text)) types.add(kind);
+  return [...types];
 }

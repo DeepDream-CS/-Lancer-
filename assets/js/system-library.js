@@ -13,13 +13,8 @@ function systemLibraryAvailable(it,p){
  return D.frames.some(f=>frameAvailable(p,f)&&[...(f.core_system?.integrated||[]),...f.traits.flatMap(t=>t.integrated||[])].includes(it.id));
 }
 function systemLibraryTypes(it){
- if(MODS[it.id])return ['Mod'];
- const types=new Set();const mapping={tg_ai:'AI',tg_drone:'Drone',tg_shield:'Shield',tg_deployable:'Deployable',tg_mine:'Mine',tg_grenade:'Grenade'};
- for(const tag of systemTags(it))if(mapping[tag.id])types.add(mapping[tag.id]);
- if(SYSTEM_LIBRARY_TYPES[it.type])types.add(it.type);
- for(const dep of asList(it.deployables))if(SYSTEM_LIBRARY_TYPES[dep.type])types.add(dep.type);
- if(it.id==='ms_roller_directed_payload_charges')types.add('Grenade'); // This item has separate grenade and mine modes.
- return types.size?[...types]:['Other'];
+ const types=systemCategories(it);
+ return types.length?types:['Other'];
 }
 function systemLibraryActivations(it){
  const out=new Set(),mapping={tg_quick_action:'Quick',tg_full_action:'Full',tg_protocol:'Protocol',tg_reaction:'Reaction',tg_free_action:'Free'};

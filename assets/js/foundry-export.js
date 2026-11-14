@@ -75,8 +75,11 @@ function foundryPilotData(p) {
 		if (m.overpower) { const [key, idx] = m.overpower.split("|"); const w = WEAPONS[m.loadout[key]?.slots?.[+idx]?.w]; if (w) notes.push(`超功率口径（核心奖励）指定武器：${itemName("item", w)}`); }
 		if (m.stabilized) notes.push(`自动稳定（核心奖励）挂载点：${m.stabilized}`);
 		if (m.sentryWeapon && WEAPONS[m.sentryWeapon]) notes.push(`哨兵无人机部署时使用：${itemName("item", WEAPONS[m.sentryWeapon])}`);
-		const belt = [m.beltSystem1, m.beltSystem2].filter(id => SYSTEMS[id]).map(id => itemName("item", SYSTEMS[id]));
-		if (belt.length) notes.push(`战术带指定系统：${belt.join("、")}`);
+		if (m.systems.includes("ms_pl_tactical_belt")) {
+			const belt = beltSystems(m).map(id => itemName("item", SYSTEMS[id]));
+			const mt = mountsOf(p, m).find(x => x.key === m.beltMount && x.type !== "Integrated");
+			notes.push(`战术带：占用挂载点 ${mt ? `${T.mount[mt.type] || mt.type} ${mt.key}` : "未指定"}；装载系统：${belt.join("、") || "无"}（减免 ${tacticalBeltDiscount(p, m)} SP）`);
+		}
 		const pod = [m.podWeapon1, m.podWeapon2].filter(id => WEAPONS[id]).map(id => itemName("item", WEAPONS[id]));
 		if (pod.length) notes.push(`武器舱（${m.podMode === "Main" ? "主武器" : "副武器"}）：${pod.join("、")}`);
 		const legacy = inheritedTrait(m);

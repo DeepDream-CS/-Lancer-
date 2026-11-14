@@ -96,7 +96,7 @@ function changeFrame(m,id) {
   if(m.frame===id) return true;
   const equipped=Object.values(m.loadout).some(s=>s.slots?.some(slot=>slot.w));
   if(equipped&&!confirm('切换骨架会清空当前机甲的武器挂载与挂载点设置。系统会保留。\n\n建议先通过「角色管理」复制角色或导出备份。确定切换吗？')) return false;
-  m.frame=id; m.loadout={}; m.retrofit=-1; m.stabilized=''; m.overpower='';
+  m.frame=id; m.loadout={}; m.retrofit=-1; m.stabilized=''; m.overpower=''; m.beltMount=''; m.sentryWeapon='';
   return true;
 }
 function enhanceUI() {
