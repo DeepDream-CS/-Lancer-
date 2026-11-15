@@ -1032,7 +1032,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 	// ---- 战斗自动化（1.10.0）：自动挂异常与撤销、豁免检定与减半联动、非攻击掷伤害与模板、跨权限护甲抗性结算与预览、Flow 补完、回合结束清异常、抗性开关
 	{
 		const L = ctx.LancerCN;
-		ok(manifest.version === "1.13.0", "清单版本应为 1.13.0");
+		ok(manifest.version === "1.15.2", "清单版本应为 1.15.2");
 		for (const k of ["autoApplyStatus", "crossPermDamage", "autoDangerZone", "turnEndPrompt"]) {
 			const cfg = log.settings[`lancer-cn.${k}`];
 			ok(cfg && cfg.scope === "world" && cfg.config === true && cfg.default === true, `应注册世界设置 ${k}（默认开启）`);
@@ -1110,10 +1110,10 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		};
 		hooks["once:ready"]?.();
 
-		const mkFlagMsg = (id, initFlags, { isAuthor = true, content = "" } = {}) => {
+		const mkFlagMsg = (id, initFlags, { isAuthor = true, content = "", speaker = undefined } = {}) => {
 			const store = JSON.parse(JSON.stringify(initFlags));
 			const m = {
-				id, isAuthor, content, flags: store,
+				id, isAuthor, content, speaker, flags: store,
 				getFlag: (scope, key) => store?.[scope]?.[key],
 				setFlag: async (scope, key, val) => { (store[scope] ||= {})[key] = val; },
 				update: async u => { if ("content" in u) m.content = u.content; },
@@ -2361,11 +2361,27 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 						["consumeCorePower", async st => { st.actor.system.core_energy = 0; return true; }],
 						["initAttackData", async st => {
 							st.data = st.data || {};
-							st.data.acc_diff = st.data.acc_diff || { base: { accuracy: 0, difficulty: 0 }, weapon: { engaged: Boolean(st.engaged), inaccurate: Boolean(st.inaccurate), arcing: false }, targets: st.targets ?? [] };
+							st.data.acc_diff = st.data.acc_diff || { base: { accuracy: 0, difficulty: 0 }, weapon: { engaged: Boolean(st.engaged), inaccurate: Boolean(st.inaccurate), arcing: false, thrown: Boolean(st.item?.system?.active_profile?.all_tags?.some?.(t => t?.lid === "tg_thrown" || t?.is_thrown)), seeking: false }, targets: st.targets ?? [] };
+							return true;
+						}],
+						["setAttackTags", async st => {
+							st.data = st.data || {};
+							st.data.tags = st.data.tags || (st.item?.system?.active_profile?.all_tags ?? st.item?.system?.tags ?? []);
 							return true;
 						}],
 						["initTechAttackData", async st => {
 							st.data = st.data || {};
+							if (st.item?.type === "npc_feature" && st.actor?.type === "npc") {
+								// 精确复现系统原生 tech.ts:137 缺少括号的表达式
+								const tierIdx = st.item.system.tier_override || st.actor.system.tier - 1;
+								const acc = st.item.system.accuracy?.[tierIdx] ?? 0;
+								st.data.grit = st.item.system.attack_bonus?.[tierIdx] ?? 0;
+								st.data.acc_diff = st.data.acc_diff || {
+									base: { grit: st.data.grit, accuracy: acc > 0 ? acc : 0, difficulty: acc < 0 ? -acc : 0 },
+									targets: st.targets ?? [],
+								};
+								return true;
+							}
 							st.data.acc_diff = st.data.acc_diff || { base: { accuracy: 0, difficulty: 0 }, targets: st.targets ?? [] };
 							return true;
 						}],
@@ -2417,8 +2433,22 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 							return true;
 						}],
 						["rollAttacks", async st => (st.rollFn ? st.rollFn(st) : true)],
-						["setDamageTags", async st => { st.data = st.data || {}; st.data.tags = st.data.tags || []; st.data.bonus_damage = st.data.bonus_damage || []; return true; }],
+						["setDamageTags", async st => {
+							if (st.item && (st.item.type === "npc_feature" || st.item.is_npc_feature?.()) && st.item.system?.type !== "Weapon") {
+								return false; // 模拟系统原生 damage.ts 对非 Weapon npc_feature 的拦截
+							}
+							st.data = st.data || {};
+							st.data.tags = st.data.tags || [];
+							st.data.bonus_damage = st.data.bonus_damage || [];
+							return true;
+						}],
 						["showDamageHUD", async st => {
+							if (st.item && (st.item.type === "npc_feature" || st.item.is_npc_feature?.()) && st.item.system?.type === "Weapon") {
+								const tierIdx = (st.actor?.system?.tier ?? 1) - 1;
+								// 模拟系统原生 DamageHudData.fromParams(data.svelte.ts:475)：若二维数组被破坏成普通对象，此处 .map 将抛 TypeError
+								st._npcHudDamage = st.item.system.damage[tierIdx].map(d => ({ ...d }));
+								return true;
+							}
 							const prof = st.item?.system?.active_profile;
 							st._hudSnapshot = prof ? JSON.parse(JSON.stringify({ damage: prof.damage, bonus: prof.bonus_damage ?? [] })) : null;
 							return true;
@@ -2438,6 +2468,36 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 						["updateItemAfterAction", async () => true],
 						["initOverchargeData", async () => true],
 						["printOverchargeCard", async () => true],
+						["rollStructureTable", async st => {
+							const hasLeg = (st.actor?.items ?? []).some(i => ["npcf_legendary_ultra", "npcf_legendary_veteran"].includes(i.system?.lid));
+							const isMon = (st.actor?.itemTypes?.npc_feature ?? st.actor?.items ?? []).some(i => i.system?.lid === "npcf_unique_physiology_monstrosity");
+							st.data = {
+								...(st.data ?? {}),
+								roll_str: hasLeg ? "{1d6kl1, 1d6kl1}kh" : "1d6kl1",
+								desc: isMon ? "lancer.tables.structureMonstrosity.description.dismember" : "lancer.tables.structure.description.direct.3plus",
+								result: { roll: { total: 2 } },
+							};
+							return true;
+						}],
+						["structureInsertDismembermentButton", async st => {
+							const isMon = (st.actor?.itemTypes?.npc_feature ?? st.actor?.items ?? []).some(i => i.system?.lid === "npcf_unique_physiology_monstrosity");
+							if (isMon && st.data?.result?.roll?.total === 2) {
+								st.data.embedButtons = [...(st.data.embedButtons ?? []), "dismemberDamage"];
+							}
+							return true;
+						}],
+						["structureInsertSecondaryRollButton", async st => {
+							const isMon = (st.actor?.itemTypes?.npc_feature ?? st.actor?.items ?? []).some(i => i.system?.lid === "npcf_unique_physiology_monstrosity");
+							if (!isMon) {
+								st.data.embedButtons = [...(st.data.embedButtons ?? []), "secondaryStructure"];
+							}
+							return true;
+						}],
+						["rollOverheatTable", async st => {
+							const hasLeg = (st.actor?.items ?? []).some(i => ["npcf_legendary_ultra", "npcf_legendary_veteran"].includes(i.system?.lid));
+							st.data = { ...(st.data ?? {}), roll_str: hasLeg ? "{1d6kl1, 1d6kl1}kh" : "1d6kl1" };
+							return true;
+						}],
 						["printStructureCard", async st => {
 							const m = mkFlagMsg(`str13_${Math.random()}`, {});
 							m.updateSource = u => { for (const [k, v] of Object.entries(u)) if (k === "flags.lancer-cn.tableStatuses") m.flags["lancer-cn"] = { tableStatuses: v }; };
@@ -2711,7 +2771,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 						constructor(f) { this.formula = f; }
 						async evaluate() {
 							const q = rollQueue.shift();
-							this.total = q ?? 4;
+							this.total = q ?? (/^\d+$/.test(String(this.formula).trim()) ? Number(this.formula) : 4);
 							this.terms = [{ results: [{ result: this.total }] }];
 							return this;
 						}
@@ -3113,9 +3173,946 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 					ok(cbTank.system.hp.value === 20 && cbTank.system.heat.value === 0, "核心奖励「寰宇兼容」：一键回满 HP 并清除全部热度");
 					await L.executeTalentSheetAction(cbTank, "adaptiveReactor");
 					ok(cbTank.system.repairs.value === 2 && cbTank.system.stress.value === 3, "核心奖励「适应性反应炉」：消耗 2 点维修容量恢复 1 点反应炉压力");
+
+					// =========================================================
+					// E. 投掷近战武器规则闭环与「猎人」（t_hunter：跳扑 / 匕首戏法 / 蔑刃）全链路自动化（1.15.0）
+					// =========================================================
+					{
+						const mkHunterWpn = (id, name, lid, size, type, { tags = [], range = [{ type: "Threat", val: 1 }], damage = [{ type: "Kinetic", val: "1d3+1" }] } = {}) => {
+							const prof = {
+								type,
+								tags: tags.map(t => ({ ...t })),
+								all_tags: tags.map(t => ({ ...t })),
+								range: range.map(r => ({ ...r })),
+								all_range: range.map(r => ({ ...r })),
+								damage: damage.map(d => ({ ...d })),
+								bonus_damage: [],
+							};
+							return {
+								id,
+								uuid: `Item.${id}`,
+								type: "mech_weapon",
+								name,
+								is_mech_weapon: () => true,
+								currentProfile: () => prof,
+								getTags: () => prof.all_tags,
+								getFlag: () => undefined,
+								system: {
+									lid,
+									size,
+									uses: { value: 0, max: 0 },
+									tags: tags.map(t => ({ ...t })),
+									all_tags: tags.map(t => ({ ...t })),
+									selected_profile_index: 0,
+									active_profile: prof,
+									profiles: [prof],
+								},
+							};
+						};
+
+						const segKnife = mkHunterWpn("h_seg", "分段匕首", "mw_segment_knife", "Auxiliary", "Melee", { tags: [] });
+						const tacKnife = mkHunterWpn("h_tac", "战术匕首", "mw_tactical_knife", "Auxiliary", "Melee", { tags: [{ lid: "tg_thrown", val: "3", is_thrown: true }] });
+						const farKnife = mkHunterWpn("h_far6", "超距飞刀", "mw_custom_knife6", "Auxiliary", "Melee", { tags: [{ lid: "tg_thrown", val: "6", is_thrown: true }] });
+						const mainBlade = mkHunterWpn("h_main", "充能剑", "mw_charged_blade", "Main", "Melee", { tags: [], damage: [{ type: "Energy", val: "1d3+3" }] });
+						const auxPistol = mkHunterWpn("h_pistol", "手枪", "mw_pistol", "Auxiliary", "CQB", { tags: [], range: [{ type: "Range", val: 5 }, { type: "Threat", val: 3 }] });
+						const chakram = mkHunterWpn("h_chak", "轮刃锁鞭", "mw_kkca_chakram_chain", "Auxiliary", "Melee", { tags: [{ lid: "tg_thrown", val: "5", is_thrown: true }] });
+						const wanderingBlade = mkHunterWpn("h_wander", "“游隼”寻索阔剑", "mw_ch_wandering_blade", "Auxiliary", "Melee", { tags: [{ lid: "tg_thrown", val: "5", is_thrown: true }], damage: [{ type: "Kinetic", val: "2" }] });
+						const doomAxe = mkHunterWpn("h_doom", "末日之斧", "mw_kkca_doom_axe", "Heavy", "Melee", { tags: [{ lid: "tg_thrown", val: "8", is_thrown: true }] });
+
+						const hunterMech = mkCpMech("飞刀猎手", "mf_nelson", {
+							extraItems: [segKnife, tacKnife, farKnife, mainBlade, auxPistol, chakram, wanderingBlade, doomAxe],
+						});
+						let mechResets = 0;
+						hunterMech.reset = () => { mechResets++; };
+						for (const it of hunterMech.items) { it.actor = hunterMech; it.parent = hunterMech; if (it.uuid) docMap[it.uuid] = it; }
+						ctx.game.actors.push(hunterMech);
+
+						// E1. 猎人 I 阶段尚未解锁匕首戏法；升级至猎人 II 时自动触发机甲重算，且仅对副近战武器注入/升级「投掷 5」而不污染原始 tags
+						const hunterPilot = attachPilot(hunterMech, {
+							talents: [["t_hunter", 1], ["t_nuclear_cavalier", 2]],
+						});
+						const prepItem = ctx.CONFIG.Item.documentClass.prototype.prepareFinalAttributes;
+						prepItem.call(segKnife);
+						prepItem.call(tacKnife);
+						ok(L.weaponThrownVal(segKnife, hunterMech) === 0 && L.weaponThrownVal(tacKnife, hunterMech) === 3, "猎人 I 时未解锁匕首戏法：无投掷副近战保持 0，战术匕首保持投掷 3");
+
+						const hunterTalItem = hunterPilot.itemTypes.talent.find(t => t.system.lid === "t_hunter");
+						hunterTalItem.system.curr_rank = 2;
+						hooks.updateItem(hunterTalItem);
+						ok(mechResets === 1, "驾驶员升级猎人天赋至 II 级时自动触发所驾机甲 reset 重算属性");
+
+						for (const w of [segKnife, tacKnife, farKnife, mainBlade, auxPistol]) prepItem.call(w);
+						ok(
+							segKnife.system.active_profile.all_tags.some(t => t.lid === "tg_thrown" && String(t.val) === "5")
+							&& segKnife.system.active_profile.tags.length === 0,
+							"猎人 II「匕首戏法」：无投掷标签的副近战武器在衍生 all_tags 自动获得「投掷 5」，且不污染原始 tags",
+						);
+						ok(
+							tacKnife.system.active_profile.all_tags.find(t => t.lid === "tg_thrown")?.val === "5"
+							&& tacKnife.system.active_profile.tags[0]?.val === "3",
+							"猎人 II「匕首戏法」：原本投掷 3 的战术匕首自动升级为「投掷 5」，且原始 tags 仍保留 3",
+						);
+						ok(
+							farKnife.system.active_profile.all_tags.find(t => t.lid === "tg_thrown")?.val === "6"
+							&& L.weaponThrownVal(mainBlade, hunterMech) === 0
+							&& L.weaponThrownVal(auxPistol, hunterMech) === 0,
+							"猎人 II「匕首戏法」：投掷 >= 5 的副近战不降级，主近战与副远程武器不受影响",
+						);
+
+						// E2. 目标选择面板 attackReach 识别投掷射程与轮刃锁鞭线形 5 模板
+						const segReach = L.attackReach({ state: { actor: hunterMech, item: segKnife } });
+						const chakReach = L.attackReach({ state: { actor: hunterMech, item: chakram } });
+						ok(segReach.reach === 5 && segReach.label === "威胁 1 / 投掷 5", `目标选择面板识别匕首戏法投掷射程（实际 reach=${segReach.reach}, label=${segReach.label}）`);
+						ok(chakReach.reach === 5 && chakReach.aoe.some(a => a.type === "Line" && a.val === 5), "轮刃锁鞭在目标选择面板同时提供投掷 5 射程与线形 5 模板按钮");
+
+						// E3. 智能近战挥砍 vs 远距投掷距离切换（邻接挥砍不受掩护影响且不离手；超威胁远投受掩护影响并标记武器已投出）
+						const hunterTok = { id: "tok_hm", x: 0, y: 0, center: { x: 0, y: 0 }, actor: hunterMech, document: { uuid: "Scene.s.Token.hm", elevation: 0 } };
+						const adjTok = { id: "tok_adj", name: "近身敌机", x: 100, y: 0, center: { x: 100, y: 0 }, actor: techVictim, document: { uuid: "Scene.s.Token.adj", elevation: 0 } };
+						const farTok = { id: "tok_far", name: "远处敌机", x: 400, y: 0, center: { x: 400, y: 0 }, actor: techVictim, document: { uuid: "Scene.s.Token.far", elevation: 0 } };
+						hunterMech.getActiveTokens = () => [hunterTok];
+						docMap["Scene.s.Token.adj"] = adjTok.document;
+						adjTok.document.actor = techVictim;
+						docMap["Scene.s.Token.far"] = farTok.document;
+						farTok.document.actor = techVictim;
+						ctx.canvas = {
+							...ctx.canvas,
+							grid: { size: 100, measurePath: pts => ({ spaces: Math.round(Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y) / 100), distance: Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y) / 100 }) },
+							tokens: { placeables: [hunterTok, adjTok, farTok], controlled: [hunterTok] },
+						};
+
+						// 邻接挥砍（距离 1 <= 威胁 1）：thrown 自动置为 false，攻击后武器仍在手中
+						ctx.game.user.targets = new Set([adjTok]);
+						const adjState = { actor: hunterMech, item: segKnife, data: {}, cardTargets: [{ uuid: "Scene.s.Token.adj", hit: true, crit: false }] };
+						await v13Steps.get("initAttackData")(adjState);
+						await v13Steps.get("setAttackTags")(adjState);
+						await v13Steps.get("printAttackCard")(adjState);
+						ok(
+							adjState.data.acc_diff.weapon.thrown === false
+							&& adjState.data.tags.some(t => t.lid === "tg_thrown" && String(t.val) === "5")
+							&& !L.isWeaponThrownOut(hunterMech, segKnife),
+							"邻接目标（距离 <= 威胁）：自动按常规近战挥砍结算（不吃投掷掩护惩罚、武器保留在手中不离手），且攻击卡保留投掷 5 标签",
+						);
+
+						// 远距投掷（距离 4 > 威胁 1）：thrown 自动置为 true，攻击后标记已投出并拦截再次使用
+						ctx.game.user.targets = new Set([farTok]);
+						const farState = { actor: hunterMech, item: segKnife, data: {}, cardTargets: [{ uuid: "Scene.s.Token.far", hit: true, crit: false }] };
+						await v13Steps.get("initAttackData")(farState);
+						await v13Steps.get("printAttackCard")(farState);
+						ok(farState.data.acc_diff.weapon.thrown === true && L.isWeaponThrownOut(hunterMech, segKnife), "超出威胁的目标（距离 4 > 威胁 1）：自动切换为投掷攻击并在结算后标记该武器已投出");
+
+						const hunterWarns = [];
+						ctx.ui = { notifications: { info() {}, warn: s => hunterWarns.push(s), error() {} } };
+						const blockedRepeat = await v13Steps.get("initAttackData")({ actor: hunterMech, item: segKnife, data: {} });
+						ok(blockedRepeat === false && hunterWarns.some(w => /分段匕首.*已投出/.test(w)), "已投出未取回的近战武器再次发起攻击时自动拦截并提示取回条件");
+
+						// 末日之斧（mw_kkca_doom_axe）：规则明确投掷后无需回收即可再次使用
+						const doomState = { actor: hunterMech, item: doomAxe, data: {}, cardTargets: [{ uuid: "Scene.s.Token.far", hit: true, crit: false }] };
+						await v13Steps.get("initAttackData")(doomState);
+						await v13Steps.get("printAttackCard")(doomState);
+						const doomRepeat = await v13Steps.get("initAttackData")({ actor: hunterMech, item: doomAxe, data: {} });
+						ok(doomState.data.acc_diff.weapon.thrown === true && !L.isWeaponThrownOut(hunterMech, doomAxe) && doomRepeat === true, "末日之斧投掷后豁免离手锁定，无需拾回即可继续攻击");
+
+						// “游隼”寻索阔剑（mw_ch_wandering_blade）：投掷超过射程 1 时自动获得引导并改为 1d3+2 动能伤害
+						const wbState = { actor: hunterMech, item: wanderingBlade, data: {}, cardTargets: [{ uuid: "Scene.s.Token.far", hit: true, crit: false }] };
+						await v13Steps.get("initAttackData")(wbState);
+						await v13Steps.get("rollAttacks")(wbState);
+						await v13Steps.get("printAttackCard")(wbState);
+						ok(wbState.data.acc_diff.weapon.seeking === true && wbState._card.flags["lancer-cn"]?.cpDamageMod?.wanderingBladeThrownFar === true, "“游隼”寻索阔剑投掷目标距离 > 1 时自动开启引导（无视掩护与视线）并写入远投伤害修正");
+						const wbDmgState = { actor: hunterMech, item: wanderingBlade, data: { lancerCnDamageMod: wbState._card.flags["lancer-cn"].cpDamageMod } };
+						await v13Steps.get("showDamageHUD")(wbDmgState);
+						ok(wbDmgState._hudSnapshot?.damage?.[0]?.val === "1d3+2" && wanderingBlade.system.active_profile.damage[0].val === "2", "“游隼”寻索阔剑远投伤害自动替换为 1d3+2 动能并在 HUD 关闭后无损还原物品原始数据");
+
+						// E4. 攻击卡与机甲表拾回交互 + 猎人 II「匕首戏法」回合结束自动收回（对比无猎人 II 机甲）
+						let farCardHtml = "";
+						let farCardClick = null;
+						const farCardRoot = {
+							querySelector: sel => (sel === ".message-content" ? {
+								insertAdjacentHTML: (_p, h) => { farCardHtml = h; },
+								querySelector: s => (s === ".lancer-cn-status-row" ? { addEventListener: (_ev, fn) => { farCardClick = fn; }, remove() {} } : null),
+							} : null),
+						};
+						L.onRenderChatMessage(farState._card, [farCardRoot]);
+						ok(/已投出/.test(farCardHtml) && /data-lancer-cn-thrown="pickup"/.test(farCardHtml) && /data-lancer-cn-thrown="undo"/.test(farCardHtml), "投掷攻击卡自动渲染「已投出」提示、「自由动作拾回」与「撤销投出」按钮");
+
+						const wpnBadgeOut = [];
+						const rollBtnMock = { style: {}, title: "" };
+						const wpnCardMock = {
+							dataset: { uuid: wanderingBlade.uuid },
+							querySelector: sel => {
+								if (sel === ".lancer-cn-thrown-badge") return null;
+								if (sel === ".roll-attack") return rollBtnMock;
+								if (sel === ".lancer-body") return { insertAdjacentHTML: (_p, h) => wpnBadgeOut.push(h) };
+								return null;
+							},
+						};
+						const sheetTalentBarHtml = L.renderTalentControlHTML(hunterMech);
+						L.onRenderActorSheet({ actor: hunterMech }, [{
+							dataset: {},
+							querySelectorAll: sel => (sel.includes(".mech_weapon.set[data-uuid]") ? [wpnCardMock] : []),
+							querySelector: () => null,
+						}]);
+						ok(
+							wpnBadgeOut.length === 1 && /已投出/.test(wpnBadgeOut[0]) && rollBtnMock.style.opacity === "0.45"
+							&& /pickupThrown:h_seg/.test(sheetTalentBarHtml) && /pickupThrownAll/.test(sheetTalentBarHtml),
+							"机甲表武器栏在武器已投出时半透明灰显攻击钮、注入「已投出 + 自由动作拾回」徽标，并在战术栏提供快捷拾回与全部拾回",
+						);
+
+						await L.executeTalentSheetAction(hunterMech, `pickupThrown:${wanderingBlade.id}`);
+						ok(!L.isWeaponThrownOut(hunterMech, wanderingBlade) && L.isWeaponThrownOut(hunterMech, segKnife), "机甲表点击自由动作拾回可单独取回指定投出武器");
+
+						// 对比：无猎人 II 的机甲回合结束不自动收回；具备猎人 II「匕首戏法」的机甲回合结束自动收回全部投出武器并发送提示卡
+						const plainThrower = mkCpMech("普通投矛手", "mf_standard_pattern_i_everest");
+						const plainKnife = mkHunterWpn("p_tac", "战术匕首", "mw_tactical_knife", "Auxiliary", "Melee", { tags: [{ lid: "tg_thrown", val: "3", is_thrown: true }] });
+						plainKnife.actor = plainThrower;
+						plainThrower.items.push(plainKnife);
+						attachPilot(plainThrower, { talents: [["t_hunter", 1]] });
+						await L.markWeaponThrown(plainThrower, plainKnife, "Scene.s.Token.far");
+						await L.onUpdateCombatTurnEnd({
+							round: 1,
+							previous: { combatantId: "c_plain" },
+							current: { combatantId: "c_hunter" },
+							combatants: {
+								get: id => (id === "c_plain" ? { id: "c_plain", name: "普通投矛手", actor: plainThrower } : { id: "c_hunter", name: "飞刀猎手", actor: hunterMech }),
+								[Symbol.iterator]: function* () { yield { actor: plainThrower }; yield { actor: hunterMech }; },
+							},
+						}, { turn: 1 }, { direction: 1 });
+						ok(L.isWeaponThrownOut(plainThrower, plainKnife), "未具备猎人 II「匕首戏法」的机甲在回合结束时投出武器不会自动飞回");
+
+						await L.onUpdateCombatTurnEnd({
+							round: 1,
+							previous: { combatantId: "c_hunter" },
+							current: { combatantId: "c_plain" },
+							combatants: {
+								get: id => (id === "c_hunter" ? { id: "c_hunter", name: "飞刀猎手", actor: hunterMech } : { id: "c_plain", name: "普通投矛手", actor: plainThrower }),
+								[Symbol.iterator]: function* () { yield { actor: plainThrower }; yield { actor: hunterMech }; },
+							},
+						}, { turn: 0 }, { direction: 1 });
+						ok(!L.isWeaponThrownOut(hunterMech, segKnife) && L.getThrownWeapons(hunterMech).length === 0 && /匕首戏法 · 投掷武器自动收回/.test(chatCreated.at(-1)?.content ?? ""), "猎人 II「匕首戏法」：回合结束时自动收回本机甲投出的全部武器并发送战报提示卡");
+
+						// E5. 猎人 I「跳扑」（1/轮飞行 3 格）与猎人 III「蔑刃」（1/轮自由动作投掷副近战且禁绝一切额外伤害）
+						hunterTalItem.system.curr_rank = 3;
+						await L.executeTalentSheetAction(hunterMech, "hunterLunge");
+						ok(L.getCombatState(hunterMech).usedHunterLunge === true && /猎人 · 跳扑/.test(chatCreated.at(-1)?.content ?? ""), "猎人 I「跳扑」：点击机甲表按钮发出无视交战与反应的 3 格飞行卡并记为本轮已用");
+						await L.executeTalentSheetAction(hunterMech, "hunterLunge");
+						ok(L.getCombatState(hunterMech).usedHunterLunge === false, "猎人 I「跳扑」：本轮已用时再次点击支持防误触重置");
+
+						let lastDisdainState = null;
+						ctx.game.lancer.flows.set("WeaponAttackFlow", class {
+							constructor(u, d) {
+								this.item = docMap[u] ?? u;
+								this.state = { actor: this.item.actor, item: this.item, data: { ...(d ?? {}) }, cardTargets: [{ uuid: "Scene.s.Token.adj", hit: true, crit: false }] };
+							}
+							async begin() {
+								const okInit = await v13Steps.get("initAttackData")(this.state);
+								if (okInit === false) return false;
+								await v13Steps.get("setAttackTags")(this.state);
+								await v13Steps.get("rollAttacks")(this.state);
+								await v13Steps.get("printAttackCard")(this.state);
+								lastDisdainState = this.state;
+								return true;
+							}
+						});
+
+						// 先只保留 tacKnife 为唯一未投出副近战（将其余副近战标为已投出），并让机甲处于超温危域测试「蔑刃不能造成额外伤害」
+						for (const w of [segKnife, farKnife, chakram, wanderingBlade]) await L.markWeaponThrown(hunterMech, w, "Scene.s.Token.far");
+						hunterMech.statuses.add("dangerzone");
+						await L.setCombatState(hunterMech, { usedNuCavBonus: false, usedHunterDisdainful: false });
+
+						ctx.game.user.targets = new Set([adjTok]);
+						const mainHitState = { actor: hunterMech, item: mainBlade, data: {}, cardTargets: [{ uuid: "Scene.s.Token.adj", hit: true, crit: false }] };
+						await v13Steps.get("initAttackData")(mainHitState);
+						await v13Steps.get("printAttackCard")(mainHitState);
+						const mainHitInfo = L.analyzeCard(mainHitState._card);
+						ok(mainHitInfo.weaponRiders.some(r => r.kind === "hunterDisdainful"), "猎人 III「蔑刃」：近战攻击命中卡自动生成自由动作投掷副近战武器按钮");
+
+						await L.executeCardRider(mainHitState._card, mainHitInfo, "hunterDisdainful");
+						ok(
+							lastDisdainState?.item === tacKnife
+							&& lastDisdainState?.data?.acc_diff?.weapon?.thrown === true
+							&& L.isWeaponThrownOut(hunterMech, tacKnife)
+							&& lastDisdainState?._card?.flags?.["lancer-cn"]?.cpDamageMod?.noBonusDamage === true
+							&& L.getCombatState(hunterMech).usedHunterDisdainful === true,
+							"猎人 III「蔑刃」：自动筛选未投出的可用副近战武器强制以投掷模式发起攻击、标记离手并写入禁额外伤害标记",
+						);
+
+						const disdainDmgState = {
+							actor: hunterMech,
+							item: tacKnife,
+							data: {
+								lancerCnDamageMod: lastDisdainState._card.flags["lancer-cn"].cpDamageMod,
+								bonus_damage: [{ type: "Kinetic", val: "1d6" }],
+								damage_hud_data: { base: { bonusDamage: [{ type: "Kinetic", val: "1d6" }] }, weapon: { bonusDamage: [] }, targets: [{ bonusDamage: [{ type: "Kinetic", val: "1d6" }] }] },
+							},
+						};
+						await v13Steps.get("setDamageTags")(disdainDmgState);
+						await v13Steps.get("rollReliable")(disdainDmgState);
+						ok(
+							disdainDmgState.data.bonus_damage.length === 0
+							&& disdainDmgState.data.damage_hud_data.base.bonusDamage.length === 0
+							&& disdainDmgState.data.damage_hud_data.targets[0].bonusDamage.length === 0
+							&& L.getCombatState(hunterMech).usedNuCavBonus === false,
+							"猎人 III「蔑刃」：严格剥离全部额外伤害，且不会误消耗本回合核骑兵等 1/回合额外伤害充能",
+						);
+
+						await L.onUpdateCombatTurnEnd({ combatants: [{ actor: hunterMech }] }, { round: 3 }, { direction: 1 });
+						ok(L.getCombatState(hunterMech).usedHunterLunge === false && L.getCombatState(hunterMech).usedHunterDisdainful === false, "进入新一轮时自动重置猎人 I「跳扑」与猎人 III「蔑刃」的每轮限次");
+						hunterMech.statuses.delete("dangerzone");
+
+						// =========================================================
+						// F. NPC 武器伤害流程修复、非链接 NPC 指示物定位与未锁定目标伤害卡兜底应用（1.15.1）
+						// =========================================================
+						{
+							const origTierArray = [
+								[{ type: "Kinetic", val: "6" }],
+								[{ type: "Kinetic", val: "9" }],
+								[{ type: "Kinetic", val: "12" }],
+							];
+							const npcAssault = mkCpMech("突击兵", "mf_standard_pattern_i_everest", { isOwner: true });
+							npcAssault.id = "npc_assault";
+							npcAssault.uuid = "Scene.s.Token.npc_a.Actor.npc_assault";
+							npcAssault.type = "npc";
+							npcAssault.is_npc = () => true;
+							npcAssault.is_mech = () => false;
+							npcAssault.system.tier = 2;
+
+							const npcRifle = {
+								id: "npcf_rifle",
+								uuid: "Scene.s.Token.npc_a.Actor.npc_assault.Item.npcf_rifle",
+								type: "npc_feature",
+								name: "重型突击步枪",
+								actor: npcAssault,
+								parent: npcAssault,
+								is_npc_feature: () => true,
+								system: {
+									lid: "npcf_assault_heavy_assault_rifle",
+									type: "Weapon",
+									weapon_type: "Main Rifle",
+									tier_override: 0,
+									damage: origTierArray,
+									range: [{ type: "Range", val: 10 }],
+									tags: [{ lid: "tg_reliable", val: "{2/3/4}", is_reliable: true, tierVal: t => [2, 3, 4][t - 1] }],
+									all_tags: [{ lid: "tg_reliable", val: "{2/3/4}", is_reliable: true, tierVal: t => [2, 3, 4][t - 1] }],
+								},
+							};
+							const npcBlade = {
+								id: "npcf_blade",
+								uuid: "Scene.s.Token.npc_a.Actor.npc_assault.Item.npcf_blade",
+								type: "npc_feature",
+								name: "战术投斧",
+								actor: npcAssault,
+								parent: npcAssault,
+								is_npc_feature: () => true,
+								system: {
+									lid: "npcf_berserker_chain_axe",
+									type: "Weapon",
+									weapon_type: "Heavy Melee",
+									tier_override: 0,
+									damage: [[{ type: "Kinetic", val: "1d6+2" }]], // 单层级自定义 NPC 武器容错测试
+									range: [{ type: "Threat", val: 1 }],
+									tags: [{ lid: "tg_thrown", val: "5", is_thrown: true }],
+									all_tags: [{ lid: "tg_thrown", val: "5", is_thrown: true }],
+								},
+							};
+							const npcTech = {
+								id: "npcf_tech",
+								uuid: "Scene.s.Token.npc_a.Actor.npc_assault.Item.npcf_tech",
+								type: "npc_feature",
+								name: "逻辑炸弹",
+								actor: npcAssault,
+								parent: npcAssault,
+								is_npc_feature: () => true,
+								system: {
+									lid: "npcf_witch_logic_bomb",
+									type: "Tech",
+									tech_type: "Quick",
+									tier_override: 0,
+									tags: [
+										{ lid: "tg_ap", is_ap: true },
+										{ lid: "tg_reliable", val: "{1/2/3}", is_reliable: true, tierVal: t => t },
+									],
+								},
+							};
+							npcAssault.items = [npcRifle, npcBlade, npcTech];
+							docMap[npcAssault.uuid] = npcAssault;
+							docMap[npcRifle.uuid] = npcRifle;
+							docMap[npcBlade.uuid] = npcBlade;
+							docMap[npcTech.uuid] = npcTech;
+
+							// F1. NPC 武器 showDamageHUD：保留二维层级伤害数组不崩溃、匹配当前层级、支持 tier_override 与单层级回退，且退出后无损还原原数组引用
+							const npcDmgSt1 = { actor: npcAssault, item: npcRifle, data: {} };
+							const okHud1 = await v13Steps.get("showDamageHUD")(npcDmgSt1);
+							ok(
+								okHud1 === true
+								&& Array.isArray(npcDmgSt1._npcHudDamage)
+								&& npcDmgSt1._npcHudDamage[0]?.val === "9"
+								&& npcRifle.system.damage === origTierArray
+								&& Array.isArray(npcRifle.system.damage[1])
+								&& npcRifle.system.damage[1][0].val === "9",
+								"NPC 武器掷伤害（showDamageHUD）：保持二维层级数组不触发 .map 崩溃，准确读取 T2 伤害（9）并在退出后无损还原原始二维数组",
+							);
+
+							npcRifle.system.tier_override = 3;
+							const npcDmgSt2 = { actor: npcAssault, item: npcRifle, data: {} };
+							await v13Steps.get("showDamageHUD")(npcDmgSt2);
+							npcRifle.system.tier_override = 0;
+							ok(npcDmgSt2._npcHudDamage?.[0]?.val === "12" && npcRifle.system.damage === origTierArray, "NPC 武器设置 tier_override=3 时在 T2 NPC 上准确读取 T3 伤害（12）且还原原数组");
+
+							npcAssault.system.tier = 3;
+							const npcDmgSt3 = { actor: npcAssault, item: npcBlade, data: {} };
+							await v13Steps.get("showDamageHUD")(npcDmgSt3);
+							npcAssault.system.tier = 2;
+							ok(npcDmgSt3._npcHudDamage?.[0]?.val === "1d6+2", "仅填写了 T1 单层伤害的自定义 NPC 武器在高阶（T3）NPC 上自动回退有效层级而不崩溃");
+
+							// F2. 非 Weapon 类型的 NPC 特性（如 Tech 科技攻击）通过 setDamageTags 并不报错拦截
+							const npcTechDmgSt = { actor: npcAssault, item: npcTech, data: {} };
+							const okTechTags = await v13Steps.get("setDamageTags")(npcTechDmgSt);
+							ok(
+								okTechTags === true
+								&& npcTechDmgSt.data.ap === true
+								&& npcTechDmgSt.data.reliable === true
+								&& npcTechDmgSt.data.reliable_val === 2,
+								"非 Weapon 类型的 NPC 科技特性触发伤害流程时不报「can't deal damage」，并准确提取穿甲与当前层级可靠值（T2=2）",
+							);
+
+							// F3. NPC 武器类型识别与角色表投出武器徽标
+							await L.markWeaponThrown(npcAssault, npcBlade, "Scene.s.Token.adj");
+							const npcSheetBadgeOut = [];
+							const npcRollBtnMock = { style: {}, title: "" };
+							L.onRenderActorSheet({ actor: npcAssault }, [{
+								dataset: {},
+								querySelectorAll: sel => (sel.includes(".npc_feature.set[data-uuid]") ? [{
+									dataset: { uuid: npcBlade.uuid },
+									querySelector: s => (s === ".lancer-cn-thrown-badge" ? null : s === ".roll-attack" ? npcRollBtnMock : s === ".lancer-body" ? { insertAdjacentHTML: (_p, h) => npcSheetBadgeOut.push(h) } : null),
+								}] : []),
+								querySelector: () => null,
+							}]);
+							ok(npcSheetBadgeOut.length === 1 && /已投出/.test(npcSheetBadgeOut[0]) && npcRollBtnMock.style.opacity === "0.45", "NPC 角色表同样为已投出的 NPC 投掷近战武器渲染已投出徽标与自由动作拾回按钮");
+							await L.retrieveThrownWeapon(npcAssault, npcBlade);
+
+							// F4. 非链接（actorLink=false）NPC 指示物在 GM 当前左键选中玩家棋子时仍能准确定位自身位置、测距与自动选敌
+							const npcTok = {
+								id: "tok_npc_a", name: "突击兵", x: 0, y: 0, center: { x: 0, y: 0 }, visible: true,
+								actor: npcAssault,
+								document: { id: "tok_npc_a", uuid: "Scene.s.Token.npc_a", actorId: "npc_base", disposition: -1, elevation: 0 },
+							};
+							npcTok.document.object = npcTok;
+							npcAssault.token = npcTok.document;
+							npcAssault.getActiveTokens = linked => (linked ? [] : [npcTok]); // 真实 Foundry 非链接合成角色：getActiveTokens(true) 返回 []
+
+							const lonePlayerMech = mkCpMech("玩家前锋", "mf_nelson", { isOwner: true, armor: 2, hp: 14, overshield: 0 });
+							let playerDmgCalcCalls = [];
+							lonePlayerMech.damageCalc = async (applied, opts) => { playerDmgCalcCalls.push({ applied, opts }); };
+							const lonePlayerTok = {
+								id: "tok_pl_1", name: "玩家前锋", x: 300, y: 0, center: { x: 300, y: 0 }, visible: true,
+								actor: lonePlayerMech,
+								document: { id: "tok_pl_1", uuid: "Scene.s.Token.pl1", actorId: lonePlayerMech.id, actor: lonePlayerMech, disposition: 1, elevation: 0 },
+								setTarget(v) { if (v) ctx.game.user.targets.add(this); else ctx.game.user.targets.delete(this); },
+							};
+							lonePlayerTok.document.object = lonePlayerTok;
+							docMap["Scene.s.Token.pl1"] = lonePlayerTok.document;
+
+							ctx.game.user.isGM = true;
+							ctx.game.user.targets = new Set();
+							log.settingValues["lancer-cn.targetPicker"] = true;
+							log.settingValues["lancer-cn.targetAutoPick"] = true;
+							ctx.canvas = {
+								...ctx.canvas,
+								grid: { size: 100, measurePath: pts => ({ spaces: Math.round(Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y) / 100), distance: Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y) / 100 }) },
+								tokens: {
+									placeables: [npcTok, lonePlayerTok],
+									controlled: [lonePlayerTok], // 模拟 GM 此前左键点击了玩家机甲（选中控制的是玩家而非 NPC）
+									get: id => [npcTok, lonePlayerTok].find(t => t.id === id),
+								},
+							};
+							const fakeNpcAtkFlow = { constructor: { name: "WeaponAttackFlow" }, state: { actor: npcAssault, item: npcRifle, data: {} } };
+							L.openTargetPicker(fakeNpcAtkFlow);
+							ok(
+								L.targetSession()?.token === npcTok && ctx.game.user.targets.has(lonePlayerTok),
+								"非链接 NPC 发起攻击时（即使 GM 当前左键选中控制的是玩家棋子），准确解析 NPC 自身指示物位置、测算射程并自动锁定射程内唯一玩家敌机",
+							);
+							L.closeTargetPicker(fakeNpcAtkFlow, false);
+
+							// F5. 未锁定目标伤害卡兜底应用栏（decorateDamageCard + applyUntargetedDamageFromCard）
+							const mkUntargetedRoot = () => {
+								const appended = [];
+								const listeners = {};
+								let selectEl = null;
+								let previewEl = null;
+								let btnEl = null;
+								const host = {
+									append: el => {
+										appended.push(el);
+									},
+								};
+								const ownerDocument = {
+									createElement: tag => {
+										const el = {
+											tagName: tag.toUpperCase(),
+											className: "",
+											style: {},
+											_html: "",
+											set innerHTML(v) {
+												this._html = v;
+												selectEl = { value: "1", addEventListener: (ev, fn) => { listeners[`sel:${ev}`] = fn; } };
+												previewEl = { textContent: "" };
+												btnEl = { addEventListener: (ev, fn) => { listeners[`btn:${ev}`] = fn; } };
+											},
+											get innerHTML() { return this._html; },
+											querySelector: s => {
+												if (s === ".lancer-cn-untargeted-mult") return selectEl;
+												if (s === ".lancer-cn-untargeted-preview") return previewEl;
+												if (s === "[data-lancer-cn-apply-untargeted]") return btnEl;
+												return null;
+											},
+											addEventListener: (ev, fn) => { listeners[`bar:${ev}`] = fn; },
+										};
+										return el;
+									},
+								};
+								return {
+									ownerDocument,
+									appended,
+									listeners,
+									getSelect: () => selectEl,
+									getPreview: () => previewEl,
+									querySelectorAll: () => [],
+									querySelector: s => {
+										if (s === ".lancer-cn-untargeted-apply") return appended[0] ?? null;
+										if (s.includes(".card")) return host;
+										return null;
+									},
+								};
+							};
+
+							// 燃烧检定清除卡（damageResults 为空）不应注入兜底应用栏
+							const emptyBurnRoot = mkUntargetedRoot();
+							const emptyBurnMsg = mkFlagMsg("burn_ok", { lancer: { damageData: { damageResults: [], critDamageResults: [], targetDamageResults: [] } } }, { speaker: { token: "tok_npc_a" } });
+							L.decorateDamageCard(emptyBurnMsg, emptyBurnRoot, emptyBurnMsg.flags.lancer.damageData);
+							ok(emptyBurnRoot.appended.length === 0, "无伤害数值的卡片（如燃烧清除成功卡）不会注入未锁定兜底应用栏");
+
+							// 未锁定目标掷出的有效 NPC 伤害卡：注入兜底应用栏 + 实时结算预览
+							const untargetedDmgData = {
+								ap: false,
+								paracausal: false,
+								half_damage: false,
+								damageResults: [
+									{ d_type: "Kinetic", roll: { total: 9 }, bonus: false },
+									{ d_type: "Energy", roll: { total: 4 }, bonus: true },
+								],
+								critDamageResults: [],
+								targetDamageResults: [],
+							};
+							const untargetedMsg = mkFlagMsg("npc_untgt_dmg", { lancer: { damageData: untargetedDmgData } }, { speaker: { token: "tok_npc_a", actor: npcAssault.id } });
+							ctx.game.user.targets = new Set();
+							ctx.canvas.tokens.controlled = [lonePlayerTok]; // GM 左键选中了玩家机甲
+							const untargetedRoot = mkUntargetedRoot();
+							L.decorateDamageCard(untargetedMsg, untargetedRoot, untargetedDmgData);
+							ok(
+								untargetedRoot.appended.length === 1
+								&& /应用伤害（锁定\/选中目标）/.test(untargetedRoot.appended[0].innerHTML)
+								&& /玩家前锋：结算预览：-11 HP/.test(untargetedRoot.getPreview()?.textContent ?? ""),
+								`未锁定目标伤害卡自动注入兜底应用按钮并实时预览受击者扣血（9动能+4能量 扣 2 护甲 = -11 HP，实际预览=${untargetedRoot.getPreview()?.textContent}）`,
+							);
+
+							// 仅选中攻击者自身（NPC 自己）且未按 T 锁定时：防误伤拦截，绝不扣 NPC 自己的血
+							let npcSelfDmgCalled = false;
+							npcAssault.damageCalc = async () => { npcSelfDmgCalled = true; };
+							const untgtWarns = [];
+							ctx.ui = { notifications: { info() {}, warn: s => untgtWarns.push(s), error() {} } };
+							ctx.canvas.tokens.controlled = [npcTok];
+							const selfRes = await L.applyUntargetedDamageFromCard(untargetedMsg, untargetedDmgData, { multiple: 1 });
+							ok(selfRes.ok === false && selfRes.reason === "self_only" && !npcSelfDmgCalled && untgtWarns.some(w => /角色自身/.test(w)), "仅左键选中攻击者自身指示物时自动拦截防误伤，不会把伤害误扣在攻击方 NPC 身上");
+
+							// GM 左键选中玩家机甲（未按 T 锁定）点击应用伤害：准确对玩家机甲调用 damageCalc
+							playerDmgCalcCalls = [];
+							ctx.canvas.tokens.controlled = [lonePlayerTok];
+							const ctrlRes = await L.applyUntargetedDamageFromCard(untargetedMsg, untargetedDmgData, { multiple: 1 });
+							ok(
+								ctrlRes.ok === true
+								&& playerDmgCalcCalls.length === 1
+								&& playerDmgCalcCalls[0].applied.Kinetic === 9
+								&& playerDmgCalcCalls[0].applied.Energy === 4
+								&& playerDmgCalcCalls[0].opts.multiple === 1,
+								"GM 左键选中玩家机甲后点击未锁定伤害卡兜底按钮，直接对玩家机甲结算 9 动能 + 4 能量伤害",
+							);
+
+							// 按 T 锁定多名目标且选择 0.5× 倍率时：额外伤害（bonus=true）按多目标规则自动减半（4 → 2）并以 0.5 倍率结算
+							const secondAllyMech = mkCpMech("玩家支援", "mf_lancaster", { isOwner: true, armor: 1, hp: 12 });
+							let secondAllyCalls = [];
+							secondAllyMech.damageCalc = async (applied, opts) => { secondAllyCalls.push({ applied, opts }); };
+							const secondAllyTok = {
+								id: "tok_pl_2", name: "玩家支援",
+								actor: secondAllyMech,
+								document: { id: "tok_pl_2", uuid: "Scene.s.Token.pl2", actor: secondAllyMech },
+							};
+							playerDmgCalcCalls = [];
+							ctx.game.user.targets = new Set([lonePlayerTok, secondAllyTok]);
+							const multiRes = await L.applyUntargetedDamageFromCard(untargetedMsg, untargetedDmgData, { multiple: 0.5 });
+							ok(
+								multiRes.ok === true
+								&& multiRes.appliedCount === 2
+								&& playerDmgCalcCalls[0]?.applied.Kinetic === 9
+								&& playerDmgCalcCalls[0]?.applied.Energy === 2
+								&& playerDmgCalcCalls[0]?.opts.multiple === 0.5
+								&& secondAllyCalls[0]?.applied.Energy === 2,
+								"按 T 锁定多名目标结算时：优先取锁定目标、多目标额外伤害自动减半（4→2），并透传所选抗性倍率（0.5×）",
+							);
+							ctx.game.user.targets = new Set();
+
+							// F6. NPC 模板核心特征兼容与被动自动化（1.15.2）
+							// (a) 中文老兵「传奇」（npcf_cn_veteran_11）与怪形「独特生理机能」（npcf_cn_monstrosity_1）兼容原生结构/过热表并无损还原 ID
+							const vetMonNpc = {
+								id: "npc_vet_mon", uuid: "Actor.npc_vet_mon", name: "老兵怪形", type: "npc", isOwner: true,
+								is_npc: () => true,
+								statuses: new Set(),
+								system: { tier: 2, structure: { value: 2, max: 3 }, stress: { value: 1, max: 2 } },
+								items: [
+									{ type: "npc_feature", name: "独特生理机能", system: { lid: "npcf_cn_monstrosity_1" } },
+									{ type: "npc_feature", name: "传奇", system: { lid: "npcf_cn_veteran_11" } },
+								],
+							};
+							vetMonNpc.itemTypes = { npc_feature: vetMonNpc.items };
+							const monStrState = { actor: vetMonNpc, data: { remStruct: 2, embedButtons: [] } };
+							await v13Steps.get("rollStructureTable")(monStrState);
+							await v13Steps.get("structureInsertDismembermentButton")(monStrState);
+							await v13Steps.get("structureInsertSecondaryRollButton")(monStrState);
+							const monOvhState = { actor: vetMonNpc, data: { remStress: 1 } };
+							await v13Steps.get("rollOverheatTable")(monOvhState);
+							ok(
+								monStrState.data.roll_str === "{1d6kl1, 1d6kl1}kh"
+								&& monOvhState.data.roll_str === "{1d6kl1, 1d6kl1}kh"
+								&& monStrState.data.desc.includes("structureMonstrosity")
+								&& monStrState.data.embedButtons.includes("dismemberDamage")
+								&& !monStrState.data.embedButtons.includes("secondaryStructure")
+								&& vetMonNpc.items[0].system.lid === "npcf_cn_monstrosity_1"
+								&& vetMonNpc.items[1].system.lid === "npcf_cn_veteran_11",
+								"中文老兵「传奇」与怪形「独特生理机能」在结构/过热检定中准确触发双骰取高与怪形专属表，并在执行后无损还原中文 LID",
+							);
+
+							// (b) NPC 科技特性 tier_override（1~3）下标偏移修复 + effect/tags 补齐
+							const witchTech = {
+								id: "nf_witch_tear", uuid: "Item.nf_witch_tear", name: "撕裂逻辑", type: "npc_feature",
+								is_npc_feature: () => true,
+								system: {
+									lid: "npcf_cn_witch_2", type: "Tech", tech_type: "Quick", tech_attack: true,
+									tier_override: 3,
+									attack_bonus: [2, 4, 6],
+									accuracy: [1, 1, 2],
+									effect: "<div>目标受到 2/3/4 热度并陷入缓慢。</div>",
+									tags: [{ lid: "tg_quick_tech", val: "" }],
+								},
+							};
+							const witchNpc = {
+								id: "npc_witch", uuid: "Actor.npc_witch", name: "女巫", type: "npc", isOwner: true,
+								is_npc: () => true,
+								statuses: new Set(),
+								system: { tier: 1, sys: 2 },
+								items: [witchTech, { type: "npc_feature", name: "军团", system: { lid: "npcf_cn_ultra_24" } }],
+							};
+							const witchT3State = { actor: witchNpc, item: witchTech, data: {} };
+							await v13Steps.get("initTechAttackData")(witchT3State);
+							ok(
+								witchT3State.data.grit === 6
+								&& witchT3State.data.acc_diff.base.accuracy === 3
+								&& witchT3State.data.effect.includes("撕裂逻辑") === false
+								&& witchT3State.data.effect.includes("2/3/4 热度")
+								&& witchT3State.data.tags.length === 1
+								&& witchTech.system.tier_override === 3
+								&& witchNpc.system.tier === 1,
+								"NPC 科技特性设置 tier_override=3 时准确读取 T3 攻击加值(+6)与准度(+2，叠加超体军团+1=3)，补齐 effect/tags 且不污染角色原层级",
+							);
+							witchTech.system.tier_override = 1;
+							witchNpc.system.tier = 3;
+							const witchT1State = { actor: witchNpc, item: witchTech, data: {} };
+							await v13Steps.get("initTechAttackData")(witchT1State);
+							ok(witchT1State.data.grit === 2 && witchNpc.system.tier === 3, "NPC 科技特性设置 tier_override=1 时准确读取 T1 攻击加值(+2)而非误偏到 T2");
+
+							// (c) 海盗「分裂弹」（npcf_cn_pirate_4）会心 +3 固定额外伤害（可与「致命」+1d6 叠加）
+							const pirateNpc = {
+								id: "npc_pirate", uuid: "Actor.npc_pirate", name: "海盗突击兵", type: "npc", isOwner: true,
+								is_npc: () => true,
+								system: { tier: 1 },
+								items: [
+									{ type: "npc_feature", name: "致命", system: { lid: "npcf_cn_pirate_1" } },
+									{ type: "npc_feature", name: "分裂弹", system: { lid: "npcf_cn_pirate_4" } },
+								],
+							};
+							const pirateCritState = {
+								actor: pirateNpc,
+								data: {
+									has_crit_hit: true,
+									damage: [{ type: "Kinetic", val: "6" }],
+									crit_damage_results: [{ d_type: "Kinetic", roll: { total: 6 }, bonus: false }],
+									damage_hud_data: { targets: [{ targetUuid: "Scene.s.Token.pl1" }] },
+									targets: [{ target: lonePlayerTok, crit: true, half_damage: false, damage: [{ type: "Kinetic", amount: 6 }] }],
+								},
+							};
+							await v13Steps.get("rollCritDamage")(pirateCritState);
+							ok(
+								pirateCritState.data.crit_damage_results.length === 3
+								&& pirateCritState.data.crit_damage_results[2].roll.total === 3
+								&& pirateCritState.data.targets[0].damage.reduce((s, d) => s + d.amount, 0) === 13,
+								"海盗同时具备「致命」(+1d6=4) 与「分裂弹」(+3) 时，会心一击自动追加两段额外伤害（6+4+3=13）",
+							);
+
+							// (d) NPC 模板无条件状态免疫（卓越骨架 / 卓越反应堆 / 至高维护 / 势不可挡 / 活体武器 / 飞行物）
+							const immuneUltra = {
+								id: "npc_imm_u", uuid: "Actor.npc_imm_u", name: "堡垒超体", type: "npc", isOwner: true,
+								is_npc: () => true,
+								statuses: new Set(),
+								toggleStatusEffect: async (st, { active }) => { if (active) immuneUltra.statuses.add(st); else immuneUltra.statuses.delete(st); },
+								items: [
+									{ type: "npc_feature", name: "卓越骨架", system: { lid: "npcf_cn_ultra_28" } },
+									{ type: "npc_feature", name: "卓越反应堆", system: { lid: "npcf_cn_ultra_29" } },
+									{ type: "npc_feature", name: "至高维护", system: { lid: "npcf_cn_ultra_31" } },
+									{ type: "npc_feature", name: "势不可挡", system: { lid: "npcf_cn_ultra_33" } },
+								],
+							};
+							docMap[immuneUltra.uuid] = immuneUltra;
+							for (const blockedSt of ["slow", "shredded", "immobilized", "stunned", "exposed", "jammed", "prone"]) {
+								const immRes = await L.setActorStatus(immuneUltra.uuid, blockedSt, true);
+								ok(immRes.immune === true && !immuneUltra.statuses.has(blockedSt), `超体模板特征自动免疫状态 ${blockedSt}`);
+							}
+							const lockRes = await L.setActorStatus(immuneUltra.uuid, "lockon", true);
+							ok(lockRes.changed === true && immuneUltra.statuses.has("lockon"), "非免疫状态（如锁定）仍可正常施加给超体 NPC");
+
+							// (e) NPC 模板攻击、科技攻防与系统豁免自动修正（至高近战 / 卓越索敌 / 视域 / 固化目标 / 要塞 / 科技脆弱）
+							const ultraAttacker = {
+								id: "npc_u_atk", uuid: "Actor.npc_u_atk", name: "剑圣超体", type: "npc", isOwner: true,
+								is_npc: () => true,
+								statuses: new Set(),
+								system: { tier: 2 },
+								items: [
+									{ type: "npc_feature", name: "至高近战", system: { lid: "npcf_cn_ultra_32" } },
+									{ type: "npc_feature", name: "卓越索敌", system: { lid: "npcf_cn_ultra_30" } },
+									{ type: "npc_feature", name: "视域", system: { lid: "npcf_cn_ultra_26" } },
+								],
+							};
+							const meleeNpcState = {
+								actor: ultraAttacker,
+								item: npcBlade,
+								targets: [{ target: lonePlayerTok, accuracy: 0, difficulty: 0, cover: 0, plugins: { invisibility: { data: 1 } } }],
+								data: { attack_type: "Melee" },
+							};
+							await v13Steps.get("initAttackData")(meleeNpcState);
+							ok(
+								meleeNpcState.data.acc_diff.base.accuracy === 1
+								&& meleeNpcState.data.acc_diff.targets[0].plugins.invisibility.data === -1,
+								"超体「至高近战」近战攻击自动 +1 准度，「视域」自动将目标隐形插件置为忽略(-1)",
+							);
+							const rangedNpcState = {
+								actor: ultraAttacker,
+								item: npcRifle,
+								targets: [{ target: lonePlayerTok, accuracy: 0, difficulty: 0, cover: 2 }],
+								data: { attack_type: "Ranged" },
+							};
+							await v13Steps.get("initAttackData")(rangedNpcState);
+							ok(rangedNpcState.data.acc_diff.targets[0].cover === 0, "超体「卓越索敌」远程攻击自动忽略目标软/硬掩护");
+
+							const hardenedVet = {
+								id: "npc_h_vet", uuid: "Actor.npc_h_vet", name: "固化老兵", type: "npc", isOwner: true,
+								is_npc: () => true,
+								statuses: new Set(),
+								system: { tier: 2, sys: 1 },
+								items: [{ type: "npc_feature", name: "固化目标", system: { lid: "npcf_cn_veteran_8" } }],
+							};
+							const rpvBot = {
+								id: "npc_rpv", uuid: "Actor.npc_rpv", name: "无人战车", type: "npc", isOwner: true,
+								is_npc: () => true,
+								statuses: new Set(),
+								system: { tier: 1, sys: 0 },
+								items: [{ type: "npc_feature", name: "科技脆弱", system: { lid: "npcf_cn_rpv_3" } }],
+							};
+							const techVsNpcState = {
+								actor: goblinHacker,
+								item: docMap["Item.horos1"],
+								targets: [
+									{ target: { actor: hardenedVet }, accuracy: 0, difficulty: 0 },
+									{ target: { actor: rpvBot }, accuracy: 0, difficulty: 0 },
+								],
+								data: {},
+							};
+							await v13Steps.get("initTechAttackData")(techVsNpcState);
+							ok(
+								techVsNpcState.data.acc_diff.targets[0].difficulty === 1
+								&& techVsNpcState.data.acc_diff.targets[1].accuracy === 1,
+								"对带有「固化目标」的老兵发起科技攻击自动 +1 难度，对带有「科技脆弱」的 RPV 发起科技攻击自动 +1 准度",
+							);
+							const vetSaveState = { actor: hardenedVet, data: { title: "系统豁免（DC 14）", path: "system.sys" } };
+							await v13Steps.get("initStatRollData")(vetSaveState);
+							ok(vetSaveState.data.acc_diff.base.accuracy === 1, "带有「固化目标」的 NPC 进行系统豁免时自动 +1 准度");
+						}
+					}
 				}
 			}
 		}
+	}
+
+	// ---- 鼠标悬停感应范围雷达圈（1.14.0）
+	{
+		const L = ctx.LancerCN;
+		const sHover = log.settings["lancer-cn.sensorHoverOverlay"];
+		const sScope = log.settings["lancer-cn.sensorHoverScope"];
+		ok(sHover && sHover.scope === "client" && sHover.config === true && sHover.default === true, "应注册客户端设置「鼠标悬停显示感应范围」（默认开启）");
+		ok(sScope && sScope.scope === "world" && sScope.config === true && sScope.default === "friendly" && sScope.choices?.friendly && sScope.choices?.all, "应注册世界设置「悬停感应圈可见范围」（默认友方与拥有观察权限的角色）");
+		ok(typeof hooks.hoverToken === "function" && typeof hooks.refreshToken === "function" && typeof hooks.canvasTearDown === "function", "应注册 hoverToken / refreshToken / canvasTearDown 钩子");
+
+		const hexGrid = L.makeHexGrid(4, 100);
+		const mkSensorTok = (id, type, sensorRange, offsets, disp = 1, extra = {}) => {
+			const c0 = hexGrid.getCenterPoint(offsets[0]);
+			const tok = {
+				id, x: c0.x, y: c0.y, center: c0, visible: true, hover: false,
+				actor: {
+					id: `act_${id}`, type, isOwner: disp === 1,
+					system: { sensor_range: sensorRange, size: offsets.length > 1 ? 2 : 1 },
+					testUserPermission: (_u, perm) => !!(extra.observer && perm === "OBSERVER"),
+				},
+				document: {
+					id, disposition: disp, hidden: !!extra.hidden, width: offsets.length > 1 ? 2 : 1,
+					getOccupiedGridSpaceOffsets: () => offsets,
+				},
+				...extra.tokProps,
+			};
+			tok.document.object = tok;
+			return tok;
+		};
+
+		// 1. 六角格有向半边抵消几何：Size 1 感应 1（7 格、18 条外边界，无内部拼接线）与感应 2（19 格、30 条外边界）及缓存复用
+		const s1R1 = mkSensorTok("m_r1", "mech", 1, [{ i: 3, j: 3 }]);
+		const gR1 = L.computeSensorGeometry(s1R1, hexGrid);
+		ok(gR1 && gR1.mode === "grid" && gR1.cellsCount === 7 && gR1.loops.length === 1 && gR1.loops[0].length === 18, `六角格 Size 1 感应 1 应精确覆盖 7 格并消去内部公共边合成单条 18 顶点闭合外轮廓（实际 ${gR1?.cellsCount} 格 / ${gR1?.loops?.[0]?.length} 顶点）`);
+
+		const s1R2 = mkSensorTok("m_r2", "mech", 2, [{ i: 3, j: 3 }]);
+		const gR2 = L.computeSensorGeometry(s1R2, hexGrid);
+		const gR2Cached = L.computeSensorGeometry(s1R2, hexGrid);
+		ok(gR2 && gR2.cellsCount === 19 && gR2.loops.length === 1 && gR2.loops[0].length === 30 && gR2 === gR2Cached, "六角格 Size 1 感应 2 精确覆盖 19 格、合成 30 顶点外轮廓且命中几何缓存");
+
+		// 2. 多格大型机甲：标准 Size 2 品字形三角占地（3 格两两邻接）感应 1 覆盖 12 格 / 24 顶点，凹折形占地覆盖 13 格 / 26 顶点，均无内部拼接边
+		const s2Tri = mkSensorTok("m_s2", "mech", 1, [{ i: 3, j: 3 }, { i: 4, j: 4 }, { i: 3, j: 4 }]);
+		const gS2Tri = L.computeSensorGeometry(s2Tri, hexGrid);
+		ok(gS2Tri && gS2Tri.cellsCount === 12 && gS2Tri.loops.length === 1 && gS2Tri.loops[0].length === 24, `六角格标准 Size 2 三角占地感应 1 应覆盖 12 格并合成 24 顶点外轮廓（实际 ${gS2Tri?.cellsCount} 格 / ${gS2Tri?.loops?.[0]?.length} 顶点）`);
+		const s2Bent = mkSensorTok("m_s2b", "mech", 1, [{ i: 3, j: 3 }, { i: 4, j: 3 }, { i: 3, j: 4 }]);
+		const gS2Bent = L.computeSensorGeometry(s2Bent, hexGrid);
+		ok(gS2Bent && gS2Bent.cellsCount === 13 && gS2Bent.loops.length === 1 && gS2Bent.loops[0].length === 26, "凹折多格占地同样准确消去全部内部公共边合成单条闭合外轮廓");
+
+		// 3. 方格与无网格（Gridless）场景兼容
+		const sqGrid = {
+			type: 1, size: 100, distance: 1, isGridless: false,
+			getCenterPoint: ({ i, j }) => ({ x: j * 100 + 50, y: i * 100 + 50 }),
+			getOffset: ({ x, y }) => ({ i: Math.floor(y / 100), j: Math.floor(x / 100) }),
+			getVertices: ({ i, j }) => [
+				{ x: j * 100, y: i * 100 }, { x: (j + 1) * 100, y: i * 100 },
+				{ x: (j + 1) * 100, y: (i + 1) * 100 }, { x: j * 100, y: (i + 1) * 100 },
+			],
+			measurePath: ([a, b]) => ({ spaces: Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) / 100 }),
+		};
+		const gSq = L.computeSensorGeometry(s1R1, sqGrid);
+		ok(gSq && gSq.cellsCount === 9 && gSq.loops.length === 1 && gSq.loops[0].length === 12, "方格场景 Size 1 感应 1 覆盖 3×3=9 格并合成 12 段外轮廓");
+
+		const gridless = { type: 0, size: 100, distance: 1, isGridless: true };
+		const gGridless = L.computeSensorGeometry(mkSensorTok("m_gl", "mech", 8, [{ i: 0, j: 0 }, { i: 1, j: 0 }]), gridless);
+		ok(gGridless && gGridless.mode === "gridless" && gGridless.radius === 900, "无网格场景 Size 2（半径 100px）感应 8 回退为半径 900px 的圆形雷达范围");
+
+		// 4. 角色类型过滤（排除步战驾驶员与部署物）与扫描前敌方隐私保护
+		const pilotTok = mkSensorTok("p1", "pilot", 5, [{ i: 1, j: 1 }], 1);
+		const depTok = mkSensorTok("d1", "deployable", 5, [{ i: 1, j: 2 }], 1);
+		const enemyNpc = mkSensorTok("n_foe", "npc", 10, [{ i: 6, j: 6 }], -1);
+		const scannedNpc = mkSensorTok("n_scan", "npc", 8, [{ i: 6, j: 7 }], -1, { observer: true });
+		const hiddenNpc = mkSensorTok("n_hid", "npc", 8, [{ i: 6, j: 8 }], -1, { hidden: true });
+		ok(L.tokenSensorRange(pilotTok) === 0 && L.tokenSensorRange(depTok) === 0 && !L.canShowSensorForToken(pilotTok), "步战驾驶员（即使系统内部默认 sensor_range=5）与部署物不显示机甲感应圈");
+
+		ctx.game.user.isGM = false;
+		log.settingValues["lancer-cn.sensorHoverOverlay"] = true;
+		log.settingValues["lancer-cn.sensorHoverScope"] = "friendly";
+		ok(L.canShowSensorForToken(s1R2) === true && L.canShowSensorForToken(enemyNpc) === false && L.canShowSensorForToken(scannedNpc) === true && L.canShowSensorForToken(hiddenNpc) === false, "非 GM 玩家默认可看己方/友方与已获观察权限（如已扫描）的 NPC，不泄露未扫描或隐藏敌方 NPC 感应");
+		log.settingValues["lancer-cn.sensorHoverScope"] = "all";
+		ok(L.canShowSensorForToken(enemyNpc) === true && L.canShowSensorForToken(hiddenNpc) === false, "世界设置改为全场公开时玩家可看可见敌方 NPC，但仍不显示隐藏指示物");
+		log.settingValues["lancer-cn.sensorHoverScope"] = "friendly";
+		ctx.game.user.isGM = true;
+		ok(L.canShowSensorForToken(enemyNpc) === true && L.canShowSensorForToken(hiddenNpc) === true, "GM 始终可查看场上全部机甲与敌方/隐藏 NPC 的感应圈");
+
+		// 5. PIXI v7 画布渲染、防抢指针（eventMode="none"）、悬停切换、移开立消、动态更新与销毁清理
+		class MockGraphics {
+			constructor() {
+				this.ops = [];
+				this.visible = false;
+				this.destroyed = false;
+				this.parent = null;
+			}
+			clear() { this.ops.push(["clear"]); }
+			lineStyle(w, c, a) { this.ops.push(["lineStyle", w, c, a]); }
+			beginFill(c, a) { this.ops.push(["beginFill", c, a]); }
+			endFill() { this.ops.push(["endFill"]); }
+			drawPolygon(pts) { this.ops.push(["drawPolygon", pts.length]); }
+			drawCircle(x, y, r) { this.ops.push(["drawCircle", x, y, r]); }
+			destroy() { this.destroyed = true; this.ops.push(["destroy"]); }
+		}
+		ctx.PIXI = { Graphics: MockGraphics };
+		const gridLayer = {
+			children: [],
+			destroyed: false,
+			addChild(ch) { ch.parent = this; if (!this.children.includes(ch)) this.children.push(ch); },
+			removeChild(ch) { const idx = this.children.indexOf(ch); if (idx >= 0) this.children.splice(idx, 1); ch.parent = null; },
+		};
+		const prevCanvas = ctx.canvas;
+		ctx.canvas = {
+			scene: { id: "sc_sensor" },
+			grid: hexGrid,
+			interface: { grid: gridLayer },
+			tokens: { placeables: [s1R2, enemyNpc, pilotTok], get: id => [s1R2, enemyNpc, pilotTok].find(t => t.id === id) },
+		};
+
+		s1R2.hover = true;
+		hooks.hoverToken(s1R2, true);
+		const st1 = L.sensorOverlayState();
+		ok(st1.token === s1R2 && st1.graphics && st1.graphics.visible === true && st1.graphics.parent === gridLayer, "鼠标悬停机甲时在 canvas.interface.grid 层挂载并显示感应雷达圈");
+		ok(st1.graphics.eventMode === "none" && st1.graphics.interactive === false && st1.graphics.interactiveChildren === false, "感应层设置 eventMode='none' 防止遮挡画布指针导致悬停闪烁");
+		ok(
+			st1.graphics.ops.some(o => o[0] === "beginFill" && o[1] === L.SENSOR_COLORS.friendly && o[2] === 0.075) &&
+			st1.graphics.ops.some(o => o[0] === "lineStyle" && o[1] === 6 && o[2] === L.SENSOR_COLORS.friendly) &&
+			st1.graphics.ops.some(o => o[0] === "lineStyle" && o[1] === 2.2 && o[2] === L.SENSOR_COLORS.friendly) &&
+			st1.graphics.ops.filter(o => o[0] === "drawPolygon" && o[1] === 60).length === 3,
+			"渲染包含极淡闭合底色（alpha 0.075）+ 外轮廓雷达晕光 + 外轮廓清晰雷达线三道同心多边形绘制"
+		);
+
+		// 重复 refreshToken（位置/感应未变）不重复重绘 PIXI
+		const opsBeforeRefresh = st1.graphics.ops.length;
+		hooks.refreshToken(s1R2);
+		ok(st1.graphics.ops.length === opsBeforeRefresh, "指示物网格与感应未变时 refreshToken 命中渲染缓存，不重复重绘 PIXI");
+
+		// 叠放指示物平滑切换：先进入敌方 NPC，再收到原机甲 hoverOut，应保持显示敌方橙红雷达圈
+		enemyNpc.hover = true;
+		hooks.hoverToken(enemyNpc, true);
+		s1R2.hover = false;
+		hooks.hoverToken(s1R2, false);
+		ok(L.sensorOverlayState().token === enemyNpc && st1.graphics.visible === true && st1.graphics.ops.some(o => o[0] === "beginFill" && o[1] === L.SENSOR_COLORS.hostile), "相邻指示物悬停切换时保持新目标雷达圈并按敌我阵营切换配色");
+
+		// 鼠标移开即刻消失
+		enemyNpc.hover = false;
+		hooks.hoverToken(enemyNpc, false);
+		ok(L.sensorOverlayState().token === null && st1.graphics.visible === false, "鼠标移开指示物后感应雷达圈立即隐藏消失");
+
+		// 动态更新角色 sensor_range、开关设置与删除指示物 / 切换场景销毁
+		s1R2.hover = true;
+		hooks.hoverToken(s1R2, true);
+		s1R2.actor.system.sensor_range = 1;
+		await hooks.updateActor(s1R2.actor, { system: { sensor_range: 1 } }, {}, "u1");
+		ok(st1.graphics.visible === true && st1.graphics.ops.at(-1)?.[0] === "drawPolygon" && st1.graphics.ops.at(-1)?.[1] === 36, "角色感应范围变化时实时重算并刷新外轮廓（18 顶点 = 36 坐标值）");
+
+		log.settingValues["lancer-cn.sensorHoverOverlay"] = false;
+		sHover.onChange();
+		ok(st1.graphics.visible === false && L.sensorOverlayState().token === null, "关闭客户端开关时立即隐藏当前悬停雷达圈");
+		log.settingValues["lancer-cn.sensorHoverOverlay"] = true;
+
+		hooks.hoverToken(s1R2, true);
+		hooks.deleteToken(s1R2.document);
+		ok(st1.graphics.visible === false && L.sensorOverlayState().token === null, "删除正悬停的指示物时立即清除雷达圈");
+
+		hooks.hoverToken(s1R2, true);
+		const gRef = L.sensorOverlayState().graphics;
+		hooks.canvasTearDown();
+		ok(gRef.destroyed === true && gridLayer.children.length === 0 && L.sensorOverlayState().graphics === null, "切换或卸载场景（canvasTearDown）时彻底销毁 PIXI 对象并清空引用");
+		ctx.canvas = prevCanvas;
 	}
 
 	// ---- zip 与 dist

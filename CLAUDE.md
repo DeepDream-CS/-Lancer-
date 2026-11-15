@@ -164,6 +164,7 @@ node tools/draft-ext-actions.js [--write]  # 扩展条目正文里的动作 → 
 - **中文版面修正**：`UI_FIX_STYLE`（中文界面启用时注入，系统样式在 `@layer lancer` 里，不分层即可覆盖）；中文字体没有的字形在 `GLYPHS` 里替换。用户截图反馈的版面问题加在这里。
 - **骨架插图**：骨架改成中文名后，Foundry 按英文名查插图的地方找不到图，模组用钩子按骨架 id 补图。
 - **车卡器资料**：专业牌照、扩展厂商无法经内容包导入，由 GM 按钮「导入车卡器资料」写入合集包（`importReference`），同时把骨架牌照改为中文名。
+- **鼠标悬停感应范围雷达圈**：`hoverToken` / `refreshToken` / `canvasTearDown` 钩子驱动纯客户端 `PIXI.Graphics` 挂载于 `canvas.interface.grid`（`eventMode = "none"` 防抢指针闪烁），对 `mech` / `npc` 按全部占地格计算 `<= sensor_range` 可达格，经空间桶顶点去重与有向半边抵消绘制无内部网格接缝的「外轮廓雷达线 + 极淡底色」，移开即消失（`computeSensorGeometry`、`renderSensorOverlay`；客户端设置 `sensorHoverOverlay`，世界隐私设置 `sensorHoverScope`）。
 - **攻击时选目标**：`lancer.preFlow.*` / `lancer.postFlow.*` 钩子开关目标面板（`openTargetPicker`）；客户端设置 `targetPicker`、`targetClearStale`、`targetAutoPick`。
 - **指示物名字与飘字**：世界设置 `tokenNames`（`preCreateToken` 设显示名称，`applyTokenNames` 由在线 GM 同步已有指示物）；第一次载入时打开系统设置 `lancer.floatingNumbers`（伤害飘字由系统负责）；状态飘字「+(名称)」在 `patchScrollingText` 里改样式。
 - **基础动作、对抗检定与受限计数**：机甲、NPC 与驾驶员表的双层「基础动作」卡（`BASIC_ACTIONS`，`actors` 区分 `mech` / `npc` / `pilot`，`group` 分主动作与战术姿态；含强化联动 `StatRollFlow` 自动 `+2` 准度并消耗、擒拿按有效体型与「合成肌肉网」控场及挣脱/争抢主导对抗、搜索系统 vs 敏捷摘匿迹、受身全抗性与下回合提醒、关机/开机、起身、脱离、准备、自爆、弃机、上下马，以及步战驾驶员骑乘控制卡/甩脱对抗、包扎 `10+` 或消耗止血贴/修复胶急救与昏迷联动、装填；通用对抗引擎 `createContestCard` / `respondToContest` 平局发起方胜出、晕眩机甲机体/敏捷自动失败）；掷骰式受限包装 `prepareFinalAttributes`；文字受限计数器存机甲 `flags.lancer-cn.counters`；说明里的骰子由 `linkDice` 变成链接。

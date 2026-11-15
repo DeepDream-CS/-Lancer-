@@ -29,6 +29,10 @@ async function updateMechFrameArt(actor, changes, userId) {
 }
 
 Hooks.on("updateActor", async (actor, changes, options, userId) => {
+	onSensorActorUpdate(actor);
+	if (changes?.flags?.[MODULE_ID] && "thrownWeapons" in changes.flags[MODULE_ID] && actor?.sheet?.rendered) {
+		try { actor.sheet.render(false); } catch { /* ignore */ }
+	}
 	await updateMechFrameArt(actor, changes, userId);
 	await onUpdateActorStatus(actor, changes, options, userId).catch(err => reportError("自动状态", err));
 });
@@ -780,7 +784,7 @@ function makeHexGrid(gridType = 4, gridSize = 100) {
 	const shiftOf = i => ((((i & 1) === 0) === even) ? 0.5 : 0);
 	const topLeft = ({ i, j }) => ({ x0: i * colStep, y0: (j + shiftOf(i)) * sizeY });
 	return {
-		type: gridType, size: gridSize, columns: true, even, isGridless: false,
+		type: gridType, size: gridSize, distance: 1, columns: true, even, isGridless: false,
 		getVertices(off) {
 			const { x0, y0 } = topLeft(off);
 			return [
@@ -800,6 +804,18 @@ function makeHexGrid(gridType = 4, gridSize = 100) {
 			const i = Math.round((x - 0.5 * sizeX) / colStep);
 			const j = Math.round((y - 0.5 * sizeY) / sizeY - shiftOf(i));
 			return { i, j };
+		},
+		measurePath(pts) {
+			if (!Array.isArray(pts) || pts.length < 2) return { distance: 0, spaces: 0 };
+			const toOff = p => (p && typeof p.i === "number" && typeof p.j === "number") ? p : this.getOffset(p);
+			const toAx = o => ({ q: o.i, r: o.j - Math.floor((o.i + (even ? 1 : 0)) / 2) });
+			let spaces = 0;
+			for (let k = 1; k < pts.length; k++) {
+				const a = toAx(toOff(pts[k - 1])), b = toAx(toOff(pts[k]));
+				const dq = a.q - b.q, dr = a.r - b.r;
+				spaces += Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
+			}
+			return { distance: spaces, spaces };
 		},
 	};
 }
@@ -1277,7 +1293,7 @@ async function placeAoETemplate(type, val, creatorToken = null) {
 	} catch { return null; } // 右键取消放置时不报错
 }
 
-// 武器的射程（科技攻击用感应），返回可达格数、显示文字与范围模板列表
+// 武器的射程（科技攻击用感应），返回可达格数、显示文字与范围模板列表（含「投掷」标签与所有射程加成）
 function attackReach(flow) {
 	const item = flow?.state?.item, actor = flow?.state?.actor;
 	const basic = BASIC_ACTIONS[flow?.lancerCnBasic];
@@ -1286,10 +1302,23 @@ function attackReach(flow) {
 		const s = actor?.system?.sensor_range;
 		return Number.isFinite(s) ? { reach: s, label: `感应 ${s}`, aoe: [] } : { reach: null, label: "", aoe: [] };
 	}
-	let ranges = [];
-	try { ranges = item?.currentProfile?.()?.range ?? []; } catch { ranges = []; }
+	let baseRanges = [];
+	try {
+		const prof = weaponProfileOf(item);
+		if (Array.isArray(prof?.all_range) && prof.all_range.length) baseRanges = prof.all_range;
+		else if (Array.isArray(prof?.range) && prof.range.length) baseRanges = prof.range;
+		else baseRanges = item?.currentProfile?.()?.range ?? [];
+	} catch { baseRanges = []; }
+	const ranges = baseRanges.map(r => ({ type: r.type, val: r.val }));
+	const thrownVal = item ? weaponThrownVal(item, actor) : 0;
+	if (thrownVal > 0 && !ranges.some(r => r.type === "Thrown")) {
+		ranges.push({ type: "Thrown", val: thrownVal });
+	}
 	const vals = ranges.filter(r => REACH_TYPES.includes(r.type)).map(r => Number(r.val)).filter(Number.isFinite);
 	const aoe = ranges.filter(r => AOE_TYPES.includes(r.type) && Number.isFinite(Number(r.val))).map(r => ({ type: r.type, val: Number(r.val), label: `${RANGE_ZH[r.type] ?? r.type} ${r.val}` }));
+	if (weaponLidOf(item) === "mw_kkca_chakram_chain" && !aoe.some(a => a.type === "Line")) {
+		aoe.push({ type: "Line", val: 5, label: "线形 5" });
+	}
 	return { reach: vals.length ? Math.max(...vals) : null, label: ranges.map(r => `${RANGE_ZH[r.type] ?? r.type} ${r.val}`).join(" / "), aoe };
 }
 
@@ -1310,12 +1339,21 @@ function tokenDistance(a, b) {
 	return Number.isFinite(best) ? best : null;
 }
 
-// 攻击者的指示物：优先当前控制的那个，其次激活指示物或场景内指示物
+// 攻击者的指示物：优先当前控制的那个，其次合成指示物文档对象、激活指示物（含非链接 NPC）或场景内指示物
 function attackerToken(actor) {
 	if (!actor) return null;
+	const tokDocId = actor.token?.id ?? null;
+	if (tokDocId) {
+		return canvas?.tokens?.controlled?.find(t => t.id === tokDocId || t.actor === actor)
+			?? actor.token?.object
+			?? canvas?.tokens?.get?.(tokDocId)
+			?? canvas?.tokens?.placeables?.find(t => t.id === tokDocId || t.actor === actor)
+			?? null;
+	}
 	return canvas?.tokens?.controlled?.find(t => t.actor === actor)
+		?? actor.getActiveTokens?.(false)?.[0]
 		?? actor.getActiveTokens?.(true)?.[0]
-		?? canvas?.tokens?.placeables?.find(t => t.actor === actor)
+		?? canvas?.tokens?.placeables?.find(t => t.actor === actor || (actor.id && t.document?.actorId === actor.id))
 		?? null;
 }
 
@@ -1454,6 +1492,8 @@ function openTargetPicker(flow) {
 	// 从攻击卡掷伤害时目标已经确定（系统按命中结果锁定），不打扰
 	if (kind === "DamageRollFlow" && flow.state?.data?.hit_results?.length) return;
 	const actor = flow?.state?.actor;
+	// 武器已投出尚未拾回时由 initAttackData 拦截提示，不弹出目标面板
+	if (kind === "WeaponAttackFlow" && isWeaponThrownOut(combatMechOf(actor) ?? actor, flow?.state?.item)) return;
 	const { reach, label, aoe } = attackReach(flow);
 	const attack = kind !== "DamageRollFlow";
 	const session = {
@@ -1512,8 +1552,397 @@ const refreshTargetPanel = () => {
 	clearTimeout(targetRefreshTimer);
 	targetRefreshTimer = setTimeout(renderTargetPanel, 50);
 };
-Hooks.on("targetToken", user => { if (user?.isSelf ?? user === game.user) refreshTargetPanel(); });
-for (const h of ["updateToken", "createToken", "deleteToken", "controlToken"]) Hooks.on(h, refreshTargetPanel);
+Hooks.on("targetToken", user => {
+	if (user?.isSelf ?? user === game.user) {
+		if (targetSession?.flow?.state) syncWeaponThrownMode(targetSession.flow.state);
+		refreshTargetPanel();
+	}
+});
+Hooks.on("updateToken", doc => { refreshTargetPanel(); onSensorTokenUpdate(doc); });
+Hooks.on("createToken", refreshTargetPanel);
+Hooks.on("deleteToken", doc => { refreshTargetPanel(); onSensorTokenDelete(doc); });
+Hooks.on("controlToken", refreshTargetPanel);
+
+// ---------------------------------------------------------------------------
+// 鼠标悬停感应范围雷达圈（1.14.0）：
+// - 鼠标悬停在机甲（mech）或允许查看的 NPC 指示物上时，纯客户端绘制感应范围「外轮廓雷达线 + 极淡底色」，移开即刻消失。
+// - 六角格 / 方格下按指示物全部占地格向四周量取 <= sensor_range 格，经有向半边抵消拼接为闭合外轮廓多边形（无内部网格接缝）；无网格场景回退为同心圆。
+// - 隐私规则：GM 可查看场上全部机甲与 NPC；非 GM 玩家默认仅查看拥有观察权限或友方的角色（避免未经扫描剧透敌方 NPC 感应），也可在世界设置改为全场公开。
+const SENSOR_SCOPE_MODES = {
+	friendly: "玩家仅看友方与拥有观察权限的角色（GM 可看全场）",
+	all: "所有人可看场上全部可见机甲与 NPC",
+};
+const SENSOR_COLORS = { friendly: 0x38bdf8, hostile: 0xf97316, neutral: 0xeab308 };
+const sensorGeomCache = new Map();
+const MAX_SENSOR_CACHE = 64;
+let sensorGraphics = null;
+let hoveredSensorToken = null;
+let lastSensorRenderKey = "";
+
+function tokenSensorRange(token) {
+	const actor = token?.actor;
+	if (!actor || (actor.type !== "mech" && actor.type !== "npc")) return 0;
+	const s = Number(actor.system?.sensor_range);
+	return Number.isFinite(s) && s > 0 ? Math.min(40, Math.round(s)) : 0;
+}
+
+function canShowSensorForToken(token) {
+	if (!getSetting("sensorHoverOverlay", true)) return false;
+	if (!token || token.destroyed || tokenSensorRange(token) <= 0) return false;
+	const isGM = !!game?.user?.isGM;
+	if (!isGM && (token.visible === false || token.document?.hidden)) return false;
+	if (isGM) return true;
+	if (getSetting("sensorHoverScope", "friendly") === "all") return true;
+	const actor = token.actor;
+	if (actor?.isOwner) return true;
+	const obsLvl = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OBSERVER ?? 2;
+	try {
+		if (typeof actor?.testUserPermission === "function" && game?.user && actor.testUserPermission(game.user, "OBSERVER")) return true;
+		if (typeof actor?.getUserLevel === "function" && game?.user && actor.getUserLevel(game.user) >= obsLvl) return true;
+	} catch { /* ignore */ }
+	const friendlyDisp = CONST?.TOKEN_DISPOSITIONS?.FRIENDLY ?? 1;
+	return token.document?.disposition === friendlyDisp;
+}
+
+function sensorRadarColor(token) {
+	const D = CONST?.TOKEN_DISPOSITIONS ?? { SECRET: -2, HOSTILE: -1, NEUTRAL: 0, FRIENDLY: 1 };
+	const disp = token?.document?.disposition;
+	if (disp === D.HOSTILE) return SENSOR_COLORS.hostile;
+	if (disp === D.NEUTRAL || disp === D.SECRET) return SENSOR_COLORS.neutral;
+	return SENSOR_COLORS.friendly;
+}
+
+function tokenOccupiedOffsets(token, grid = canvas?.grid) {
+	const doc = token?.document;
+	if (typeof doc?.getOccupiedGridSpaceOffsets === "function") {
+		try {
+			const arg = Number.isFinite(token?.x) && Number.isFinite(token?.y) ? { x: token.x, y: token.y } : undefined;
+			const s = arg ? doc.getOccupiedGridSpaceOffsets(arg) : doc.getOccupiedGridSpaceOffsets();
+			if (s?.length) return s;
+		} catch {
+			try { const s = doc.getOccupiedGridSpaceOffsets(); if (s?.length) return s; } catch { /* ignore */ }
+		}
+	}
+	if (grid?.getOffset) {
+		const c = token?.center ?? { x: token?.x ?? 0, y: token?.y ?? 0 };
+		return [grid.getOffset(c)];
+	}
+	return [];
+}
+
+function gridCellDistance(grid, ptA, ptB, offA, offB) {
+	if (typeof grid?.measurePath === "function") {
+		const r = grid.measurePath([ptA, ptB]);
+		if (Number.isFinite(r?.spaces)) return r.spaces;
+		if (Number.isFinite(r?.distance)) return Math.round(r.distance / (grid.distance || 1));
+	}
+	if (grid?.columns !== undefined) {
+		const even = !!grid.even;
+		if (grid.columns) {
+			const aq1 = offA.i, ar1 = offA.j - Math.floor((offA.i + (even ? 1 : 0)) / 2);
+			const aq2 = offB.i, ar2 = offB.j - Math.floor((offB.i + (even ? 1 : 0)) / 2);
+			const dq = aq1 - aq2, dr = ar1 - ar2;
+			return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
+		}
+		const ar1 = offA.i, aq1 = offA.j - Math.floor((offA.i + (even ? 1 : 0)) / 2);
+		const ar2 = offB.i, aq2 = offB.j - Math.floor((offB.i + (even ? 1 : 0)) / 2);
+		const dq = aq1 - aq2, dr = ar1 - ar2;
+		return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
+	}
+	return Math.max(Math.abs(offA.i - offB.i), Math.abs(offA.j - offB.j));
+}
+
+function computeSensorGeometry(token, grid = canvas?.grid) {
+	const range = tokenSensorRange(token);
+	if (!grid || range <= 0) return null;
+	const sizePx = Number(grid.size) || 100;
+	if (grid.isGridless || typeof grid.getVertices !== "function" || typeof grid.getCenterPoint !== "function") {
+		const c = token?.center ?? { x: token?.x ?? 0, y: token?.y ?? 0 };
+		const wSpaces = Math.max(Number(token?.document?.width) || 0, Number(token?.actor?.system?.size) || 1, 0.5);
+		const tokenRadiusPx = Number.isFinite(token?.w) && Number.isFinite(token?.h) && (token.w > 0 || token.h > 0)
+			? Math.max(token.w, token.h) / 2
+			: (wSpaces * sizePx) / 2;
+		const radius = tokenRadiusPx + range * sizePx;
+		return {
+			mode: "gridless",
+			range,
+			cx: c.x,
+			cy: c.y,
+			radius,
+			cacheKey: `gridless|${Math.round(c.x)}|${Math.round(c.y)}|${Math.round(radius)}`,
+		};
+	}
+
+	const occ = tokenOccupiedOffsets(token, grid);
+	if (!occ.length) return null;
+	const occSorted = occ.map(o => `${o.i},${o.j}`).sort().join(";");
+	const sceneId = canvas?.scene?.id ?? "";
+	const cacheKey = `${sceneId}|${grid.type ?? ""}|${sizePx}|${grid.distance ?? 1}|${occSorted}|${range}`;
+	const cached = sensorGeomCache.get(cacheKey);
+	if (cached) return cached;
+
+	const occSet = new Set(occ.map(o => `${o.i},${o.j}`));
+	const occItems = occ.map(o => ({ off: o, pt: grid.getCenterPoint(o) }));
+	let minI = Infinity, maxI = -Infinity, minJ = Infinity, maxJ = -Infinity;
+	for (const o of occ) {
+		if (o.i < minI) minI = o.i;
+		if (o.i > maxI) maxI = o.i;
+		if (o.j < minJ) minJ = o.j;
+		if (o.j > maxJ) maxJ = o.j;
+	}
+
+	const reachable = [];
+	const pad = range + 2;
+	for (let i = minI - pad; i <= maxI + pad; i++) {
+		for (let j = minJ - pad; j <= maxJ + pad; j++) {
+			const off = { i, j };
+			if (occSet.has(`${i},${j}`)) {
+				reachable.push(off);
+				continue;
+			}
+			const pt = grid.getCenterPoint(off);
+			let okDist = false;
+			for (const oc of occItems) {
+				if (gridCellDistance(grid, oc.pt, pt, oc.off, off) <= range) {
+					okDist = true;
+					break;
+				}
+			}
+			if (okDist) reachable.push(off);
+		}
+	}
+
+	// 空间桶去重共享顶点（容差 0.35px），再通过有向半边抵消提取无内部接缝的闭合外轮廓多边形
+	const canonVerts = [];
+	const vBuckets = new Map();
+	const vidOf = p => {
+		const bx = Math.round(p.x), by = Math.round(p.y);
+		for (let dx = -1; dx <= 1; dx++) {
+			for (let dy = -1; dy <= 1; dy++) {
+				const list = vBuckets.get(`${bx + dx},${by + dy}`);
+				if (!list) continue;
+				for (const id of list) {
+					const v = canonVerts[id];
+					if (Math.abs(v.x - p.x) <= 0.35 && Math.abs(v.y - p.y) <= 0.35) return id;
+				}
+			}
+		}
+		const id = canonVerts.length;
+		canonVerts.push({ x: p.x, y: p.y });
+		const bk = `${bx},${by}`;
+		let list = vBuckets.get(bk);
+		if (!list) { list = []; vBuckets.set(bk, list); }
+		list.push(id);
+		return id;
+	};
+
+	const halfEdges = new Set();
+	for (const off of reachable) {
+		const rawVerts = grid.getVertices(off);
+		if (!rawVerts || rawVerts.length < 3) continue;
+		let area2 = 0;
+		for (let k = 0; k < rawVerts.length; k++) {
+			const a = rawVerts[k], b = rawVerts[(k + 1) % rawVerts.length];
+			area2 += a.x * b.y - b.x * a.y;
+		}
+		const verts = area2 >= 0 ? rawVerts : [...rawVerts].reverse();
+		const ids = verts.map(vidOf);
+		for (let k = 0; k < ids.length; k++) {
+			const u = ids[k], v = ids[(k + 1) % ids.length];
+			if (u === v) continue;
+			const rev = `${v}:${u}`;
+			if (halfEdges.has(rev)) halfEdges.delete(rev);
+			else halfEdges.add(`${u}:${v}`);
+		}
+	}
+
+	const outMap = new Map();
+	for (const edge of halfEdges) {
+		const sep = edge.indexOf(":");
+		const u = Number(edge.slice(0, sep)), v = Number(edge.slice(sep + 1));
+		let arr = outMap.get(u);
+		if (!arr) { arr = []; outMap.set(u, arr); }
+		arr.push(v);
+	}
+
+	const loops = [];
+	for (const [startU, startArr] of outMap) {
+		while (startArr.length) {
+			const chain = [startU];
+			let curr = startArr.pop();
+			let guard = 0;
+			while (curr !== undefined && curr !== startU && guard++ < 10000) {
+				chain.push(curr);
+				const nextArr = outMap.get(curr);
+				if (!nextArr?.length) break;
+				curr = nextArr.pop();
+			}
+			if (chain.length >= 3) loops.push(chain.map(id => canonVerts[id]));
+		}
+	}
+
+	const res = { mode: "grid", range, cellsCount: reachable.length, loops, cacheKey };
+	if (sensorGeomCache.size >= MAX_SENSOR_CACHE) {
+		const firstKey = sensorGeomCache.keys().next().value;
+		sensorGeomCache.delete(firstKey);
+	}
+	sensorGeomCache.set(cacheKey, res);
+	return res;
+}
+
+function sensorOverlayParent() {
+	const cand = [canvas?.interface?.grid, canvas?.interface, canvas?.stage];
+	return cand.find(c => c && !c.destroyed && typeof c.addChild === "function") ?? null;
+}
+
+function ensureSensorGraphics() {
+	const parent = sensorOverlayParent();
+	const GraphicsCls = globalThis.PIXI?.Graphics;
+	if (!parent || typeof GraphicsCls !== "function") return null;
+	if (sensorGraphics && !sensorGraphics.destroyed) {
+		if (sensorGraphics.parent !== parent) parent.addChild(sensorGraphics);
+		return sensorGraphics;
+	}
+	const g = new GraphicsCls();
+	g.name = "lancer-cn-sensor-radar";
+	g.eventMode = "none";
+	g.interactive = false;
+	g.interactiveChildren = false;
+	parent.addChild(g);
+	sensorGraphics = g;
+	return g;
+}
+
+function clearSensorOverlay(destroy = false) {
+	hoveredSensorToken = null;
+	lastSensorRenderKey = "";
+	if (!sensorGraphics) return;
+	try {
+		if (!sensorGraphics.destroyed) {
+			sensorGraphics.clear?.();
+			sensorGraphics.visible = false;
+			if (destroy) {
+				sensorGraphics.parent?.removeChild?.(sensorGraphics);
+				sensorGraphics.destroy?.({ children: true });
+			}
+		}
+	} catch { /* ignore */ }
+	if (destroy || sensorGraphics?.destroyed) sensorGraphics = null;
+}
+
+function renderSensorOverlay(token, force = false) {
+	if (!canShowSensorForToken(token)) {
+		clearSensorOverlay(false);
+		return false;
+	}
+	const geom = computeSensorGeometry(token);
+	if (!geom) {
+		clearSensorOverlay(false);
+		return false;
+	}
+	const g = ensureSensorGraphics();
+	if (!g) return false;
+	const color = sensorRadarColor(token);
+	const renderKey = `${geom.cacheKey}|${color}`;
+	if (!force && g.visible && lastSensorRenderKey === renderKey) return true;
+
+	g.clear();
+	if (geom.mode === "gridless") {
+		g.lineStyle(0);
+		g.beginFill(color, 0.075);
+		g.drawCircle(geom.cx, geom.cy, geom.radius);
+		g.endFill();
+		g.lineStyle(6, color, 0.18);
+		g.drawCircle(geom.cx, geom.cy, geom.radius);
+		g.lineStyle(2.2, color, 0.88);
+		g.drawCircle(geom.cx, geom.cy, geom.radius);
+	} else {
+		if (!geom.loops.length) {
+			clearSensorOverlay(false);
+			return false;
+		}
+		const flatLoops = geom.loops.map(loop => loop.flatMap(p => [p.x, p.y]));
+		g.lineStyle(0);
+		g.beginFill(color, 0.075);
+		for (const pts of flatLoops) g.drawPolygon(pts);
+		g.endFill();
+		g.lineStyle(6, color, 0.18);
+		for (const pts of flatLoops) g.drawPolygon(pts);
+		g.lineStyle(2.2, color, 0.88);
+		for (const pts of flatLoops) g.drawPolygon(pts);
+	}
+	g.visible = true;
+	lastSensorRenderKey = renderKey;
+	return true;
+}
+
+function refreshHoveredSensor() {
+	if (!hoveredSensorToken) return;
+	if (!canShowSensorForToken(hoveredSensorToken)) {
+		clearSensorOverlay(false);
+		return;
+	}
+	renderSensorOverlay(hoveredSensorToken);
+}
+
+function onHoverSensorToken(token, hovered) {
+	if (hovered) {
+		if (canShowSensorForToken(token)) {
+			hoveredSensorToken = token;
+			renderSensorOverlay(token);
+		} else if (!hoveredSensorToken || hoveredSensorToken === token || !hoveredSensorToken.hover) {
+			clearSensorOverlay(false);
+		}
+		return;
+	}
+	if (hoveredSensorToken && hoveredSensorToken !== token) return;
+	const fallback = (canvas?.tokens?.placeables ?? []).find(t => t !== token && t.hover && canShowSensorForToken(t));
+	if (fallback) {
+		hoveredSensorToken = fallback;
+		renderSensorOverlay(fallback);
+	} else {
+		clearSensorOverlay(false);
+	}
+}
+
+function onSensorTokenUpdate(doc) {
+	if (!hoveredSensorToken) return;
+	const obj = doc?.object ?? canvas?.tokens?.get?.(doc?.id);
+	if (obj === hoveredSensorToken || doc?.id === hoveredSensorToken.id) refreshHoveredSensor();
+}
+
+function onSensorTokenDelete(doc) {
+	if (!hoveredSensorToken) return;
+	const obj = doc?.object;
+	if (obj === hoveredSensorToken || doc?.id === hoveredSensorToken.id) clearSensorOverlay(false);
+}
+
+function onSensorActorUpdate(actor) {
+	if (!hoveredSensorToken || !actor) return;
+	const hActor = hoveredSensorToken.actor;
+	if (hActor === actor || hActor?.id === actor.id || hActor?.system?.pilot?.value === actor) {
+		refreshHoveredSensor();
+	}
+}
+
+Hooks.once("init", () => {
+	if (game.system?.id !== "lancer") return;
+	game.settings.register(MODULE_ID, "sensorHoverOverlay", {
+		name: "鼠标悬停显示感应范围",
+		hint: "鼠标悬停在机甲或允许查看的 NPC 指示物上时，在画布上显示其感应范围的外轮廓雷达线与极淡底色，移开鼠标即消失。",
+		scope: "client", config: true, type: Boolean, default: true,
+		onChange: () => refreshHoveredSensor(),
+	});
+	game.settings.register(MODULE_ID, "sensorHoverScope", {
+		name: "悬停感应圈可见范围",
+		hint: "控制非 GM 玩家将鼠标移到指示物上时能否看到感应圈（依核心规则，敌方 NPC 的感应数值在扫描前默认不公开；GM 始终可查看场上全部机甲与 NPC）。",
+		scope: "world", config: true, type: String, choices: SENSOR_SCOPE_MODES, default: "friendly",
+		onChange: () => refreshHoveredSensor(),
+	});
+});
+Hooks.on("hoverToken", onHoverSensorToken);
+Hooks.on("refreshToken", token => { if (token === hoveredSensorToken) refreshHoveredSensor(); });
+Hooks.on("canvasTearDown", () => { clearSensorOverlay(true); sensorGeomCache.clear(); });
 
 // ---------------------------------------------------------------------------
 // 指示物名字与浮动文字
@@ -1730,6 +2159,28 @@ function talentRank(actor, lid) {
 	const item = talentItemOf(actor, lid);
 	return Math.max(0, Number(item?.system?.curr_rank) || 0);
 }
+
+// 驾驶员天赋增删或升级时，同步重算并刷新其名下机甲的衍生属性（如猎人 II「匕首戏法」赋予副近战投掷 5）
+function onTalentItemChanged(item) {
+	if (!item || (item.type !== "talent" && !item.is_talent?.())) return;
+	const pilot = item.actor ?? item.parent;
+	if (!pilot) return;
+	const mechs = new Set();
+	const active = pilot.system?.active_mech?.value;
+	if (active) mechs.add(active);
+	for (const m of allKnownMechs()) {
+		if (m.system?.pilot?.value === pilot || (pilot.id && m.system?.pilot?.id === pilot.id)) mechs.add(m);
+	}
+	for (const m of mechs) {
+		try {
+			m.reset?.();
+			if (m.sheet?.rendered) m.sheet.render(false);
+		} catch (err) { reportError("刷新天赋衍生属性", err); }
+	}
+}
+Hooks.on("createItem", onTalentItemChanged);
+Hooks.on("updateItem", onTalentItemChanged);
+Hooks.on("deleteItem", onTalentItemChanged);
 
 function hasCoreBonus(actor, lid) {
 	const pilot = mechPilot(actor);
@@ -1978,10 +2429,62 @@ function preferredTargetUuid(actor) {
 	return tok?.document?.uuid ?? tok?.uuid ?? actor.uuid ?? null;
 }
 
+function hasNpcFeature(actor, lids, names = []) {
+	if (!actor || (actor.type !== "npc" && !actor.is_npc?.())) return false;
+	const lidList = Array.isArray(lids) ? lids : [lids];
+	const pool = new Set([...(actor.items ?? []), ...(actor.itemTypes?.npc_feature ?? [])]);
+	for (const item of pool) {
+		if (item.type && item.type !== "npc_feature") continue;
+		if (item.system?.destroyed) continue;
+		const lid = String(item.system?.lid ?? "");
+		if (lid && lidList.includes(lid)) return true;
+		if (names.length) {
+			const nm = String(item.name ?? "").trim();
+			if (names.includes(nm)) return true;
+		}
+	}
+	return false;
+}
+
+// 兼容原生系统硬编码英文 NPC LID（老兵/超体「传奇」双骰取高、怪形「独特生理机能」专属结构表），执行完立即无损还原
+async function withCanonicalNpcFlowLids(actor, fn) {
+	const saved = [];
+	if (actor && (actor.type === "npc" || actor.is_npc?.())) {
+		const pool = new Set([...(actor.items ?? []), ...(actor.itemTypes?.npc_feature ?? [])]);
+		for (const item of pool) {
+			if (!item?.system || (item.type && item.type !== "npc_feature") || item.system.destroyed) continue;
+			const lid = String(item.system.lid ?? "");
+			const nm = String(item.name ?? "").trim();
+			let mapped = null;
+			if (lid === "npcf_cn_monstrosity_1" || nm === "独特生理机能") mapped = "npcf_unique_physiology_monstrosity";
+			else if (lid === "npcf_cn_ultra_6") mapped = "npcf_legendary_ultra";
+			else if (lid === "npcf_cn_veteran_11" || nm === "传奇" || /^legendary$/i.test(nm)) mapped = "npcf_legendary_veteran";
+			if (mapped && mapped !== lid) {
+				saved.push([item, lid]);
+				item.system.lid = mapped;
+			}
+		}
+	}
+	try { return await fn(); }
+	finally {
+		for (const [item, origLid] of saved) {
+			if (item?.system) item.system.lid = origLid;
+		}
+	}
+}
+
 function isStatusImmune(actor, status) {
 	if (!actor) return false;
 	if (status === "impaired" && hasCoreBonus(actor, "cb_superior_by_design")) return true;
 	if (status === "shredded" && hasCoreBonus(actor, "cb_piof_slow_cycle_shroud") && (Number(actor.system?.overshield?.value) || 0) > 0) return true;
+	if (actor.type === "npc" || actor.is_npc?.()) {
+		if ((status === "slow" || status === "shredded") && hasNpcFeature(actor, ["npcf_cn_ultra_28", "npcf_superior_frame_ultra"], ["卓越骨架"])) return true;
+		if (status === "immobilized" && hasNpcFeature(actor, ["npcf_cn_ultra_28", "npcf_superior_frame_ultra", "npcf_cn_ship_1", "npcf_flyer_ship"], ["卓越骨架", "飞行物"])) return true;
+		if (status === "stunned" && hasNpcFeature(actor, ["npcf_cn_ultra_29", "npcf_superior_reactor_ultra", "npcf_cn_ship_1", "npcf_flyer_ship"], ["卓越反应堆", "飞行物"])) return true;
+		if (status === "exposed" && hasNpcFeature(actor, ["npcf_cn_ultra_29", "npcf_superior_reactor_ultra"], ["卓越反应堆"])) return true;
+		if (status === "jammed" && hasNpcFeature(actor, ["npcf_cn_ultra_31", "npcf_supreme_maintenance_ultra", "npcf_cn_exotic_7", "npcf_living_weaponry_exotic"], ["至高维护", "活体武器"])) return true;
+		if (status === "prone" && hasNpcFeature(actor, ["npcf_cn_ultra_33", "npcf_unstoppable_ultra", "npcf_cn_ship_1", "npcf_flyer_ship"], ["势不可挡", "飞行物"])) return true;
+	}
 	return false;
 }
 
@@ -2470,6 +2973,16 @@ function collectWeaponAttackRiders(message, attack, item, actor, dc = 10) {
 		} else if (ammo === "javelin" && anyHit) {
 			riders.push({ kind: "walkingArmoryJavelin", label: `🏹 猎人弹（机体豁免 DC ${dc} → 伏卧）` });
 		}
+		// 猎人 I「跳扑」：1/轮，使用副近战武器攻击时，攻击前可朝目标飞行至多 3 格（忽略交战且不触发反应）
+		if (item?.system?.size === "Auxiliary" && isMeleeWeaponItem(item) && talentRank(mech, "t_hunter") >= 1 && !getCombatState(mech).usedHunterLunge) {
+			riders.push({ kind: "hunterLunge", label: "🦅 跳扑（朝目标飞行3格 · 1/轮无视交战与反应）" });
+		}
+		// 猎人 III「蔑刃」：1/轮，近战攻击命中时，以自由动作投掷一把副近战武器攻击射程内任意角色（无额外伤害）
+		const basicKey = message?.getFlag?.(MODULE_ID, "basicAction") ?? message?.flags?.[MODULE_ID]?.basicAction;
+		const isMeleeAtk = item ? isMeleeWeaponItem(item) : basicKey === "improvised";
+		if (isMeleeAtk && anyHit && talentRank(mech, "t_hunter") >= 3 && !getCombatState(mech).usedHunterDisdainful) {
+			riders.push({ kind: "hunterDisdainful", label: "🗡️ 蔑刃（自由动作投掷副近战武器 · 无额外伤害）" });
+		}
 	}
 	return riders;
 }
@@ -2776,29 +3289,164 @@ function patchTrueblackDamageCalc() {
 	proto.damageCalc.lancerCn = true;
 }
 
-function decorateDamageCard(message, root, damageData) {
-	if (!root?.querySelectorAll || !damageData?.targetDamageResults?.length) return;
-	for (const card of root.querySelectorAll(".lancer-damage-target")) {
-		if (card.querySelector(".lancer-cn-dmg-preview")) continue;
-		const group = card.querySelector(".lancer-damage-button-group");
-		const targetUuid = group?.dataset?.target ?? card.dataset?.uuid;
-		const actor = resolveActor(targetUuid);
-		const tdr = damageData.targetDamageResults.find(t => t.target === targetUuid);
-		if (!actor || !tdr) continue;
-		const addBurn = group?.dataset?.addBurn !== "false";
-		const sel = group?.querySelector?.("select");
-		const div = (root.ownerDocument ?? globalThis.document).createElement("div");
-		div.className = "lancer-cn-dmg-preview";
-		div.style.cssText = "grid-column:1 / -1;font-size:11px;color:#555;padding:1px 4px 2px;line-height:1.35";
-		const update = () => {
-			const mult = sel ? (parseFloat(sel.value) || 1) : 1;
-			const p = previewDamageCalc(actor, tdr.damage, { multiple: mult, ap: Boolean(tdr.ap ?? damageData.ap), paracausal: Boolean(tdr.paracausal ?? damageData.paracausal), addBurn });
-			div.textContent = p ? p.summary : "";
-		};
-		update();
-		sel?.addEventListener?.("change", update);
-		card.append(div);
+function extractUntargetedDamageEntries(damageData) {
+	if (!damageData || typeof damageData !== "object") return [];
+	const rawList = (Array.isArray(damageData.critDamageResults) && damageData.critDamageResults.length)
+		? damageData.critDamageResults
+		: (Array.isArray(damageData.damageResults) ? damageData.damageResults : []);
+	const entries = [];
+	for (const dr of rawList) {
+		const type = dr?.d_type ?? dr?.type ?? "Kinetic";
+		const rawAmount = Number(dr?.roll?.total ?? dr?.total ?? dr?.amount) || 0;
+		if (rawAmount <= 0) continue;
+		entries.push({ type, rawAmount, bonus: Boolean(dr?.bonus) });
 	}
+	return entries;
+}
+
+function resolveUntargetedDamageTargets(message) {
+	const locked = Array.from(globalThis.game?.user?.targets ?? []).filter(t => t && (t.actor || t.document?.actor));
+	if (locked.length > 0) return { tokens: locked, mode: "targeted", selfOnlyControlled: false };
+	const controlled = Array.from(globalThis.canvas?.tokens?.controlled ?? []).filter(t => t && (t.actor || t.document?.actor));
+	if (!controlled.length) return { tokens: [], mode: "none", selfOnlyControlled: false };
+	const spkTokId = typeof message?.speaker?.token === "string" ? message.speaker.token : (message?.speaker?.token?.id ?? null);
+	const spkActorId = typeof message?.speaker?.actor === "string" ? message.speaker.actor : (message?.speaker?.actor?.id ?? null);
+	const isSpeakerTok = t => {
+		if (spkTokId) return (t.id ?? t.document?.id) === spkTokId;
+		if (spkActorId) return (t.actor?.id ?? t.document?.actorId) === spkActorId;
+		return false;
+	};
+	const nonSelf = controlled.filter(t => !isSpeakerTok(t));
+	if (nonSelf.length > 0) return { tokens: nonSelf, mode: "controlled", selfOnlyControlled: false };
+	return { tokens: [], mode: "none", selfOnlyControlled: true };
+}
+
+async function applyUntargetedDamageFromCard(message, damageData = null, { multiple = 1, addBurn = true } = {}) {
+	const dd = damageData ?? message?.getFlag?.("lancer", "damageData") ?? message?.flags?.lancer?.damageData;
+	const rawEntries = extractUntargetedDamageEntries(dd);
+	if (!rawEntries.length) return { ok: false, reason: "no_damage" };
+	const { tokens, selfOnlyControlled } = resolveUntargetedDamageTargets(message);
+	if (!tokens.length) {
+		if (selfOnlyControlled) {
+			ui?.notifications?.warn?.("当前选中的是发起该伤害的角色自身！请先按 T 锁定受击目标，或在地图上左键选中受击目标的指示物（若确需对自身结算伤害，请按 T 锁定自身）。");
+			return { ok: false, reason: "self_only" };
+		}
+		ui?.notifications?.warn?.("请先按 T 锁定受击目标，或在地图上左键选中受击目标的指示物后再点击应用伤害。");
+		return { ok: false, reason: "no_target" };
+	}
+	const mult = [0.5, 1, 2].includes(Number(multiple)) ? Number(multiple) : 1;
+	const multiTarget = tokens.length > 1;
+	const ap = Boolean(dd?.ap);
+	const paracausal = Boolean(dd?.paracausal);
+	let appliedCount = 0;
+	for (const tok of tokens) {
+		const targetUuid = tok.document?.uuid ?? tok.uuid ?? tok.actor?.uuid;
+		const actor = tok.actor ?? tok.document?.actor ?? resolveActor(targetUuid);
+		if (!actor) continue;
+		const perTargetEntries = rawEntries.map(e => {
+			let amount = (multiTarget && e.bonus) ? Math.ceil(e.rawAmount / 2) : e.rawAmount;
+			if (dd?.half_damage) amount = Math.ceil(amount / 2);
+			return { type: e.type, amount };
+		});
+		const applied = sumAppliedDamage(perTargetEntries);
+		if (actor.isOwner && typeof actor.damageCalc === "function") {
+			await actor.damageCalc(applied, { multiple: mult, addBurn: addBurn !== false, ap, paracausal });
+			appliedCount++;
+		} else if (getSetting("crossPermDamage", true) && game.users?.activeGM) {
+			game.socket?.emit(`module.${MODULE_ID}`, {
+				action: "applyDamage",
+				targetUuid,
+				applied,
+				multiple: mult,
+				addBurn: addBurn !== false,
+				ap,
+				paracausal,
+			});
+			ui?.notifications?.info?.(`已请求 GM 对「${tok.name ?? actor.token?.name ?? actor.name}」结算伤害。`);
+			appliedCount++;
+		} else {
+			ui?.notifications?.warn?.(`没有权限对「${tok.name ?? actor.name}」结算伤害（且当前无在线 GM）。`);
+		}
+	}
+	return { ok: appliedCount > 0, appliedCount };
+}
+
+function decorateDamageCard(message, root, damageData) {
+	if (!root?.querySelectorAll) return;
+	if (damageData?.targetDamageResults?.length) {
+		for (const card of root.querySelectorAll(".lancer-damage-target")) {
+			if (card.querySelector(".lancer-cn-dmg-preview")) continue;
+			const group = card.querySelector(".lancer-damage-button-group");
+			const targetUuid = group?.dataset?.target ?? card.dataset?.uuid;
+			const actor = resolveActor(targetUuid);
+			const tdr = damageData.targetDamageResults.find(t => t.target === targetUuid);
+			if (!actor || !tdr) continue;
+			const addBurn = group?.dataset?.addBurn !== "false";
+			const sel = group?.querySelector?.("select");
+			const div = (root.ownerDocument ?? globalThis.document).createElement("div");
+			div.className = "lancer-cn-dmg-preview";
+			div.style.cssText = "grid-column:1 / -1;font-size:11px;color:#555;padding:1px 4px 2px;line-height:1.35";
+			const update = () => {
+				const mult = sel ? (parseFloat(sel.value) || 1) : 1;
+				const p = previewDamageCalc(actor, tdr.damage, { multiple: mult, ap: Boolean(tdr.ap ?? damageData.ap), paracausal: Boolean(tdr.paracausal ?? damageData.paracausal), addBurn });
+				div.textContent = p ? p.summary : "";
+			};
+			update();
+			sel?.addEventListener?.("change", update);
+			card.append(div);
+		}
+		return;
+	}
+	// 未锁定目标直接掷出的伤害卡（无系统原生应用伤害按钮）：提供兜底应用栏，支持按 T 锁定或左键选中受击者后一键结算
+	if (root.querySelector(".lancer-cn-untargeted-apply")) return;
+	const rawEntries = extractUntargetedDamageEntries(damageData);
+	if (!rawEntries.length) return;
+	if (!(game.user?.isGM || message?.isAuthor || getSetting("crossPermDamage", true))) return;
+	const host = root.querySelector?.(".card.clipped-bot, .card, .message-content") ?? root;
+	const doc = root.ownerDocument ?? globalThis.document;
+	const bar = doc.createElement("div");
+	bar.className = "lancer-cn-untargeted-apply";
+	bar.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:4px 6px;margin-top:4px;border-top:1px dashed rgba(128,128,128,.35);font-size:12px";
+	bar.innerHTML = `<span style="opacity:.82">未锁定目标：</span>`
+		+ `<select class="lancer-cn-untargeted-mult" title="选择伤害倍率" style="height:24px;width:auto;padding:0 4px;font-size:12px"><option value="2">2×</option><option value="1" selected>1×</option><option value="0.5">抗性 0.5×</option></select>`
+		+ `<button type="button" class="lancer-button lancer-primary" data-lancer-cn-apply-untargeted="1" style="width:auto;flex:0 0 auto;line-height:1.5;padding:0 .6em;margin:0" title="对当前锁定的目标（T），或在地图上左键选中的受击目标指示物结算此伤害">💥 应用伤害（锁定/选中目标）</button>`
+		+ `<div class="lancer-cn-untargeted-preview" style="flex:1 1 100%;font-size:11px;color:#555;line-height:1.35"></div>`;
+	const sel = bar.querySelector(".lancer-cn-untargeted-mult");
+	const btn = bar.querySelector("[data-lancer-cn-apply-untargeted]");
+	const prevEl = bar.querySelector(".lancer-cn-untargeted-preview");
+	const updatePreview = () => {
+		if (!prevEl) return;
+		const { tokens } = resolveUntargetedDamageTargets(message);
+		if (!tokens.length) {
+			prevEl.textContent = "提示：先按 T 锁定受击目标，或左键选中受击者指示物，再点击上方按钮即可自动扣减护甲/护盾/HP";
+			return;
+		}
+		const mult = sel ? (parseFloat(sel.value) || 1) : 1;
+		const multiTarget = tokens.length > 1;
+		const lines = [];
+		for (const tok of tokens) {
+			const actor = tok.actor ?? tok.document?.actor ?? resolveActor(tok.document?.uuid ?? tok.uuid);
+			if (!actor) continue;
+			const entries = rawEntries.map(e => {
+				let amount = (multiTarget && e.bonus) ? Math.ceil(e.rawAmount / 2) : e.rawAmount;
+				if (damageData?.half_damage) amount = Math.ceil(amount / 2);
+				return { type: e.type, amount };
+			});
+			const p = previewDamageCalc(actor, entries, { multiple: mult, ap: Boolean(damageData?.ap), paracausal: Boolean(damageData?.paracausal), addBurn: true });
+			if (p) lines.push(`${tok.name ?? actor.name}：${p.summary}`);
+		}
+		prevEl.textContent = lines.join(" ｜ ");
+	};
+	updatePreview();
+	sel?.addEventListener?.("change", updatePreview);
+	bar.addEventListener?.("mouseenter", updatePreview);
+	btn?.addEventListener?.("click", ev => {
+		ev.preventDefault?.();
+		ev.stopPropagation?.();
+		const mult = sel ? (parseFloat(sel.value) || 1) : 1;
+		applyUntargetedDamageFromCard(message, damageData, { multiple: mult, addBurn: true }).catch(err => reportError("未锁定伤害结算", err));
+	});
+	host.append(bar);
 }
 
 // ---------------------------------------------------------------------------
@@ -2809,6 +3457,7 @@ let pendingDamageMod = null;     // 从带 CP 强化的攻击卡点击「掷伤�
 let pendingCpAttackMeta = null;  // CP 专属攻击出卡前暂存：{ actorUuid, ... }
 let pendingTechActionMeta = null; // 科技攻击 / 入侵出卡前暂存：{ actorUuid, itemUuid, title, actionName, effect, invade }
 let pendingWeaponAttackFlags = null; // 武器攻击出卡前暂存天赋与弹药库标记：{ actorUuid, ... }
+let pendingDisdainfulBlade = null;   // 猎人 III「蔑刃」自由动作投掷出卡前暂存：{ actorUuid, weaponUuid }
 
 async function updateMessageFlagCompat(message, key, value) {
 	if (!message) return;
@@ -3868,6 +4517,7 @@ async function resetSceneTalentState(mech) {
 	if (Array.isArray(cs.mimicValues)) keep.mimicValues = cs.mimicValues;
 	if (Number.isFinite(Number(cs.osirisGate))) keep.osirisGate = cs.osirisGate;
 	if (mech.setFlag) await mech.setFlag(MODULE_ID, "combatState", keep);
+	await retrieveThrownWeapon(mech, "all", { notify: false });
 }
 
 async function resetFullRepairTalentState(mech) {
@@ -3879,6 +4529,7 @@ async function resetFullRepairTalentState(mech) {
 	}
 	if (mech.unsetFlag) await mech.unsetFlag(MODULE_ID, "combatState");
 	else await setCombatState(mech, { osirisGate: 1 });
+	await retrieveThrownWeapon(mech, "all", { notify: false });
 }
 
 async function onDeleteCombat(combat) {
@@ -4515,6 +5166,17 @@ function weaponTypesOf(item) {
 	if (lid === "mw_mimic_gun") return ["Rifle", "Cannon", "Launcher", "CQB", "Nexus"];
 	if (lid === "mw_piof_grim_harvest_scythe") return ["Melee", "Nexus"];
 	if (lid === "mw_ch_blackjack") return ["Launcher", "Rifle"];
+	if (item?.type === "npc_feature" || item?.is_npc_feature?.()) {
+		const wt = String(item?.system?.weapon_type ?? "");
+		const found = ["Rifle", "Cannon", "Launcher", "CQB", "Nexus", "Melee"].filter(k => wt.includes(k));
+		if (found.length) return found;
+		if (/近战/.test(wt)) return ["Melee"];
+		if (/步枪/.test(wt)) return ["Rifle"];
+		if (/大炮|加农/.test(wt)) return ["Cannon"];
+		if (/发射器/.test(wt)) return ["Launcher"];
+		if (/巢房/.test(wt)) return ["Nexus"];
+		return [];
+	}
 	const t = weaponProfileOf(item)?.type;
 	return t ? [t] : [];
 }
@@ -4527,14 +5189,14 @@ function isRangedWeaponItem(item) {
 	if (!item) return false;
 	if (weaponLidOf(item) === "mw_mimic_gun") return true;
 	const ranges = weaponProfileOf(item)?.range ?? [];
-	return ranges.some(r => r?.type && r.type !== "Threat");
+	return ranges.some(r => r?.type && r.type !== "Threat" && r.type !== "Thrown");
 }
 
 function isMeleeWeaponItem(item) {
 	if (!item) return false;
 	if (weaponHasType(item, "Melee")) return true;
 	const ranges = weaponProfileOf(item)?.range ?? [];
-	return !isRangedWeaponItem(item) && ranges.some(r => r?.type === "Threat");
+	return !isRangedWeaponItem(item) && ranges.some(r => r?.type === "Threat" || r?.type === "Thrown");
 }
 
 function isHeavyRangedWeapon(item) {
@@ -4558,6 +5220,345 @@ function maxWeaponRangeVal(item, actor = null) {
 		}
 	}
 	return best;
+}
+
+// ---------------------------------------------------------------------------
+// 投掷近战武器规则闭环与「猎人」（t_hunter：跳扑 / 匕首戏法 / 蔑刃）全链路自动化（v1.15.0）
+let cachedLancerTagClass = null;
+
+function resolveLancerTagClass(item = null) {
+	if (cachedLancerTagClass) return cachedLancerTagClass;
+	const pools = [
+		item?.system?.all_tags,
+		item?.system?.tags,
+		...(item?.system?.profiles ?? []).flatMap(p => [p?.all_tags, p?.tags]),
+		...(item?.actor?.items ?? []).flatMap(i => [i?.system?.all_tags, i?.system?.tags, ...(i?.system?.profiles ?? []).flatMap(p => [p?.all_tags, p?.tags])]),
+	];
+	for (const arr of pools) {
+		for (const t of arr ?? []) {
+			if (t && typeof t === "object" && t.constructor && t.constructor !== Object && typeof t.copy === "function") {
+				cachedLancerTagClass = t.constructor;
+				return cachedLancerTagClass;
+			}
+		}
+	}
+	return null;
+}
+
+function makeThrownTag(val, item = null) {
+	const strVal = String(val);
+	const TagCls = resolveLancerTagClass(item);
+	if (TagCls) {
+		try { return new TagCls({ lid: "tg_thrown", val: strVal }); } catch { /* 回退至兼容对象 */ }
+	}
+	let name = "投掷{VAL}";
+	let description = "这近战武器可以投向{VAL}格内的目标。投掷攻击遵循近战攻击规则，但受掩护影响；此外，投掷出的武器会停在与目标邻接的空格，必须在邻接它时以自由动作取回才能再次使用。";
+	try {
+		const cfg = game?.settings?.get?.(game?.system?.id ?? "lancer", "tag_config")?.tg_thrown;
+		if (cfg?.name) name = cfg.name;
+		if (cfg?.description) description = cfg.description;
+	} catch { /* ignore */ }
+	return {
+		lid: "tg_thrown",
+		val: strVal,
+		name,
+		description,
+		hidden: false,
+		is_thrown: true,
+		should_show: true,
+		get num_val() { const p = Number.parseInt(this.val, 10); return Number.isNaN(p) ? null : p; },
+		tierVal() { return this.val; },
+		save() { return { lid: this.lid, val: this.val }; },
+		copy() { return makeThrownTag(this.val, item); },
+	};
+}
+
+function isThrownTagObj(t) {
+	return Boolean(t && (t.lid === "tg_thrown" || t.id === "tg_thrown" || t.is_thrown));
+}
+
+function upsertThrownTagInArray(arr, minVal, item = null) {
+	const list = Array.isArray(arr) ? arr : [];
+	const idx = list.findIndex(isThrownTagObj);
+	if (idx < 0) {
+		list.push(makeThrownTag(minVal, item));
+		return list;
+	}
+	const curVal = parseInt(list[idx]?.val, 10) || 0;
+	if (curVal < minVal) {
+		list[idx] = makeThrownTag(minVal, item);
+	}
+	return list;
+}
+
+// 猎人 II「匕首戏法」：没有投掷标签或投掷小于 5 的副近战武器获得「投掷 5」（仅写衍生 all_tags，不污染原始 tags）
+function applyKnifeJugglerTags(item, actorOverride = null) {
+	if (!item || (item.type !== "mech_weapon" && !item.is_mech_weapon?.())) return false;
+	if (item.system?.size !== "Auxiliary" || !itemBenefitsFromTalents(item)) return false;
+	const owner = actorOverride ?? item.actor ?? item.parent;
+	if (talentRank(owner, "t_hunter") < 2) return false;
+	const baseProfiles = Array.isArray(item.system?.profiles) && item.system.profiles.length
+		? [...item.system.profiles]
+		: [];
+	if (item.system?.active_profile && !baseProfiles.includes(item.system.active_profile)) {
+		baseProfiles.push(item.system.active_profile);
+	}
+	const profiles = baseProfiles.length ? baseProfiles : (item.system ? [item.system] : []);
+	let applied = false;
+	for (const p of profiles) {
+		const isMeleeProf = p?.type === "Melee" || weaponLidOf(item) === "mw_piof_grim_harvest_scythe";
+		if (!isMeleeProf) continue;
+		if (!Array.isArray(p.all_tags)) {
+			p.all_tags = Array.isArray(p.tags)
+				? p.tags.map(t => (typeof t?.copy === "function" ? t.copy() : { ...t }))
+				: [];
+		}
+		upsertThrownTagInArray(p.all_tags, 5, item);
+		applied = true;
+	}
+	if (applied && item.system) {
+		if (!Array.isArray(item.system.all_tags)) {
+			item.system.all_tags = Array.isArray(item.system.tags)
+				? item.system.tags.map(t => (typeof t?.copy === "function" ? t.copy() : { ...t }))
+				: [];
+		}
+		upsertThrownTagInArray(item.system.all_tags, 5, item);
+	}
+	return applied;
+}
+
+function weaponThreatVal(item) {
+	if (!item) return 1;
+	const prof = weaponProfileOf(item);
+	const ranges = Array.isArray(prof?.all_range) && prof.all_range.length
+		? prof.all_range
+		: (prof?.range ?? item?.currentProfile?.()?.range ?? []);
+	let best = 0;
+	for (const r of ranges) {
+		if (r?.type === "Threat") {
+			const n = parseInt(r.val, 10);
+			if (Number.isFinite(n) && n > best) best = n;
+		}
+	}
+	return best > 0 ? best : (isMeleeWeaponItem(item) ? 1 : 0);
+}
+
+function weaponThrownVal(item, actorOverride = null) {
+	if (!item) return 0;
+	const owner = actorOverride ?? item.actor ?? item.parent;
+	const tier = Math.min(3, Math.max(1, Number(owner?.system?.tier) || 1));
+	const prof = weaponProfileOf(item);
+	const tagPools = [
+		prof?.all_tags,
+		(() => { try { return item.getTags?.(); } catch { return null; } })(),
+		prof?.tags,
+		item.system?.all_tags,
+		item.system?.tags,
+	];
+	let best = 0;
+	for (const arr of tagPools) {
+		for (const tg of arr ?? []) {
+			if (!isThrownTagObj(tg)) continue;
+			const raw = typeof tg.tierVal === "function" ? tg.tierVal(tier) : tg.val;
+			const n = parseInt(raw, 10);
+			if (Number.isFinite(n) && n > best) best = n;
+		}
+	}
+	const ranges = Array.isArray(prof?.all_range) && prof.all_range.length
+		? prof.all_range
+		: (prof?.range ?? item?.currentProfile?.()?.range ?? []);
+	for (const r of ranges) {
+		if (r?.type === "Thrown") {
+			const n = parseInt(r.val, 10);
+			if (Number.isFinite(n) && n > best) best = n;
+		}
+	}
+	if ((item.type === "mech_weapon" || item.is_mech_weapon?.())
+		&& item.system?.size === "Auxiliary"
+		&& isMeleeWeaponItem(item)
+		&& itemBenefitsFromTalents(item)
+		&& talentRank(owner, "t_hunter") >= 2) {
+		best = Math.max(best, 5);
+	}
+	return best;
+}
+
+function weaponTrackKey(item) {
+	return String(item?.id || item?.uuid || weaponLidOf(item) || item?.name || "");
+}
+
+function getThrownWeapons(actor) {
+	const holder = combatMechOf(actor) ?? actor;
+	const raw = holder?.getFlag?.(MODULE_ID, "thrownWeapons");
+	if (!Array.isArray(raw)) return [];
+	return raw.filter(x => x && typeof x === "object" && x.key);
+}
+
+function isWeaponThrownOut(actor, item) {
+	if (!actor || !item) return false;
+	if (weaponLidOf(item) === "mw_kkca_doom_axe") return false; // 末日之斧投掷后无需回收即可再次使用
+	const key = weaponTrackKey(item);
+	const id = item.id ?? "";
+	const uuid = item.uuid ?? "";
+	return getThrownWeapons(actor).some(w =>
+		(key && w.key === key)
+		|| (uuid && w.weaponUuid && w.weaponUuid === uuid)
+		|| (id && w.weaponId && w.weaponId === id),
+	);
+}
+
+async function markWeaponThrown(actor, item, targetUuid = null) {
+	const holder = combatMechOf(actor) ?? actor;
+	if (!holder?.setFlag || !item) return null;
+	if (weaponLidOf(item) === "mw_kkca_doom_axe") return null;
+	const key = weaponTrackKey(item);
+	if (!key) return null;
+	const tDoc = targetUuid ? resolveDocSync(targetUuid) : null;
+	const tActor = tDoc?.actor ?? (targetUuid ? resolveActor(targetUuid) : null);
+	const entry = {
+		key,
+		weaponId: item.id ?? "",
+		weaponUuid: item.uuid ?? "",
+		weaponLid: weaponLidOf(item),
+		weaponName: item.name ?? "近战武器",
+		targetUuid: targetUuid ?? null,
+		targetName: tDoc?.name ?? tActor?.token?.name ?? tActor?.name ?? "",
+		round: Number(game?.combat?.round) || 0,
+		thrownThisTurn: true,
+	};
+	const prev = getThrownWeapons(holder).filter(w => w.key !== key && (!entry.weaponUuid || w.weaponUuid !== entry.weaponUuid));
+	const next = [...prev, entry];
+	await holder.setFlag(MODULE_ID, "thrownWeapons", next);
+	try { if (holder.sheet?.rendered) holder.sheet.render(false); } catch { /* ignore */ }
+	return entry;
+}
+
+async function retrieveThrownWeapon(actor, keyOrAll = "all", { notify = true, postCard = false, cardTitle = "", cardBody = "" } = {}) {
+	const holder = combatMechOf(actor) ?? actor;
+	if (!holder?.setFlag) return [];
+	const cur = getThrownWeapons(holder);
+	if (!cur.length) return [];
+	const matchAll = !keyOrAll || keyOrAll === "all";
+	const removed = [];
+	const remain = [];
+	for (const w of cur) {
+		if (matchAll || w.key === keyOrAll || w.weaponId === keyOrAll || w.weaponUuid === keyOrAll) removed.push(w);
+		else remain.push(w);
+	}
+	if (!removed.length) return [];
+	await holder.setFlag(MODULE_ID, "thrownWeapons", remain);
+	try { if (holder.sheet?.rendered) holder.sheet.render(false); } catch { /* ignore */ }
+	const names = removed.map(w => w.weaponName).join("、");
+	if (notify) {
+		ui?.notifications?.info?.(`已拾回投掷武器：${names}`);
+	}
+	if (postCard) {
+		await postCpEffectCard(
+			holder,
+			cardTitle || "拾回投掷武器（自由动作）",
+			cardBody || `<p><b>${escHtml(holder.name)}</b> 以<b>自由动作</b>取回了投出的武器：<b>${escHtml(names)}</b>。</p>`,
+		);
+	}
+	return removed;
+}
+
+function eligibleDisdainfulWeapons(mech) {
+	if (!mech) return [];
+	return (mech.items ?? []).filter(w => {
+		if (!w || w.system?.destroyed) return false;
+		if (w.type !== "mech_weapon" && !w.is_mech_weapon?.()) return false;
+		if (w.system?.size !== "Auxiliary" || !isMeleeWeaponItem(w)) return false;
+		if (isWeaponThrownOut(mech, w)) return false;
+		if (w.isLoading?.() && !w.system?.loaded) return false;
+		if (w.isLimited?.()) {
+			const curUses = typeof w.system?.uses === "object" ? Number(w.system.uses.value) : Number(w.system?.uses);
+			if (Number.isFinite(curUses) && curUses <= 0) return false;
+		}
+		return weaponThrownVal(w, mech) > 0;
+	});
+}
+
+// 根据锁定目标与威胁距离智能切换近战挥砍 / 远距投掷（避免邻接捅刀被系统默认勾选投掷而误吃掩护惩罚或丢刀）
+function syncWeaponThrownMode(state, { explicitAccDiff = false } = {}) {
+	if (!state?.item || !state?.data?.acc_diff?.weapon) return;
+	const item = state.item;
+	if (!isMeleeWeaponItem(item)) return;
+	const mech = combatMechOf(state.actor) ?? state.actor;
+	const thrownReach = weaponThrownVal(item, mech);
+	if (thrownReach <= 0 && !state.data._lancerCnForceThrown) return;
+
+	const aTok = attackerToken(mech);
+	const userTargets = Array.from(globalThis.game?.user?.targets ?? []);
+	const tadTargets = (state.data.acc_diff.targets ?? []).map(t => t?.target).filter(Boolean);
+	const tokList = userTargets.length ? userTargets : tadTargets;
+	const dists = tokList
+		.map(bTok => (aTok && bTok) ? tokenDistance(aTok, bTok) : null)
+		.filter(d => d !== null && Number.isFinite(d));
+
+	if (state.data._lancerCnForceThrown) {
+		state.data.acc_diff.weapon.thrown = true;
+	} else if (!explicitAccDiff) {
+		const threat = weaponThreatVal(item);
+		if (dists.length > 0) {
+			state.data.acc_diff.weapon.thrown = dists.some(d => d > threat);
+		} else {
+			state.data.acc_diff.weapon.thrown = false;
+		}
+	}
+
+	// “游隼”寻索阔剑（mw_ch_wandering_blade）：投掷目标超过射程 1 时获得引导标签并改为 1d3+2 动能伤害
+	if (weaponLidOf(item) === "mw_ch_wandering_blade") {
+		const farThrow = Boolean(state.data.acc_diff.weapon.thrown && (dists.length === 0 || dists.some(d => d > 1)));
+		state.data.acc_diff.weapon.seeking = farThrow;
+		state.data._lancerCnWanderingFar = farThrow;
+	}
+}
+
+async function triggerHunterDisdainful(mech, preferredWeaponId = null) {
+	if (!mech?.isOwner) return false;
+	await ensureCombatTurnState(mech);
+	if (getCombatState(mech).usedHunterDisdainful) {
+		ui?.notifications?.warn?.("本轮已使用过猎人 III「蔑刃」！");
+		return false;
+	}
+	const eligible = eligibleDisdainfulWeapons(mech);
+	if (!eligible.length) {
+		ui?.notifications?.warn?.("当前没有可用（未投出且未损毁）的副近战武器可供「蔑刃」投掷！");
+		return false;
+	}
+	let chosen = preferredWeaponId
+		? eligible.find(w => w.id === preferredWeaponId || w.uuid === preferredWeaponId || weaponTrackKey(w) === preferredWeaponId)
+		: null;
+	if (!chosen) {
+		if (eligible.length === 1) {
+			chosen = eligible[0];
+		} else {
+			const picked = await promptConditionChoice(
+				"蔑刃 · 选择要自由动作投掷的副近战武器",
+				eligible.map(w => ({ weapon: w, buttonLabel: `${w.name}（投掷 ${weaponThrownVal(w, mech)}）` })),
+			);
+			chosen = picked?.weapon ?? null;
+		}
+	}
+	if (!chosen) return false;
+	await setCombatState(mech, { usedHunterDisdainful: true });
+	pendingDisdainfulBlade = { actorUuid: mech.uuid, weaponUuid: chosen.uuid };
+	try {
+		const AtkCls = game.lancer?.flows?.get?.("WeaponAttackFlow");
+		if (!AtkCls) {
+			await setCombatState(mech, { usedHunterDisdainful: false });
+			return false;
+		}
+		const flow = new AtkCls(chosen.uuid ?? chosen, { title: `${chosen.name}（蔑刃 · 投掷）` });
+		const ok = await flow.begin();
+		if (ok === false) {
+			await setCombatState(mech, { usedHunterDisdainful: false });
+			return false;
+		}
+		return true;
+	} finally {
+		pendingDisdainfulBlade = null;
+	}
 }
 
 function adaptiveWeightMinReliable(item) {
@@ -4853,6 +5854,10 @@ async function onCreateChatMessage(message, _options, userId) {
 					await deductWalkingArmoryAmmo(attActor, usedAmmo, Boolean(targets[0]?.crit));
 					await setTalentConfig(attActor, { walkingArmoryAmmo: "" });
 					await setCombatState(attActor, { usedWalkingArmoryTurn: true });
+				}
+				// 投掷近战武器：攻击结算后标记武器离手，拾回或「匕首戏法」回合结束飞回前不可重复使用
+				if (message.getFlag?.(MODULE_ID, "thrownAttack") && info.item) {
+					await markWeaponThrown(attActor, info.item, targets[0]?.uuid ?? null);
 				}
 			}
 		}
@@ -5844,6 +6849,26 @@ async function executeCardRider(message, info, riderKind) {
 	}
 	if (riderKind === "walkingArmoryJavelin") {
 		await postCpEffectCard(mech, "自走兵器库 · 猎人弹", `<p>选中的命中角色必须通过<b>机体豁免（DC ${dc}）</b>，否则被击倒<b>伏卧</b>。</p>`, { allowAutoScan: true });
+		return;
+	}
+	if (riderKind === "hunterLunge") {
+		if (!mech?.isOwner) return;
+		await ensureCombatTurnState(mech);
+		if (getCombatState(mech).usedHunterLunge) {
+			ui?.notifications?.warn?.("本轮已使用过猎人 I「跳扑」！");
+			return;
+		}
+		await setCombatState(mech, { usedHunterLunge: true });
+		await postCpEffectCard(
+			mech,
+			"猎人 · 跳扑",
+			`<p><b>${escHtml(mech.name)}</b> 发动<b>跳扑</b>（1/轮）：使用副近战武器攻击时，可在攻击前朝一名攻击目标<b>飞行最多 3 格</b>（此移动忽略交战且不会触发反应）！</p>`,
+		);
+		try { if (mech.sheet?.rendered) mech.sheet.render(false); } catch { /* ignore */ }
+		return;
+	}
+	if (riderKind === "hunterDisdainful") {
+		await triggerHunterDisdainful(mech);
 	}
 }
 
@@ -5917,6 +6942,20 @@ function buildCardAutomationHTML(message, info) {
 	if (canControl && info?.weaponRiders?.length) {
 		for (const r of info.weaponRiders) {
 			parts.push(`<button type="button" data-lancer-cn-rider="${escHtml(r.kind)}" style="${BTN_INLINE_STYLE}">${escHtml(r.label)}</button>`);
+		}
+	}
+
+	// 3b-2. 投掷近战武器离手标记与一键自由动作拾回 / 撤销投出
+	if (canControl && message?.getFlag?.(MODULE_ID, "thrownAttack") && info?.item && weaponLidOf(info.item) !== "mw_kkca_doom_axe") {
+		if (isWeaponThrownOut(info.actor, info.item)) {
+			const retNote = talentRank(info.actor, "t_hunter") >= 2 ? "回合结束自动飞回" : "停在目标邻接格";
+			parts.push(
+				`<span>🗡️ 已投出「<b>${escHtml(info.item.name)}</b>」（${retNote}）</span>`
+				+ `<button type="button" data-lancer-cn-thrown="pickup" style="${BTN_INLINE_STYLE}" title="邻接该投出武器时以自由动作取回">🤚 自由动作拾回</button>`
+				+ `<button type="button" data-lancer-cn-thrown="undo" style="${BTN_INLINE_STYLE}" title="若本次攻击实为邻接近战而非投掷，点击撤销投出标记">↩ 撤销投出</button>`,
+			);
+		} else {
+			parts.push(`<span style="opacity:.7">🪃「${escHtml(info.item.name)}」已收回</span>`);
 		}
 	}
 
@@ -6066,8 +7105,8 @@ function onRenderChatMessage(message, html) {
 	const root = html instanceof HTMLElement ? html : html?.[0];
 	if (!root) return;
 
-	// 1. 伤害卡：注入实时护甲 / 抗性 / 护盾结算预览
-	const damageData = message?.getFlag?.("lancer", "damageData");
+	// 1. 伤害卡：注入实时护甲 / 抗性 / 护盾结算预览（以及未锁定目标伤害卡的兜底应用栏）
+	const damageData = message?.getFlag?.("lancer", "damageData") ?? message?.flags?.lancer?.damageData;
 	if (damageData && typeof damageData === "object" && getSetting("crossPermDamage", true)) {
 		decorateDamageCard(message, root, damageData);
 		return;
@@ -6238,6 +7277,28 @@ function onRenderChatMessage(message, html) {
 		const riderKind = ev.target.closest?.("[data-lancer-cn-rider]")?.dataset?.lancerCnRider;
 		if (riderKind && info) {
 			await executeCardRider(message, info, riderKind);
+			return;
+		}
+
+		const thrownAct = ev.target.closest?.("[data-lancer-cn-thrown]")?.dataset?.lancerCnThrown;
+		if (thrownAct && info?.item) {
+			if (thrownAct === "pickup") {
+				await retrieveThrownWeapon(info.actor, weaponTrackKey(info.item), { notify: true, postCard: true });
+				const rowEl = content.querySelector(".lancer-cn-status-row");
+				if (rowEl) {
+					rowEl.remove();
+					onRenderChatMessage(message, root);
+				}
+			} else if (thrownAct === "undo") {
+				await retrieveThrownWeapon(info.actor, weaponTrackKey(info.item), { notify: false });
+				await updateMessageFlagCompat(message, "thrownAttack", false);
+				ui?.notifications?.info?.(`已撤销「${info.item.name}」的投出标记。`);
+				const rowEl = content.querySelector(".lancer-cn-status-row");
+				if (rowEl) {
+					rowEl.remove();
+					onRenderChatMessage(message, root);
+				}
+			}
 			return;
 		}
 
@@ -6504,6 +7565,8 @@ async function onUpdateCombatTurnEnd(combat, changed, options) {
 					usedTacticianFlank: false,
 					usedCrackShotZeroIn: false,
 					usedApothecaryRound: false,
+					usedHunterLunge: false,
+					usedHunterDisdainful: false,
 				});
 			}
 		}
@@ -6635,6 +7698,18 @@ async function onUpdateCombatTurnEnd(combat, changed, options) {
 		}
 		if (prevCs.sysopFirewall) endPatch.sysopFirewall = false;
 		if (Object.keys(endPatch).length) await setCombatState(actor, endPatch);
+
+		// 猎人 II「匕首戏法」：在你的回合结束时，投出的所有武器自动回到你身上
+		const thrownList = getThrownWeapons(actor);
+		if (thrownList.length && talentRank(actor, "t_hunter") >= 2) {
+			const names = thrownList.map(w => w.weaponName).join("、");
+			await retrieveThrownWeapon(actor, "all", {
+				notify: false,
+				postCard: true,
+				cardTitle: "匕首戏法 · 投掷武器自动收回",
+				cardBody: `<p><b>${escHtml(actor.name)}</b> 回合结束触发<b>猎人 II「匕首戏法」</b>：投出的武器（<b>${escHtml(names)}</b>）已自动回到身上！</p>`,
+			});
+		}
 	}
 
 	if (!getSetting("turnEndPrompt", true)) return;
@@ -6694,15 +7769,16 @@ function overheatOutcomeStatuses(descKey) {
 	return [];
 }
 
-async function promptConditionChoice(title, choices) {
+async function promptConditionChoice(title, choices, promptText = "") {
 	if (!choices.length) return null;
 	if (choices.length === 1) return choices[0];
 	const DialogV2 = foundry?.applications?.api?.DialogV2;
 	if (!DialogV2?.wait) return choices[0];
+	const bodyText = promptText || (String(title || "").includes("清除") ? "请选择要清除的一项状况：" : `请选择（${title}）：`);
 	try {
 		const picked = await DialogV2.wait({
 			window: { title },
-			content: `<p>请选择要清除的一项状况：</p>`,
+			content: `<p>${escHtml(bodyText)}</p>`,
 			buttons: choices.map((c, idx) => ({
 				action: String(idx),
 				label: c.buttonLabel,
@@ -6737,6 +7813,12 @@ function applyDamageModToState(state) {
 		mod.minReliable = Math.max(Number(intrinsic.minReliable) || 0, Number(baseMod.minReliable) || 0);
 	}
 	state.data.lancerCnDamageMod = mod;
+	if (mod.noBonusDamage) {
+		state.data.bonus_damage = [];
+		if (state.data.damage_hud_data?.base) state.data.damage_hud_data.base.bonusDamage = [];
+		if (state.data.damage_hud_data?.weapon) state.data.damage_hud_data.weapon.bonusDamage = [];
+		for (const ht of state.data.damage_hud_data?.targets ?? []) ht.bonusDamage = [];
+	}
 	if (mod.ap) {
 		state.data.ap = true;
 		if (state.data.damage_hud_data?.base) state.data.damage_hud_data.base.ap = true;
@@ -6824,6 +7906,9 @@ function transformWeaponBaseDamage(rawList, state) {
 			}
 		} else if (wLid === "mw_ch_smart_blade" && (mod.smartBladeUsedLockOn || state?.data?.hit_results?.some?.(h => h?.usedLockOn))) {
 			val = "1d6+3";
+		} else if (wLid === "mw_ch_wandering_blade" && mod.wanderingBladeThrownFar) {
+			type = "Kinetic";
+			val = "1d3+2";
 		}
 		if (nuCavEnergy && (type === "Kinetic" || type === "Explosive")) {
 			type = "Energy";
@@ -6842,6 +7927,11 @@ async function injectDamageFlowBonuses(state) {
 	state.data._lancerCnBonusInjected = true;
 	const mech = combatMechOf(state.actor) ?? state.actor;
 	if (!mech || mech.type === "npc" || mech.is_npc?.()) return;
+	const mod = state.data.lancerCnDamageMod ?? pendingDamageMod ?? {};
+	if (mod.noBonusDamage) {
+		state.data.bonus_damage = [];
+		return;
+	}
 	await ensureCombatTurnState(mech);
 	const cs = getCombatState(mech);
 	const cfg = getTalentConfig(mech);
@@ -6853,7 +7943,6 @@ async function injectDamageFlowBonuses(state) {
 	const benefitsCb = itemBenefitsFromCoreBonuses(item);
 	const isMelee = item ? isMeleeWeaponItem(item) : state.data.attack_type === "Melee";
 	const isRanged = item ? isRangedWeaponItem(item) : state.data.attack_type === "Ranged";
-	const mod = state.data.lancerCnDamageMod ?? pendingDamageMod ?? {};
 	const profDmg = weaponProfileOf(item)?.damage ?? state.data.damage ?? [];
 	const baseType = profDmg[0]?.type && profDmg[0].type !== "Variable" ? profDmg[0].type : "Kinetic";
 	const bonuses = Array.isArray(state.data.bonus_damage) ? [...state.data.bonus_damage] : [];
@@ -7046,8 +8135,16 @@ function patchLancerFlows() {
 		return ok;
 	});
 
-	// 0b. 武器 / 基础攻击准度、难度、无视掩护与天赋状态预填
+	// 0b. 武器 / 基础攻击准度、难度、无视掩护、投掷武器状态与天赋状态预填
 	wrap("initAttackData", async (orig, state, options) => {
+		const preMech = combatMechOf(state?.actor) ?? state?.actor;
+		if (state?.item) {
+			if (isWeaponThrownOut(preMech, state.item)) {
+				ui?.notifications?.warn?.(`武器「${state.item.name}」已投出落在场上，取回前无法再次使用！（可在邻接时以自由动作拾回，或具备「匕首戏法」时在回合结束自动收回）`);
+				return false;
+			}
+			applyKnifeJugglerTags(state.item, preMech);
+		}
 		const ok = await orig(state, options);
 		if (ok === false || !state?.data) return ok;
 		const mech = combatMechOf(state.actor) ?? state.actor;
@@ -7067,6 +8164,18 @@ function patchLancerFlows() {
 		const csPatch = {};
 		const cfgPatch = {};
 		const outFlags = {};
+
+		// 猎人 III「蔑刃」自由动作投掷标记与近战武器智能近战/投掷距离切换
+		if (pendingDisdainfulBlade && (!pendingDisdainfulBlade.weaponUuid || item?.uuid === pendingDisdainfulBlade.weaponUuid)) {
+			state.data._lancerCnForceThrown = true;
+			state.data._lancerCnNoBonusDamage = true;
+			if (item?.name && !String(state.data.title || "").includes("蔑刃")) {
+				state.data.title = `${item.name}（蔑刃 · 投掷）`;
+			}
+		}
+		syncWeaponThrownMode(state, { explicitAccDiff: Boolean(options?.acc_diff) });
+		if (state.data._lancerCnNoBonusDamage) outFlags.noBonusDamage = true;
+		if (state.data._lancerCnWanderingFar) outFlags.wanderingBladeThrownFar = true;
 
 		// 无视交战远程惩罚：混合作战 II / 刺鬃冠镖弹发射器 / 台风
 		if (state.data.acc_diff?.weapon && ((benefitsTalent && talentRank(mech, "t_combined_arms") >= 2) || wLid === "mw_bristlecrown_flechette_launcher" || wLid === "mw_ch_typhoon")) {
@@ -7211,6 +8320,26 @@ function patchLancerFlows() {
 				}
 			}
 
+			// NPC 核心模板被动特征：至高近战（近战 +1 准度）、卓越索敌（远程无视掩护）、视域（无视隐形）、微弱信号（射程 3 内无视隐形）
+			if (state.actor?.type === "npc" || state.actor?.is_npc?.()) {
+				if (isMelee && hasNpcFeature(state.actor, ["npcf_cn_ultra_32", "npcf_supreme_melee_ultra"], ["至高近战"])) accBonus += 1;
+				if (isRanged && hasNpcFeature(state.actor, ["npcf_cn_ultra_30", "npcf_superior_targeting_ultra"], ["卓越索敌"])) ignoreCover = true;
+				const ultraSight = hasNpcFeature(state.actor, ["npcf_cn_ultra_26", "npcf_sight_ultra"], ["视域"]);
+				const vetFaint = !ultraSight && hasNpcFeature(state.actor, ["npcf_cn_veteran_12", "npcf_feint_veteran", "npcf_faint_signal_veteran"], ["微弱信号"]);
+				if (ultraSight || vetFaint) {
+					for (const tad of tads) {
+						if (!tad?.plugins?.invisibility) continue;
+						if (ultraSight) {
+							tad.plugins.invisibility.data = -1;
+						} else {
+							const bTok = tad?.target;
+							const dist = (aTok && bTok) ? tokenDistance(aTok, bTok) : (Number.isFinite(Number(tad?.distance)) ? Number(tad.distance) : null);
+							if (dist !== null && dist <= 3) tad.plugins.invisibility.data = -1;
+						}
+					}
+				}
+			}
+
 			if (accBonus) state.data.acc_diff.base.accuracy = (Number(state.data.acc_diff.base.accuracy) || 0) + accBonus;
 			if (diffBonus) state.data.acc_diff.base.difficulty = (Number(state.data.acc_diff.base.difficulty) || 0) + diffBonus;
 			if (ignoreCover) {
@@ -7227,10 +8356,32 @@ function patchLancerFlows() {
 		return ok;
 	});
 
-	// 0c. 科技攻击准度预填 + 广域编码脉冲无视隐形 + 残酷 III + 扫描虫群 + 黑冰模块 + 系统管理员防火墙
+	// 0c. 科技攻击准度预填（含修复原生 NPC 科技特性 tier_override 下标偏移）+ 广域编码脉冲 / 视域无视隐形 + 残酷 III + 扫描虫群 + 黑冰模块 + 系统管理员防火墙 + NPC 军团 / 固化目标 / 要塞 / 科技脆弱
 	wrap("initTechAttackData", async (orig, state, options) => {
-		const ok = await orig(state, options);
+		const isNpcTech = Boolean(
+			state?.item
+			&& (state.item.type === "npc_feature" || state.item.is_npc_feature?.())
+			&& (state?.actor?.type === "npc" || state?.actor?.is_npc?.()),
+		);
+		const savedTierOv = isNpcTech ? (Number(state.item.system?.tier_override) || 0) : 0;
+		const savedActorTier = isNpcTech ? state.actor?.system?.tier : undefined;
+		if (savedTierOv > 0 && state.item.system && state.actor?.system) {
+			state.item.system.tier_override = 0;
+			state.actor.system.tier = Math.min(3, Math.max(1, savedTierOv));
+		}
+		let ok;
+		try { ok = await orig(state, options); }
+		finally {
+			if (savedTierOv > 0 && state?.item?.system && state?.actor?.system) {
+				state.item.system.tier_override = savedTierOv;
+				state.actor.system.tier = savedActorTier;
+			}
+		}
 		if (ok !== false && state?.data) {
+			if (isNpcTech) {
+				if (!state.data.effect && state.item.system?.effect) state.data.effect = state.item.system.effect;
+				if ((!state.data.tags || !state.data.tags.length) && Array.isArray(state.item.system?.tags)) state.data.tags = state.item.system.tags;
+			}
 			const mech = combatMechOf(state.actor) ?? state.actor;
 			if (mech?.isOwner) await ensureCombatTurnState(mech);
 			const tads = Array.isArray(state.data.acc_diff?.targets) ? state.data.acc_diff.targets : [];
@@ -7241,12 +8392,24 @@ function patchLancerFlows() {
 				if (itemBenefitsFromTalents(state.item) && talentRank(mech, "t_brutal") >= 3) {
 					bonus += Number(getTalentDie(mech, "brutal")) || 0;
 				}
+				if (hasNpcFeature(state.actor, ["npcf_cn_ultra_24", "npcf_legion_ultra"], ["军团"])) {
+					bonus += 1;
+				}
 				if (bonus) state.data.acc_diff.base.accuracy = (Number(state.data.acc_diff.base.accuracy) || 0) + bonus;
 				state.data._lancerCnCpAtkAcc = true;
 			}
-			if (state.actor?._lancerCnWidePulse && tads.length) {
+			const ultraSight = hasNpcFeature(state.actor, ["npcf_cn_ultra_26", "npcf_sight_ultra"], ["视域"]);
+			const vetFaint = !ultraSight && hasNpcFeature(state.actor, ["npcf_cn_veteran_12", "npcf_feint_veteran", "npcf_faint_signal_veteran"], ["微弱信号"]);
+			if ((state.actor?._lancerCnWidePulse || ultraSight || vetFaint) && tads.length) {
 				for (const tad of tads) {
-					if (tad?.plugins?.invisibility) tad.plugins.invisibility.data = -1;
+					if (!tad?.plugins?.invisibility) continue;
+					if (state.actor?._lancerCnWidePulse || ultraSight) {
+						tad.plugins.invisibility.data = -1;
+					} else {
+						const bTok = tad?.target;
+						const dist = (aTok && bTok) ? tokenDistance(aTok, bTok) : (Number.isFinite(Number(tad?.distance)) ? Number(tad.distance) : null);
+						if (dist !== null && dist <= 3) tad.plugins.invisibility.data = -1;
+					}
 				}
 			}
 			// 扫描虫群：对邻接目标科技攻击 +1 准度
@@ -7264,7 +8427,7 @@ function patchLancerFlows() {
 					}
 				}
 			}
-			// 黑冰模块（1→2→3→1 难度递进）与系统管理员 II「防火墙」（+1 难度）
+			// 黑冰模块（1→2→3→1 难度递进）+ 系统管理员 II「防火墙」（+1 难度）+ NPC 固化目标（+1 难度）/ 要塞（+3 难度）/ 科技脆弱（+1 准度）
 			const targetEntries = tads.length
 				? tads.map(tad => ({ tad, tok: tad?.target, actor: tad?.target?.actor ?? resolveActor(tad?.target?.document?.uuid ?? tad?.target?.uuid) }))
 				: Array.from(globalThis.game?.user?.targets ?? []).map(tok => ({ tad: null, tok, actor: tok?.actor ?? resolveActor(tok?.document?.uuid ?? tok?.uuid) }));
@@ -7272,7 +8435,11 @@ function patchLancerFlows() {
 				const defActor = entry.actor;
 				if (!defActor) continue;
 				let addDiff = 0;
+				let addAcc = 0;
 				if (getCombatState(defActor).sysopFirewall) addDiff += 1;
+				if (hasNpcFeature(defActor, ["npcf_cn_veteran_8", "npcf_cn_exotic_2", "npcf_hardened_target_veteran", "npcf_hardened_target_exotic"], ["固化目标"])) addDiff += 1;
+				if (hasNpcFeature(defActor, ["npcf_cn_ultra_22", "npcf_fortress_ultra"], ["要塞"])) addDiff += 3;
+				if (hasNpcFeature(defActor, ["npcf_cn_rpv_3", "npcf_tech_vulnerability_rpv"], ["科技脆弱"])) addAcc += 1;
 				let blackIceHolder = hasMechSystem(defActor, "ms_black_ice_module") ? defActor : null;
 				if (!blackIceHolder && entry.tok) {
 					const defDisp = entry.tok.document?.disposition ?? 1;
@@ -7295,6 +8462,22 @@ function patchLancerFlows() {
 					if (entry.tad) entry.tad.difficulty = (Number(entry.tad.difficulty) || 0) + addDiff;
 					else if (state.data.acc_diff?.base) state.data.acc_diff.base.difficulty = (Number(state.data.acc_diff.base.difficulty) || 0) + addDiff;
 				}
+				if (addAcc > 0) {
+					if (entry.tad) entry.tad.accuracy = (Number(entry.tad.accuracy) || 0) + addAcc;
+					else if (state.data.acc_diff?.base) state.data.acc_diff.base.accuracy = (Number(state.data.acc_diff.base.accuracy) || 0) + addAcc;
+				}
+			}
+		}
+		return ok;
+	});
+
+	// 0c-1b. 攻击标签补全：确保猎人 II「匕首戏法」赋予的「投掷 5」同步写入攻击卡标签栏
+	wrap("setAttackTags", async (orig, state, options) => {
+		const ok = await orig(state, options);
+		if (ok !== false && state?.item && Array.isArray(state?.data?.tags)) {
+			const tv = weaponThrownVal(state.item, state.actor);
+			if (tv > 0) {
+				state.data.tags = upsertThrownTagInArray([...state.data.tags], tv, state.item);
 			}
 		}
 		return ok;
@@ -7315,14 +8498,40 @@ function patchLancerFlows() {
 	});
 
 	wrap("printAttackCard", async (orig, state, options) => {
+		const mech = combatMechOf(state?.actor) ?? state?.actor;
+		const wasThrown = Boolean(
+			state?.item
+			&& isMeleeWeaponItem(state.item)
+			&& (state?.data?.acc_diff?.weapon?.thrown || state?.data?._lancerCnForceThrown),
+		);
+		if (wasThrown || state?.data?._lancerCnNoBonusDamage || state?.data?._lancerCnWanderingFar) {
+			pendingWeaponAttackFlags = {
+				...(pendingWeaponAttackFlags ?? { actorUuid: state?.actor?.uuid ?? mech?.uuid }),
+				...(wasThrown ? { thrownAttack: true } : {}),
+				...(state?.data?._lancerCnNoBonusDamage ? { noBonusDamage: true } : {}),
+				...(wasThrown && state?.data?._lancerCnWanderingFar ? { wanderingBladeThrownFar: true } : {}),
+			};
+		}
 		try { return await orig(state, options); }
-		finally { pendingWeaponAttackFlags = null; }
+		finally {
+			pendingWeaponAttackFlags = null;
+			pendingDisdainfulBlade = null;
+		}
 	});
 
-	// 0d. 攻击掷骰拦截：碎头集群导弹无视一切难度 + 天生优越免疫受损惩罚 + 佩玛达折光棱镜 + 18+ 会心 + 虎爪警杖保底命中 + 记录天然 20
+	// 0d. 攻击掷骰拦截：碎头集群导弹无视一切难度 + 天生优越免疫受损惩罚 + 佩玛达折光棱镜 + 18+ 会心 + 虎爪警杖保底命中 + 游隼阔剑远投引导 + 记录天然 20
 	wrap("rollAttacks", async (orig, state, options) => {
 		const mech = combatMechOf(state?.actor) ?? state?.actor;
 		const wLid = weaponLidOf(state?.item);
+		if (wLid === "mw_ch_wandering_blade" && state?.data?.acc_diff?.weapon) {
+			const aTok = attackerToken(mech);
+			const tads = state.data.acc_diff.targets ?? [];
+			const tokList = tads.length ? tads.map(t => t?.target).filter(Boolean) : Array.from(globalThis.game?.user?.targets ?? []);
+			const dists = tokList.map(bTok => (aTok && bTok) ? tokenDistance(aTok, bTok) : null).filter(d => d !== null && Number.isFinite(d));
+			const farThrow = Boolean(state.data.acc_diff.weapon.thrown && (dists.length === 0 || dists.some(d => d > 1)));
+			state.data.acc_diff.weapon.seeking = farThrow;
+			state.data._lancerCnWanderingFar = farThrow;
+		}
 		if (wLid === "mw_shatterhead_colony_missiles" && state?.data?.acc_diff) {
 			if (state.data.acc_diff.base) state.data.acc_diff.base.difficulty = 0;
 			if (state.data.acc_diff.weapon) {
@@ -7399,9 +8608,34 @@ function patchLancerFlows() {
 		return ok;
 	});
 
-	// 0e. 伤害标签与条件额外伤害预填
+	// 0e. 伤害标签与条件额外伤害预填（并兼容非 Weapon 类型的 NPC 特性如科技入侵触发 DamageRollFlow）
 	wrap("setDamageTags", async (orig, state, options) => {
-		const ok = await orig(state, options);
+		const isNonWeaponNpcFeat = Boolean(
+			state?.item
+			&& (state.item.type === "npc_feature" || state.item.is_npc_feature?.())
+			&& state.item.system?.type !== "Weapon",
+		);
+		let ok;
+		if (isNonWeaponNpcFeat) {
+			if (state.data) {
+				const tags = Array.isArray(state.item.system?.tags) ? state.item.system.tags : [];
+				state.data.tags = tags;
+				state.data.ap = Boolean(state.data.ap || tags.some(t => t?.is_ap || t?.lid === "tg_ap"));
+				state.data.overkill = Boolean(state.data.overkill || tags.some(t => t?.is_overkill || t?.lid === "tg_overkill"));
+				const relTag = tags.find(t => t?.is_reliable || t?.lid === "tg_reliable");
+				if (relTag) {
+					const tier = Math.min(3, Math.max(1, Number(state.item.system?.tier_override) || Number(state.actor?.system?.tier) || 1));
+					const relVal = parseInt(typeof relTag.tierVal === "function" ? relTag.tierVal(tier) : relTag.val, 10) || 0;
+					if (relVal > 0) {
+						state.data.reliable = true;
+						state.data.reliable_val = relVal;
+					}
+				}
+			}
+			ok = true;
+		} else {
+			ok = await orig(state, options);
+		}
 		if (ok !== false) {
 			applyDamageModToState(state);
 			await injectDamageFlowBonuses(state);
@@ -7409,18 +8643,39 @@ function patchLancerFlows() {
 		return ok;
 	});
 
-	// 0f. 伤害 HUD 预览时临时映射武器基础伤害（拟态枪 / 刺鬃冠镖弹 / 智能刀 / 核骑兵能量转换 / 自走兵器库），退出时无损还原物品数据
+	// 0f. 伤害 HUD 预览时临时映射武器基础伤害（机甲/驾驶员武器一维 damage 转换；NPC 武器保持三维层级二维数组并对齐 tier_override），退出时无损还原物品数据
 	wrap("showDamageHUD", async (orig, state, options) => {
-		const profile = state?.item ? weaponProfileOf(state.item) : null;
+		const item = state?.item ?? null;
+		const profile = item ? weaponProfileOf(item) : null;
+		const isNpcFeat = Boolean(item && (item.type === "npc_feature" || item.is_npc_feature?.() || Array.isArray(profile?.damage?.[0])));
+		if (isNpcFeat) {
+			const savedNpcTiers = Array.isArray(item.system?.damage) ? item.system.damage : null;
+			applyDamageModToState(state);
+			if (savedNpcTiers && item.system?.type === "Weapon") {
+				const actorTierIdx = Math.min(2, Math.max(0, (Number(state.actor?.system?.tier) || 1) - 1));
+				const effTierIdx = Math.min(2, Math.max(0, (Number(item.system?.tier_override) || Number(state.actor?.system?.tier) || 1) - 1));
+				const chosenTierDmg = Array.isArray(savedNpcTiers[effTierIdx]) && savedNpcTiers[effTierIdx].length
+					? savedNpcTiers[effTierIdx]
+					: (savedNpcTiers.find(arr => Array.isArray(arr) && arr.length) ?? []);
+				item.system.damage = [0, 1, 2].map(i => (i === actorTierIdx ? chosenTierDmg : (Array.isArray(savedNpcTiers[i]) ? savedNpcTiers[i] : chosenTierDmg)));
+			}
+			if (state?.data) state.data._lancerCnHudDmgSynced = true;
+			try { return await orig(state, options); }
+			finally {
+				if (item?.system && savedNpcTiers) item.system.damage = savedNpcTiers;
+			}
+		}
 		const savedDmg = Array.isArray(profile?.damage) ? profile.damage : null;
 		const savedBonus = Array.isArray(profile?.bonus_damage) ? profile.bonus_damage : null;
 		const mod = applyDamageModToState(state);
 		if (savedDmg) {
 			profile.damage = transformWeaponBaseDamage(savedDmg, state);
-			if (mod?.walkingArmoryAmmo === "hellfire" && savedBonus) {
+			if (mod?.noBonusDamage && savedBonus) {
+				profile.bonus_damage = [];
+			} else if (mod?.walkingArmoryAmmo === "hellfire" && savedBonus) {
 				profile.bonus_damage = savedBonus.map(b => ({ ...b, type: "Burn" }));
 			}
-			state.data._lancerCnHudDmgSynced = true;
+			if (state?.data) state.data._lancerCnHudDmgSynced = true;
 		}
 		try { return await orig(state, options); }
 		finally {
@@ -7480,20 +8735,30 @@ function patchLancerFlows() {
 
 		if (isNpc) {
 			const dice = countNpcDeadlyDice(state.actor);
-			if (dice <= 0) return ok;
+			const splinterFlat = hasNpcFeature(state.actor, ["npcf_cn_pirate_4", "npcf_splinter_rounds_pirate"], ["分裂弹"]) ? 3 : 0;
+			if (dice <= 0 && splinterFlat <= 0) return ok;
 			const dType = state.data.crit_damage_results?.[0]?.d_type ?? state.data.damage?.[0]?.type ?? "Kinetic";
-			const roll = new Roll(`${dice}d6`);
-			if (state.data.overkill && foundry?.dice?.terms?.Die) {
-				roll.terms?.forEach?.(term => {
-					if (term instanceof foundry.dice.terms.Die) term.modifiers = ["x1", `kh${term.number}`, ...(term.modifiers ?? [])];
-				});
-			}
-			await roll.evaluate();
-			const tt = typeof roll.getTooltip === "function" ? await roll.getTooltip() : "";
-			state.data.crit_damage_results = [...(state.data.crit_damage_results ?? []), { roll, tt, d_type: dType, bonus: true }];
 			const multiTarget = (state.data.damage_hud_data?.targets?.length ?? 0) > 1;
-			const rawBonus = Number(roll.total) || 0;
-			const perTargetBonus = multiTarget ? Math.ceil(rawBonus / 2) : rawBonus;
+			let totalBonus = 0;
+			if (dice > 0) {
+				const roll = new Roll(`${dice}d6`);
+				if (state.data.overkill && foundry?.dice?.terms?.Die) {
+					roll.terms?.forEach?.(term => {
+						if (term instanceof foundry.dice.terms.Die) term.modifiers = ["x1", `kh${term.number}`, ...(term.modifiers ?? [])];
+					});
+				}
+				await roll.evaluate();
+				const tt = typeof roll.getTooltip === "function" ? await roll.getTooltip() : "";
+				state.data.crit_damage_results = [...(state.data.crit_damage_results ?? []), { roll, tt, d_type: dType, bonus: true }];
+				totalBonus += Number(roll.total) || 0;
+			}
+			if (splinterFlat > 0) {
+				const flatRoll = await new Roll(String(splinterFlat)).evaluate();
+				const flatTt = typeof flatRoll.getTooltip === "function" ? await flatRoll.getTooltip() : "";
+				state.data.crit_damage_results = [...(state.data.crit_damage_results ?? []), { roll: flatRoll, tt: flatTt, d_type: dType, bonus: true }];
+				totalBonus += splinterFlat;
+			}
+			const perTargetBonus = multiTarget ? Math.ceil(totalBonus / 2) : totalBonus;
 			for (const t of state.data.targets ?? []) {
 				if (!t.crit) continue;
 				const added = t.half_damage ? Math.ceil(perTargetBonus / 2) : perTargetBonus;
@@ -7716,7 +8981,17 @@ function patchLancerFlows() {
 		return res;
 	});
 
-	// 4. 结构伤害表：根据表结果自动挂昏迷 / 晕眩 / 受损 + 碾碎机 II「报复」+ 体变之训无形
+	// 4. 结构伤害表与过热表：兼容中文 NPC「传奇」（老兵/超体双骰取高）与怪形「独特生理机能」专属结构表 + 自动挂状态
+	for (const npcStructStep of [
+		"rollStructureTable",
+		"noStructureRemaining",
+		"checkStructureMultipleOnes",
+		"structureInsertDismembermentButton",
+		"structureInsertSecondaryRollButton",
+		"rollOverheatTable",
+	]) {
+		wrap(npcStructStep, (orig, state, options) => withCanonicalNpcFlowLids(state?.actor, () => orig(state, options)));
+	}
 	wrap("printStructureCard", async (orig, state, options) => {
 		const actor = state?.actor;
 		const statuses = getSetting("autoApplyStatus", true) ? structureOutcomeStatuses(state?.data?.desc, state?.data?.remStruct) : [];
@@ -7814,6 +9089,13 @@ function patchLancerFlows() {
 					}
 					statAcc += bestBonded;
 				}
+			} else if (!state.item && actor && (actor.type === "npc" || actor.is_npc?.())) {
+				const p = String(state.data.path ?? "");
+				const isSave = /(豁免|save)/i.test(String(state.data.title ?? ""));
+				if (isSave && p.endsWith(".sys")) {
+					if (hasNpcFeature(actor, ["npcf_cn_veteran_8", "npcf_cn_exotic_2", "npcf_hardened_target_veteran", "npcf_hardened_target_exotic"], ["固化目标"])) statAcc += 1;
+					if (hasNpcFeature(actor, ["npcf_cn_ultra_22", "npcf_fortress_ultra"], ["要塞"])) statAcc += 3;
+				}
 			}
 			if (statAcc) {
 				state.data.acc_diff.base.accuracy = (Number(state.data.acc_diff.base.accuracy) || 0) + statAcc;
@@ -7843,7 +9125,7 @@ function patchLancerFlows() {
 const ALLOWED_SOCKET_MSG_FLAGS = new Set([
 	"appliedStatusesUndone", "braceCleared", "turnEndClear", "saveResults",
 	"grappleState", "contest", "jockeyState", "mazeState",
-	"cpDamageMod", "analystUsed",
+	"cpDamageMod", "analystUsed", "thrownAttack",
 ]);
 
 Hooks.on("renderChatMessageHTML", onRenderChatMessage);
@@ -8470,9 +9752,12 @@ function onPreCreateBasicCard(message) {
 		if (wf.watchThisArmed) patch[`flags.${MODULE_ID}.watchThisArmed`] = true;
 		if (wf.gunslingerHeartKill) patch[`flags.${MODULE_ID}.gunslingerHeartKill`] = true;
 		if (wf.walkingArmoryAmmo) patch[`flags.${MODULE_ID}.walkingArmoryAmmo`] = wf.walkingArmoryAmmo;
+		if (wf.thrownAttack) patch[`flags.${MODULE_ID}.thrownAttack`] = true;
 		const cpDmgPatch = {
 			...(message.flags?.[MODULE_ID]?.cpDamageMod ?? {}),
 			...(wf.crackShotZeroIn ? { crackShotZeroIn: true } : {}),
+			...(wf.noBonusDamage ? { noBonusDamage: true } : {}),
+			...(wf.wanderingBladeThrownFar ? { wanderingBladeThrownFar: true } : {}),
 			...(wf.nat20Uuids?.length ? { nat20Uuids: [...wf.nat20Uuids] } : {}),
 		};
 		if (Object.keys(cpDmgPatch).length) patch[`flags.${MODULE_ID}.cpDamageMod`] = cpDmgPatch;
@@ -8592,18 +9877,21 @@ function patchLimitedMax() {
 				const rolled = Number(this.getFlag?.(MODULE_ID, "limitedRoll")) || 0;
 				this.system.uses.max = rolled ? rolled + limitedBonus(this.actor) : 0;
 			}
+			applyKnifeJugglerTags(this);
 		} catch (err) { reportError("计算受限次数", err); }
 		return r;
 	};
 	proto.prepareFinalAttributes.lancerCn = true;
 }
 
-// 载入时已经算过的物品按新的上限重算，并刷新打开的角色表
+// 载入时已经算过的物品按新的上限重算，并刷新打开的角色表（同步激活猎人 II「匕首戏法」投掷 5 标签）
 function refreshDiceLimited() {
 	const actors = [...(game.actors ?? [])];
 	for (const scene of game.scenes ?? []) for (const t of scene.tokens ?? []) if (t.actor && !t.actorLink) actors.push(t.actor);
 	for (const a of actors) {
-		if (!(a.items ?? []).some(diceLimited)) continue;
+		const hasDiceLim = (a.items ?? []).some(diceLimited);
+		const hasKnifeJuggler = (a.type === "mech" || a.is_mech?.()) && talentRank(a, "t_hunter") >= 2;
+		if (!hasDiceLim && !hasKnifeJuggler) continue;
 		try { a.reset?.(); if (a.sheet?.rendered) a.sheet.render(false); } catch (err) { reportError("重算受限次数", err); }
 	}
 }
@@ -8813,6 +10101,20 @@ function renderTalentControlHTML(actor) {
 		addToggle("phaseReady", "相位准备", "相位准备改装：无视视线与掩护，但目标在本次攻击中视为隐形");
 	}
 
+	// 7. 猎人 I「跳扑」（攻击前飞行 3 格快捷触发）与投出武器自由动作拾回
+	if (talentRank(actor, "t_hunter") >= 1) {
+		const lungeUsed = Boolean(cs.usedHunterLunge);
+		parts.push(`<button type="button" class="lancer-button ${lungeUsed ? "lancer-secondary" : "lancer-primary"}" data-lancer-cn-talent-act="hunterLunge" title="猎人 I（1/轮）：使用副近战武器攻击前，朝目标飞行至多 3 格（无视交战且不触发反应；误点可再次点击重置）" style="width:auto;flex:0 0 auto;padding:0 .55em;line-height:1.55;opacity:${lungeUsed ? ".72" : "1"}">🦅 跳扑${lungeUsed ? "（本轮已用）" : "（飞3格 · 1/轮）"}</button>`);
+	}
+	const thrownList = getThrownWeapons(actor);
+	for (const tw of thrownList) {
+		const locNote = tw.targetName ? `（${tw.targetName}旁）` : "";
+		parts.push(`<button type="button" class="lancer-button lancer-primary" data-lancer-cn-talent-act="pickupThrown:${escHtml(tw.key)}" title="邻接时以自由动作拾回投出的「${escHtml(tw.weaponName)}」${escHtml(locNote)}" style="width:auto;flex:0 0 auto;padding:0 .55em;line-height:1.55">🤚 拾回「${escHtml(tw.weaponName)}」</button>`);
+	}
+	if (thrownList.length > 1) {
+		parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="pickupThrownAll" title="一次性取回当前投出的全部武器" style="width:auto;flex:0 0 auto;padding:0 .55em;line-height:1.55">🤚 全部拾回</button>`);
+	}
+
 	if (!parts.length) return "";
 	return `<div class="card clipped lancer-cn-talent-bar">`
 		+ `<span class="lancer-header lancer-primary submajor">天赋与核心战术栏</span>`
@@ -8896,6 +10198,32 @@ async function executeTalentSheetAction(actor, act, value) {
 		refresh();
 		return true;
 	}
+	if (kind === "hunterLunge") {
+		await ensureCombatTurnState(actor);
+		if (getCombatState(actor).usedHunterLunge) {
+			await setCombatState(actor, { usedHunterLunge: false });
+			ui?.notifications?.info?.("已重置本轮「跳扑」可用状态。");
+		} else {
+			await setCombatState(actor, { usedHunterLunge: true });
+			await postCpEffectCard(
+				actor,
+				"猎人 · 跳扑",
+				`<p><b>${escHtml(actor.name)}</b> 触发<b>跳扑</b>（1/轮）：使用副近战武器攻击前，朝目标<b>飞行至多 3 格</b>（此移动<b>无视交战且不触发反应</b>）！</p>`,
+			);
+		}
+		refresh();
+		return true;
+	}
+	if (kind === "pickupThrown" && arg1) {
+		await retrieveThrownWeapon(actor, arg1, { notify: true, postCard: true });
+		refresh();
+		return true;
+	}
+	if (kind === "pickupThrownAll") {
+		await retrieveThrownWeapon(actor, "all", { notify: true, postCard: true });
+		refresh();
+		return true;
+	}
 	return false;
 }
 
@@ -8942,8 +10270,32 @@ function onRenderActorSheet(app, html) {
 			const coreWrap = root.querySelector(".core-wrapper, .core-active-wrapper, .lancer-core-sys");
 			if (coreWrap) coreWrap.insertAdjacentHTML("beforeend", cpBar);
 			else {
-				const basicCardEl = root.querySelector(".lancer-cn-basic");
-				if (basicCardEl) basicCardEl.insertAdjacentHTML("beforebegin", `<div class="card clipped">${cpBar}</div>`);
+			const basicCardEl = root.querySelector(".lancer-cn-basic");
+			if (basicCardEl) basicCardEl.insertAdjacentHTML("beforebegin", `<div class="card clipped">${cpBar}</div>`);
+			}
+		}
+	}
+	// 机甲 / NPC 武器栏投出状态徽标与一键拾回按钮
+	if ((actor.type === "mech" || actor.type === "npc") && actor.isOwner) {
+		const thrownMap = getThrownWeapons(actor);
+		if (thrownMap.length) {
+			for (const wpnCard of root.querySelectorAll(".mech_weapon.set[data-uuid], .npc_feature.set[data-uuid]")) {
+				if (wpnCard.querySelector(".lancer-cn-thrown-badge")) continue;
+				const wUuid = wpnCard.dataset?.uuid;
+				const wpn = wUuid ? (fromUuidSync(wUuid) ?? (actor.items ?? []).find(i => i.uuid === wUuid)) : null;
+				if (!wpn || !isWeaponThrownOut(actor, wpn)) continue;
+				const tw = thrownMap.find(x => x.key === weaponTrackKey(wpn) || (wUuid && x.weaponUuid === wUuid) || (wpn.id && x.weaponId === wpn.id));
+				const rollBtn = wpnCard.querySelector(".roll-attack");
+				if (rollBtn) {
+					rollBtn.style.opacity = "0.45";
+					rollBtn.title = "该武器已投出落在场上，取回前无法再次攻击";
+				}
+				const bodyEl = wpnCard.querySelector(".lancer-body") ?? wpnCard;
+				const locNote = tw?.targetName ? `（${escHtml(tw.targetName)}旁）` : "";
+				bodyEl.insertAdjacentHTML(
+					"afterbegin",
+					`<div class="lancer-cn-thrown-badge" style="display:flex;align-items:center;gap:6px;padding:3px 6px;margin:2px 0;border-radius:3px;background:rgba(230,81,0,.14);color:#e65100;font-size:.88em"><b>🗡️ 已投出${locNote}</b><button type="button" class="lancer-button lancer-primary" data-lancer-cn-talent-act="pickupThrown:${escHtml(tw?.key || weaponTrackKey(wpn))}" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.4;margin:0">🤚 自由动作拾回</button></div>`,
+				);
 			}
 		}
 	}
@@ -9110,19 +10462,22 @@ globalThis.LancerCN = {
 	setActorStatus, applyStatusTo, removeStatusFrom, onCreateChatMessage, undoAppliedStatuses, executeCardSave, rollNonAttackDamage,
 	executeFieldAnalystReaction, executeCardRider,
 	actorBaseSize, hasSyntheticMuscleNetting, effectiveGrappleSize, findActiveGrappleFor, isGrappleImmobilized, endGrapple,
-	mechPilot, findActiveMechForPilot, combatMechOf, talentItemOf, talentRank, hasCoreBonus, hasMechSystem, countMechNHPs,
+	mechPilot, findActiveMechForPilot, combatMechOf, talentItemOf, talentRank, hasCoreBonus, hasMechSystem, countMechNHPs, onTalentItemChanged,
 	weaponModOf, weaponLidOf, weaponModLidOf, itemBenefitsFromTalents, itemBenefitsFromCoreBonuses,
+	makeThrownTag, applyKnifeJugglerTags, weaponThreatVal, weaponThrownVal, weaponTrackKey, getThrownWeapons, isWeaponThrownOut, markWeaponThrown, retrieveThrownWeapon, eligibleDisdainfulWeapons, syncWeaponThrownMode, triggerHunterDisdainful,
 	TALENT_DICE_DEFS, getTalentDie, setTalentDie, getCombatState, setCombatState, ensureCombatTurnState, getTalentConfig, setTalentConfig,
-	isStatusImmune, rollMimicGunValues, resetSceneTalentState, resetFullRepairTalentState, renderTalentControlHTML, executeTalentSheetAction, maxFormulaValue,
+	hasNpcFeature, withCanonicalNpcFlowLids, isStatusImmune, rollMimicGunValues, resetSceneTalentState, resetFullRepairTalentState, renderTalentControlHTML, executeTalentSheetAction, maxFormulaValue,
 	EFFICIENT_FRAME_LIDS, CP_PROFILES, mechFrame, mechFrameLid, isEfficientCore, getCoreState, setCoreState, isCoreActiveOn,
 	hasTrueblack, isUnremovableShredded, isCoreSustainedImmobilized, cpAttackAccuracyBonus, cpStatAccuracyBonus,
 	activateCorePower, deactivateCoreEffect, endCorePower, onDeleteCombat, executeCoreAction, renderCoreControlHTML,
 	createMazeCard, attemptMazeSave, patchTrueblackDamageCalc,
 	pickPilotCheckSpec, rollActorContestStat, createContestCard, startGrappleContest, respondToContest,
 	createJockeyControlCard, executeJockeyEffect, startJockeyShakeOff, endJockey, clearBraceResistances,
-	previewDamageCalc, decorateDamageCard, onCrossPermDamageClick, gmUndoDamageByPayload,
+	previewDamageCalc, extractUntargetedDamageEntries, resolveUntargetedDamageTargets, applyUntargetedDamageFromCard, decorateDamageCard, onCrossPermDamageClick, gmUndoDamageByPayload,
 	onUpdateActorStatus, onUpdateCombatTurnEnd, countNpcDeadlyDice, structureOutcomeStatuses, overheatOutcomeStatuses, patchLancerFlows,
 	onRenderChatMessage, placeAoETemplate, attackReach, tokenDistance, targetCandidates, targetPanelHTML, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession,
+	SENSOR_COLORS, tokenSensorRange, canShowSensorForToken, sensorRadarColor, computeSensorGeometry, renderSensorOverlay, clearSensorOverlay, onHoverSensorToken, refreshHoveredSensor,
+	sensorOverlayState: () => ({ token: hoveredSensorToken, graphics: sensorGraphics, renderKey: lastSensorRenderKey }),
 	tokenNameMode, onPreCreateToken, applyTokenNames, setupNamesAndNumbers, patchScrollingText,
 	BASIC_ACTIONS, beginBasicAction, onPreCreateBasicCard, basicActionsHTML, resistancesHTML, toggleActorResistance, onBasicDamageClick, rollBasicDamage,
 	patchLimitedMax, rollLimited, diceLimited, isDiceFormula, textLimitedOf, textCounters, counterState, resetCounters, onFullRepair,
