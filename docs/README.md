@@ -2,7 +2,7 @@
 
 [返回项目说明](../README.md) · [开发约定](../CLAUDE.md) · [打开车卡器](../index.html)
 
-更新日期：2026-11-10。以下路径均指正式项目，命令默认从项目根目录执行；脚本在 `assets/js/`、样式在 `assets/css/`，网页入口是根目录 `index.html`。
+更新日期：2026-11-25。以下路径均指正式项目，命令默认从项目根目录执行；脚本在 `assets/js/`、样式在 `assets/css/`，网页入口是根目录 `index.html`。
 
 ## 文档索引
 
@@ -11,18 +11,20 @@
 | 文档 | 用途与范围 |
 |---|---|
 | [规则与译文校准](VALIDATION.md) | 初次核验记录、后续修正、当前检查入口与功能边界 |
+| [核心规则书全量对照核查](CORE-RULEBOOK-AUDIT.md) | 对照 `@massif/lancer-data 3.1.7` 与 v3.5 规范完成的核心骨架、核心奖励、天赋、装备、术语与前端渲染全量校准记录 |
+| [扩展内容全量对照核查](EXPANSION-AUDIT.md) | 对照 8 部官方补充书与第三方英文原书完成的全部扩展骨架、装备、天赋、背景、苏尔丹专业牌照及前端机制校准记录 |
 | [核心规则 v3.5 译名对照](TRANSLATION-V35.md) | 核心译名、PDF 依据页与覆盖层维护 |
 | [术语修订](GLOSSARY-REVISION.md) | 手写术语的来源与后续释义修正 |
-| [扩展翻译核对](EXPANSION-TRANSLATION-REVIEW.md) | 指定骨架及牌照的转录校准、待澄清项，非全部扩展的重译证明 |
-| [专业牌照](PROFESSIONAL-LICENSES.md) | 专业牌照的取得方式、配置支持与数据维护 |
+| [扩展翻译核对（早期批次）](EXPANSION-TRANSLATION-REVIEW.md) | 早期 13 个骨架及牌照的中文转录校准记录；其中遗留待澄清项已在 `EXPANSION-AUDIT.md` 对照英文原书结案 |
+| [专业牌照](PROFESSIONAL-LICENSES.md) | 专业牌照的取得方式、配置支持、苏尔丹原文校对与数据维护 |
 | [规则 FAQ 翻译](FAQ-TRANSLATION.md) | 184 条快照问答的使用、来源和验证 |
-| [风味文本覆盖与缺项](EQUIPMENT-LORE-AUDIT.md) | 自动生成的当前覆盖情况及未匹配清单 |
+| [风味文本覆盖与缺项](EQUIPMENT-LORE-AUDIT.md) | 自动生成的当前覆盖情况（489 项中文 / 42 项未匹配独立段落）及清单 |
 
 ### 界面
 
 | 文档 | 用途与范围 |
 |---|---|
-| [界面与交互改进](UI-UX.md) | 按日期记录布局、查询、地图与配置交互更新 |
+| [界面与交互改进](UI-UX.md) | 按日期记录布局、查询、地图、多模式与特征配置交互更新 |
 
 ### Foundry VTT
 
@@ -31,7 +33,10 @@
 | [Foundry 内容包](FVTT-LCP.md) | 两个中文内容包（含 NPC）、界面中文模组 lancer-cn 与其战斗工具、安装与导入顺序、常见问题、模组更新记录、从车卡器导出驾驶员与 NPC |
 | [Foundry 核心包核对表](FVTT-LCP-CORE-AUDIT.md) | 自动生成：核心条目覆盖情况、仍为英文的文字 |
 | [Foundry 扩展包核对表](FVTT-LCP-AUDIT.md) | 自动生成：覆盖的官方条目、数值差异、仍为英文的文字、自动生成的动作按钮 |
-| [官方补充书未收录条目](FVTT-OFFICIAL-UNCOVERED.md) | 自动生成：Foundry 官方补充书中车卡器没有中文的 58 个条目，待译文字导出到 `dist/fvtt/zh-official.todo.json` |
+| [官方补充书未收录条目](FVTT-OFFICIAL-UNCOVERED.md) | 自动生成：Foundry 官方补充书中车卡器没有中文的条目（57 项战役异域条目已核验），待译文字导出到 `dist/fvtt/zh-official.todo.json` |
+| [Foundry 核心同步交接单](FVTT-CORE-SYNC.md) | 核心规则书全量核查中拆分出的 Foundry VTT 并行同步清单 |
+| [Foundry 扩展同步交接单](FVTT-EXPANSION-SYNC.md) | 扩展内容全量核查中拆分出的 Foundry VTT 并行同步清单 |
+| [Foundry 补译回填记录](FVTT-BACKFILL.md) | Foundry 官方数据字段回填中文译文的说明记录 |
 
 ## 数据维护入口
 

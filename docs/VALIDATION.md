@@ -2,7 +2,7 @@
 
 [文档目录](README.md) · [项目说明](../README.md)
 
-维护更新：2026-11-04。文中原核对日期及当时结果保留；源码路径和命令均相对于项目根目录。
+维护更新：2026-11-25。文中原核对日期及当时结果保留；源码路径和命令均相对于项目根目录。
 
 初次核验日期：2026-10-21。以下初次记录适用范围：当时项目内的核心规则数据，29 个骨架、LL0–LL12。结果：已修正下列问题，28 项代码回归检查通过，并完成本地浏览器车卡、保存刷新、JSON 导出导入、PNG 下载检查。
 
@@ -103,3 +103,20 @@ node tools/test-rules.js
 ## 资源路径维护（2026-11-04）
 
 脚本和样式集中到 `assets/js/`、`assets/css/`。页面、数据生成器、术语审计工具及规则／浏览器检查均改用新路径，命令仍从项目根目录执行。构建后不应再产生根目录同名 JS 文件；本次调整不修改规则源、数值基线或存档格式。
+
+## 核心与扩展全量英文对照及检查更新（2026-11-24 ~ 2026-11-25）
+
+- **核查范围升级**：已完成全部核心规则书内容（对照 `@massif/lancer-data 3.1.7` 与 v3.5 PDF，见 [CORE-RULEBOOK-AUDIT.md](CORE-RULEBOOK-AUDIT.md)）及全部扩展内容（对照 8 部 Massif Press 官方补充书结构化数据与第三方扩展英文原书，见 [EXPANSION-AUDIT.md](EXPANSION-AUDIT.md)）的逐条对照与修复。
+- **当前正式数据规模**：103 个骨架（29 核心 + 74 扩展）、202 件武器、312 个系统（新增太空民 I 级内建系统 `ms_spaceborn_1`）、17 个武器改装、50 项天赋、51 项核心奖励、25 个背景、38 件驾驶员装备、21 张专业牌照；风味文本已匹配中文 489 项，未匹配独立段落 42 项（见 [EQUIPMENT-LORE-AUDIT.md](EQUIPMENT-LORE-AUDIT.md)）；NPC 构筑含 85 个职业、25 个模板、1052 个特性。
+- **新增构筑与面板规则支持**：
+  - 变体骨架：GMS 埃弗勒斯变体（珠穆朗玛、萨加玛塔）`license_level` 修正为 `0`；非 GMS 同牌照的标准骨架与变体骨架在驾驶员机甲列表中执行互斥检查。
+  - 骨架与核心奖励联动：总督蝶「近威胁目标处理器」（发射器同时视为 CQB 且获得威胁 3，可安装 CQB 模块）、万寿菊「枪决」（挂载槽提供可选勾选，将远程非步枪武器改为步枪并获得杀绝，含康格多遗产支持）、赤蛱蝶「天蛇之尾」（主近战 +1 威胁）、PI-OF「“曲线球”臂部调谐」（榴弹系统受限次数 +2）、K/KCA「私人家教」（页眉与成长页统一调用 `talentBudget`）。
+  - 武器与模块边界：补齐 5 把官方多模式武器的完整 `profiles` 并将模式索引上限改为按武器实际模式数动态计算（支持寺岛之刃 5 架势、骏逆回环 4 阶段）；补齐远近双类型武器的 `types` 与模式 `type`；支持滑移枪（`no_mods / no_core_bonus / no_attack`）与纠结加农炮（`no_bonus_damage`）的模块／超功率口径／自稳定承力点拦截。
+  - Foundry 导出与内建系统：战术带占用的空挂载点导出 `lock: true`；移除武器舱自动清理残留武器并按当前主／副规格导出备注；太空民 I 级自动挂载并导出 `ms_spaceborn_1`。
+- **当前自动化检查结果**：
+  - `node tools/test-v35.js`：475 项译名、数值结构摘要与稳定 ID 检查通过。
+  - `node tools/test-rules.js`：130 项车卡规则、扩展机制、筛选搜索、术语高亮、系统库分类与更新公告面板回归检查通过。
+  - `node tools/test-core-corrections.js`（7 项）、`node tools/test-mod-display.js`（8 项）、`node tools/test-expansion-copy.js`：全部通过。
+  - `node tools/test-official-supplements.js`：87 个扩展条目、268 个官方补充说明字段检查通过。
+  - `node tools/test-foundry-export.js`：4401 项检查（覆盖全部 103 个骨架、战斗地图与专业牌照导出）通过。
+  - `node tools/test-faq.js`（184 条问答）、`node tools/test-equipment-lore.js`、`node tools/test-npc-builder.js`（56728 项检查）：全部通过。

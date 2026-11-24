@@ -15,14 +15,14 @@
 | 文件 | 作用 |
 |---|---|
 | `assets/js/`、`assets/css/` | 网页资源统一收纳；生成器、测试与页面均引用此处，根目录不保留重复资源 |
-| `index.html` | 页面骨架；脚本顺序：`assets/js/data.js → assets/js/equipment-lore.js → assets/js/wizard.js → assets/js/cardexport.js → assets/js/rules.js → assets/js/glossary.js → assets/js/ui.js → assets/js/system-library.js → assets/js/faq-data.js → assets/js/faq.js → assets/js/frame-catalog.js → assets/js/battlemap.js → assets/js/app.js → assets/js/foundry-export.js`；之后是判定速查、`npc-data.js → npc-library.js`（NPC 库）、`npc-classes.js → npc-builder.js`（NPC 构筑） |
+| `index.html` | 页面骨架；脚本顺序：`assets/js/data.js → assets/js/equipment-lore.js → assets/js/wizard.js → assets/js/cardexport.js → assets/js/rules.js → assets/js/glossary.js → assets/js/ui.js → assets/js/system-library.js → assets/js/faq-data.js → assets/js/faq.js → assets/js/frame-catalog.js → assets/js/battlemap.js → assets/js/app.js → assets/js/foundry-export.js`；之后是判定速查、更新公告（`announcements.js`）、`npc-data.js → npc-library.js`（NPC 库）、`npc-classes.js → npc-builder.js`（NPC 构筑） |
 | `assets/js/data.js` | **生成文件，不要手改**。由 `tools/build-data.js` 生成 |
 | `assets/js/equipment-lore.js` | **生成文件，不要手改**。风味文本独立数据，由 `tools/build-equipment-lore.js` 生成 |
 | `assets/js/system-library.js` / `assets/css/system-library.css` | 只读系统与武器改装查询，搜索、筛选、规则及风味文本展示 |
 | `docs/` | 翻译、核验与界面记录；入口为 `docs/README.md`，相对链接按文档实际位置填写 |
 | `source/lore/` | 风味文本中文及出处，见该目录 README |
 | `assets/js/app.js` | 状态、存档、导入导出、各页面（驾驶员 / 等级成长 / 机甲 / 角色卡 / 战斗地图入口）、数值计算、渲染与事件 |
-| `assets/js/rules.js` | 车卡规则：天赋装备、加值、挂载点与超重型、受限、配装检查、旧存档迁移 |
+| `assets/js/rules.js` | 车卡规则：天赋装备（`special_equipment` / `integrated`）、常驻与武器类型转换加值（总督蝶、万寿菊「枪决」、赤蛱蝶、曲线球等）、双类型武器改装判定、挂载点与超重型、受限、系统分类（`systemCategories`）、配装检查、旧存档迁移 |
 | `assets/js/wizard.js` | 引导式车卡步骤（`WIZ_STEPS`），复用 assets/js/app.js 的各个面板 |
 | `assets/js/ui.js` | 纯界面状态：天赋/系统/骨架筛选、系统搜索（`systemSearchText`）、切换骨架确认、术语高亮与术语库、武器表 |
 | `assets/js/frame-catalog.js` / `assets/css/frame-catalog.css` | 骨架目录：浏览、预览后再确认使用 |
@@ -51,9 +51,9 @@
 ## 数据流水线（`node tools/build-data.js`）
 
 1. 读 lancer-data 数值 + 规则站中文 + `source/i18n/zh` 自译，组成 `data`（中文名放在 `data.zh` 各表或条目的 `zh_name`）。
-2. `calibrate-text.js` 统一术语 → `core-v35.js` 套用 v3.5 译名覆盖。
+2. `calibrate-text.js` 统一术语（含语境边界防误伤）→ `core-v35.js` 套用 v3.5 译名覆盖。
 3. `mergeExpansion()` 并入扩展与专业牌照：只套用 calibrate-text 和 v3.5 **术语表**，不做旧译名替换（那一步会把「内建武器」「百臂巨人」这类普通词误换成核心条目的新译名）。
-4. 输出 `assets/js/data.js`。
+4. `build-official-supplements.js` 从 `source/fvtt/official-map.json` 与 `source/fvtt/zh-overrides.json` 将官方补充书中文补译注入扩展条目的 `official_supplement`（自动跳过 `tg_*` / `st_*` 标签与状态及非字符串数值覆盖），随后输出 `assets/js/data.js`。
 5. 调用 `tools/build-equipment-lore.js`，结合 `source/lore/zh.json`、原始装备描述和当前数据生成 `assets/js/equipment-lore.js`、`docs/EQUIPMENT-LORE-AUDIT.md`。核对表由工具维护，不在生成文件中手补内容。
 
 FAQ 使用独立流水线：`node tools/build-faq.js` 读取保留的上游快照和中文译文，生成 `assets/js/faq-data.js`。日常数据构建无需联网，不会主动获取上游新版本。
@@ -62,13 +62,13 @@ FAQ 使用独立流水线：`node tools/build-faq.js` 读取保留的上游快�
 
 - 每个条目自动带 `ext: true` 和 `pack`，界面显示金色「扩展」标签。
 - 新厂商：在 all-expansions.js 用 `manufacturers.push({ id, name, color, description })`，构建时并入 `D.manufacturers` 和 `zh.makers`，厂商筛选、牌照列表、核心奖励分组会自动出现。核心奖励用 `core_bonuses.push`，`source` 填厂商 id；资格按该厂商牌照合计 3 级 / 个计算。
-- 变体骨架：`variant_of` 指向标准骨架 id；沿用标准骨架牌照（牌照 II 可用），不出现在牌照列表，构建时排在标准骨架之后。`source` 用标准骨架的厂商，实际制造商写在 `maker_note`。
-- 新授权骨架：装备的 `license` 填骨架的 `name`（查找名），`license_level` 1–3；骨架本身牌照 II 解锁。
-- 骨架内建武器不写 `source`（因此不会出现在可选列表），在核心系统写 `integrated: [id]`。多模式武器（多枪头、两种形态）用 `profiles`，每项含 name / damage / range / tags / effect。
-- 天赋装备用 `talent_item`、`talent_id`、`talent_rank`，并在天赋等级里写 `special_equipment`。天赋等级上的 `bonuses`（如 `deployable_hp`）会保留到 assets/js/data.js 并计入数值。
-- 武器改装放在 `mods`，用 `allowed_types` / `allowed_sizes` 限制；`stack_tags: true` 表示同名数值标签相加（如击退 +1）。
+- 变体骨架：`variant_of` 指向标准骨架 id；非 GMS 变体沿用标准骨架牌照（牌照 II 可用，且同一驾驶员多机甲列表中不能同时保留同牌照的标准骨架与变体骨架），GMS 变体 `license_level` 为 `0`（LL0 起可用且与埃弗勒斯不互斥）。变体不出现在牌照列表，构建时排在标准骨架之后；`source` 用标准骨架的厂商，实际制造商写在 `maker_note`。
+- 新授权骨架：装备的 `license` 填骨架的 `name`（查找名），`license_level` 1–3；骨架本身牌照 II 解锁。核心系统带「高效」标签时设置 `core_system.efficient: true`，常驻被动部署物放在 `core_system.deployables`（不要放进 1 CP 主动区的 `active_deployables`）。
+- 骨架内建武器不写 `source`（因此不会出现在可选列表），在核心系统写 `integrated: [id]`。多模式武器（多枪头、多架势）用 `profiles`（支持超过 3 种模式），每项含 name / damage / range / tags / effect（本体共享标签需一并写入各 `profile.tags`）；远近混合双类型武器加 `types: [...]` 并在不同形态的 `profile` 上标明 `type`。
+- 天赋装备用 `talent_item`、`talent_id`、`talent_rank`，按规则在天赋等级里写 `special_equipment`（占 SP 可选装）或 `integrated`（0 SP 自动内建，如太空民 I 级的 `ms_spaceborn_1`）。天赋等级上的 `bonuses`（如 `deployable_hp`）会保留到 assets/js/data.js 并计入数值。
+- 武器改装放在 `mods`，用 `allowed_types` / `allowed_sizes` / `restricted_types` / `restricted_sizes` 限制（`restricted_types` 按「武器至少具有一种非禁用类型」判定，兼容远近双类型武器）；`stack_tags: true` 表示同名数值标签相加（如超巨质量模块的击退 +1）。特殊限制武器可标 `no_mods`、`no_core_bonus`、`no_attack`、`no_bonus_damage`。
 - 新规则术语（变体骨架、高效、无形等）写在 `rules`，会出现在术语库和相关骨架的「扩展规则说明」。
-- 特殊机制需要代码支持时，在骨架或核心奖励上加字段并在 assets/js/app.js / assets/js/rules.js 处理。现有例子：`no_grit_hp`、`cb_ext_superheavy_mounting`、`cb_kkca_private_tutor`（`talentBudget`）、`cb_kkca_signature_move`（机甲字段 `signature`，`signatureDiscount`）。需要指定对象的核心奖励在 `loadoutChecks` 里加未指定的报错。
+- 特殊机制需要代码支持时，在骨架或核心奖励上加字段并在 assets/js/app.js / assets/js/rules.js 处理。现有例子：`no_grit_hp`、`cb_ext_superheavy_mounting`、`cb_kkca_private_tutor`（`talentBudget`）、`cb_kkca_signature_move`（机甲字段 `signature`，`signatureDiscount`）、`cb_piof_curveball`（榴弹系统受限次数 +2）、`mf_ext_viceroy`（`近威胁目标处理器`：发射器同时视为 CQB 且获得威胁 3）、`mf_ext_tagetes`（槽位开关 `fusilier`：可选将远程武器改为步枪并获得杀绝）。需要指定对象的核心奖励在 `loadoutChecks` 里加未指定的报错。
 - 新增内容后更新 `tools/test-rules.js` 里扩展条目数量的断言，并为新机制加检查；id 不能和已有条目重复（有专门检查）。
 
 ## 术语高亮
@@ -89,6 +89,7 @@ node tools/test-mod-display.js      # 武器改装显示
 node tools/test-faq.js              # 规则 FAQ
 node tools/test-core-corrections.js # 核心修正、无人机动作和重分配
 node tools/test-equipment-lore.js   # 风味文本与出处
+node tools/test-official-supplements.js # 官方补充说明（official_supplement）268 项补译与展示
 node tools/test-system-library.js   # 系统库浏览器检查（需本机 Playwright / Edge）
 node tools/i18n-missing.js          # 自译缺项
 node tools/build-lcp.js             # Foundry 核心包与扩展包（dist/fvtt/）及核对表 docs/FVTT-LCP-*.md
@@ -190,3 +191,9 @@ node tools/draft-ext-actions.js [--write]  # 扩展条目正文里的动作 → 
 - 导出格式按 foundryvtt-lancer 3.1.3 的 `npc`、`npc_class`、`npc_template`、`npc_feature` 数据模型：层级数值是三个元素的数组，层级标签值写成 `{a/b/c}`，物品带 16 位 `_id`。
 - 已确认与待核对的原文写法列在 `source/npc/README.md`；用户确认后从「待核对」移到「已确认」，并在 `test-npc-builder.js` 锁住数值。
 - NPC 数据变了要依次重新运行 `build-npc-classes.js`、`build-lcp.js`，并提高内容包版本号；`test-npc-builder.js` 与 `test-lcp.js` 检查格式与引用。
+
+## 核心与扩展全量英文对照校准（2026-11-24 ~ 2026-11-25）
+
+- 对照 `@massif/lancer-data 3.1.7`、8 部官方补充书英文结构化数据及第三方扩展英文原书，已完成车卡器全部核心与扩展内容的逐条核对与修复，记录在 [docs/CORE-RULEBOOK-AUDIT.md](docs/CORE-RULEBOOK-AUDIT.md) 与 [docs/EXPANSION-AUDIT.md](docs/EXPANSION-AUDIT.md)。
+- `tools/core-v35.js` 与 `tools/calibrate-text.js` 加入了语境边界防护（排除普通词语「稳定瞄准」「辅助瞄准器」「危险区域」「内建武器」「百臂巨人」「判定」被全局替换误伤，严格区分范围模板 `溅射（Blast）` 与伤害类型 `爆炸（Explosive）`、`超限（Overcharge）` 与德川 `超频（Overclock）`、`盾牌（Shield）` 与临时 HP `护盾（Overshield）`）。
+- `professional-licenses.js` 中顶峰（PI-OF）与卡西米尔（K/KCA）共 6 张专业牌照为用户原创设定，无英文原书，不纳入英文原文翻译改动范围。

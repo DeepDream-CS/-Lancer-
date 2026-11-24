@@ -8,7 +8,7 @@ function runtime(saved) {
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     document:{body:el(),addEventListener(){},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);},querySelectorAll(){return[];}},
     window:{scrollTo(){},addEventListener(){}},navigator:{},confirm:()=>true});
-  for(const file of ['assets/js/data.js','assets/js/wizard.js','assets/js/cardexport.js','assets/js/rules.js','assets/js/glossary.js','assets/js/ui.js','assets/js/frame-catalog.js','assets/js/system-library.js','assets/js/battlemap.js','assets/js/app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
+  for(const file of ['assets/js/data.js','assets/js/wizard.js','assets/js/cardexport.js','assets/js/rules.js','assets/js/glossary.js','assets/js/ui.js','assets/js/frame-catalog.js','assets/js/system-library.js','assets/js/battlemap.js','assets/js/app.js','assets/js/announcements.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
   return code=>vm.runInContext(code,ctx);
 }
 const run=runtime(); let passed=0;
@@ -336,6 +336,32 @@ test('Expansion audit fixes: KTB backgrounds, Viceroy, Tagetes, Curveball, Red A
   assert(run("{m=blankMech();m.systems=['ms_pl_weapon_pod'];m.podWeapon1='mw_assault_rifle';m.podWeapon2='mw_pistol';m.systems=[];cleanMechSystemRefs(m);m.podWeapon1===''&&m.podWeapon2===''}"));
   assert(run("['ms_ext_chimney_cold_source','ms_ext_wodeng_counterfire','ms_ext_cbnrn_sealing','ms_kkca_cricket_art_1','ms_ext_judas_exploit','ms_ch_submunitions'].every(id=>!systemLibraryActivations(SYSTEMS[id]).includes('Passive'))"));
   assert(run("['ms_ext_wide_dominion','ms_ext_emperors_eye','ms_ext_book_of_kings','ms_ext_sovereign_gait'].every(id=>SYSTEMS[id].type==='Tech')&&!systemLibraryTypes(SYSTEMS.ms_ext_rmj_nozzles).includes('Shield')"));
+});
+
+test('Announcement bulletin: two-column data model, unique IDs, keyword filter and top-bar trigger wiring',()=>{
+  const html = fs.readFileSync(require('path').join(root,'index.html'),'utf8');
+  assert(html.includes('id="openAnnouncements"') && html.includes('assets/css/announcements.css') && html.includes('assets/js/announcements.js'));
+  assert(run("Array.isArray(window.LANCER_ANNOUNCEMENTS)&&window.LANCER_ANNOUNCEMENTS.length>=1&&new Set(window.LANCER_ANNOUNCEMENTS.map(a=>a.id)).size===window.LANCER_ANNOUNCEMENTS.length"));
+  assert(run("{const a=window.LANCER_ANNOUNCEMENTS[0],all=window.LANCER_ANNOUNCEMENTS_VIEW.filterAnnouncement(a,''),hit=window.LANCER_ANNOUNCEMENTS_VIEW.filterAnnouncement(a,'万寿菊 枪决'),miss=window.LANCER_ANNOUNCEMENTS_VIEW.filterAnnouncement(a,'不存在的检索词xyz');a.id==='ANN-20261125-01'&&all.totalCount>=20&&hit.matchedCount>=1&&hit.matchedCount<all.totalCount&&miss.matchedCount===0}"));
+  // Verify DOM lifecycle: never auto-opens on load, opens two-column dialog on click, clears unread dot
+  const store=new Map();
+  let dialogEl=null, clickFn=null;
+  const dotEl={hidden:true};
+  const btnEl={addEventListener:(ev,fn)=>{if(ev==='click')clickFn=fn;},querySelector:sel=>sel==='.ann-dot'?dotEl:null,focus(){}};
+  const makeNode=tag=>({tagName:tag.toUpperCase(),id:'',className:'',open:false,hidden:false,inert:false,value:'',textContent:'',scrollTop:0,
+    setAttribute(){},addEventListener(){},focus(){},showModal(){this.open=true;},close(){this.open=false;},
+    querySelector(sel){return this._map?.[sel]||null;},querySelectorAll(){return[];}});
+  const domCtx=vm.createContext({console,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},window:{},
+    document:{activeElement:btnEl,body:{children:[btnEl],classList:{add(){},remove(){}},appendChild(n){dialogEl=n;const subs={};for(const s of ['.ann-total-count','.ann-list','#annMobileSelect','#annSearchInput','[data-ann-action=\"clearSearch\"]','[data-ann-action=\"toggleAll\"]','.ann-match-status','.ann-scroll'])subs[s]=makeNode('div');n._map=subs;}},
+      getElementById:id=>id==='openAnnouncements'?btnEl:null,createElement:makeNode}});
+  vm.runInContext(fs.readFileSync(require('path').join(root,'assets/js/announcements.js'),'utf8'),domCtx,{filename:'assets/js/announcements.js'});
+  assert.equal(dialogEl,null,'Should not mount or auto-open dialog before clicking button');
+  assert.equal(dotEl.hidden,false,'Unread dot shown before viewing announcement');
+  clickFn();
+  assert(dialogEl?.open===true,'Clicking top button opens announcement dialog');
+  assert.equal(dotEl.hidden,true,'Unread dot clears after viewing announcement');
+  assert(dialogEl._map['.ann-list'].innerHTML.includes('ANN-20261125-01')&&dialogEl._map['.ann-list'].innerHTML.includes('aria-current="true"'),'Left column renders active announcement ID');
+  assert(dialogEl._map['.ann-scroll'].innerHTML.includes('核心规则书 v3.5 与全扩展英文原文大面积修订')&&dialogEl._map['.ann-scroll'].innerHTML.includes('弹道臂盾'),'Right column renders full revision content');
 });
 
 console.log(passed+' regression checks passed.');

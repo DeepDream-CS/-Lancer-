@@ -2295,7 +2295,10 @@ function targetPanelThrownInfo(session, rows) {
 	if (!item || session?.kind !== "WeaponAttackFlow" || !isMeleeWeaponItem(item)) return null;
 	const mech = combatMechOf(session.actor ?? state?.actor) ?? session.actor ?? state?.actor;
 	const thrownReach = weaponThrownVal(item, mech);
-	const forceThrown = Boolean(state?.data?._lancerCnForceThrown);
+	const forceThrown = Boolean(
+		state?.data?._lancerCnForceThrown
+		|| (pendingDisdainfulBlade && (!pendingDisdainfulBlade.weaponUuid || item?.uuid === pendingDisdainfulBlade.weaponUuid)),
+	);
 	const isOverwatch = Boolean(state?.data?._lancerCnOverwatchAttack);
 	if (thrownReach <= 0 && !forceThrown) return null;
 	const threat = overwatchThreatVal(item, mech);
@@ -2595,10 +2598,14 @@ function onHudZoneChange(ev) {
 	if (ev.target?.type === "checkbox") {
 		const st = targetSession.flow?.state;
 		if (st?.data?.acc_diff?.weapon && isMeleeWeaponItem(st.item)) {
-			// 允许右侧准度面板手动勾选/取消「投掷（*）」后同步反映到左侧目标面板
+			const labelText = String(ev.target.closest?.("label")?.textContent ?? "");
+			const isThrownBox = /Thrown|投掷/i.test(labelText);
+			// 仅在右侧准度面板手动勾选/取消「投掷（*）」时锁定手动覆盖，避免点击精准/锁定等复选框误锁投掷自动切换
 			globalThis.setTimeout?.(() => {
 				if (targetSession?.flow?.state === st && st.data?.acc_diff?.weapon) {
-					targetSession.manualThrownOverride = Boolean(st.data.acc_diff.weapon.thrown);
+					if (isThrownBox) {
+						targetSession.manualThrownOverride = Boolean(st.data.acc_diff.weapon.thrown);
+					}
 					refreshTargetPanel();
 				}
 			}, 0);
@@ -8634,36 +8641,72 @@ let cachedLancerTagClass = null;
 
 function resolveLancerTagClass(item = null) {
 	if (cachedLancerTagClass) return cachedLancerTagClass;
-	const pools = [
-		item?.system?.all_tags,
-		item?.system?.tags,
-		...(item?.system?.profiles ?? []).flatMap(p => [p?.all_tags, p?.tags]),
-		...(item?.actor?.items ?? []).flatMap(i => [i?.system?.all_tags, i?.system?.tags, ...(i?.system?.profiles ?? []).flatMap(p => [p?.all_tags, p?.tags])]),
-	];
-	for (const arr of pools) {
-		for (const t of arr ?? []) {
-			if (t && typeof t === "object" && t.constructor && t.constructor !== Object && typeof t.copy === "function") {
-				cachedLancerTagClass = t.constructor;
-				return cachedLancerTagClass;
+	try {
+		const isTagInstance = t => Boolean(t && typeof t === "object" && t.constructor && t.constructor !== Object && typeof t.copy === "function");
+		const scanPool = arr => {
+			if (!arr) return null;
+			for (const t of arr) {
+				if (isTagInstance(t)) return t.constructor;
+			}
+			return null;
+		};
+		const scanItem = it => {
+			if (!it?.system) return null;
+			let found = scanPool(it.system.all_tags) || scanPool(it.system.tags);
+			if (found) return found;
+			for (const p of it.system.profiles ?? []) {
+				found = scanPool(p?.all_tags) || scanPool(p?.tags);
+				if (found) return found;
+			}
+			return null;
+		};
+		let cls = scanItem(item);
+		if (!cls) {
+			const owner = item?.actor ?? item?.parent;
+			// Foundry 的 actor.items 是 Collection（Map 子类），没有数组方法 flatMap，必须按可迭代协议遍历
+			for (const it of owner?.items ?? []) {
+				if (it === item) continue;
+				cls = scanItem(it);
+				if (cls) break;
 			}
 		}
-	}
+		if (cls) {
+			cachedLancerTagClass = cls;
+			return cachedLancerTagClass;
+		}
+	} catch { /* 回退至兼容标签对象 */ }
 	return null;
 }
 
 function makeThrownTag(val, item = null) {
 	const strVal = String(val);
-	const TagCls = resolveLancerTagClass(item);
-	if (TagCls) {
-		try { return new TagCls({ lid: "tg_thrown", val: strVal }); } catch { /* 回退至兼容对象 */ }
-	}
 	let name = "投掷{VAL}";
 	let description = "这近战武器可以投向{VAL}格内的目标。投掷攻击遵循近战攻击规则，但受掩护影响；此外，投掷出的武器会停在与目标邻接的空格，必须在邻接它时以自由动作取回才能再次使用。";
 	try {
-		const cfg = game?.settings?.get?.(game?.system?.id ?? "lancer", "tag_config")?.tg_thrown;
+		const sysId = game?.system?.id ?? "lancer";
+		const reg = game?.settings?.settings;
+		let tagMap = null;
+		if (!reg || reg.has?.(`${sysId}.tagConfig`)) {
+			try { tagMap = game?.settings?.get?.(sysId, "tagConfig"); } catch { /* ignore */ }
+		}
+		if (!tagMap && (!reg || reg.has?.(`${sysId}.tag_config`))) {
+			try { tagMap = game?.settings?.get?.(sysId, "tag_config"); } catch { /* ignore */ }
+		}
+		const cfg = tagMap?.tg_thrown;
 		if (cfg?.name) name = cfg.name;
 		if (cfg?.description) description = cfg.description;
 	} catch { /* ignore */ }
+	const TagCls = resolveLancerTagClass(item);
+	if (TagCls) {
+		try {
+			const tag = new TagCls({ lid: "tg_thrown", val: strVal });
+			if (tag) {
+				if (!tag.name || tag.name === "...") tag.name = name;
+				if (!tag.description || tag.description === "Tag not found") tag.description = description;
+				return tag;
+			}
+		} catch { /* 回退至兼容对象 */ }
+	}
 	return {
 		lid: "tg_thrown",
 		val: strVal,
@@ -8977,6 +9020,9 @@ async function triggerHunterDisdainful(mech, preferredWeaponId = null) {
 			return false;
 		}
 		return true;
+	} catch (err) {
+		await setCombatState(mech, { usedHunterDisdainful: false });
+		throw err;
 	} finally {
 		pendingDisdainfulBlade = null;
 	}
@@ -13241,7 +13287,7 @@ function patchLancerFlows() {
 				ui?.notifications?.warn?.(`武器「${state.item.name}」已投出落在场上，取回前无法再次使用！（可在邻接时以自由动作拾回，或具备「匕首戏法」时在回合结束自动收回）`);
 				return false;
 			}
-			applyKnifeJugglerTags(state.item, preMech);
+			try { applyKnifeJugglerTags(state.item, preMech); } catch (err) { reportError("猎人匕首戏法标签同步", err); }
 		}
 		const ok = await orig(state, options);
 		if (ok === false || !state?.data) return ok;
@@ -16995,7 +17041,8 @@ globalThis.LancerCN = {
 	actorBaseSize, hasSyntheticMuscleNetting, effectiveGrappleSize, findActiveGrappleFor, isGrappleImmobilized, endGrapple,
 	mechPilot, findActiveMechForPilot, combatMechOf, TALENT_LID_ALIASES, SYSTEM_LID_ALIASES, talentItemOf, talentRank, hasCoreBonus, hasMechSystem, countMechNHPs, onTalentItemChanged,
 	weaponModOf, weaponLidOf, weaponModLidOf, itemBenefitsFromTalents, itemBenefitsFromCoreBonuses,
-	makeThrownTag, applyKnifeJugglerTags, weaponThreatVal, weaponThrownVal, weaponTrackKey, getThrownWeapons, isWeaponThrownOut, markWeaponThrown, retrieveThrownWeapon, eligibleDisdainfulWeapons, syncWeaponThrownMode, triggerHunterDisdainful, hasWalkingArmoryCharges,
+	resolveLancerTagClass, makeThrownTag, applyKnifeJugglerTags, weaponThreatVal, weaponThrownVal, weaponTrackKey, getThrownWeapons, isWeaponThrownOut, markWeaponThrown, retrieveThrownWeapon, eligibleDisdainfulWeapons, syncWeaponThrownMode, triggerHunterDisdainful, hasWalkingArmoryCharges,
+	resetCachedTagClass: () => { cachedLancerTagClass = null; },
 	isActiveCombat, maxReactionsPerTurn, canReactWhileGrappled, hasUnlimitedOverwatchPerRound, checkReactionAvailability, syncActorReactionTracker, consumeReaction, refundReaction,
 	weaponHasOrdnanceTag, overwatchThreatVal, eligibleOverwatchWeapons, executeOverwatchAttack, triggerPreparedAction, cancelPreparedAction, onPreUpdateTokenOverwatch, onOverwatchTokenUpdate, resetOverwatchPromptDedup,
 	TALENT_DICE_DEFS, hasDieQualification, getTalentDie, setTalentDie, getCombatState, setCombatState, patchCombatStateCompat, updateAttackMessageTargetsCompat, ensureCombatTurnState, getTalentConfig, setTalentConfig,
@@ -17010,7 +17057,7 @@ globalThis.LancerCN = {
 	createJockeyControlCard, executeJockeyEffect, startJockeyShakeOff, endJockey, clearBraceResistances,
 	previewDamageCalc, extractUntargetedDamageEntries, resolveUntargetedDamageTargets, applyUntargetedDamageFromCard, decorateDamageCard, onCrossPermDamageClick, gmUndoDamageByPayload,
 	onUpdateActorStatus, onUpdateCombatTurnEnd, countNpcDeadlyDice, structureOutcomeStatuses, overheatOutcomeStatuses, collectCascadeableSources, resolveCascadeActor, executeCascadeCheck, onCascadeButtonClick, handleModuleSocketMessage, patchLancerFlows,
-	onRenderChatMessage, patchMeasuredTemplateCone, patchWeaponRangeTemplate, computeLancerHexConeOffsets, buildSmoothConePolygon, coneRangeSpaces, normalizeTemplateDirection, rotatePlacedDirectionalTemplate, onPlacedTemplateWheel, onUpdateMeasuredTemplate, isPlacingTemplate, placeAoETemplate, attackReach, tokenDistance, targetCandidates, targetPanelThrownInfo, targetPanelHTML, toggleTargetPanelThrownMode, submitActiveHud, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession,
+	onRenderChatMessage, patchMeasuredTemplateCone, patchWeaponRangeTemplate, computeLancerHexConeOffsets, buildSmoothConePolygon, coneRangeSpaces, normalizeTemplateDirection, rotatePlacedDirectionalTemplate, onPlacedTemplateWheel, onUpdateMeasuredTemplate, isPlacingTemplate, placeAoETemplate, attackReach, tokenDistance, targetCandidates, targetPanelThrownInfo, targetPanelHTML, toggleTargetPanelThrownMode, submitActiveHud, onHudZoneChange, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession,
 	techActionBlockReason, isModularRifleReactionProfile, isOwnDroneTokenOf, resolveAnnihilationBurstOrigin,
 	SENSOR_COLORS, tokenSensorRange, canShowSensorForToken, sensorRadarColor, computeSensorGeometry, renderSensorOverlay, clearSensorOverlay, onHoverSensorToken, refreshHoveredSensor,
 	sensorOverlayState: () => ({ token: hoveredSensorToken, graphics: sensorGraphics, renderKey: lastSensorRenderKey }),

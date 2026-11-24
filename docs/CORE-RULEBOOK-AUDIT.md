@@ -1,6 +1,6 @@
 # 核心规则书全量对照核查清单（车卡器部分 · 已全部修复验证 · 2026-11-24）
 
-[返回文档目录](README.md) · [FVTT 并行修复交接单](FVTT-CORE-SYNC.md)
+[返回文档目录](README.md) · [扩展内容全量对照核查](EXPANSION-AUDIT.md) · [FVTT 并行修复交接单](FVTT-CORE-SYNC.md)
 
 > **修复状态（2026-11-24）**：本清单所列 **第一类（35 项实质规则错漏）+ 第二类（14 项前端渲染/动作/构筑校验问题）+ 第三类（10 组 v3.5 术语与错别字）** 已在车卡器侧全部完成修正并重生成 `assets/js/data.js`，通过 `test-v35`（475 项断言 + SHA-256 数值结构基线不变）、`test-rules`（128 项）、`test-core-corrections`、`test-mod-display`、`test-foundry-export`（4343 项）、`test-expansion-copy`、`test-faq`、`test-equipment-lore`、`test-official-supplements`、`test-npc-builder`（56728 项）及无头 Edge 浏览器全流程验证。FVTT 侧同步清单见 [FVTT-CORE-SYNC.md](FVTT-CORE-SYNC.md)，车卡器修复未触碰任何 `source/fvtt/*`、`dist/fvtt/*` 或 `build-lcp.js` / `build-fvtt-module.js`。
 

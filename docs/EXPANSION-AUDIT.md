@@ -138,7 +138,7 @@
 | 5 | 5 部扩展骨架将常驻被动部署物误放入 `active_deployables` | `all-expansions.js:869,936,979,2236,2449`、`assets/js/frame-catalog.js:23-32` | `镰翅蛾（黑猫无人机）`、`布莱（「船工」无人机）`、`哈布斯堡（E-R-桥塔）`、`茴香（军刀无人机）`、`八角（建筑项目）` 的可展开物都属于常驻核心被动（无需消耗 1 CP），却写在 `active_deployables` 里，导致渲染在 1 CP 主动大招下方。 | 统一迁入 `core_system.deployables`。 |
 | 6 | 双类型武器缺失 `types` 与模式 `type` 导致模块校验与加值失效 | `all-expansions.js:1956,2166,2601,2604,2650`、`assets/js/rules.js:61,103` | ① `mw_kkca_kinetic_musket` 动能滑膛枪的 `刺刀` 模式未写 `type: "Melee"`，切换刺刀后仍被当成 `大炮（Cannon）`；② `17 型跳帮手枪`（CQB/近战）、`96 型盾炮`（近战/大炮）、`“残酷收割”等离子镰`（近战/巢房）、`黑荚克战斗弓`（发射器/步枪）未写 `types: [...]`，导致无法安装另一类型的合法武器模块（如 96 型盾炮装不上大炮模块）。 | 为刺刀模式补 `type: "Melee"`，并为上述双类型武器补齐 `types: [...]` 数组。 |
 | 7 | 特殊限制武器漏标 `no_mods / no_core_bonus / no_attack` 与零伤拦截 | `all-expansions.js:1734,2635`、`assets/js/rules.js:63,107,137,191` | ① `mw_ext_ifrit_slip` 滑移枪正文写明「不能搭载模块或受核心奖励加成，且不进行攻击掷骰」，但缺 `no_mods: true, no_core_bonus: true, no_attack: true`，目前可违规装模块、挂超功率口径/自动稳定硬点并吃鬼面蛾 +1 命中；② `mw_ch_tangle_cannon` 纠结加农炮明文「不能造成任何伤害（包括额外伤害）」，却能挂载 `超功率口径（+1d6 额外伤害）`。 | 为滑移枪补齐三项标记；为纠结加农炮补 `no_bonus_damage`（或在 `mountEligibleForBonus` 中排除 `damage: []` 且禁伤害的武器）。 |
-| 8 | `私人家教（cb_kkca_private_tutor）` 顶部预算显示与分配规则校验缺失 | `assets/js/ui.js:64`、`assets/js/rules.js:76,178-190` | ① `ui.js:64` 顶部摘要写死 `天赋 ${spent}/${level.talents}` 而未调用 `talentBudget(p)`，选私人家教后显示 `8/6`；② 私人家教规则为「获得两个天赋各 1 级，或单个天赋 2 级（不可拆去把已有的两个 II 级天赋同时升到 III 级）」，目前仅做总点数 `+2`，允许在 LL6 违规点出 3 个 III 级 + 额外超额高阶组合（如 LL9 点出 5 个 III 级天赋）。 | ① `ui.js:64` 改用 `talentBudget(p)`；② 在 `rules.js` 校验私人家教提供的额外 2 点符合「至多使基础预算外多出两个 I 级或一个 I→II 级（即 `rank3Count + max(0, rank2Count - ...) <= level.talents` 可达性检查）」。 |
+| 8 | `私人家教（cb_kkca_private_tutor）` 顶部天赋预算摘要未同步 | `assets/js/ui.js:64` | `ui.js:64` 顶部摘要写死 `天赋 ${spent}/${level.talents}` 而未调用 `talentBudget(p)`，选私人家教后显示 `8/6`（注：原文「在两个天赋上各获得 1 级，或在单个天赋上获得 2 级」在任意 2 点正整数拆分下与 `+2` 天赋总预算完全等价，且升级时可继续正常提升等级，不额外附加阻断合法构筑的人工限制）。 | 将 `ui.js:64` 改用 `talentBudget(p)`。 |
 | 9 | `“曲线球”臂部调谐（cb_piof_curveball）` 榴弹 `+2` 受限次数未生效 | `all-expansions.js:2103`、`assets/js/rules.js:89-92` | 核心奖励规定「你的榴弹获得 +3 射程和 **+2 受限充能**」，但 `limitedTags(tags, p, m)` 目前只计算工程加值与 `内置弹药带`，未对榴弹系统（`tg_grenade` 或效果含榴弹的系统）增加 +2 使用次数。 | 在 `limitedTags`（传入装备对象或分类上下文）识别 `cb_piof_curveball` 并对带榴弹分类的系统自动 `+2` 受限次数。 |
 | 10 | `赤蛱蝶` 特征「天蛇之尾」主近战 `+1 威胁` 未计入面板射程 | `all-expansions.js:1054` | 托尔图加、死神之首等骨架特征加值均已结构化写入 `bonuses`，唯独 `mf_ext_red_admiral` 特征 1「主武器近战武器获得 +1 威胁」缺少 `bonuses`，装备主近战武器时面板威胁值未自动 +1。 | 为 `mf_ext_red_admiral` 补入 `bonuses: [{ id: "range", val: 1, weapon_types: ["Melee"], weapon_sizes: ["Main"], range_types: ["Threat"] }]`。 |
 | 11 | `总督蝶` 与 `万寿菊` 武器类型转换特征未接入模块与面板计算 | `all-expansions.js:245,423`、`assets/js/rules.js:61,103` | ① `总督蝶` 特征 1 让所有「发射器」同时视为「CQB」且获得 `威胁3`（应允许发射器安装 CQB 模块并在面板显示威胁 3）；② `万寿菊` 特征 1「枪决」让非重火器/非超重型远程武器视为「步枪」并获得 `杀绝`。目前两项特征均未反映到 `canModify` 与 `effectiveProfile` 中。 | 在 `weaponTypes(w, mech)` 与 `effectiveProfile(w, idx, p, m, slot)` 中按当前骨架 `mf_ext_viceroy` / `mf_ext_tagetes` 动态叠加对应类型、威胁 3 与 `tg_overkill`。 |
@@ -194,20 +194,18 @@
 
 ---
 
-## 第四类：版本差异与待你拍板确认项（5 项）
+## 第四类：版本差异与用户拍板确认结果（5 项 · 已全部落实）
 
-在动手修改车卡器前，请对以下 **5 个涉及第三方版本取舍或专名偏好的小问题** 拍板：
+经确认拍板，以下 5 项版本取舍与专名修订已全部写入车卡器数据并通过测试验证：
 
 1. **《午夜伊菲革涅亚》幽灵牌照（`针与线` & `堕落面具之训`）的数值版本**：
-   - 当前车卡器按早期中文译本录入：`针与线（ms_ext_needle_and_thread）` 赋予 **`1 + 毅力`** 护盾，`堕落面具之训（ms_ext_fallen_mask）` 轮末恢复 **`毅力`** 点 HP。
-   - 英文后续迭代版（v0.6.0）将该两项调整为 **`4 + 毅力/2`** 护盾与 **`2 + 毅力/2`** HP（低等级更高、高等级持平）。
-   - **建议（默认方案）**：**保留当前车卡器已锁定的汉化版数值不变**，仅修正「引起一次失误 → 使一次攻击未命中」的机翻措辞；若你希望升级到英文 v0.6.0 数值请告知。
-2. **`mf_ext_banshee_vine` 树绳妖核心主动（第 67 项）确认**：
-   - 是否确认将语义不通的 `成功则对方因任何原因无法离开驾驶舱，若没有驾驶员则晕眩至下一回合结束` 修正为豁免失败无法离舱/无驾驶员时的兜底效果（**`若目标因任何原因无法离开驾驶舱或没有驾驶员，则改为晕眩至其下一回合结束`**）？
-3. **`t_ext_bricklayer` 砖匠 III 溢出治疗措辞（`all-expansions.js:2523`）**：
-   - 现文：`恢复一半的最大 HP。剩余 HP 以护盾代替。`（英文原意为恢复最大 HP 的一半，若因此超出最大 HP 上限，溢出的恢复量转化为护盾）。是否确认修顺为 **`恢复等同最大 HP 一半的 HP；超出最大 HP 上限的溢出恢复量转化为护盾`**？
-4. **两处既有专名是否微调**：
-   - `ms_ext_chimney_cold_source`（基德 III，`SMOKESTACK Heat Sink`）：保留现名 `“烟窗”冷源`，还是修正形近字为 **`“烟囱”冷源`**？
-   - `wm_ext_hypermass_mod`（卡利班 I，`Supermassive Mod`）：保留现名 `超巨质量模组`，还是按 v3.5 统一为 **`超巨质量模块`**？
-5. **扩展 NPC 遗留疑问结案说明**：
-   - `source/npc/README.md:103` 中关于《塞壬之歌》NPC 职业「暴风雨（Tempest）」的 `零度浴 / 太阳浴 / 旋涡浴 / 狂风浴` 归属疑问，经核对英文原书确认它们确为「类别 III（系统，协定）」的四个天气姿态选项，当前 `source/npc/books-npcs.json` 结构与文本完全正确，修复时将直接在 `source/npc/README.md` 标记核实结案。
+   - **已确认保留汉化版锁定数值**：`针与线（ms_ext_needle_and_thread）` 赋予 **`1+毅力`** 护盾，`堕落面具之训（ms_ext_fallen_mask）` 轮末恢复 **`毅力`** 点 HP（未改用英文后续迭代版 v0.6.0 的 `4+毅力/2` 与 `2+毅力/2`），同时将机翻 `引起一次失误` 修正为 **`使针对他们的一次攻击未命中`**（同步修正 `“绝唱”归零长矛`）。
+2. **`mf_ext_banshee_vine` 树绳妖核心主动（第 67 项）**：
+   - **已确认修正**：将原误译的 `成功则对方因任何原因无法离开驾驶舱，若没有驾驶员则晕眩至下一回合结束` 修正为豁免失败无法离舱或无驾驶员时的兜底效果：**`若目标因任何原因无法离开驾驶舱或没有驾驶员，则改为晕眩至其下一回合结束。`**
+3. **`t_ext_bricklayer` 砖匠 III 溢出治疗措辞（`all-expansions.js`）**：
+   - **已确认修顺**：改为 **`恢复等同最大 HP 一半的 HP；超出最大 HP 上限的溢出恢复量转化为护盾。`**
+4. **两处既有专名修正与统一**：
+   - `ms_ext_chimney_cold_source`（基德 III，`SMOKESTACK Heat Sink`）：已由 `“烟窗”冷源` 修正为 **`“烟囱”冷源`**。
+   - `wm_ext_hypermass_mod`（卡利班 I，`Supermassive Mod`）：已由 `超巨质量模组` 按 v3.5 统一为 **`超巨质量模块`**（同步更新 `source/lore/zh.json` 风味引用）。
+5. **扩展 NPC 遗留疑问结案**：
+   - `source/npc/README.md` 中关于《塞壬之歌》NPC 职业「暴风雨（Tempest）」的 `零度浴 / 太阳浴 / 旋涡浴 / 狂风浴` 归属疑问，经核对英文原书确认确为「类别 III（系统，协定）」下的四项气象姿态选项，已在 `source/npc/README.md` 移入已确认记录结案。

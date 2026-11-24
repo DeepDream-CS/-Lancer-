@@ -1050,7 +1050,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 	// ---- 战斗自动化（1.10.0）：自动挂异常与撤销、豁免检定与减半联动、非攻击掷伤害与模板、跨权限护甲抗性结算与预览、Flow 补完、回合结束清异常、抗性开关
 	{
 		const L = ctx.LancerCN;
-		ok(manifest.version === "1.21.0", "清单版本应为 1.21.0");
+		ok(manifest.version === "1.21.1", "清单版本应为 1.21.1");
 		for (const k of ["autoApplyStatus", "crossPermDamage", "autoDangerZone", "turnEndPrompt", "overwatchPrompt", "autoDeployableCover"]) {
 			const cfg = log.settings[`lancer-cn.${k}`];
 			ok(cfg && cfg.scope === "world" && cfg.config === true && cfg.default === true, `应注册世界设置 ${k}（默认开启）`);
@@ -4907,7 +4907,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		// ---- v1.17.0 全项目交叉审计回归测试
 		{
 			const L = ctx.LancerCN;
-			ok(manifest.version === "1.21.0", `模组版本号应为 1.21.0（实际 ${manifest.version}）`);
+			ok(manifest.version === "1.21.1", `模组版本号应为 1.21.1（实际 ${manifest.version}）`);
 
 			// 1) UI/聊天词典与全大写/首字母大写匹配修复
 			ok(L.translate("// 埃弗勒斯 IS STARTING THEIR TURN //") === "// 埃弗勒斯开始回合 //", "全大写回合开始横幅正常汉化");
@@ -7296,6 +7296,248 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 			ctx.game.combat = prevCombat121;
 			ctx.game.lancer = prevLancer121;
 			ctx.ui = prevUi121;
+		}
+
+		// ---- v1.21.1 投掷近战武器（刺枪 vs 匕首 + 猎人 II「匕首戏法」）真实 Foundry Collection 回归测试
+		{
+			const L = ctx.LancerCN;
+			const prevLancer1211 = ctx.game.lancer;
+			const prevSettingsGet1211 = ctx.game.settings.get;
+			const prevSettingsMap1211 = ctx.game.settings.settings;
+			const prevCanvas1211 = ctx.canvas;
+			const prevTargets1211 = ctx.game.user.targets;
+			const prevFromUuidSync1211 = ctx.fromUuidSync;
+			const prevSetTimeout1211 = ctx.setTimeout;
+
+			// 模拟真实 Foundry VTT EmbeddedCollection（继承自 Map，无 Array.prototype.flatMap）
+			class FakeFoundryCollection extends Map {
+				constructor(entries = []) {
+					super();
+					for (const item of entries) this.set(item.id, item);
+				}
+				[Symbol.iterator]() { return this.values(); }
+				filter(fn) { return Array.from(this.values()).filter(fn); }
+				find(fn) { return Array.from(this.values()).find(fn); }
+				some(fn) { return Array.from(this.values()).some(fn); }
+				map(fn) { return Array.from(this.values()).map(fn); }
+			}
+			// 模拟真实 foundryvtt-lancer 的 Tag 类（读 game.settings.get("lancer", "tagConfig")）
+			class FakeLancerTag {
+				constructor(data) {
+					this.lid = data.lid;
+					this.val = String(data.val ?? "");
+					const cfg = ctx.game.settings.get("lancer", "tagConfig")?.[data.lid];
+					this.name = cfg?.name ?? "...";
+					this.description = cfg?.description ?? "Tag not found";
+					this.hidden = cfg?.hidden ?? false;
+				}
+				get is_thrown() { return this.lid === "tg_thrown"; }
+				get num_val() { const n = Number.parseInt(this.val, 10); return Number.isNaN(n) ? null : n; }
+				tierVal() { return this.val; }
+				save() { return { lid: this.lid, val: this.val }; }
+				copy() { return new FakeLancerTag(this.save()); }
+			}
+
+			const fakeSettingsMap = new Map([["lancer.tagConfig", {}]]);
+			ctx.game.settings.settings = fakeSettingsMap;
+			ctx.game.settings.get = (ns, key) => {
+				if (ns === "lancer" && key === "tagConfig") {
+					return {
+						tg_thrown: { lid: "tg_thrown", name: "投掷{VAL}", description: "可将武器投向{VAL}格内目标。", hidden: false },
+						tg_knockback: { lid: "tg_knockback", name: "击退{VAL}", description: "命中击退{VAL}格。", hidden: false },
+					};
+				}
+				if (ns === "lancer" && key === "tag_config") {
+					throw new Error("lancer.tag_config is not a registered game setting");
+				}
+				return prevSettingsGet1211(ns, key);
+			};
+
+			const mkColWpn = (id, name, lid, size, range, tags) => {
+				const tagObjs = tags.map(t => new FakeLancerTag(t));
+				const prof = {
+					type: "Melee",
+					range: range.map(r => ({ ...r })),
+					all_range: range.map(r => ({ ...r })),
+					tags: tagObjs.map(t => t.copy()),
+					all_tags: tagObjs.map(t => t.copy()),
+					damage: [{ type: "Kinetic", val: size === "Main" ? "1d6" : "1d3+1" }],
+				};
+				return {
+					id,
+					uuid: `Actor.m_col_hunter.Item.${id}`,
+					name,
+					type: "mech_weapon",
+					is_mech_weapon: () => true,
+					currentProfile: () => prof,
+					getTags: () => prof.all_tags,
+					isLoading: () => false,
+					isLimited: () => false,
+					system: {
+						lid,
+						size,
+						destroyed: false,
+						selected_profile_index: 0,
+						active_profile: prof,
+						profiles: [prof],
+						tags: tagObjs.map(t => t.copy()),
+						all_tags: tagObjs.map(t => t.copy()),
+					},
+				};
+			};
+
+			const warPikeCol = mkColWpn("wp_pike", "刺枪", "mw_war_pike", "Main", [{ type: "Threat", val: 3 }], [{ lid: "tg_knockback", val: "1" }, { lid: "tg_thrown", val: "5" }]);
+			const tacKnifeCol = mkColWpn("wp_tac", "战术匕首", "mw_tactical_knife", "Auxiliary", [{ type: "Threat", val: 1 }], [{ lid: "tg_thrown", val: "3" }]);
+			const segKnifeCol = mkColWpn("wp_seg", "多段刀", "mw_segment_knife", "Auxiliary", [{ type: "Threat", val: 1 }], []);
+			const foldKnifeCol = mkColWpn("wp_fold", "翘曲匕首", "mw_fold_knife", "Auxiliary", [{ type: "Threat", val: 1 }], []);
+
+			const colFlags = {};
+			const colPilot = {
+				id: "p_col_hunter",
+				uuid: "Actor.p_col_hunter",
+				type: "pilot",
+				is_pilot: () => true,
+				itemTypes: { talent: [{ type: "talent", system: { lid: "t_hunter", curr_rank: 3 } }] },
+				items: new FakeFoundryCollection([{ id: "tal_h", type: "talent", system: { lid: "t_hunter", curr_rank: 3 } }]),
+			};
+			const colMech = {
+				id: "m_col_hunter",
+				uuid: "Actor.m_col_hunter",
+				name: "猎人纳尔逊",
+				type: "mech",
+				is_mech: () => true,
+				isOwner: true,
+				statuses: new Set(),
+				items: new FakeFoundryCollection([warPikeCol, tacKnifeCol, segKnifeCol, foldKnifeCol]),
+				getFlag: (ns, k) => colFlags[`${ns}.${k}`],
+				setFlag: async (ns, k, v) => { colFlags[`${ns}.${k}`] = v; },
+				system: {
+					pilot: { value: colPilot },
+					loadout: { frame: { value: { system: { lid: "mf_nelson" } } } },
+				},
+			};
+			for (const w of colMech.items) { w.actor = colMech; w.parent = colMech; }
+
+			// 1) 清空标签类缓存后，面对无 .flatMap() 的 Foundry EmbeddedCollection，resolveLancerTagClass 与 applyKnifeJugglerTags 必须零异常且构造真实 Tag 实例
+			L.resetCachedTagClass();
+			ok(typeof colMech.items.flatMap === "undefined", "测试夹具的 actor.items 正确模拟真实 Foundry EmbeddedCollection（无 flatMap 方法）");
+			let knifeJugglerErr = null;
+			try {
+				L.applyKnifeJugglerTags(tacKnifeCol, colMech);
+				L.applyKnifeJugglerTags(segKnifeCol, colMech);
+				L.applyKnifeJugglerTags(foldKnifeCol, colMech);
+			} catch (err) {
+				knifeJugglerErr = err;
+			}
+			ok(
+				!knifeJugglerErr
+				&& tacKnifeCol.system.active_profile.all_tags.some(t => t instanceof FakeLancerTag && t.lid === "tg_thrown" && t.val === "5" && t.name === "投掷{VAL}")
+				&& segKnifeCol.system.active_profile.all_tags.some(t => t instanceof FakeLancerTag && t.lid === "tg_thrown" && t.val === "5")
+				&& foldKnifeCol.system.active_profile.all_tags.some(t => t instanceof FakeLancerTag && t.lid === "tg_thrown" && t.val === "5"),
+				"真实 Foundry Collection（无 flatMap）下：猎人 II「匕首戏法」对战术匕首/多段刀/翘曲匕首注入投掷 5 不再崩溃，并正确复用 Tag 类与 tagConfig 译名"
+			);
+
+			// 2) 模拟真实 WeaponAttackFlow 步骤链（initAttackData -> setAttackTags -> printAttackCard）：刺枪与战术匕首/多段刀均能顺利完成冷缓存投掷流程并标记离手
+			L.resetCachedTagClass();
+			const selfTokC = { id: "tc_self", center: { x: 50, y: 50 }, actor: colMech, visible: true, document: { id: "tc_self", uuid: "Scene.sc.Token.tc_self", name: "猎人纳尔逊", disposition: 1 } };
+			const enemyActC = { id: "a_ec", uuid: "Actor.a_ec", name: "斥候", type: "npc", statuses: new Set(), getFlag: () => undefined, system: { statuses: {} } };
+			const enemyTokC = { id: "tc_enemy", center: { x: 550, y: 50 }, actor: enemyActC, visible: true, document: { id: "tc_enemy", uuid: "Scene.sc.Token.tc_enemy", name: "斥候", disposition: -1, actor: enemyActC } };
+			enemyTokC.document.object = enemyTokC;
+			ctx.canvas = {
+				grid: {
+					size: 100, distance: 1, isGridless: false,
+					getOffset: pt => ({ i: Math.floor(pt.y / 100), j: Math.floor(pt.x / 100) }),
+					getCenterPoint: off => ({ x: off.j * 100 + 50, y: off.i * 100 + 50 }),
+					measurePath: ([a, b]) => ({ spaces: Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 100) }),
+				},
+				tokens: { controlled: [selfTokC], placeables: [selfTokC, enemyTokC], get: id => (id === "tc_enemy" ? enemyTokC : id === "tc_self" ? selfTokC : null) },
+			};
+			ctx.fromUuidSync = u => {
+				if (u === "Scene.sc.Token.tc_enemy") return enemyTokC.document;
+				if (u === colMech.uuid) return colMech;
+				for (const w of colMech.items) if (w.uuid === u) return w;
+				return prevFromUuidSync1211?.(u);
+			};
+			ctx.game.user.targets = new Set([enemyTokC]);
+
+			const stepsC = new Map([
+				["initAttackData", async st => {
+					st.data.attack_type = "Melee";
+					st.data.acc_diff = {
+						weapon: { melee: true, thrown: st.item.system.active_profile.all_tags.some(t => t.lid === "tg_thrown"), seeking: false },
+						base: { accuracy: 0, difficulty: 0 },
+						targets: [{ targetUuid: "Scene.sc.Token.tc_enemy", accuracy: 0, difficulty: 0, cover: 1 }],
+					};
+					return true;
+				}],
+				["setAttackTags", async st => { st.data.tags = [...st.item.system.active_profile.all_tags]; return true; }],
+				["printAttackCard", async () => true],
+			]);
+			ctx.game.lancer = { flowSteps: stepsC, flows: new Map() };
+			L.patchLancerFlows();
+
+			// 重置战术匕首的 all_tags 为未升级态（模拟首次攻击冷启动）
+			tacKnifeCol.system.active_profile.all_tags = [new FakeLancerTag({ lid: "tg_thrown", val: "3" })];
+			tacKnifeCol.system.all_tags = [new FakeLancerTag({ lid: "tg_thrown", val: "3" })];
+			const tacFlowState = { actor: colMech, item: tacKnifeCol, data: {} };
+			const tacInitOk = await stepsC.get("initAttackData")(tacFlowState);
+			const tacTagsOk = await stepsC.get("setAttackTags")(tacFlowState);
+			ok(
+				tacInitOk === true
+				&& tacTagsOk === true
+				&& tacFlowState.data.acc_diff.weapon.thrown === true
+				&& tacFlowState.data.tags.some(t => t.lid === "tg_thrown" && t.val === "5"),
+				"战术匕首冷启动执行 initAttackData + setAttackTags 不崩溃，正确识别 5 格远投并写入投掷 5 标签"
+			);
+
+			// 3) 右侧准度面板勾选非「投掷」复选框（如「精准」）不应错误冻结 manualThrownOverride；仅勾选「投掷（*）」时才锁定手动覆盖
+			ctx.setTimeout = fn => { fn(); return 1; };
+			const prevPicker1211 = log.settingValues["lancer-cn.targetPicker"];
+			log.settingValues["lancer-cn.targetPicker"] = true;
+			class WeaponAttackFlow {}
+			const hudFlow = new WeaponAttackFlow();
+			hudFlow.state = tacFlowState;
+			tacFlowState.data.acc_diff.weapon.thrown = false;
+			L.openTargetPicker(hudFlow);
+			L.onHudZoneChange({
+				target: {
+					type: "checkbox",
+					closest: sel => (sel === "#accdiff-hud" ? {} : sel === "label" ? { textContent: "精准 (+1)" } : null),
+				},
+			});
+			ok(L.targetSession()?.manualThrownOverride === undefined || L.targetSession()?.manualThrownOverride === null, "在右侧面板勾选「精准 (+1)」不会误冻结投掷手动覆盖标记");
+			tacFlowState.data.acc_diff.weapon.thrown = true;
+			L.onHudZoneChange({
+				target: {
+					type: "checkbox",
+					closest: sel => (sel === "#accdiff-hud" ? {} : sel === "label" ? { textContent: "投掷（*）" } : null),
+				},
+			});
+			ok(L.targetSession()?.manualThrownOverride === true, "在右侧面板手动切换「投掷（*）」复选框才会写入 manualThrownOverride");
+			L.closeTargetPicker(hudFlow, false);
+			log.settingValues["lancer-cn.targetPicker"] = prevPicker1211;
+
+			// 4) 猎人 III「蔑刃」若底层 flow.begin() 抛出异常，应自动回滚 usedHunterDisdainful 不浪费本轮次数
+			class ThrowingFlow {
+				async begin() { throw new Error("mock flow crash"); }
+			}
+			ctx.game.lancer.flows.set("WeaponAttackFlow", ThrowingFlow);
+			let caughtDisdainErr = false;
+			try { await L.triggerHunterDisdainful(colMech, tacKnifeCol.id); } catch { caughtDisdainErr = true; }
+			ok(caughtDisdainErr && L.getCombatState(colMech).usedHunterDisdainful === false, "猎人 III「蔑刃」在攻击流程异常中断时自动回滚本轮已用标记");
+
+			// 5) makeThrownTag 在仅注册 tagConfig（不注册 tag_config）且无 Tag 类时，正确读取中文配置不抛异常
+			L.resetCachedTagClass();
+			const fbTag = L.makeThrownTag(5, null);
+			ok(fbTag.lid === "tg_thrown" && fbTag.val === "5" && fbTag.name === "投掷{VAL}" && fbTag.is_thrown === true, "makeThrownTag 优先读取真实设置键 tagConfig 并在回退对象中保留完整 Tag 接口");
+
+			ctx.setTimeout = prevSetTimeout1211;
+			ctx.fromUuidSync = prevFromUuidSync1211;
+			ctx.game.user.targets = prevTargets1211;
+			ctx.canvas = prevCanvas1211;
+			ctx.game.settings.get = prevSettingsGet1211;
+			ctx.game.settings.settings = prevSettingsMap1211;
+			ctx.game.lancer = prevLancer1211;
 		}
 	}
 
