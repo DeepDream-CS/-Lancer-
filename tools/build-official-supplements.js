@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const KINDS = ['frames', 'weapons', 'systems', 'mods', 'core_bonuses', 'talents', 'pilot_gear'];
-const LABELS = {core_system:'核心系统',traits:'骨架特征',ranks:'天赋等级',profiles:'武器模式',actions:'动作',passive_actions:'被动动作',active_actions:'主动动作',synergies:'规则提示',passive_synergies:'被动规则提示',active_synergies:'主动规则提示',deployables:'部署物',counters:'计数器',name:'名称',description:'背景说明',detail:'效果',effect:'效果',on_hit:'命中效果',on_attack:'攻击效果',on_crit:'会心一击效果',trigger:'触发条件'};
+const LABELS = {core_system:'核心系统',traits:'骨架特征',ranks:'天赋等级',profiles:'武器模式',actions:'动作',passive_actions:'被动动作',active_actions:'主动动作',synergies:'规则提示',passive_synergies:'被动规则提示',active_synergies:'主动规则提示',deployables:'部署物',counters:'计数器',name:'名称',description:'背景说明',detail:'效果',effect:'效果',on_hit:'命中效果',on_attack:'攻击效果',on_crit:'会心一击效果',trigger:'触发条件',init:'前置条件',terse:'简述',mounted_effect:'装备效果',passive_name:'被动名称',passive_effect:'被动效果',active_name:'主动名称',active_effect:'主动效果'};
 function label(field) {
  return field.split('.').map(part=>{const m=part.match(/^([^[]+)(?:\[(\d+)\])?$/);if(!m||!LABELS[m[1]])throw Error('Unknown supplement field: '+field);return LABELS[m[1]]+(m[2]===undefined?'':' '+(Number(m[2])+1));}).join(' · ');
 }

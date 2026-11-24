@@ -267,7 +267,7 @@ function checks(p) {
 		const f = FRAMES[m.frame];
 		const tag = `机甲「${m.name || mi + 1}」`;
 		if (!f) return out.push(["err", `${tag} 未选择骨架`]);
-		if (!frameAvailable(p, f)) out.push(["err", `${tag} 的骨架 ${f.name} ${f.required_core_bonus?`需要核心奖励「${CBS[f.required_core_bonus].name}」`:'需要该牌照 2 级'}`]);
+		if (!frameAvailable(p, f)) out.push(["err", `${tag} 的骨架 ${frameName(f)} ${f.required_core_bonus?`需要核心奖励「${plain("cb", CBS[f.required_core_bonus])}」`:'需要该牌照 2 级'}`]);
 		out.push(...loadoutChecks(p, m));
 		const st = mechStats(p, m);
 		if (st.spUsed > st.sp) out.push(["err", `${tag} SP 超出：${st.spUsed}/${st.sp}`]);
@@ -1151,7 +1151,7 @@ function cleanMechSystemRefs(m) {
   else counts[id]--;
  }
 }
-function sentryWeapons(p,m) { return equippedWeapons(p,m).filter(e=>e.mount.type!=='Integrated'&&e.w.mount!=='Superheavy'&&['CQB','Rifle'].includes(e.w.type)); }
+function sentryWeapons(p,m) { return equippedWeapons(p,m).filter(e=>e.mount.type!=='Integrated'&&e.w.mount!=='Superheavy'&&(e.w.types||[e.w.type]).some(t=>['CQB','Cannon','Rifle'].includes(t))); }
 function professionalSystemSetup(p,m,s) {
  const sel=(key,options)=>`<select data-k="mech.${key}"><option value="">— 选择 —</option>${options.map(([id,name])=>opt(id,esc(name),String(m[key]??'')===String(id))).join('')}</select>`;
  if(s.id==='ms_pl_sentry_drone')return `<label>部署时交给哨兵的已安装武器 ${sel('sentryWeapon',sentryWeapons(p,m).map(e=>[e.mount.key+'|'+e.i,plain('item',e.w)]))}</label><p class="muted">部署后该武器由无人机使用；回收后返回机甲。</p>`;
@@ -1191,7 +1191,7 @@ function swapPodWeapons(p,m,key) {
 }
 function professionalLoadoutChecks(p,m) {
  const out=[],err=t=>out.push(['err',`机甲「${m.name}」：${t}`]);
- if(m.systems.includes('ms_pl_sentry_drone')&&m.sentryWeapon&&!sentryWeapons(p,m).some(e=>e.mount.key+'|'+e.i===m.sentryWeapon))err('哨兵无人机的武器必须是已安装的非内置、非超重型 CQB 或步枪');
+ if(m.systems.includes('ms_pl_sentry_drone')&&m.sentryWeapon&&!sentryWeapons(p,m).some(e=>e.mount.key+'|'+e.i===m.sentryWeapon))err('哨兵无人机的武器必须是已安装的非内置、非超重型 CQB、大炮或步枪');
  if(m.systems.includes('ms_pl_tactical_belt')) {
   const mt=mountsOf(p,m).find(x=>x.key===m.beltMount&&x.type!=='Integrated');
   if(!mt)err('战术带需要占用一个非内置挂载点');

@@ -9,7 +9,7 @@ function frameVariantDescription(f) {
     : `${variantNote(f)}：与标准骨架共用牌照 II，打印时选择其中一种；装备沿用原牌照。`;
 }
 function frameAccess(p,f) {
-  if(f.required_core_bonus) return `需要核心奖励「${CBS[f.required_core_bonus].name}」 · ${p.coreBonuses.includes(f.required_core_bonus)?'已取得':'未取得'}`;
+  if(f.required_core_bonus) return `需要核心奖励「${plain("cb", CBS[f.required_core_bonus])}」 · ${p.coreBonuses.includes(f.required_core_bonus)?'已取得':'未取得'}`;
   if ([f.id,f.variant_of].includes(EVEREST)) return 'GMS · 无需牌照';
   const base=FRAMES[f.variant_of]||f, rank=p.licenses[base.id]||0;
   return `${frameName(base)} 牌照 II${db.ignoreLimits?' · GM 模式':rank>=2?' · 已解锁':` · 当前 ${['未取得','I'][rank]||rank}`}`;

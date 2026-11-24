@@ -74,7 +74,18 @@ function foundryPilotData(p) {
 		if (m.signature && SYSTEMS[m.signature]) notes.push(`招牌动作（核心奖励）指定系统：${itemName("item", SYSTEMS[m.signature])}，SP −2`);
 		if (m.overpower) { const [key, idx] = m.overpower.split("|"); const w = WEAPONS[m.loadout[key]?.slots?.[+idx]?.w]; if (w) notes.push(`超功率口径（核心奖励）指定武器：${itemName("item", w)}`); }
 		if (m.stabilized) notes.push(`自动稳定（核心奖励）挂载点：${m.stabilized}`);
-		if (m.sentryWeapon && WEAPONS[m.sentryWeapon]) notes.push(`哨兵无人机部署时使用：${itemName("item", WEAPONS[m.sentryWeapon])}`);
+		if (m.systems.includes("ms_pl_sentry_drone") && m.sentryWeapon) {
+			const e = sentryWeapons(p, m).find(x => x.mount.key + "|" + x.i === m.sentryWeapon);
+			if (e) notes.push(`哨兵无人机部署时使用：${itemName("item", e.w)}`);
+		}
+		if (p.talents.t_engineer > 0) {
+			const pType = T.wtype?.[m.prototypeType] || { Melee: "近战", CQB: "CQB", Rifle: "步枪", Cannon: "大炮", Launcher: "发射器", Nexus: "巢房" }[m.prototypeType] || "步枪";
+			const pDmg = T.dmg?.[m.prototypeDamage] || { Kinetic: "动能", Explosive: "爆炸", Energy: "能量" }[m.prototypeDamage] || "动能";
+			const pPerks = p.talents.t_engineer >= 2
+				? [["prototypeOptics", "调校光学（+1准度）"], ["prototypeSmart", "调校电脑（智慧）"], ["prototypeReactor", "移除反应炉屏蔽"]].filter(([k]) => m[k] === "yes").map(([, lbl]) => lbl)
+				: [];
+			notes.push(`原型武器（工程师 ${p.talents.t_engineer} 级）配置：${pType} · ${pDmg}伤害${pPerks.length ? ` · 强化：${pPerks.join("、")}` : ""}`);
+		}
 		if (m.systems.includes("ms_pl_tactical_belt")) {
 			const belt = beltSystems(m).map(id => itemName("item", SYSTEMS[id]));
 			const mt = mountsOf(p, m).find(x => x.key === m.beltMount && x.type !== "Integrated");

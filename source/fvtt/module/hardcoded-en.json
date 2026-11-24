@@ -118,6 +118,9 @@
     "src/module/apps/acc_diff/AccDiffHUD.svelte:338",
     "src/module/apps/acc_diff/AccDiffHUD.svelte:70"
   ],
+  "Action": [
+    "src/module/models/bits/action.ts:125"
+  ],
   "Action Editing": [
     "src/module/apps/action-editor.ts:13"
   ],
@@ -290,10 +293,14 @@
   "Bulkhead": [
     "src/module/tours/lancer-tour.ts:314"
   ],
+  "Burn Damage": [
+    "src/module/flows/burn.ts:23"
+  ],
   "Burn flow requires the actor to have a token in the scene": [
     "src/module/flows/burn.ts:56"
   ],
   "CASCADE": [
+    "src/module/flows/cascade.ts:39",
     "src/module/flows/cascade.ts:95"
   ],
   "CASCADE CHECK": [
@@ -476,6 +483,10 @@
   "Crit": [
     "src/module/apps/damage/HitRadio.svelte:17"
   ],
+  "Custom Skill": [
+    "src/module/actor/import.ts:1094",
+    "src/module/actor/import.ts:525"
+  ],
   "DAMAGE": [
     "public/templates/item/mech_weapon.hbs:76",
     "public/templates/item/pilot_weapon.hbs:33",
@@ -539,7 +550,8 @@
     "src/module/flows/hotbar.ts:136"
   ],
   "Damage Roll": [
-    "src/module/apps/damage/data.svelte.ts:487"
+    "src/module/apps/damage/data.svelte.ts:487",
+    "src/module/flows/damage.ts:54"
   ],
   "Damage application button has no damage data available": [
     "src/module/flows/damage.ts:726"
@@ -658,6 +670,9 @@
   "Empty": [
     "src/module/helpers/refs.ts:80"
   ],
+  "Enemy Unknown": [
+    "src/module/flows/scan.ts:30"
+  ],
   "Engaged (-1)": [
     "src/module/apps/acc_diff/AccDiffHUD.svelte:356",
     "src/module/apps/acc_diff/AccDiffHUD.svelte:87"
@@ -680,6 +695,9 @@
   ],
   "Equip weapon": [
     "src/module/helpers/item.ts:437"
+  ],
+  "Equipment Destruction": [
+    "src/module/flows/structure.ts:534"
   ],
   "Errant": [
     "src/module/tours/lancer-tour.ts:319"
@@ -909,6 +927,9 @@
   "INVADE": [
     "public/templates/chat/tech-attack-card.hbs:1"
   ],
+  "INVADE // {x}": [
+    "src/module/flows/tech.ts:77"
+  ],
   "IS TECH ATTACK?": [
     "public/templates/window/action_editor.hbs:7"
   ],
@@ -1124,6 +1145,9 @@
   "MOUNTED WEAPONS": [
     "src/module/helpers/loadout.ts:194"
   ],
+  "MY SHACKLES LOOSE, MY CHAINS UNBOUND!": [
+    "src/module/flows/cascade.ts:100"
+  ],
   "Manual Adjust": [
     "src/module/apps/acc_diff/AccDiffInput.svelte:2"
   ],
@@ -1146,8 +1170,26 @@
   "Max:": [
     "public/templates/window/counter.hbs:2"
   ],
+  "Mech has cleared all burn.": [
+    "src/module/flows/stabilize.ts:95"
+  ],
   "Mech has no repairs left. Please try again.": [
     "src/module/flows/stabilize.ts:86"
+  ],
+  "Mech has selected full reload. Weapons reloaded:": [
+    "src/module/flows/stabilize.ts:104"
+  ],
+  "Mech has selected to clear an allied condition. Please clear manually.": [
+    "src/module/flows/stabilize.ts:101"
+  ],
+  "Mech has selected to clear own condition. Please clear manually.": [
+    "src/module/flows/stabilize.ts:98"
+  ],
+  "Mech has spent 1 repair to regain HP.": [
+    "src/module/flows/stabilize.ts:89"
+  ],
+  "Mech is cooling itself. Heat and @Compendium[world.status-items.Exposed] cleared.": [
+    "src/module/flows/stabilize.ts:82"
   ],
   "Migration to v{x} in progress. Please do not shut down your world or refresh the page until migration is complete.": [
     "src/module/world_migration.ts:93"
@@ -1261,6 +1303,12 @@
   "Non-pilot cannot use a pilot talent!": [
     "src/module/flows/tech.ts:172"
   ],
+  "Not a valid LID {x}": [
+    "src/module/models/shared.ts:152"
+  ],
+  "Not a valid uuid {x}": [
+    "src/module/models/shared.ts:305"
+  ],
   "Notice: {x} has been fully repaired.": [
     "src/module/flows/full-repair.ts:75"
   ],
@@ -1293,6 +1341,9 @@
   ],
   "OTHER": [
     "src/module/helpers/npc.ts:41"
+  ],
+  "OUR SHACKLES LOOSE, OUR CHAINS UNBOUND!": [
+    "src/module/flows/cascade.ts:99"
   ],
   "Official LANCER Content": [
     "public/templates/lcp/lcp-manager.hbs:2"
@@ -1388,6 +1439,9 @@
   ],
   "PURPOSE": [
     "public/templates/item/organization.hbs:24"
+  ],
+  "Partially loaded '{x}'s new state.": [
+    "src/module/actor/import.ts:1504"
   ],
   "Pilot → Deployable Bonuses": [
     "src/module/effects/converter.ts:216"
@@ -1833,6 +1887,9 @@
     "public/templates/chat/tech-attack-card.hbs:1",
     "public/templates/item/frame.hbs:31"
   ],
+  "TECH ATTACK": [
+    "src/module/flows/tech.ts:108"
+  ],
   "TECH ATTACK?": [
     "public/templates/item/npc_feature.hbs:63"
   ],
@@ -1951,6 +2008,9 @@
     "src/module/helpers/automation/combat.ts:107",
     "src/module/status-icons.ts:828"
   ],
+  "The shackles remain intact, for now.": [
+    "src/module/flows/cascade.ts:40"
+  ],
   "The targeted token has no associated actor.": [
     "src/module/flows/scan.ts:49"
   ],
@@ -2003,6 +2063,12 @@
   "Tyrant": [
     "src/module/tours/lancer-tour.ts:335"
   ],
+  "UNKNOWN": [
+    "src/module/integrations/combat-tracker-dock.ts:18"
+  ],
+  "UNKNOWN ACTION": [
+    "src/module/flows/activation.ts:77"
+  ],
   "UNKNOWN EXOTIC SYSTEM": [
     "src/module/flows/scan.ts:156"
   ],
@@ -2015,6 +2081,9 @@
   "UNKNOWN EXOTIC WEAPON": [
     "src/module/flows/scan.ts:91"
   ],
+  "UNKNOWN MECH": [
+    "src/module/apps/struct_stress/StructStressHUD.svelte:61"
+  ],
   "UNLOCKED RANK:": [
     "public/templates/item/license.hbs:5"
   ],
@@ -2022,7 +2091,8 @@
     "public/templates/item/talent.hbs:4"
   ],
   "USE": [
-    "src/module/helpers/commons.ts:219"
+    "src/module/helpers/commons.ts:219",
+    "src/module/helpers/item.ts:1263"
   ],
   "USES": [
     "src/module/helpers/item.ts:249",
@@ -2042,11 +2112,23 @@
   "Undo this damage": [
     "src/module/actor/lancer-actor.ts:241"
   ],
+  "Unknown <{x}>": [
+    "src/module/config.ts:121"
+  ],
+  "Unknown <{x}>s": [
+    "src/module/config.ts:119"
+  ],
   "Unknown flow type for flow drop on hotbar!": [
     "src/module/flows/hotbar.ts:318"
   ],
   "Unlink": [
     "src/module/helpers/item.ts:1668"
+  ],
+  "Unnamed Organization": [
+    "src/module/models/items/organization.ts:45"
+  ],
+  "Unnamed Reserve": [
+    "src/module/models/items/reserve.ts:52"
   ],
   "Unresolved deployabled LID \"{x}\". Re-import + Set yourself as its owner": [
     "src/module/helpers/item.ts:1148"
@@ -2149,6 +2231,10 @@
     "src/module/actor/import.ts:1017",
     "src/module/actor/import.ts:243"
   ],
+  "base": [
+    "src/module/actor/lancer-actor.ts:75",
+    "src/module/item/lancer-item.ts:56"
+  ],
   "bonds": [
     "src/module/apps/lcp-manager/LCPDetails.svelte:21"
   ],
@@ -2163,6 +2249,9 @@
   ],
   "clear": [
     "src/module/apps/automation-settings.ts:51"
+  ],
+  "ephem": [
+    "src/module/helpers/collapse.ts:44"
   ],
   "first.": [
     "src/module/world_migration.ts:73"
@@ -2234,6 +2323,10 @@
     "public/templates/item/frame.hbs:78",
     "public/templates/item/frame.hbs:89"
   ],
+  "unknown": [
+    "src/module/helpers/actor.ts:191",
+    "src/module/helpers/actor.ts:317"
+  ],
   "vs {x}": [
     "src/module/apps/acc_diff/AccDiffHUD.svelte:72"
   ],
@@ -2259,6 +2352,9 @@
   "{x} DIFFICULTY": [
     "src/module/helpers/item.ts:224"
   ],
+  "{x} HAS STABILIZED": [
+    "src/module/flows/stabilize.ts:35"
+  ],
   "{x} SYSTEM POINTS": [
     "src/module/helpers/commons.ts:244"
   ],
@@ -2275,8 +2371,14 @@
   "{x} has taken {x} damage!": [
     "src/module/apps/struct_stress/StructStressHUD.svelte:7"
   ],
+  "{x} is OVERCHARGING": [
+    "src/module/flows/overcharge.ts:37"
+  ],
   "{x} is ending their turn": [
     "src/module/flows/action-track.ts:36"
+  ],
+  "{x} is not a valid numeric value": [
+    "src/module/apps/counter-editor.ts:31"
   ],
   "{x} is starting their turn": [
     "src/module/flows/action-track.ts:34"
@@ -2289,6 +2391,22 @@
   ],
   "{x}'s inventory": [
     "src/module/apps/inventory.ts:166"
+  ],
+  "{x}Actor {x} not found.": [
+    "src/module/actor/lancer-actor.ts:889",
+    "src/module/actor/lancer-actor.ts:908"
+  ],
+  "{x}Document {x} not an actor.": [
+    "src/module/actor/lancer-actor.ts:895",
+    "src/module/actor/lancer-actor.ts:914"
+  ],
+  "{x}Document {x} not an item.": [
+    "src/module/item/lancer-item.ts:571",
+    "src/module/item/lancer-item.ts:588"
+  ],
+  "{x}Item {x} not found.": [
+    "src/module/item/lancer-item.ts:566",
+    "src/module/item/lancer-item.ts:583"
   ],
   "{x}{x} Burn": [
     "src/module/actor/lancer-actor.ts:963"

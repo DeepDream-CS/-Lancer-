@@ -22,7 +22,7 @@ function walk(dir, out = []) {
 // 一段文字是否值得翻译：含两个以上英文字母的词，不是代码、路径、CSS 类名。
 function wanted(s) {
   if (!/[A-Za-z]{2,}/.test(s)) return false;
-  if (/^[\w.-]+\.(hbs|svg|png|webp|js|css)$/.test(s)) return false;
+  if (/^[\w.{}/-]+\.(hbs|svg|png|webp|js|css)$/.test(s)) return false;
   if (/[{};=]|=>|\(\)|\bfunction\b|&&|\|\|/.test(s)) return false;
   if (/^[a-z]+([A-Z][a-z]+)+$/.test(s)) return false; // camelCase
   if (/^[a-z0-9_-]+$/.test(s) && /[-_]/.test(s)) return false; // css-class / snake_case
@@ -67,8 +67,9 @@ const TPL_EXPR = /\$\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/g;
 // 字面量前面的上下文：通知、对话框 / 窗口 / 聊天卡的标题、按钮文字、提示等
 const CONTEXT = new RegExp(
   "(?:notifications[!?]*\\.(?:info|warn|error)\\(\\s*" +
-    "|\\b(?:title|label|hint|desc|description|content|name|text|tooltip|flavor|subtitle|header|human)\\s*[:=]\\s*" +
-    "|\\b(?:title|label|desc|description|content)\\s*[:=]\\s*[^,;\\n]*\\?\\s*[^,;\\n]*:\\s*)$"
+    "|\\b(?:title|label|hint|desc|description|content|name|text|tooltip|flavor|subtitle|header|human|message|option1text|option2text)\\s*[:=]\\s*(?:[\\w.?![\\]()]+\\s*(?:\\?\\?|\\|\\|)\\s*)*" +
+    "|\\b(?:title|label|desc|description|content|message)\\s*[:=]\\s*[^;]+?\\?\\s*(?:[^;:]+?:\\s*)?" +
+    "|\\{[^{}]*?\\?\\?\\s*)$"
 );
 
 const lineOf =(src, at) => src.slice(0, at).split("\n").length;
@@ -119,8 +120,12 @@ function scan(fork) {
     let m;
     while ((m = litRe.exec(src))) {
       const raw = m[1] ?? m[2] ?? m[3];
-      if (/<[a-z][^>]*>/i.test(raw)) continue; // HTML 已在上面处理
-      const before = src.slice(Math.max(0, m.index - 60), m.index);
+      const before = src.slice(Math.max(0, m.index - 200), m.index);
+      if (/<[a-z][^>]*>/i.test(raw)) {
+        if (m[3] !== undefined || !CONTEXT.test(before)) continue; // 反引号模板 HTML 已在上面处理
+        for (const r of fromHtml(raw, TPL_EXPR)) add(r.text, `${rel(f)}:${lineOf(src, m.index)}`);
+        continue;
+      }
       if (!CONTEXT.test(before)) continue;
       const v = norm(raw.replace(TPL_EXPR, "{x}").replace(/\\(.)/g, "$1"));
       if (wanted(v.replace(/\{x\}/g, ""))) add(v, `${rel(f)}:${lineOf(src, m.index)}`);

@@ -210,7 +210,7 @@ function checkPack(packId) {
 	const under = out.weapons.find(w => w.id === "mw_pl_underslung_data");
 	ok(under && under.name === "下挂式冲击器（附带武器）" && under.mount === "Auxiliary" && under.type === "Launcher" && under.damage[0]?.val === 5 && under.range[0]?.val === 3, "下挂式冲击器应另导出为附带武器（副武器发射器，射程 3，5 爆炸）");
 	ok(under && under.tags.some(t => t.id === "tg_ap") && under.tags.some(t => t.id === "tg_loading") && under.no_bonus && under.no_core_bonus && under.sp === 0, "附带武器：穿甲、装填，不受其他改装与核心奖励影响，0 SP");
-	ok(under && under.license_id === "pl_ips_vanguard" && /离散/.test(under.on_hit), "附带武器沿用改装的牌照，命中效果取自改装说明");
+	ok(under && under.license_id === "pl_ips_vanguard" && /散裂/.test(under.on_hit), "附带武器沿用改装的牌照，命中效果取自改装说明");
 	// 犹大漏洞是命中后的追加动作（自由动作），不是快速科技
 	const judas = sysById("ms_ext_judas_exploit")?.actions?.[0];
 	ok(judas?.activation === "Free" && judas.frequency === "1/Scene" && /命中/.test(judas.trigger || ""), "犹大漏洞应为带触发的自由动作");

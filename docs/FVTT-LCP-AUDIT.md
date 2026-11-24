@@ -2,7 +2,7 @@
 
 由 `node tools/build-lcp.js` 生成，请勿手改。
 
-内容包：枪骑兵简易车卡器：扩展内容（中文） 1.6.0
+内容包：枪骑兵简易车卡器：扩展内容（中文） 1.6.2
 
 | 类别 | 条目数 |
 |---|---|
@@ -22,7 +22,7 @@
 - 覆盖官方条目：108
 - 新增条目：323
 - 写入的车卡器说明：99 条
-- 补译：322 处
+- 补译：323 处
 
 官方数据版本：@massif/dustgrave-data 1.4.0，@massif/ktb-data 1.2.4，@massif/long-rim-data 1.2.2，@massif/osr-data 1.2.0，@massif/ows-data 1.0.1，@massif/sotw-data 1.0.2，@massif/ssmr-data 1.7.0，@massif/wallflower-data 2.1.0
 
@@ -508,8 +508,8 @@
 | weapons | mw_pl_gorgon_micro | 哥瓦尔丹微型导弹 |
 | weapons | mw_pl_garuda | 缇娜玻安导弹 |
 | weapons | mw_pl_seeking_launcher | 寻索弹射器 |
-| weapons | mw_pl_polaris | “北极星”式多功能辐射枪 |
-| weapons | mw_pl_orion | “猎户座”式热射辐射枪 |
+| weapons | mw_pl_polaris | “北极星”式多功能镭射枪 |
+| weapons | mw_pl_orion | “猎户座”式热射镭射枪 |
 | weapons | mw_pl_modular_rifle | 模块化先进战斗步枪 |
 | weapons | mw_pl_kinetic_driver | 运动驱动器 |
 | weapons | mw_pl_hotwind | 热风冲锋手枪 |

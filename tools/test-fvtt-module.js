@@ -125,6 +125,23 @@ const cases = [
 	["Main Rifle // 突击 Class Feature", "主步枪 // 突击职业特性"], ["Main Cannon // 工业机甲 Template Feature", "主大炮 // 工业机甲模板特性"], ["Insert Heavy weapon", "装入重型武器"],
 	["Are you sure you want to fully repair the mech \"Raven\"?", "确定要全面维修机甲“Raven”吗？"],
 	["The", ""], ["Armor", "护甲"], ["E-DEF", "电子防御"], ["Stunned", "晕眩"],
+	["// Weapon Destruction //", "// 武器摧毁 //"],
+	["// System Destruction //", "// 系统摧毁 //"],
+	["// Equipment Destruction //", "// 装备摧毁 //"],
+	["// FULL REPAIR //", "// 全面维修 //"],
+	["// 埃弗勒斯 HAS STABILIZED //", "// 埃弗勒斯已稳住阵脚 //"],
+	["// 埃弗勒斯 is OVERCHARGING //", "// 埃弗勒斯正在超频 //"],
+	["// 攻击 VS EVASION //", "// 攻击 VS 回避 //"],
+	["// 攻击 VS E-DEF //", "// 攻击 VS 电子防御 //"],
+	["Structure Damage -- 埃弗勒斯", "结构伤害 -- 埃弗勒斯"],
+	["Stress Damage -- 埃弗勒斯", "压力伤害 -- 埃弗勒斯"],
+	["Burn Damage -- 埃弗勒斯", "燃烧伤害 -- 埃弗勒斯"],
+	["HULL -- 埃弗勒斯", "机体 -- 埃弗勒斯"],
+	["BURN :: ENG -- 埃弗勒斯", "燃烧 :: 工程 -- 埃弗勒斯"],
+	["The shackles remain intact, for now.", "枷锁暂时完好无损。"],
+	["MY SHACKLES LOOSE, MY CHAINS UNBOUND!", "吾之枷锁已松，吾之锁链已断！"],
+	["OUR SHACKLES LOOSE, OUR CHAINS UNBOUND!", "吾等枷锁已松，吾等锁链已断！"],
+	["Impaired", "受损"], ["IMPAIRED", "受损"], ["STUNNED", "晕眩"], ["EXPOSED", "暴露"],
 ];
 for (const [s, want] of cases) { const got = tr(s); ok(got === want, `translate(${JSON.stringify(s)}) 应为 ${JSON.stringify(want)}，实际 ${JSON.stringify(got)}`); }
 for (const s of ["Raven", "Bandana", "Damage roll button not in chat message", "伤害", "My custom note about the fight", "Raven took", "12", ""])
@@ -544,9 +561,9 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		const sc = rNew?.scene;
 		ok(sc && sc.name === "车卡器直出场景" && sc.viewed && sc.grid.type === 4 && sc.padding === 0 && sc.tokenVision === false, "新建场景模式：按文件名称建立平顶六角格场景并切换视图");
 		ok(sc.walls.length === 6 && sc.regions.length === 4, "新建场景包含 6 段障碍物墙体与 4 类地形/掩护区域");
-		// 涂画工具与导入的场景无缝衔接：点 (3,1) 中心能识别困难地形格
-		const pt31 = sc.grid.getCenterPoint({ i: 3, j: 1 });
-		ok(L.terrainCellHas(sc, sc.grid, pt31, "difficult") && !L.terrainCellHas(sc, sc.grid, pt31, "dangerous"), "导入后的区域可直接用涂画工具继续编辑");
+		// 涂画工具与导入的场景无缝衔接：Foundry v13 HexagonalGrid 中 i=行(r)、j=列(q)，故 (q=3,r=1) 对应 { i: 1, j: 3 }
+		const pt31 = sc.grid.getCenterPoint({ i: 1, j: 3 });
+		ok(L.terrainCellHas(sc, sc.grid, pt31, "difficult") && !L.terrainCellHas(sc, sc.grid, pt31, "dangerous"), "导入后的区域可直接用涂画工具继续编辑（{ i: 行, j: 列 } 与 BattleMap.toFoundry 完全对齐）");
 		// 部署标记清除：只删单位标记（1 个 S1 + 3 格 S2 占地 + 1 个 S2 圆标 = 5 个），保留墙体图形、涂色格、标注和画线
 		const drawBefore = sc.drawings.length;
 		const cleared = await L.clearUnitMarkers(sc);
@@ -563,11 +580,11 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		ok(bgScene.grid.type === 5, "铺到方格场景且勾选自动切换时，网格按 minQ=-3 切为偶数列下移平顶六角格（type=5）");
 		const softReg = bgScene.regions.find(r => r.getFlag("lancer-cn", "coverCells") === "soft");
 		ok(softReg && softReg.shapes.length === 2, "已有手动软性掩护区时，把导入的掩护格合并进同一区域而不丢失原格子");
-		// 再铺到奇数列下移（HEXODDQ=4）的场景且不切换网格：origin.i 应自动偏移 +1 以保持相邻列上下错位一致
+		// 再铺到奇数列下移（HEXODDQ=4）的场景且不切换网格：origin.j（列偏移）应自动偏移 +1 以保持相邻列上下错位一致
 		const fixedHexScene = mkSceneObj({ name: "固定 HEXODDQ 底图", grid: { type: 4, size: 100 }, flags: {} });
 		await L.importBattleMap(oddMap, { mode: "current", scene: fixedHexScene, setHexGrid: false });
-		// oddMap 中障碍物在 q=1,r=1，minQ=-3 → q-minQ=4；因 HEXODDQ 在 i=0 时不移、而 minQ=-3 在车卡器中下移，origin.i 应偏移为 1，故障碍物落在 i=5,j=1
-		ok(fixedHexScene.walls.length === 6 && fixedHexScene.walls[0].getFlag("lancer-cn", "hexWall") === "5,1", "在 HEXODDQ 场景铺奇数列地图时自动偏移 1 列对齐六角格上下错位：" + fixedHexScene.walls[0]?.getFlag("lancer-cn", "hexWall"));
+		// oddMap 中障碍物在 q=1,r=1，minQ=-3 → q-minQ=4；因 HEXODDQ 在 j=0 时不移、而 minQ=-3 在车卡器中下移，origin.j 应偏移为 1，故障碍物落在 i=1(行), j=5(列)
+		ok(fixedHexScene.walls.length === 6 && fixedHexScene.walls[0].getFlag("lancer-cn", "hexWall") === "1,5", "在 HEXODDQ 场景铺奇数列地图时自动偏移 1 列对齐六角格上下错位：" + fixedHexScene.walls[0]?.getFlag("lancer-cn", "hexWall"));
 		// 重复导入并开启 replaceImported：旧导入内容被替换，不会翻倍，GM 手工图形保留
 		await L.importBattleMap({ ...oddMap, cells: { "1,1": { terrain: "障碍物", color: "#202a38" } }, units: [], lines: [] }, { mode: "current", scene: bgScene, setHexGrid: false, replaceImported: true });
 		ok(bgScene.walls.length === 6 && bgScene.drawings.filter(d => !d.getFlag("lancer-cn", "mapImport")).length === 1 && !bgScene.drawings.some(d => d.getFlag("lancer-cn", "unitMarker")), "重复导入替换旧导入内容，不重复叠加墙体且保留 GM 手工图形");
@@ -833,8 +850,8 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		const L = ctx.LancerCN;
 		const B = L.BASIC_ACTIONS;
 		const keysOf = t => Object.keys(B).filter(k => B[k].actors.includes(t)).join();
-		ok(keysOf("mech") === "fragment,lockon,bolster,grapple,breakGrapple,ram,improvised,hide,search,brace,standUp,disengage,prepare,shutDown,bootUp,selfDestruct,eject,mountDismount", "机甲的基础动作完整覆盖核心规则书动作表");
-		ok(keysOf("npc") === "breakGrapple,standUp,disengage,prepare,npcInvade,npcLockon,npcGrapple,npcRam,npcHide,npcSearch,npcImprovised,npcStabilize", "NPC 的基础动作覆盖专属动作与通用挣脱/起身/脱离/准备");
+		ok(keysOf("mech") === "fragment,lockon,bolster,grapple,breakGrapple,ram,improvised,hide,search,overwatch,brace,standUp,disengage,prepare,shutDown,bootUp,selfDestruct,eject,mountDismount", "机甲的基础动作完整覆盖核心规则书动作表（含守望）");
+		ok(keysOf("npc") === "breakGrapple,overwatch,standUp,disengage,prepare,npcInvade,npcLockon,npcGrapple,npcRam,npcHide,npcSearch,npcImprovised,npcStabilize", "NPC 的基础动作覆盖专属动作与通用挣脱/守望/起身/脱离/准备");
 		ok(keysOf("pilot") === "standUp,disengage,prepare,mountDismount,pilotJockey,pilotPatch,pilotReload,pilotHide,pilotSearch", "驾驶员的基础动作覆盖步战骑乘/包扎/装填/躲藏/搜索及通用动作");
 		ok(B.npcInvade.flow === "TechAttackFlow" && B.npcInvade.invade && B.npcInvade.statuses.join() === "impaired" && /以系统对抗电子防御/.test(B.npcInvade.effect), "NPC 入侵：只有受损，没有缓慢");
 		ok(["npcGrapple", "npcRam", "npcImprovised"].every(k => B[k].effect.includes("+1/2/3 加值")) && B.npcRam.statuses.join() === "prone", "NPC 擒拿、冲撞、权宜攻击照录 +1/2/3 加值");
@@ -885,7 +902,8 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		FakeFlow.prototype.msg = mkMsg("Actor.m");
 		await L.beginBasicAction(mech, "fragment");
 		let b = begun.at(-1);
-		ok(b.name === "TechAttackFlow" && b.data.title === "入侵 // 破碎讯号" && b.data.invade === true && /破碎讯号/.test(b.data.effect) && b.data.extra === 1, "破碎讯号以科技攻击发起，begin 时带标题、入侵与说明");
+		ok(b.name === "TechAttackFlow" && b.data.title === "破碎讯号（快速科技）" && b.data.invade === true && /破碎讯号/.test(b.data.effect) && b.data.extra === 1, "破碎讯号以科技攻击发起，begin 时带快速科技标题、入侵与说明");
+		ok(L.translate("INVADE :: 破碎讯号（快速科技）") === "入侵 :: 破碎讯号（快速科技）", "破碎讯号聊天卡标题同时标明入侵类别与快速科技消耗且不重复入侵前缀");
 		ok(b.flow.lancerCnBasic === "fragment", "flow 上记下基础动作");
 		ok(sourced.length === 1 && sourced[0]["flags.lancer-cn.basicAction"] === "fragment", "攻击卡记上基础动作");
 		await L.beginBasicAction(mech, "improvised");
@@ -1032,8 +1050,8 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 	// ---- 战斗自动化（1.10.0）：自动挂异常与撤销、豁免检定与减半联动、非攻击掷伤害与模板、跨权限护甲抗性结算与预览、Flow 补完、回合结束清异常、抗性开关
 	{
 		const L = ctx.LancerCN;
-		ok(manifest.version === "1.15.2", "清单版本应为 1.15.2");
-		for (const k of ["autoApplyStatus", "crossPermDamage", "autoDangerZone", "turnEndPrompt"]) {
+		ok(manifest.version === "1.19.4", "清单版本应为 1.19.4");
+		for (const k of ["autoApplyStatus", "crossPermDamage", "autoDangerZone", "turnEndPrompt", "overwatchPrompt", "autoDeployableCover"]) {
 			const cfg = log.settings[`lancer-cn.${k}`];
 			ok(cfg && cfg.scope === "world" && cfg.config === true && cfg.default === true, `应注册世界设置 ${k}（默认开启）`);
 		}
@@ -3093,18 +3111,24 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 					// 盖革斯骨架 +1 + 双方羁绊（距离 2，家族禁卫扩展邻接至 2 格）+2 = +3 准度
 					ok(hullStatState.data.acc_diff.base.accuracy === 3, "家族禁卫扩展邻接至 2 格，双方羁绊 I（+2）与盖革斯骨架（+1）叠加使机体豁免/检定预填 +3 准度");
 
-					// C9. 巨人杀手骑乘强化（R1 软掩护与推动提醒 + R2 瓦解 + R3 终斩）+ 机甲表「天赋与核心战术栏」渲染与操作
+					// C9. 巨人杀手骑乘强化（R1 软掩护与结束清理 + R2 瓦解 + R3 实际扣血后终斩）+ 机甲表「天赋与核心战术栏」渲染与操作
 					acePilot.system.active_mech.value = null; // 模拟步战下马骑乘
 					proneEnemy.statuses.clear();
-					proneEnemy.system.hp.value = 3;
+					proneEnemy.system.hp.value = 6;
 					const gsJockeyMsg = await L.createJockeyControlCard({
 						pilotUuid: acePilot.uuid, pilotName: acePilot.name,
 						mechUuid: "Scene.s.Token.pe", mechName: "伏卧靶",
 					});
 					await L.executeJockeyEffect(gsJockeyMsg, "distract");
 					ok(acePilot.statuses.has("cover_soft") && proneEnemy.statuses.has("impaired") && proneEnemy.statuses.has("slow") && /巨人杀手 · 激怒/.test(chatCreated.at(-1)?.content ?? ""), "巨人杀手 R1：骑乘生效自动赋予驾驶员软掩护，干扰施加受损+缓慢并提示推动 2 格");
+					v13DmgFlows.length = 0;
 					await L.executeJockeyEffect(gsJockeyMsg, "damage");
-					ok(proneEnemy.system.hp.value === 0, "巨人杀手 R3「终斩」：骑乘破坏将剩余 HP ≤ 3 的目标直接斩杀至 0 HP");
+					ok(v13DmgFlows.at(-1)?.data?.lancerCnJockeyFinisher === true && proneEnemy.system.hp.value === 6, "巨人杀手 R3：掷伤害卡阶段仅透传终斩标记，不提前在未扣血前误判旧 HP");
+					proneEnemy.system.hp.value = 2; // 模拟原生 damageCalc 扣减 4 点伤害后剩余 2 HP
+					await ctx.CONFIG.Actor.documentClass.prototype.damageCalc.call(proneEnemy, { Kinetic: 4, Energy: 0, Explosive: 0, Burn: 0, Heat: 0, Variable: 0 }, { multiple: 1, addBurn: true, ap: false, paracausal: false, dmgCtx: { jockeyGiantSlayerFinisher: true } });
+					ok(proneEnemy.system.hp.value === 0, "巨人杀手 R3「终斩」：骑乘破坏实际扣血后剩余 HP 降至 1–3 时直接斩杀至 0 HP");
+					await L.endJockey(gsJockeyMsg, "测试结束");
+					ok(!acePilot.statuses.has("cover_soft"), "巨人杀手 R1：结束骑乘时自动移除骑乘赋予驾驶员的软掩护");
 					acePilot.system.active_mech.value = aceMech;
 
 					const talentBarHtml = L.renderTalentControlHTML(aceMech);
@@ -4113,6 +4137,2172 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		hooks.canvasTearDown();
 		ok(gRef.destroyed === true && gridLayer.children.length === 0 && L.sensorOverlayState().graphics === null, "切换或卸载场景（canvasTearDown）时彻底销毁 PIXI 对象并清空引用");
 		ctx.canvas = prevCanvas;
+	}
+
+	// ---- v1.15.3 回归测试：结构/过热/稳住阵脚聊天卡状态引用归一化与 AI 崩溃检定修复
+	{
+		// 1. preCreateChatMessage 将旧式 @Compendium[world.status-items.Exposed/Impaired] 与无标签 @LancerID[...] 归一化为中文 @LancerID[lid]{中文名}
+		let patchedMsg = null;
+		const fakeMsg = {
+			content: `<div class="effect-text">你的机甲@Compendium[world.status-items.Exposed]，但它@Compendium[world.status-items.Impaired]，且@LancerID[stunned]直到下一回合结束。</div>`,
+			flags: {},
+			updateSource(d) { patchedMsg = d; },
+		};
+		ctx.game.i18n = { lang: "cn" };
+		hooks.preCreateChatMessage(fakeMsg);
+		ok(
+			patchedMsg?.content === `<div class="effect-text">你的机甲@LancerID[exposed]{暴露}，但它@LancerID[impaired]{受损}，且@LancerID[stunned]{晕眩}直到下一回合结束。</div>`,
+			`结构/过热/稳住阵脚卡应把旧式 @Compendium 状态与裸 @LancerID 归一化为中文标签：实际 ${patchedMsg?.content}`,
+		);
+
+		// 2. 崩溃检定（CascadeFlow）：排除 tg_no_cascade 与已摧毁/已崩溃物品；掷出 2–20 时不写入 cascading=true，仅掷出 1 时写入
+		const stepsMap = ctx.game.lancer?.flowSteps;
+		if (stepsMap?.set && stepsMap?.get) {
+			let cascadeUpdates = [];
+			stepsMap.set("initCascadeData", async state => {
+				state.data.ai_systems.push("ai_normal", "ai_no_cascade", "ai_destroyed", "ai_already");
+				return true;
+			});
+			stepsMap.set("cascadeUpdateItems", async state => {
+				cascadeUpdates = state.data.ai_systems.slice();
+				return true;
+			});
+			let burnNormalRolled = false;
+			stepsMap.set("rollNormalDamage", async () => { burnNormalRolled = true; return true; });
+			stepsMap.set("checkBurnResult", async state => {
+				if (!state.data.check_total) throw new TypeError("Burn check hasn't been rolled yet!");
+				return true;
+			});
+			// 重新触发包装在上面新建的原生步骤上
+			const L2 = ctx.LancerCN;
+			void L2;
+			// 直接通过新的子沙盒调用 ready 以包裹新增的 flowSteps
+			const cascItems = [
+				{ id: "ai_normal", system: { destroyed: false, cascading: false, tags: [{ lid: "tg_ai" }] } },
+				{ id: "ai_no_cascade", system: { destroyed: false, cascading: false, tags: [{ lid: "tg_ai" }, { lid: "tg_no_cascade", is_cascaderesistant: true }] } },
+				{ id: "ai_destroyed", system: { destroyed: true, cascading: false, tags: [{ lid: "tg_ai" }] } },
+				{ id: "ai_already", system: { destroyed: false, cascading: true, tags: [{ lid: "tg_ai" }] } },
+			];
+			cascItems.get = id => cascItems.find(x => x.id === id);
+			// 若 patchLancerFlows 已在 ready 时运行过，检查是否已包裹或模拟新注册后包裹
+			if (!stepsMap.get("cascadeUpdateItems").lancerCnWrapped) {
+				// 创建独立 flowSteps Map 并在新实例验证
+				const h2 = runHooks();
+				const sm2 = new Map([
+					["initCascadeData", async state => { state.data.ai_systems.push("ai_normal", "ai_no_cascade", "ai_destroyed", "ai_already"); return true; }],
+					["cascadeUpdateItems", async state => { cascadeUpdates = state.data.ai_systems.slice(); return true; }],
+					["rollNormalDamage", async () => { burnNormalRolled = true; return true; }],
+					["checkBurnResult", async state => { if (!state.data.check_total) throw new TypeError("Burn check hasn't been rolled yet!"); return true; }],
+				]);
+				ctx.game = { system: { id: "lancer" }, user: { id: "u1" }, lancer: { flowSteps: sm2 }, settings: { get: () => true } };
+				h2["once:ready"]();
+				const stInit = { actor: { items: cascItems }, data: { ai_systems: [] } };
+				const initOk = await sm2.get("initCascadeData")(stInit);
+				ok(initOk === true && JSON.stringify(stInit.data.ai_systems) === JSON.stringify(["ai_normal"]), `initCascadeData 应剔除防崩溃（tg_no_cascade）、已摧毁与已崩溃的 AI：实际 ${JSON.stringify(stInit.data.ai_systems)}`);
+
+				cascadeUpdates = [];
+				await sm2.get("cascadeUpdateItems")({ actor: { items: cascItems }, data: { ai_systems: ["ai_normal"], result: { roll: { total: 14 } } } });
+				ok(cascadeUpdates.length === 0, "崩溃检定掷出 2–20（如 14）通过时绝不应把 AI 标记为已崩溃");
+
+				await sm2.get("cascadeUpdateItems")({ actor: { items: cascItems }, data: { ai_systems: ["ai_normal"], result: { roll: { total: 1 } } } });
+				ok(JSON.stringify(cascadeUpdates) === JSON.stringify(["ai_normal"]), "崩溃检定掷出 1 时应正常将对应 AI 标记为已崩溃");
+
+				burnNormalRolled = false;
+				const burnZeroOk = await sm2.get("checkBurnResult")({ data: { check_total: 0 } });
+				ok(burnZeroOk === true && burnNormalRolled === true, "燃烧工程检定总计恰好为 0 时不应抛错崩溃，应正常进入燃烧伤害掷骰");
+			}
+		}
+	}
+
+	// ---- v1.16.0 全面审计增补测试：6 项底层修复 + 机甲被动特征 + 回合初/末生命周期 + 低等兵/NPC 模板/职业被动 + 核心奖励 + NPC 无人机部署
+	{
+		const L = ctx.LancerCN;
+		const v116Cards = [];
+		const prevChatMsg116 = ctx.ChatMessage;
+		ctx.ChatMessage = {
+			getSpeaker: o => ({ actor: o?.actor?.name }),
+			create: async d => { v116Cards.push(d); return d; },
+		};
+		const mkFlagActor = (type, init = {}) => {
+			const flags = { "lancer-cn": { ...(init.flags ?? {}) } };
+			const statuses = new Set(init.statuses ?? []);
+			const items = [...(init.items ?? [])];
+			items.get = id => items.find(x => x.id === id);
+			const actor = {
+				id: init.id || `act_${Math.random().toString(36).slice(2, 8)}`,
+				uuid: init.uuid || `Actor.${init.id || Math.random().toString(36).slice(2, 8)}`,
+				name: init.name || "测试角色",
+				type,
+				isOwner: init.isOwner !== false,
+				statuses,
+				flags,
+				items,
+				itemTypes: init.itemTypes ?? {},
+				is_mech: () => type === "mech",
+				is_npc: () => type === "npc",
+				is_pilot: () => type === "pilot",
+				is_deployable: () => type === "deployable",
+				system: {
+					hp: { value: 12, max: 12, ...(init.hp ?? {}) },
+					overshield: { value: 0, ...(init.overshield ?? {}) },
+					heat: { value: 0, max: 6, ...(init.heat ?? {}) },
+					burn: init.burn ?? 0,
+					armor: init.armor ?? 0,
+					structure: { value: 4, max: 4, ...(init.structure ?? {}) },
+					stress: { value: 4, max: 4, ...(init.stress ?? {}) },
+					tier: init.tier ?? 1,
+					save: init.save ?? 11,
+					sensor_range: init.sensor_range ?? 10,
+					grit: init.grit ?? 2,
+					resistances: { ...(init.resistances ?? {}) },
+					statuses: Object.fromEntries([...statuses].map(s => [s, true])),
+					loadout: init.frameLid
+						? { frame: { value: { type: "frame", system: { lid: init.frameLid, counters: init.frameCounters ?? [] }, update: async p => { if (p["system.counters"]) actor.system.loadout.frame.value.system.counters = p["system.counters"]; } } } }
+						: (init.loadout ?? {}),
+					pilot: init.pilot ? { value: init.pilot } : undefined,
+				},
+				getFlag(scope, key) {
+					return key.split(".").reduce((o, k) => o?.[k], flags[scope]);
+				},
+				async setFlag(scope, key, val) {
+					flags[scope] = flags[scope] ?? {};
+					flags[scope][key] = val;
+				},
+				async unsetFlag(scope, key) {
+					if (flags[scope]) delete flags[scope][key];
+				},
+				async toggleStatusEffect(id, opts) {
+					const active = opts?.active !== undefined ? Boolean(opts.active) : !statuses.has(id);
+					if (active) statuses.add(id);
+					else statuses.delete(id);
+					actor.system.statuses[id] = active;
+				},
+				async update(patch) {
+					for (const [k, v] of Object.entries(patch ?? {})) {
+						if (k === "system" && v && typeof v === "object") {
+							for (const [sk, sv] of Object.entries(v)) {
+								const parts = sk.split(".");
+								let cur = actor.system;
+								for (let i = 0; i < parts.length - 1; i++) cur = (cur[parts[i]] = cur[parts[i]] ?? {});
+								cur[parts[parts.length - 1]] = sv;
+							}
+						} else if (k.startsWith("system.")) {
+							const parts = k.slice(7).split(".");
+							let cur = actor.system;
+							for (let i = 0; i < parts.length - 1; i++) cur = (cur[parts[i]] = cur[parts[i]] ?? {});
+							cur[parts[parts.length - 1]] = v;
+						}
+					}
+				},
+				async updateEmbeddedDocuments(_type, updates) {
+					for (const u of updates ?? []) {
+						const it = items.find(x => x.id === u._id);
+						if (it && u["system.loaded"] !== undefined) it.system.loaded = u["system.loaded"];
+						if (it && u["system.charged"] !== undefined) it.system.charged = u["system.charged"];
+						if (it && u["system.destroyed"] !== undefined) it.system.destroyed = u["system.destroyed"];
+					}
+				},
+			};
+			return actor;
+		};
+
+		// 1. Bugfix ①：扩展骨架 CP_PROFILES ID 对齐（网斗士 / 沃登 / 提索纳）
+		ok(Boolean(L.CP_PROFILES.mf_ch_retiarius && L.CP_PROFILES.mf_ext_wodeng && L.CP_PROFILES.mf_kkca_tizona), "扩展骨架 mf_ch_retiarius / mf_ext_wodeng / mf_kkca_tizona 均已对齐 CP_PROFILES");
+
+		// 2. Bugfix ③：extractBalancedClassBlocks 支持嵌套多段 <div> 不提前截断
+		const nestedHtml = `<div class="card"><div class="lancer-body"><div class="effect-text"><p><b>触发</b></p><p>目标进入射程</p><div class="sub-box"><p>子区块造成 4 爆炸伤害并必须通过敏捷豁免，否则伏卧。</p></div></div></div></div>`;
+		const blocks = L.extractBalancedClassBlocks(nestedHtml, /\beffect-text\b/);
+		ok(blocks.length === 1 && blocks[0].includes("4 爆炸伤害") && blocks[0].includes("否则伏卧"), "extractBalancedClassBlocks 完整保留含嵌套 <div> 的卡片正文，不截断后续伤害与豁免");
+
+		// 3. Bugfix ④ & ⑤：豁免减半/检定写法、非攻击加伤/散热排除、受到该武器伤害触发
+		const svHalf = L.parseSavesInText("锥形3内的角色受到 6 爆炸伤害，通过敏捷豁免则伤害减半。", { dc: 14 });
+		ok(svHalf.length === 1 && svHalf[0].key === "agi" && svHalf[0].halfOnSuccess === true, "识别「通过敏捷豁免则伤害减半」为成功减半");
+		const svCheck = L.parseSavesInText("目标必须通过机体检定，否则陷入伏卧并受损。", { dc: 12 });
+		ok(svCheck.length === 1 && svCheck[0].key === "hull" && svCheck[0].failStatuses.includes("prone") && svCheck[0].failStatuses.includes("impaired"), "识别「必须通过机体检定，否则...」为机体豁免");
+		const svXing = L.parseSavesInText("路径上的角色必须行敏捷豁免，失败则受到固定。", { dc: 13 });
+		ok(svXing.length === 1 && svXing[0].key === "agi" && svXing[0].failStatuses.includes("immobilized"), "识别「行敏捷豁免」写法");
+		ok(L.parseNonAttackDamage("直到下一回合结束，你的所有攻击造成+3动能伤害，且你冷却 4 热度。") === null, "parseNonAttackDamage 排除被动加伤（「攻击造成+3动能伤害」）与散热（「冷却 4 热度」）误判");
+		const seekerCls = L.classifyAttackCard({ system: { effect: "受到该武器伤害的角色自动陷入锁定。" } }, null, 12);
+		ok(seekerCls.autoHitStatuses.includes("lockon"), "classifyAttackCard 识别蜂巢寻索云「受到该武器伤害」为命中自动状态");
+
+		// 4. P0 机甲被动特征：燃烧免疫、状态免疫、伤害计算与预览（黑巫/蝎狮/拿破仑受身/为朝燃烧保底 1HP/提索纳双倍甲/哈布斯堡减伤/尼莫伏卧视同离散/灭世成吉思无视燃烧热度抗性）
+		const lancaster = mkFlagActor("mech", { frameLid: "mf_lancaster", armor: 1 });
+		const sal = mkFlagActor("mech", { frameLid: "mf_saladin", armor: 2 });
+		const sag = mkFlagActor("mech", { frameLid: "mf_ch_sagittarius" });
+		ok(L.isBurnImmune(lancaster) === true, "兰开斯特对燃烧免疫");
+		ok(L.isStatusImmune(sal, "shredded") === true && L.isStatusImmune(sag, "lockon") === true, "萨拉丁免疫离散、射手座免疫锁定");
+
+		const blackWitch = mkFlagActor("mech", { frameLid: "mf_black_witch", armor: 1 });
+		const bwPrev = L.previewDamageCalc(blackWitch, { Kinetic: 9, Energy: 0, Explosive: 0, Burn: 0, Heat: 0 });
+		ok(bwPrev.hpLoss === 4, `黑巫固有动能抗性：(9 - 1甲)=8 -> 减半为 4，实际 ${bwPrev.hpLoss}`);
+
+		const napoleon = mkFlagActor("mech", { frameLid: "mf_napoleon", armor: 2 });
+		await L.setCombatState(napoleon, { bracedActive: true });
+		const napPrev = L.previewDamageCalc(napoleon, { Kinetic: 12, Energy: 0, Explosive: 0, Burn: 0, Heat: 3 });
+		ok(napPrev.hpLoss === 1 && napPrev.heatGain === 3, `拿破仑受身「重型护盾/闪烁神盾」将普通伤害压至 1（替代常规抗性，热度按原值 3 照常承受），实际 hp=${napPrev.hpLoss}, heat=${napPrev.heatGain}`);
+
+		const tametomo = mkFlagActor("mech", { frameLid: "mf_ext_tametomo", hp: { value: 3, max: 10 }, burn: 6 });
+		tametomo.damageCalc = async function (applied, opts) {
+			const hpSub = (Number(applied?.Kinetic) || 0) + (Number(applied?.Energy) || 0) + (Number(applied?.Explosive) || 0) + (Number(applied?.Burn) || 0);
+			this.system.hp.value = Math.max(0, (Number(this.system.hp.value) || 0) - hpSub);
+			if (opts?.addBurn !== false && (Number(applied?.Burn) || 0) > 0) this.system.burn = (Number(this.system.burn) || 0) + Number(applied.Burn);
+			if ((Number(applied?.Heat) || 0) > 0) this.system.heat.value = (Number(this.system.heat.value) || 0) + Number(applied.Heat);
+		};
+		const prevCfgActor = ctx.CONFIG?.Actor;
+		ctx.CONFIG = ctx.CONFIG ?? {};
+		ctx.CONFIG.Actor = { documentClass: { prototype: tametomo } };
+		delete tametomo.damageCalc.lancerCnPatched;
+		L.patchTrueblackDamageCalc();
+		await tametomo.damageCalc({ Kinetic: 0, Energy: 0, Explosive: 0, Burn: 6, Heat: 0 }, { multiple: 1, addBurn: false, ap: true, paracausal: true, dmgCtx: { isBurnTick: true } });
+		ok(tametomo.system.hp.value === 1 && tametomo.system.burn === 6, `为朝「烈焰不灭」燃烧检定伤害应保留至少 1 HP 且不清零燃烧标记：实际 hp=${tametomo.system.hp.value}, burn=${tametomo.system.burn}`);
+
+		const nemoAtk = mkFlagActor("mech", { id: "nemo1", uuid: "Actor.nemo1", frameLid: "mf_ext_nemo" });
+		const proneDef = mkFlagActor("npc", { id: "def_p", uuid: "Actor.def_p", armor: 3, statuses: ["prone"], resistances: { kinetic: true } });
+		const prevLookup = ctx.fromUuidSync;
+		ctx.fromUuidSync = u => (u === "Actor.nemo1" ? nemoAtk : u === "Actor.def_p" ? proneDef : prevLookup?.(u));
+		const nemoPrev = L.previewDamageCalc(proneDef, { Kinetic: 6, Energy: 0, Explosive: 0, Burn: 0, Heat: 0 }, { dmgCtx: { attackerUuid: "Actor.nemo1" } });
+		ok(nemoPrev.hpLoss === 6, `内莫「憎恨之大天使」攻击伏卧目标应视同离散（无视 3 护甲与动能抗性，打满 6 伤），实际 ${nemoPrev.hpLoss}`);
+
+		const wkGenghis = mkFlagActor("mech", { id: "wkg1", uuid: "Actor.wkg1", frameLid: "mf_genghis_alt_worldkiller_genghis_mk_i" });
+		const resistDef = mkFlagActor("npc", { id: "def_r", uuid: "Actor.def_r", statuses: ["resistance_burn", "resistance_heat"] });
+		ctx.fromUuidSync = u => (u === "Actor.wkg1" ? wkGenghis : u === "Actor.def_r" ? resistDef : prevLookup?.(u));
+		const wkPrev = L.previewDamageCalc(resistDef, { Kinetic: 0, Energy: 0, Explosive: 0, Burn: 6, Heat: 4 }, { dmgCtx: { attackerUuid: "Actor.wkg1", ignoreBurnHeatResist: true } });
+		ok(wkPrev.hpLoss === 6 && wkPrev.heatGain === 4, `灭世成吉思汗「TBK 弹药」应无视目标燃烧与热度抗性（6 燃烧 + 4 热度），实际 hp=${wkPrev.hpLoss}, heat=${wkPrev.heatGain}`);
+		ctx.fromUuidSync = prevLookup;
+
+		// 5. P0 低等兵（Grunt）模板规则：「贫弱」外部热度即死 + 「无用之人」豁免成功免伤
+		const grunt = mkFlagActor("npc", {
+			id: "grunt1", uuid: "Actor.grunt1", name: "突击低等兵",
+			hp: { value: 1, max: 1 }, structure: { value: 1, max: 1 },
+			items: [
+				{ type: "npc_feature", name: "无用之人", system: { lid: "npcf_cn_grunt_1" } },
+				{ type: "npc_feature", name: "贫弱", system: { lid: "npcf_cn_grunt_2" } },
+			],
+		});
+		ok(L.hasGruntChaff(grunt) === true && L.hasGruntWeak(grunt) === true, "正确识别低等兵「无用之人」与「贫弱」模板特征");
+		const prevLookup2 = ctx.fromUuidSync;
+		ctx.fromUuidSync = u => (u === "Actor.grunt1" ? grunt : prevLookup2?.(u));
+		grunt.damageCalc = tametomo.damageCalc;
+		await grunt.damageCalc({ Kinetic: 0, Energy: 0, Explosive: 0, Burn: 0, Heat: 2 }, { multiple: 1, addBurn: true });
+		ok(grunt.system.hp.value === 0 && grunt.system.structure.value === 0 && grunt.statuses.has("downandout"), "低等兵承受外部热度时触发「贫弱」立即摧毁并陷入昏迷");
+		ctx.fromUuidSync = prevLookup2;
+
+		// 6. P1 老兵「假死」、超体「阿耳戈斯装甲」、老兵「钢爪 / 冲击装甲 / 隔热」、异种「现世挤出物」
+		const veteran = mkFlagActor("npc", {
+			id: "vet1", uuid: "Actor.vet1", name: "精英老兵",
+			armor: 1, hp: { value: 4, max: 14 }, structure: { value: 1, max: 1 },
+			items: [
+				{ type: "npc_feature", name: "假死", system: { lid: "npcf_cn_veteran_6" } },
+				{ type: "npc_feature", name: "隔热", system: { lid: "npcf_cn_veteran_10" } },
+				{ type: "npc_feature", name: "冲击装甲", system: { lid: "npcf_cn_veteran_19" } },
+				{ type: "npc_feature", name: "钢爪", system: { lid: "npcf_cn_veteran_21" } },
+			],
+		});
+		veteran.damageCalc = tametomo.damageCalc;
+		ok(L.isBurnImmune(veteran) === true, "老兵「隔热」对燃烧免疫");
+		const auxPrev = L.previewDamageCalc(veteran, { Kinetic: 7, Energy: 0, Explosive: 0, Burn: 0, Heat: 0 }, { dmgCtx: { weaponSize: "Auxiliary" } });
+		ok(auxPrev.hpLoss === 1, `老兵「钢爪」受到副武器伤害最多只承受 1 点，实际 ${auxPrev.hpLoss}`);
+		const mainPrev = L.previewDamageCalc(veteran, { Kinetic: 9, Energy: 0, Explosive: 0, Burn: 0, Heat: 0 }, { dmgCtx: { weaponSize: "Main" } });
+		ok(mainPrev.hpLoss === 4, `老兵「冲击装甲」对主武器伤害有抗性：(9-1甲)=8 -> 4，实际 ${mainPrev.hpLoss}`);
+		await veteran.damageCalc({ Kinetic: 10, Energy: 0, Explosive: 0, Burn: 0, Heat: 0 }, { multiple: 1, addBurn: true, ap: true });
+		ok(veteran.system.hp.value === 1 && L.getCombatState(veteran).usedFeignDeath === true, `老兵首次被致命击毁时触发「假死」保留 1 HP，实际 hp=${veteran.system.hp.value}`);
+		if (prevCfgActor) ctx.CONFIG.Actor = prevCfgActor;
+
+		const ultra = mkFlagActor("npc", {
+			id: "ult1", uuid: "Actor.ult1", name: "重装超体", tier: 2, armor: 6,
+			items: [
+				{ type: "npc_feature", name: "阿耳戈斯装甲", system: { lid: "npcf_cn_ultra_18" } },
+				{ type: "npc_feature", name: "额外致命", system: { lid: "npcf_cn_ultra_21" } },
+				{ type: "npc_feature", name: "致命", system: { lid: "npcf_cn_ultra_3" } },
+			],
+		});
+		await L.applyUltraArgusArmorLoss(ultra);
+		ok(ultra.system.armor === 4, `超体「阿耳戈斯装甲」触发结构/过热检定后损失 2 点护甲（6->4），实际 ${ultra.system.armor}`);
+		ok(L.countNpcDeadlyDice(ultra) === 3, "T2 超体首次会心计入致命(+1d6) + 额外致命(+2d6) = 3d6");
+		await L.setCombatState(ultra, { usedUltraExtraDeadly: true });
+		ok(L.countNpcDeadlyDice(ultra) === 1, "超体「额外致命」本回合已触发后不再重复叠加，仅保留普通「致命」1d6");
+
+		const exotic = mkFlagActor("npc", {
+			id: "exo1", uuid: "Actor.exo1", name: "异种体",
+			items: [{ type: "npc_feature", name: "现世挤出物", system: { lid: "npcf_cn_exotic_6" } }],
+		});
+		const exoPrev = L.previewDamageCalc(exotic, { Kinetic: 7, Energy: 0, Explosive: 0, Burn: 0, Heat: 0 });
+		ok(exoPrev.hpLoss === 4, `异种「现世挤出物」对所有伤害拥有抗性（ceil(7/2)=4），实际 ${exoPrev.hpLoss}`);
+
+		// 7. Bugfix ② & ⑥ + Flow 集成测试：NPC Main Melee 攻击类型修正、NPC tier_override 可靠标签、特战「致命精度」、戈尔贡「转移性麻痹」、机甲 HASE 检定修正、自动灭火器
+		{
+			const smFlow = new Map([
+				["initAttackData", async state => {
+					state.data.attack_type = "Ranged"; // 模拟原生把 "Main Melee" 误判为 Ranged
+					state.data.acc_diff = {
+						weapon: { melee: false, thrown: false, engaged: true, seeking: false, plugins: {} },
+						base: { accuracy: 0, difficulty: 0 },
+						targets: [],
+					};
+					return true;
+				}],
+				["setDamageTags", async state => {
+					const rel = (state.item?.system?.tags ?? []).find(t => t.is_reliable);
+					if (rel) {
+						state.data.reliable = true;
+						state.data.reliable_val = parseInt(rel.tierVal(state.actor.system.tier), 10) || 0;
+					}
+					return true;
+				}],
+				["rollAttacks", async () => true],
+				["rollCritDamage", async () => true],
+				["rollBurnCheck", async state => { state.data.check_total = 4; return true; }],
+				["initStatRollData", async () => true],
+			]);
+			const prevGame = ctx.game;
+			const prevRollFlow = ctx.Roll;
+			ctx.Roll = class {
+				constructor(f) { this.formula = String(f ?? ""); }
+				async evaluate() { this.total = Number(this.formula) || 4; return this; }
+				async getTooltip() { return ""; }
+			};
+			ctx.game = {
+				...prevGame,
+				system: { id: "lancer" },
+				user: { id: "u1", targets: new Set() },
+				users: { activeGM: { isSelf: true } },
+				lancer: { flowSteps: smFlow },
+				settings: { get: () => true },
+			};
+			L.patchLancerFlows();
+
+			// NPC "Main Melee" 修正
+			const npcBerserker = mkFlagActor("npc", { tier: 2 });
+			const npcAxe = { type: "npc_feature", name: "链锯巨斧", system: { type: "Weapon", weapon_type: "Heavy Melee", range: [{ type: "Threat", val: 1 }], tags: [] } };
+			const atkState = { actor: npcBerserker, item: npcAxe, data: {} };
+			await smFlow.get("initAttackData")(atkState, {});
+			ok(atkState.data.attack_type === "Melee" && atkState.data.acc_diff.weapon.melee === true && atkState.data.acc_diff.weapon.engaged === false, "NPC Heavy/Main Melee 武器应被修正为近战（attack_type=Melee、melee=true、忽略交战惩罚）");
+
+			// NPC 武器 tier_override 对齐 tg_reliable
+			const npcT1 = mkFlagActor("npc", { tier: 1 });
+			const npcRelWpn = {
+				type: "npc_feature",
+				system: {
+					type: "Weapon",
+					tier_override: 3,
+					tags: [{ lid: "tg_reliable", is_reliable: true, tierVal: t => [2, 3, 5][t - 1] }],
+				},
+			};
+			const dmgTagState = { actor: npcT1, item: npcRelWpn, data: { tags: [] } };
+			await smFlow.get("setDamageTags")(dmgTagState, {});
+			ok(dmgTagState.data.reliable_val === 5 && npcT1.system.tier === 1, `NPC 武器 tier_override=3 时可靠标签应取 T3 数值 5 且无损还原 NPC 原层级 1：实际 rel=${dmgTagState.data.reliable_val}, tier=${npcT1.system.tier}`);
+
+			// 特战队员「致命精度」会心固定加伤 (+2/+3/+3)
+			const specOp = mkFlagActor("npc", {
+				tier: 2,
+				items: [{ type: "npc_feature", name: "致命精度", system: { lid: "npcf_deadly_precision_spec_op" } }],
+			});
+			const critState = {
+				actor: specOp,
+				data: {
+					has_crit_hit: true,
+					damage: [{ type: "Kinetic", val: "4" }],
+					crit_damage_results: [{ d_type: "Kinetic", roll: { total: 4 } }],
+					damage_hud_data: { targets: [{ targetUuid: "Token.p1" }] },
+					targets: [{ target: { uuid: "Token.p1" }, crit: true, half_damage: false, damage: [{ type: "Kinetic", amount: 4 }] }],
+				},
+			};
+			await smFlow.get("rollCritDamage")(critState, {});
+			const specSum = critState.data.targets[0].damage.reduce((n, d) => n + d.amount, 0);
+			ok(specSum === 7, `T2 特战队员「致命精度」会心应在 4 伤基础上追加 +3 固定伤害（合计 7），实际 ${specSum}`);
+
+			// 戈尔贡「转移性麻痹」：天然 1–2 自动失手并令攻击者晕眩
+			const gorgon = mkFlagActor("mech", { id: "gorg1", uuid: "Actor.gorg1", frameLid: "mf_gorgon" });
+			const attackerNpc = mkFlagActor("npc", { id: "atk1", uuid: "Actor.atk1", name: "突击兵" });
+			const prevLookup3 = ctx.fromUuidSync;
+			ctx.fromUuidSync = u => (u === "Actor.atk1" ? attackerNpc : u === "Actor.gorg1" ? gorgon : prevLookup3?.(u));
+			const gorgonRollState = {
+				actor: attackerNpc,
+				data: {
+					attack_type: "Ranged",
+					has_normal_hit: true,
+					has_crit_hit: false,
+					attack_results: [{ roll: { terms: [{ faces: 20, results: [{ result: 2, active: true }] }] } }],
+					hit_results: [{ target: { actor: gorgon, uuid: "Actor.gorg1" }, total: 12, hit: true, crit: false }],
+				},
+			};
+			await smFlow.get("rollAttacks")(gorgonRollState, {});
+			ok(gorgonRollState.data.hit_results[0].hit === false && gorgonRollState.data.has_normal_hit === false && attackerNpc.statuses.has("stunned"), "攻击戈尔贡掷出天然 1–2 时自动失手，且攻击者立即陷入晕眩");
+			ctx.fromUuidSync = prevLookup3;
+
+			// 骨架 HASE 检定修正（暮翼机体 +1 难度、谢尔曼工程 +1 准度）
+			const duskWing = mkFlagActor("mech", { frameLid: "mf_dusk_wing" });
+			const dwHullState = { actor: duskWing, data: { path: "system.hull", title: "机体豁免", acc_diff: { base: { accuracy: 0, difficulty: 0 } } } };
+			await smFlow.get("initStatRollData")(dwHullState, {});
+			ok(dwHullState.data.acc_diff.base.difficulty === 1, "暮翼机体检定与豁免自动预填 +1 难度");
+
+			const sherman = mkFlagActor("mech", { frameLid: "mf_sherman" });
+			const shEngState = { actor: sherman, data: { path: "system.eng", title: "工程检定", acc_diff: { base: { accuracy: 0, difficulty: 0 } } } };
+			await smFlow.get("initStatRollData")(shEngState, {});
+			ok(shEngState.data.acc_diff.base.accuracy === 1, "谢尔曼工程检定与豁免自动预填 +1 准度");
+
+			// 核心奖励「自动灭火器」：BurnFlow 自动通过检定（check_total = 20）
+			const extPilot = mkFlagActor("pilot", { items: [{ type: "core_bonus", system: { lid: "cb_ch_extinguisher" } }] });
+			const extMech = mkFlagActor("mech", { pilot: extPilot, burn: 5 });
+			const burnSt = { actor: extMech, data: {} };
+			await smFlow.get("rollBurnCheck")(burnSt, {});
+			ok(burnSt.data.check_total === 20, "具备「自动灭火器」的机甲进行燃烧检定时自动以 20 通过");
+
+			ctx.Roll = prevRollFlow;
+			ctx.game = prevGame;
+		}
+
+		// 8. P0/P2 回合初/末生命周期：NPC 充能提示与一键掷骰、雷利「全金属外壳」自动装填、炎魔「再生」、鬼影织物隐形维持与萨加玛塔「英雄本色」受身免罚
+		{
+			const raleigh = mkFlagActor("mech", {
+				id: "ral1", uuid: "Actor.ral1", name: "雷利号", frameLid: "mf_raleigh",
+				items: [{ id: "w_hand_cannon", type: "mech_weapon", name: "手炮", system: { loaded: false, tags: [{ lid: "tg_loading", is_loading: true }] } }],
+			});
+			const balor = mkFlagActor("mech", {
+				id: "bal1", uuid: "Actor.bal1", name: "炎魔号", frameLid: "mf_balor",
+				hp: { value: 6, max: 20 },
+			});
+			const rechargeItem = {
+				id: "npcf_rc1", type: "npc_feature", name: "散射地雷",
+				system: { charged: false, destroyed: false, tags: [{ lid: "tg_recharge", is_recharge: true, val: "4" }] },
+				async update(p) { if (p["system.charged"] !== undefined) rechargeItem.system.charged = p["system.charged"]; },
+			};
+			const rechargeNpc = mkFlagActor("npc", {
+				id: "npc_rc", uuid: "Actor.npc_rc", name: "播种者", tier: 2,
+				items: [rechargeItem],
+			});
+			const prevUsers = ctx.game.users;
+			ctx.game.users = { activeGM: { isSelf: true } };
+			const mockCombat = {
+				round: 2,
+				previous: { combatantId: "c_ral" },
+				current: { combatantId: "c_bal" },
+				combatants: [
+					{ id: "c_ral", name: "雷利号", actor: raleigh, token: { uuid: "Actor.ral1" } },
+					{ id: "c_bal", name: "炎魔号", actor: balor, token: { uuid: "Actor.bal1" } },
+					{ id: "c_npc", name: "播种者", actor: rechargeNpc, token: { uuid: "Actor.npc_rc" } },
+				],
+			};
+			await L.onUpdateCombatTurnEnd(mockCombat, { turn: 1 }, { direction: 1 });
+			ok(raleigh.items[0].system.loaded === true, "雷利回合结束未攻击时触发「全金属外壳」自动装填全部装填武器");
+
+			mockCombat.previous = { combatantId: "c_bal" };
+			mockCombat.current = { combatantId: "c_npc" };
+			await L.onUpdateCombatTurnEnd(mockCombat, { turn: 2 }, { direction: 1 });
+			ok(balor.system.hp.value === 11, `炎魔回合结束触发「再生」回复 1/4 最大 HP（6 + 5 = 11），实际 ${balor.system.hp.value}`);
+			const rcMsg = v116Cards.find(m => m.flags?.["lancer-cn"]?.npcRechargePrompt);
+			ok(Boolean(rcMsg), "NPC 回合开始存在未充能特性时自动发出「NPC 充能检定」提醒卡");
+			if (rcMsg) {
+				rcMsg.isAuthor = true;
+				rcMsg.getFlag = (s, k) => rcMsg.flags?.[s]?.[k];
+				rcMsg.setFlag = async (s, k, v) => { rcMsg.flags[s] = rcMsg.flags[s] ?? {}; rcMsg.flags[s][k] = v; };
+				const prevLookup4 = ctx.fromUuidSync;
+				const prevRoll = ctx.Roll;
+				ctx.fromUuidSync = u => (u === "Actor.npc_rc" ? rechargeNpc : prevLookup4?.(u));
+				ctx.Roll = class { async evaluate() { this.total = 6; return this; } };
+				await L.executeNpcRechargePrompt(rcMsg);
+				ctx.Roll = prevRoll;
+				ctx.fromUuidSync = prevLookup4;
+				ok(rechargeItem.system.charged === true && rcMsg.flags["lancer-cn"].npcRechargePrompt.rolled === true, "点击 NPC 充能检定按钮掷出达标值后自动将特性标记为已充能");
+			}
+			ctx.game.users = prevUsers;
+
+			// 萨加玛塔「英雄本色」：1/场景受身不设 braced 惩罚标记
+			const sagarmatha = mkFlagActor("mech", { frameLid: "mf_sagarmatha" });
+			await L.beginBasicAction(sagarmatha, "brace");
+			ok(!sagarmatha.getFlag("lancer-cn", "braced") && L.getCombatState(sagarmatha).usedSagarmathaHeroism === true, "萨加玛塔首次受身触发「英雄本色」，不挂下回合行动受限 braced 标记");
+			await L.beginBasicAction(sagarmatha, "brace");
+			ok(sagarmatha.getFlag("lancer-cn", "braced") === true, "萨加玛塔同场景第二次受身正常挂上 braced 标记");
+
+			// 吉尔伽美什「军备骰」：初始为 6，降至 1 时显示重掷按钮并可一键重置为 6
+			const gilgamesh = mkFlagActor("mech", { frameLid: "mf_gilgamesh" });
+			ok(L.getTalentDie(gilgamesh, "gilgamesh") === 6, "吉尔伽美什初始军备骰为 6");
+			await L.setTalentDie(gilgamesh, "gilgamesh", 1);
+			const gilBar = L.renderTalentControlHTML(gilgamesh);
+			ok(gilBar.includes("军备骰") && gilBar.includes("gilgameshReroll"), "吉尔伽美什军备骰为 1 时战术栏渲染「军备重掷（重置→6）」按钮");
+			await L.executeTalentSheetAction(gilgamesh, "gilgameshReroll");
+			ok(L.getTalentDie(gilgamesh, "gilgamesh") === 6, "执行军备重掷后军备骰重置回 6");
+		}
+
+		// 9. P2 NPC 无人机 / 地雷属性解析与一键生成部署指示物
+		{
+			const hiveNpc = mkFlagActor("npc", { id: "hive1", uuid: "Actor.hive1", name: "蜂巢统领", tier: 2 });
+			const turretItem = {
+				type: "npc_feature",
+				name: "炮塔无人机",
+				system: {
+					lid: "npcf_turret_drone",
+					type: "System",
+					tags: [{ lid: "tg_drone", is_drone: true }],
+					effect: "部署一个炮塔无人机（大小1/2，HP 5/8/10，回避10，电子防御10，护甲0）。",
+				},
+			};
+			const spec = L.parseNpcDeployableSpec(turretItem, turretItem.system.effect, hiveNpc);
+			ok(spec && spec.deployType === "Drone" && spec.size === 0.5 && spec.hp === 8 && spec.evasion === 10 && spec.edef === 10, `parseNpcDeployableSpec 按 T2 自动提取无人机属性（HP=8, 大小=0.5）：实际 ${JSON.stringify(spec)}`);
+
+			let createdActorData = null;
+			let createdTokenDocs = null;
+			const prevActorCls = ctx.Actor;
+			const prevCanvas2 = ctx.canvas;
+			ctx.Actor = {
+				create: async data => {
+					createdActorData = data;
+					return { id: "dep_act_1", uuid: "Actor.dep_act_1", name: data.name, img: data.img, prototypeToken: data.prototypeToken, update: async () => {} };
+				},
+			};
+			ctx.canvas = {
+				...prevCanvas2,
+				grid: { size: 100 },
+				scene: {
+					createEmbeddedDocuments: async (_type, docs) => {
+						createdTokenDocs = docs;
+						return docs.map(d => ({ ...d, id: "tok_dep_1" }));
+					},
+				},
+				tokens: { placeables: [{ actor: hiveNpc, x: 200, y: 300, document: { disposition: -1, elevation: 0 } }] },
+			};
+			const spawned = await L.spawnNpcDeployableFromCard({}, { actor: hiveNpc, actorUuid: hiveNpc.uuid, item: turretItem, npcDeployable: spec });
+			ctx.Actor = prevActorCls;
+			ctx.canvas = prevCanvas2;
+			ok(Boolean(spawned && createdActorData?.type === "deployable" && createdActorData.system.stats.hp === "8" && createdTokenDocs?.length === 1 && createdTokenDocs[0].x === 300), "spawnNpcDeployableFromCard 自动创建 deployable 角色并在部署者邻接格放置指示物");
+		}
+		ctx.ChatMessage = prevChatMsg116;
+
+		// ---- v1.16.1 回归测试：爆发（Burst）范围模板数值类型与 getBurstDistance 字符串拼接修复、持续区域免自动清除及勘探者 II 淘金热豁免
+		{
+			const prevCanvasT = ctx.canvas;
+			const prevWrt = ctx.game.lancer.canvas;
+			const flagsSet = [];
+			class MockWeaponRangeTemplate {
+				constructor(range, creator) {
+					this.range = range;
+					this.creator = creator;
+				}
+				// 复刻上游 weapon-range-template.ts 原始实现（未强转 Number 且未乘 grid_distance）
+				getBurstDistance(size) {
+					return this.range.val + size / 2;
+				}
+				async placeTemplate() {
+					return {
+						id: "tmpl_burst_test",
+						setFlag: async (scope, key, val) => { flagsSet.push([scope, key, val]); },
+					};
+				}
+				static fromRange(range, creator) {
+					return new MockWeaponRangeTemplate(range, creator);
+				}
+			}
+			ctx.canvas = { ...prevCanvasT, scene: { dimensions: { distance: 1 } } };
+			ctx.game.lancer.canvas = { WeaponRangeTemplate: MockWeaponRangeTemplate };
+
+			let capturedRange = null;
+			const origFrom = MockWeaponRangeTemplate.fromRange;
+			MockWeaponRangeTemplate.fromRange = function (range, creator) {
+				capturedRange = range;
+				return origFrom.call(this, range, creator);
+			};
+
+			// 1) placeAoETemplate 传数字或字符串 "1"，range.val 均为数值 1，getBurstDistance(1) === 1.5（而非字符串 "10.5"），getBurstDistance(2) === 2（而非 "11"）
+			flagsSet.length = 0;
+			await L.placeAoETemplate("Burst", "1", null);
+			const inst1 = ctx.game.lancer.canvas.WeaponRangeTemplate.fromRange({ type: "Burst", val: "1" });
+			ok(typeof capturedRange?.val === "number" && capturedRange.val === 1, "placeAoETemplate 传入 WeaponRangeTemplate.fromRange 的 val 必须为数值而非字符串");
+			ok(inst1.getBurstDistance(1) === 1.5 && inst1.getBurstDistance(2) === 2, "修复后 Burst 1 对体积 1 / 体积 2 指示物的半径分别为 1.5 与 2（杜绝 \"1\" + 0.5 === \"10.5\" 巨型圆缺陷）");
+			ok(flagsSet.some(f => f[0] === "lancer" && f[1] === "isAttack" && f[2] === true), "瞬发范围模板默认标记 lancer.isAttack = true");
+
+			// 2) 当场景网格距离单位为 5（手动新建场景默认值）时，Burst 1 半径自动按 1.5 * 5 = 7.5 缩放
+			ctx.canvas = { ...prevCanvasT, scene: { dimensions: { distance: 5 } } };
+			ok(inst1.getBurstDistance(1) === 7.5, "getBurstDistance 自动乘以 scene.dimensions.distance，兼容非 1 网格比例场景");
+
+			// 3) 持续存在区域（如勘探者「创造进口」）识别 persistentAoE = true，放置时不打 isAttack 标记；瞬发状态持续描述不误判为持续区域
+			flagsSet.length = 0;
+			const prospectorText = "每场景1次，站在坚实地面上时，你可以用快速动作在自身周围创造爆发1进口。随后你可以穿梭隧道至多5格，并在抵达处创造另一个爆发1进口。进口持续存在至场景结束。与进口重叠的地形及地形部分受到20穿甲爆炸伤害。";
+			ok(L.isPersistentAoEText(prospectorText) === true, "勘探者「进口持续存在至场景结束」识别为持续存在区域模板");
+			ok(L.isPersistentAoEText("爆发1内的角色必须通过机体豁免，否则陷入缓慢状态，直到其下一回合结束。") === false, "角色状态持续至下一回合结束不误判为持续区域模板");
+			await L.placeAoETemplate("Burst", 1, null, { persistent: true });
+			ok(flagsSet.length === 0, "persistent: true 的持续区域模板不设置 lancer.isAttack，避免换回合被系统自动删除");
+
+			// 4) 勘探者 II「淘金热」：点击「创造进口」卡片自动附带机体豁免 -> 伏卧
+			const prospItem = { id: "it_prosp", uuid: "Actor.p_prosp.Item.it_prosp", type: "talent", is_talent: () => true, system: { lid: "t_prospector", curr_rank: 2 } };
+			const prospPilot = {
+				id: "p_prosp", uuid: "Actor.p_prosp", name: "矿工", type: "pilot",
+				items: [prospItem],
+				itemTypes: { talent: [prospItem] },
+				system: {},
+			};
+			prospItem.actor = prospPilot;
+			prospItem.parent = prospPilot;
+			const prospMech = mkFlagActor("mech", { id: "m_prosp", uuid: "Actor.m_prosp", name: "掘进机", save: 13 });
+			prospMech.system.pilot = { value: prospPilot, id: prospPilot.id };
+			prospPilot.system.active_mech = { value: prospMech };
+			const prevLookupProsp = ctx.fromUuidSync;
+			ctx.fromUuidSync = u => (u === prospItem.uuid ? prospItem : u === "Actor.p_prosp" ? prospPilot : u === "Actor.m_prosp" ? prospMech : prevLookupProsp?.(u));
+			const entranceMsg = {
+				id: "msg_prosp_ent",
+				content: `<div class="card clipped-bot" data-uuid="Actor.p_prosp.Item.it_prosp"><div class="lancer-header">// 创造进口 //</div><div class="effect-text">${prospectorText}</div></div>`,
+				speaker: { actor: "p_prosp" },
+				flags: { lancer: { actionData: { actor: "p_prosp", action: { name: "创造进口" } } } },
+				getFlag: (scope, key) => entranceMsg.flags?.[scope]?.[key],
+			};
+			const entInfo = L.analyzeCard(entranceMsg);
+			ctx.fromUuidSync = prevLookupProsp;
+			ok(Boolean(entInfo?.persistentAoE && entInfo.aoeRanges?.length === 1 && entInfo.aoeRanges[0].type === "Burst" && entInfo.aoeRanges[0].val === 1), "勘探者「创造进口」卡片解析出数值型 Burst 1 且标记为持续区域");
+			ok(Boolean(entInfo?.saves?.some(s => s.key === "hull" && s.dc === 13 && s.failStatuses.includes("prone"))), "勘探者 II「淘金热」在「创造进口」卡片上自动生成 DC=机甲豁免 的机体豁免否则伏卧");
+
+			ctx.canvas = prevCanvasT;
+			ctx.game.lancer.canvas = prevWrt;
+		}
+
+		// ---- v1.16.2 回归测试：线形（Line）与锥形（Cone）模板放置期滚轮 / 按键 / 拖拽 / 两步瞄准旋转 + 落盘后直接旋转与自动重锁目标
+		{
+			ok(L.normalizeTemplateDirection(-15) === 345 && L.normalizeTemplateDirection(375) === 15, "normalizeTemplateDirection 将负角与超 360° 角归一化至 [0, 360)");
+
+			const prevCanvasR = ctx.canvas;
+			const prevWrtR = ctx.game.lancer.canvas;
+			const prevAddEv = ctx.addEventListener;
+			const prevRemEv = ctx.removeEventListener;
+			const winHandlers = new Map();
+			ctx.addEventListener = (type, fn) => {
+				if (!winHandlers.has(type)) winHandlers.set(type, new Set());
+				winHandlers.get(type).add(fn);
+			};
+			ctx.removeEventListener = (type, fn) => {
+				winHandlers.get(type)?.delete(fn);
+			};
+			const emitWin = (type, evObj) => {
+				for (const fn of Array.from(winHandlers.get(type) ?? [])) fn(evObj);
+			};
+
+			const viewEl = { id: "board" };
+			const createdDocs = [];
+			class MockPreviewTemplate {
+				constructor(range) {
+					this.range = range;
+					const src = {
+						t: range.type === "Line" ? "ray" : range.type === "Cone" ? "cone" : "circle",
+						x: 0, y: 0, direction: 0, distance: Number(range.val) || 1,
+						flags: { lancer: { range, ignore: { tokens: [], dispositions: [] } } },
+					};
+					this.document = {
+						...src,
+						updateSource(patch) { Object.assign(this, patch); },
+						toObject() { return { ...this }; },
+					};
+					this.layer = { preview: { removeChildren: () => [] } };
+				}
+				get isBurst() { return this.range.type === "Burst"; }
+				snapToCenter(p) { return { x: Math.round(p.x / 100) * 100, y: Math.round(p.y / 100) * 100 }; }
+				snapToToken(p) { return this.snapToCenter(p); }
+				refresh() {}
+				activatePreviewListeners() { return Promise.resolve(null); }
+				placeTemplate() { return this.activatePreviewListeners({ activate() {} }); }
+				static fromRange(r) { return new MockPreviewTemplate(r); }
+			}
+
+			ctx.canvas = {
+				...prevCanvasR,
+				ready: true,
+				app: null,
+				grid: { size: 100 },
+				canvasCoordinatesFromClient: p => ({ x: p.x, y: p.y }),
+				scene: {
+					dimensions: { distance: 1 },
+					templates: createdDocs,
+					createEmbeddedDocuments: async (_type, arr) => {
+						const doc = {
+							...arr[0],
+							id: `tmpl_dir_${createdDocs.length + 1}`,
+							isAuthor: true,
+							user: ctx.game.user?.id || "u1",
+							flags: { lancer: { range: arr[0].flags.lancer.range, isAttack: true } },
+							getFlag(scope, key) { return this.flags?.[scope]?.[key]; },
+							async setFlag(scope, key, val) { this.flags[scope] = this.flags[scope] ?? {}; this.flags[scope][key] = val; },
+							async update(patch) {
+								Object.assign(this, patch);
+								L.onUpdateMeasuredTemplate(this, patch, {}, ctx.game.user?.id || "u1");
+								return this;
+							},
+						};
+						createdDocs.push(doc);
+						return [doc];
+					},
+				},
+			};
+			if (ctx.canvas) ctx.canvas.app = { canvas: viewEl };
+			// 让无真实 PIXI 渲染测试直接返回创建文档
+			const origCreateEmb = ctx.canvas.scene.createEmbeddedDocuments;
+			ctx.canvas.scene.createEmbeddedDocuments = async (t, a) => {
+				const res = await origCreateEmb(t, a);
+				res[0].object = { shape: true };
+				return res;
+			};
+			ctx.game.lancer.canvas = { WeaponRangeTemplate: MockPreviewTemplate };
+			L.patchWeaponRangeTemplate();
+
+			// 1) 方式 A：滚轮旋转（阻止地图缩放）+ Q/E 微调 + 单击直接落盘
+			let wheelPrevented = false;
+			const p1 = L.placeAoETemplate("Line", 5, null);
+			ok(L.isPlacingTemplate() === true, "放置范围模板期间 isPlacingTemplate() 为 true，防止目标面板抢夺点击");
+			emitWin("pointermove", { clientX: 100, clientY: 100, target: viewEl });
+			emitWin("wheel", { deltaY: 100, shiftKey: false, ctrlKey: false, target: viewEl, preventDefault: () => { wheelPrevented = true; }, stopImmediatePropagation: () => {} });
+			emitWin("keydown", { code: "KeyE", shiftKey: true, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			emitWin("pointerdown", { button: 0, clientX: 100, clientY: 100, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			emitWin("pointerup", { button: 0, clientX: 100, clientY: 100, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			const d1 = await p1;
+			ok(wheelPrevented && d1?.direction === 20 && d1.x === 100 && d1.y === 100, `滚轮(+15°) + Shift+E(+5°) 旋转至 20° 后单击直接落盘，且阻止画布缩放：实际 ${d1?.direction}`);
+
+			// 2) 方式 B：按住左键拖拽瞄准方向（起点锁在 (200,200)，拖向正南 (200,400) -> 90°）
+			const p2 = L.placeAoETemplate("Cone", 3, null);
+			emitWin("pointerdown", { button: 0, clientX: 200, clientY: 200, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			emitWin("pointermove", { clientX: 200, clientY: 400, shiftKey: false, target: viewEl });
+			emitWin("pointerup", { button: 0, clientX: 200, clientY: 400, shiftKey: false, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			const d2 = await p2;
+			ok(d2?.x === 200 && d2?.y === 200 && d2?.direction === 90, `按住左键拖拽瞄准：起点保持 (200,200) 且方向实时指向 90°，实际 (${d2?.x},${d2?.y}) @ ${d2?.direction}°`);
+
+			// 3) 方式 C：两步法（左键单击锁起点 -> 右键重选起点 -> 再次左键锁起点 -> 移动鼠标指向 180° -> 左键确认）
+			const p3 = L.placeAoETemplate("Line", 4, null);
+			emitWin("pointerdown", { button: 0, clientX: 100, clientY: 100, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			emitWin("pointerup", { button: 0, clientX: 100, clientY: 100, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			// 右键轻点解锁起点而不是直接退出
+			emitWin("pointerdown", { button: 2, clientX: 100, clientY: 100, target: viewEl });
+			emitWin("contextmenu", { clientX: 100, clientY: 100, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			// 重新在 (300,300) 单击锁定起点，移动鼠标到正西 (100,300) -> 180°，再次单击确认
+			emitWin("pointerdown", { button: 0, clientX: 300, clientY: 300, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			emitWin("pointerup", { button: 0, clientX: 300, clientY: 300, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			emitWin("pointermove", { clientX: 100, clientY: 300, shiftKey: false, target: viewEl });
+			emitWin("pointerdown", { button: 0, clientX: 100, clientY: 300, shiftKey: false, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			emitWin("pointerup", { button: 0, clientX: 100, clientY: 300, shiftKey: false, target: viewEl, preventDefault: () => {}, stopImmediatePropagation: () => {} });
+			const d3 = await p3;
+			ok(d3?.x === 300 && d3?.y === 300 && d3?.direction === 180, `两步法瞄准与右键重选起点：最终落在 (300,300) @ 180°，实际 (${d3?.x},${d3?.y}) @ ${d3?.direction}°`);
+
+			// 4) 落盘后直接旋转（Alt + 滚轮 / rotatePlacedDirectionalTemplate）并自动触发 targetsFromTemplate 重新锁定目标
+			let retargetedId = null;
+			const prevTargetsFn = ctx.game.lancer.targetsFromTemplate;
+			ctx.game.lancer.targetsFromTemplate = id => { retargetedId = id; };
+			L.onPlacedTemplateWheel({
+				altKey: true, shiftKey: false, ctrlKey: false, metaKey: false,
+				deltaY: -100, clientX: 300, clientY: 300, target: viewEl,
+				preventDefault: () => {}, stopImmediatePropagation: () => {},
+			});
+			await new Promise(r => setTimeout(r, 60));
+			ok(d3.direction === 165 && retargetedId === d3.id, `落盘后按住 Alt+滚轮直接将线形模板从 180° 旋至 165° 并自动重跑 targetsFromTemplate（${retargetedId}）`);
+
+			const tpHtmlLine = L.targetPanelHTML({ title: "测试", aoe: [{ type: "Line", val: 5, label: "线形 5" }, { type: "Blast", val: 1, label: "溅射 1" }] }, []);
+			ok((tpHtmlLine.match(/data-act="rot-template"/g) ?? []).length === 2, "目标选择面板仅为线形/锥形渲染 ↺ / ↻ 旋转按钮，不为溅射/爆发冗余渲染");
+
+			ctx.game.lancer.targetsFromTemplate = prevTargetsFn;
+			ctx.addEventListener = prevAddEv;
+			ctx.removeEventListener = prevRemEv;
+			ctx.canvas = prevCanvasR;
+			ctx.game.lancer.canvas = prevWrtR;
+		}
+
+		// ---- v1.17.0 全项目交叉审计回归测试
+		{
+			const L = ctx.LancerCN;
+			ok(manifest.version === "1.19.4", `模组版本号应为 1.19.4（实际 ${manifest.version}）`);
+
+			// 1) UI/聊天词典与全大写/首字母大写匹配修复
+			ok(L.translate("// 埃弗勒斯 IS STARTING THEIR TURN //") === "// 埃弗勒斯开始回合 //", "全大写回合开始横幅正常汉化");
+			ok(L.translate("// 埃弗勒斯 IS ENDING THEIR TURN //") === "// 埃弗勒斯结束回合 //", "全大写回合结束横幅正常汉化");
+			ok(L.translate("On Hit") === "命中时" && L.translate("On Crit") === "会心一击时" && L.translate("On Attack") === "攻击时", "首字母大写 On Attack/Hit/Crit 正常汉化");
+			ok(L.translate("// CHECK :: GRIT //") === "// 检定 :: 毅力 //" && L.translate("// CHECK :: TIER //") === "// 检定 :: 等阶 //", "毅力与等阶检定卡标题正常汉化");
+			ok(L.translate("LOCKED: BRACING") === "锁定：副挂载占用" && L.translate("Superheavy Bracing") === "超重型副挂载占用", "超重型副挂载占用术语区分于受身动作");
+			ok(L.translate("AUXAUX") === "副/副" && L.translate("QUICKTECH") === "快速科技", "编辑器连写枚举值正常汉化");
+
+			// 2) 残酷 I + 杀绝会心公式最大值解析
+			ok(L.maxFormulaValue("4d6x1kh2") === 12 && L.maxFormulaValue("2d6x1kh1+3") === 9, `maxFormulaValue 正确解析含 x1 杀绝修饰符的取高公式：${L.maxFormulaValue("4d6x1kh2")} / ${L.maxFormulaValue("2d6x1kh1+3")}`);
+
+			// 3) NPC {a/b/c} 花括号分层伤害与 tier_override 解析
+			const bracedT1 = L.parseNonAttackDamage("目标受到 {2/4/6} 点能量伤害。", { system: { tier: 1 } }, null);
+			const bracedOv2 = L.parseNonAttackDamage("目标受到 {2/4/6} 点能量伤害。", { system: { tier: 1 } }, { system: { tier_override: 2 } });
+			ok(bracedT1?.damage?.[0]?.val === "2" && bracedOv2?.damage?.[0]?.val === "4", `花括号分层伤害按 T1=2、tier_override(2)=4 准确取值（实际 ${bracedT1?.damage?.[0]?.val} / ${bracedOv2?.damage?.[0]?.val}）`);
+
+			// 4) 低速循环屏蔽罩在受击方同时处于离散时置位 customReductionApplied 并正常计入护甲
+			const shroudPilot = { type: "pilot", items: [{ type: "core_bonus", system: { lid: "cb_piof_slow_cycle_shroud" } }] };
+			const shroudMech = {
+				type: "mech",
+				is_mech: () => true,
+				statuses: new Set(["shredded"]),
+				items: [],
+				getFlag: () => ({}),
+				system: {
+					armor: 2,
+					hp: { value: 10, max: 10 },
+					overshield: { value: 4 },
+					heat: { value: 0, max: 6 },
+					statuses: { shredded: true, exposed: false },
+					resistances: {},
+					pilot: { value: shroudPilot },
+					loadout: { frame: { value: { system: { lid: "mf_drake" } } } },
+				},
+			};
+			const shroudPrev = L.previewDamageCalc(shroudMech, [{ type: "Kinetic", amount: 5 }], { ap: false });
+			ok(shroudPrev?.customReductionApplied === true && shroudPrev?.overshieldUsed === 3 && shroudPrev?.hpLoss === 0, `低速循环屏蔽罩抵消离散时置位 customReductionApplied 并扣减 2 点护甲（护盾 -3，HP -0）`);
+
+			// 5) 哥布林物品科技攻击不重复累加 +1 准度（上游已加 1 时不加，无物品基础科技攻击仍加 1）
+			const gobSteps = new Map([
+				["initTechAttackData", async st => { st.data = { acc_diff: { base: { accuracy: 0, difficulty: 0 }, targets: [] } }; return true; }],
+			]);
+			const prevFlowsGob = ctx.game.lancer.flowSteps;
+			ctx.game.lancer.flowSteps = gobSteps;
+			L.patchLancerFlows();
+			const gobActor = {
+				type: "mech",
+				is_mech: () => true,
+				isOwner: true,
+				statuses: new Set(),
+				items: [],
+				getFlag: () => ({}),
+				setFlag: async () => {},
+				system: { loadout: { frame: { value: { system: { lid: "mf_goblin" } } } } },
+			};
+			const gobItemSt = { actor: gobActor, item: { type: "mech_system", system: { lid: "ms_h0r_os_system_upgrade_i" } }, data: {} };
+			const gobBasicSt = { actor: gobActor, item: null, data: {} };
+			await gobSteps.get("initTechAttackData")(gobItemSt, {});
+			await gobSteps.get("initTechAttackData")(gobBasicSt, {});
+			ok(gobItemSt.data.acc_diff.base.accuracy === 0 && gobBasicSt.data.acc_diff.base.accuracy === 1, `哥布林带系统科技攻击不重复 +1（+${gobItemSt.data.acc_diff.base.accuracy}），无物品基础科技攻击补齐 +1（+${gobBasicSt.data.acc_diff.base.accuracy}）`);
+			ctx.game.lancer.flowSteps = prevFlowsGob;
+
+			// 6) 超体「主宰」多选状态清除按钮渲染非空 data-lancer-cn-ultra-jug 并可正常结算
+			const jugFlags = {
+				"lancer-cn": {
+					ultraJuggernautPrompt: {
+						uuid: "Actor.jug1",
+						name: "超体测试机",
+						mode: "clearStatus",
+						options: [{ key: "impaired", id: "impaired", label: "受损" }, { key: "slow", id: "slow", label: "缓慢" }],
+						resolved: false,
+					},
+				},
+			};
+			const jugActor = {
+				id: "jug1", uuid: "Actor.jug1", name: "超体测试机", type: "npc", isOwner: true,
+				statuses: new Set(["impaired", "slow"]),
+				async toggleStatusEffect(id, { active }) { active ? this.statuses.add(id) : this.statuses.delete(id); },
+			};
+			const prevJugActors = ctx.game.actors;
+			ctx.game.actors = { get: id => (id === "jug1" ? jugActor : null), [Symbol.iterator]: function* () { yield jugActor; } };
+			const prevFromUuidSyncJug = ctx.fromUuidSync;
+			ctx.fromUuidSync = u => (u === "Actor.jug1" ? jugActor : prevFromUuidSyncJug?.(u));
+			const jugMsg = {
+				id: "m_jug", isAuthor: true, flags: jugFlags,
+				getFlag: (sc, k) => jugFlags[sc]?.[k],
+				setFlag: async (sc, k, v) => { (jugFlags[sc] ||= {})[k] = v; },
+			};
+			let jugInserted = "";
+			const jugContentEl = {
+				insertAdjacentHTML: (_pos, h) => { jugInserted += h; },
+				querySelector: () => ({ addEventListener: () => {} }),
+			};
+			L.onRenderChatMessage(jugMsg, { querySelector: sel => (sel === ".message-content" ? jugContentEl : null) });
+			ok(jugInserted.includes('data-lancer-cn-ultra-jug="impaired"') && jugInserted.includes('data-lancer-cn-ultra-jug="slow"'), "超体主宰多选按钮正确写入选项键值而非空字符串");
+			await L.executeUltraJuggernautChoice(jugMsg, "impaired");
+			ok(!jugActor.statuses.has("impaired") && jugFlags["lancer-cn"].ultraJuggernautPrompt.resolved === true, "超体主宰点击清除指定状态正常结算");
+			ctx.fromUuidSync = prevFromUuidSyncJug;
+			ctx.game.actors = prevJugActors;
+
+			// 7) 晕眩机甲点击卡片机体豁免自动判负
+			const stunnedNpc = {
+				id: "st_npc", uuid: "Actor.st_npc", name: "晕眩重甲", type: "npc", isOwner: true,
+				statuses: new Set(["stunned"]),
+				system: { hull: 6, agi: 4, statuses: { stunned: true } },
+				async toggleStatusEffect(id, { active }) { active ? this.statuses.add(id) : this.statuses.delete(id); },
+			};
+			const prevCanvasSt = ctx.canvas;
+			ctx.canvas = { tokens: { controlled: [{ uuid: "Actor.st_npc", name: "晕眩重甲", actor: stunnedNpc }], placeables: [] } };
+			const prevFromUuidSyncSt = ctx.fromUuidSync;
+			ctx.fromUuidSync = u => (u === "Actor.st_npc" ? stunnedNpc : prevFromUuidSyncSt?.(u));
+			const stSaveRes = await L.executeCardSave(null, { key: "hull", path: "system.hull", label: "机体豁免", dc: 10, failStatuses: ["prone"], passStatuses: [], halfOnSuccess: false });
+			ok(stSaveRes.length === 1 && stSaveRes[0].passed === false && stSaveRes[0].autoFail === true, "处于晕眩的机甲/NPC 进行机体豁免时自动失败");
+			ctx.fromUuidSync = prevFromUuidSyncSt;
+			ctx.canvas = prevCanvasSt;
+
+			// 8) 伤害撤销在目标已先清零燃烧/热度时安全钳制为 0，不产生负值
+			let patchedUndoData = null;
+			const clearedTarget = {
+				uuid: "Actor.u_tgt", type: "mech",
+				system: { overshield: { value: 0 }, hp: { value: 8 }, burn: 0, heat: { value: 1 } },
+				update: async d => { patchedUndoData = d; },
+			};
+			const undoChatMsg = { id: "m_undo", isAuthor: true, content: '<span>4 燃烧</span><a class="lancer-damage-undo"></a>', update: async () => {} };
+			const prevGetMsg = ctx.game.messages?.get;
+			const prevFromUuidAsync = ctx.fromUuid;
+			ctx.fromUuid = async u => (u === "Actor.u_tgt" ? clearedTarget : prevFromUuidAsync?.(u));
+			ctx.game.messages = { ...ctx.game.messages, get: id => (id === "m_undo" ? undoChatMsg : prevGetMsg?.(id)) };
+			await L.gmUndoDamageByPayload({ actorUuid: "Actor.u_tgt", messageId: "m_undo", overshieldDelta: 0, hpDelta: 4, burnDelta: 5, heatDelta: 4, addBurn: true });
+			ok(patchedUndoData?.["system.burn"] === 0 && patchedUndoData?.["system.heat.value"] === 0 && patchedUndoData?.["system.hp.value"] === 12, "已提前清除燃烧/热度后点撤销伤害时将燃烧与热度安全钳制在 0");
+			ctx.fromUuid = prevFromUuidAsync;
+			if (prevGetMsg) ctx.game.messages.get = prevGetMsg;
+
+			// 9) 删除尚未开打的预设战斗遭遇（started: false, round: 0）不误关场上机甲核心协议；驾驶员云端导入自动去重骨架内建武器并补满受限改装充能
+			let coreEndedOnUnstarted = false;
+			const unstartedMech = {
+				type: "mech", is_mech: () => true, isOwner: true,
+				system: { core_active: true },
+				getFlag: () => ({ active: true }),
+				update: async () => { coreEndedOnUnstarted = true; },
+			};
+			await L.onDeleteCombat({ started: false, round: 0, combatants: [{ actor: unstartedMech }] });
+			ok(coreEndedOnUnstarted === false, "删除未开打的备用遭遇（started=false, round=0）不会提前关闭机甲核心协议");
+
+			let deletedDupIds = [];
+			let refilledModUses = null;
+			const eqIntWpn = { id: "w_eq", type: "mech_weapon", system: { lid: "mw_sherman_integrated" } };
+			const dupIntWpn = { id: "w_dup", type: "mech_weapon", system: { lid: "mw_sherman_integrated" } };
+			const limMod = {
+				id: "m_lim", type: "weapon_mod",
+				system: { lid: "wm_throughbolt_rounds", uses: { value: 0, max: 3 }, tags: [{ lid: "tg_limited", is_limited: true }] },
+				update: async d => { refilledModUses = d["system.uses.value"]; },
+			};
+			const importedMech = {
+				id: "m_imp", type: "mech", isOwner: true,
+				items: [eqIntWpn, dupIntWpn, limMod],
+				deleteEmbeddedDocuments: async (_t, ids) => { deletedDupIds = ids; },
+				system: {
+					pilot: { value: { id: "p_imp" } },
+					loadout: {
+						frame: { value: { system: { core_system: { integrated: ["mw_sherman_integrated"] } } } },
+						weapon_mounts: [
+							{ slots: [{ weapon: { value: eqIntWpn }, mod: { value: null } }] },
+							{ slots: [{ weapon: { value: { id: "w_main" } }, mod: { value: limMod } }] },
+						],
+						systems: [],
+					},
+				},
+			};
+			const prevImpActors = ctx.game.actors;
+			const impPilot = { id: "p_imp", type: "pilot", system: { active_mech: { value: importedMech } } };
+			ctx.game.actors = [impPilot, importedMech];
+			await L.cleanupPilotImportedMechs(impPilot, { system: { last_cloud_update: "2026-11-17" } }, "u1");
+			ok(deletedDupIds.length === 1 && deletedDupIds[0] === "w_dup" && refilledModUses === 3, "车卡器导入驾驶员后自动删除未装备的重复骨架内建武器，并将受限武器改装充能从 0 补满至 max");
+			ctx.game.actors = prevImpActors;
+		}
+
+		// ---- v1.18.0 守望（Overwatch）与反应体系（Reaction Economy）回归测试
+		{
+			const L = ctx.LancerCN;
+			const prevCombat18 = ctx.game.combat;
+			const prevIsGM18 = ctx.game.user.isGM;
+			const prevUsers18 = ctx.game.users;
+			const prevActors18 = ctx.game.actors;
+			const prevUi18 = ctx.ui;
+			const prevCanvas18 = ctx.canvas;
+			const prevFlows18 = ctx.game.lancer.flows;
+			const prevFlowSteps18 = ctx.game.lancer.flowSteps;
+			const prevFromUuidSync18 = ctx.fromUuidSync;
+			const prevFromUuid18 = ctx.fromUuid;
+			const prevChatMsg18 = ctx.ChatMessage;
+
+			const docMap = {};
+			const chatCreated = [];
+			const mkFlagMsg = (id, initFlags = {}, extra = {}) => {
+				const flags = JSON.parse(JSON.stringify(initFlags));
+				return {
+					id,
+					isAuthor: extra.isAuthor !== false,
+					content: extra.content ?? "",
+					flags,
+					getFlag: (sc, k) => flags[sc]?.[k],
+					setFlag: async (sc, k, v) => { (flags[sc] ||= {})[k] = v; },
+					unsetFlag: async (sc, k) => { if (flags[sc]) delete flags[sc][k]; },
+					update: async d => { if (d?.content !== undefined) extra.content = d.content; },
+				};
+			};
+			let msgSeq18 = 1;
+			ctx.ChatMessage = {
+				getSpeaker: o => ({ actor: o?.actor?.name }),
+				create: async d => {
+					const m = mkFlagMsg(`m18_${msgSeq18++}`, d?.flags ?? {}, { isAuthor: true, content: d?.content ?? "" });
+					m.speaker = d?.speaker;
+					chatCreated.push(m);
+					return m;
+				},
+			};
+			ctx.game.users = { activeGM: { isSelf: true } };
+			const warns18 = [];
+			ctx.ui = {
+				notifications: {
+					info() {},
+					warn: m => { warns18.push(String(m)); },
+					error() {},
+				},
+			};
+
+			const mkRwActor = (id, name, opts = {}) => {
+				const flags = { "lancer-cn": {} };
+				const statuses = new Set(opts.statuses ?? []);
+				const pilot = opts.pilot ?? {
+					id: `p_${id}`,
+					type: "pilot",
+					items: opts.pilotItems ?? [],
+				};
+				const a = {
+					id,
+					uuid: `Actor.${id}`,
+					name,
+					type: opts.type ?? "mech",
+					isOwner: opts.isOwner !== false,
+					is_mech: () => (opts.type ?? "mech") === "mech",
+					is_npc: () => opts.type === "npc",
+					statuses,
+					items: opts.items ?? [],
+					getFlag: (sc, k) => flags[sc]?.[k],
+					setFlag: async (sc, k, v) => { (flags[sc] ||= {})[k] = v; },
+					unsetFlag: async (sc, k) => { if (flags[sc]) delete flags[sc][k]; },
+					toggleStatusEffect: async (sid, { active }) => { active ? statuses.add(sid) : statuses.delete(sid); },
+					update: async d => {
+						for (const [k, v] of Object.entries(d)) {
+							if (k === "system.action_tracker.reaction") a.system.action_tracker.reaction = v;
+							if (k === "system.overshield.value") a.system.overshield.value = v;
+							if (k === "system.heat.value") a.system.heat.value = v;
+						}
+					},
+					system: {
+						tier: opts.tier ?? 1,
+						armor: opts.armor ?? 1,
+						hp: { value: opts.hp ?? 14, max: 14 },
+						overshield: { value: 0 },
+						heat: { value: 0, max: 6 },
+						sensor_range: opts.sensor ?? 10,
+						action_tracker: { reaction: true },
+						statuses: {},
+						resistances: {},
+						pilot: { value: pilot },
+						loadout: {
+							frame: { value: { system: { lid: opts.frameLid ?? "mf_standard_pattern_i_everest", core_system: { integrated: opts.integrated ?? [] } } } },
+							weapon_mounts: opts.mounts ?? [],
+						},
+					},
+				};
+				return a;
+			};
+
+			// 1) 反应经济：1/回合拦截（玩家硬阻止 + 提示，GM 越权放行 + 提示）、戈尔贡 2/回合上限与换回合重置
+			ctx.game.combat = { id: "cmb18", started: true, round: 1, turn: 0, combatants: [] };
+			ctx.game.user.isGM = false;
+			const stdMech = mkRwActor("rw_std", "标准机");
+			const r1 = await L.consumeReaction(stdMech, { kind: "test", label: "战术反应" });
+			ok(r1.ok === true && stdMech.system.action_tracker.reaction === false, "标准机甲战斗中执行第 1 次反应成功，并同步将 action_tracker.reaction 置为 false");
+			warns18.length = 0;
+			const r2Player = await L.consumeReaction(stdMech, { kind: "test", label: "战术反应" });
+			ok(r2Player.ok === false && r2Player.blocked === true && warns18.some(w => w.includes("无法执行战术反应") && w.includes("本回合反应次数已用尽")), "玩家侧同回合尝试第 2 次反应时被直接拦截并弹出提示");
+			ctx.game.user.isGM = true;
+			warns18.length = 0;
+			const r2GM = await L.consumeReaction(stdMech, { kind: "test", label: "战术反应" });
+			ok(r2GM.ok === true && r2GM.gmOverride === true && warns18.some(w => w.includes("主持人越权执行")), "主持人侧在反应受限时弹出越权提示并允许放行");
+
+			ctx.game.user.isGM = false;
+			const gorgonMech = mkRwActor("rw_gorgon", "戈尔贡测试机", { frameLid: "mf_gorgon" });
+			ok(L.maxReactionsPerTurn(gorgonMech) === 2 && L.maxReactionsPerTurn(stdMech) === 1, "戈尔贡「凝视」每回合反应上限识别为 2，其余角色为 1");
+			const g1 = await L.consumeReaction(gorgonMech, { kind: "test", label: "反应一" });
+			ok(g1.ok === true && gorgonMech.system.action_tracker.reaction === true, "戈尔贡同回合第 1 次反应后仍保留第 2 次反应可用标记");
+			const g2 = await L.consumeReaction(gorgonMech, { kind: "test", label: "反应二" });
+			ok(g2.ok === true && gorgonMech.system.action_tracker.reaction === false, "戈尔贡同回合第 2 次反应后标记反应耗尽");
+			const g3 = await L.consumeReaction(gorgonMech, { kind: "test", label: "反应三" });
+			ok(g3.ok === false && g3.blocked === true, "戈尔贡同回合第 3 次反应对非 GM 玩家正常拦截");
+
+			// 换回合后自动恢复反应次数与 action_tracker.reaction
+			ctx.game.combat = {
+				id: "cmb18", started: true, round: 1, turn: 1,
+				previous: { combatantId: "c_std" }, current: { combatantId: "c_gorg" },
+				combatants: [
+					{ id: "c_std", name: "标准机", actor: stdMech, token: { uuid: stdMech.uuid } },
+					{ id: "c_gorg", name: "戈尔贡测试机", actor: gorgonMech, token: { uuid: gorgonMech.uuid } },
+				],
+			};
+			ctx.game.combat.combatants.get = cid => ctx.game.combat.combatants.find(x => x.id === cid);
+			ctx.game.actors = [stdMech, gorgonMech];
+			ctx.game.user.isGM = true;
+			await L.onUpdateCombatTurnEnd(ctx.game.combat, { turn: 1 }, { direction: 1 });
+			ok(stdMech.system.action_tracker.reaction === true && gorgonMech.system.action_tracker.reaction === true && L.checkReactionAvailability(gorgonMech).ok === true, "切换到下一名角色的回合后，全场角色每回合反应额度自动重置");
+
+			// 2) 状态与姿态限制及专属豁免：晕眩（无畏级萨拉丁豁免）、受扰、擒拿（黑胡子豁免）、创造进口、瓦解/埋伏、准备动作互斥与触发
+			ctx.game.user.isGM = false;
+			const stunnedSaladin = mkRwActor("rw_dread", "无畏萨拉丁", { frameLid: "mf_ext_saladin_dread", statuses: ["stunned"] });
+			const stunnedNormal = mkRwActor("rw_stun", "晕眩机", { statuses: ["stunned"] });
+			ok(L.checkReactionAvailability(stunnedNormal).ok === false && L.checkReactionAvailability(stunnedSaladin).ok === true, "晕眩状态阻止普通机甲反应，但无畏级萨拉丁「反应式防御矩阵」在未关机时仍可反应");
+			stunnedSaladin.statuses.add("shutdown");
+			ok(L.checkReactionAvailability(stunnedSaladin).ok === false, "无畏级萨拉丁进入关机状态后不可反应");
+
+			const jammedMech = mkRwActor("rw_jam", "受扰机", { statuses: ["jammed"] });
+			ok(L.checkReactionAvailability(jammedMech).ok === false && L.checkReactionAvailability(jammedMech).reasonText.includes("受扰"), "受扰状态阻止反应");
+
+			const grappledNormal = mkRwActor("rw_grp1", "被擒普通机", { statuses: ["grappled"] });
+			const grappledBlackbeard = mkRwActor("rw_bb", "黑胡子", { frameLid: "mf_blackbeard", statuses: ["grappled"] });
+			const grappledMonstrosity = mkRwActor("rw_mon", "怪形纠缠爪", {
+				type: "npc",
+				statuses: ["grappled"],
+				items: [{ type: "npc_feature", name: "纠缠之爪", system: { lid: "npcf_cn_monstrosity_8" } }],
+			});
+			ok(!L.checkReactionAvailability(grappledNormal).ok && L.checkReactionAvailability(grappledBlackbeard).ok && L.checkReactionAvailability(grappledMonstrosity).ok, "擒拿中普通单位禁反应，黑胡子「锁定/杀戮子系统」与怪形「纠缠之爪」豁免");
+
+			// 勘探者「创造进口」禁本回合反应
+			const prospMech = mkRwActor("rw_prosp", "勘探机", {
+				pilotItems: [{ type: "talent", system: { lid: "t_prospector", curr_rank: 1 } }],
+			});
+			docMap[prospMech.uuid] = prospMech;
+			ctx.fromUuidSync = u => docMap[u] ?? prevFromUuidSync18?.(u) ?? null;
+			const prospCardMsg = mkFlagMsg("prosp_18", {}, {
+				isAuthor: true,
+				content: `<div class="card clipped-bot" data-uuid="${prospMech.uuid}"><div class="lancer-header">// 创造进口 //</div><div class="effect-text">在自身周围创造爆发1进口。直到当前回合结束，你不能采取反应。</div></div>`,
+			});
+			await L.onCreateChatMessage(prospCardMsg, {}, "u1");
+			ok(!L.checkReactionAvailability(prospMech).ok && L.checkReactionAvailability(prospMech).reasonText.includes("创造进口"), "勘探者发动「创造进口」后本回合禁止反应");
+
+			// 准备动作保持期间阻止其他反应，但允许「⚡ 触发准备动作」消耗反应并解除保持
+			const prepMech = mkRwActor("rw_prep", "准备机");
+			docMap[prepMech.uuid] = prepMech;
+			chatCreated.length = 0;
+			await L.beginBasicAction(prepMech, "prepare", { trigger: "敌方露头时", action: "交火射击" });
+			const prepMsg = chatCreated.at(-1);
+			ok(!L.checkReactionAvailability(prepMech, { kind: "overwatch", label: "守望" }).ok && L.checkReactionAvailability(prepMech, { kind: "triggerPrepared", label: "准备动作" }).ok, "保持准备动作期间禁止守望等其他反应，仅允许触发已准备动作");
+			const trigOk = await L.triggerPreparedAction(prepMsg);
+			ok(trigOk === true && L.getCombatState(prepMech).preparedAction === null && L.getCombatState(prepMech).reactionsUsedTurn === 1, "点击「触发准备动作」成功消耗本回合反应并解除准备锁定");
+
+			// ActivationFlow / SystemFlow 拦截受限反应（不误扣自身热度）并在取消时退回反应
+			const actSteps18 = new Map([
+				["initActivationData", async st => { st._ranOrig = true; return st._cancelOrig ? false : true; }],
+				["initSystemUseData", async st => { st._ranOrig = true; return true; }],
+			]);
+			ctx.game.lancer.flowSteps = actSteps18;
+			L.patchLancerFlows();
+			const reactSysItem = {
+				id: "sys_r1", name: "主动点防", type: "mech_system",
+				system: { lid: "ms_point_defense", actions: [{ name: "点防拦截", activation: "Reaction", frequency: "1/round" }] },
+			};
+			const blockedActState = { actor: jammedMech, item: reactSysItem, data: { path: "system.actions.0" } };
+			const blockedActRes = await actSteps18.get("initActivationData")(blockedActState, {});
+			ok(blockedActRes === false && !blockedActState._ranOrig, "受扰机甲点击角色表反应动作时在结算热度与次数前即被 ActivationFlow 拦截");
+
+			const cleanReactMech = mkRwActor("rw_clean", "点防机");
+			const cancelActState = { actor: cleanReactMech, item: reactSysItem, data: { path: "system.actions.0" }, _cancelOrig: true };
+			await actSteps18.get("initActivationData")(cancelActState, {});
+			ok((L.getCombatState(cleanReactMech).reactionsUsedTurn || 0) === 0 && cleanReactMech.system.action_tracker.reaction === true, "ActivationFlow 原生步骤中途取消时无损返还反应额度与 1/轮标记");
+
+			// 3) overwatchThreatVal 与 eligibleOverwatchWeapons 合法性过滤
+			const wRifleDefault = { id: "w_rif", uuid: "Item.w_rif", name: "突击步枪", type: "mech_weapon", system: { size: "Main", active_profile: { type: "Rifle", range: [{ type: "Range", val: 10 }], tags: [] } } };
+			const wCqb3 = { id: "w_cqb", uuid: "Item.w_cqb", name: "霰弹枪", type: "mech_weapon", system: { size: "Main", active_profile: { type: "CQB", range: [{ type: "Range", val: 5 }, { type: "Threat", val: 3 }], tags: [] } } };
+			const wSuperheavy = { id: "w_sh", uuid: "Item.w_sh", name: "旋风炮", type: "mech_weapon", system: { size: "Superheavy", active_profile: { type: "Cannon", range: [{ type: "Range", val: 15 }], tags: [] } } };
+			const wOrdnance = { id: "w_ord", uuid: "Item.w_ord", name: "迫击炮", type: "mech_weapon", system: { size: "Main", active_profile: { type: "Cannon", range: [{ type: "Range", val: 15 }], tags: [{ lid: "tg_ordnance", is_ordnance: true }] } } };
+			const wUnloaded = { id: "w_unl", uuid: "Item.w_unl", name: "反器材步枪", type: "mech_weapon", system: { size: "Main", loaded: false, active_profile: { type: "Rifle", range: [{ type: "Range", val: 20 }], tags: [{ lid: "tg_loading", is_loading: true }] } } };
+			const wKnife = { id: "w_knf", uuid: "Item.w_knf", name: "战术刀", type: "mech_weapon", system: { size: "Auxiliary", active_profile: { type: "Melee", range: [{ type: "Threat", val: 1 }, { type: "Thrown", val: 3 }], tags: [] } } };
+
+			const tokugawaExposed = mkRwActor("rw_toku", "德川", { frameLid: "mf_tokugawa", statuses: ["exposed"] });
+			ok(L.overwatchThreatVal(wRifleDefault, cleanReactMech) === 1 && L.overwatchThreatVal(wRifleDefault, tokugawaExposed) === 2, "未标威胁的武器默认具有威胁 1，德川暴露状态下动态提升至威胁 2");
+
+			const filterMech = mkRwActor("rw_flt", "武器过滤机", {
+				pilotItems: [{ type: "talent", system: { lid: "t_vanguard", curr_rank: 3 } }],
+				items: [wRifleDefault, wCqb3, wSuperheavy, wOrdnance, wUnloaded, wKnife],
+				mounts: [
+					{ bracing: false, slots: [{ weapon: { value: wRifleDefault } }] },
+					{ bracing: false, slots: [{ weapon: { value: wCqb3 } }] },
+					{ bracing: false, slots: [{ weapon: { value: wSuperheavy } }] },
+					{ bracing: true, slots: [{ weapon: { value: { id: "w_brc", name: "被占用副武器", type: "mech_weapon", system: { size: "Auxiliary", active_profile: { type: "Rifle", range: [], tags: [] } } } } }] },
+					{ bracing: false, slots: [{ weapon: { value: wOrdnance } }, { weapon: { value: wUnloaded } }, { weapon: { value: wKnife } }] },
+				],
+			});
+			await L.markWeaponThrown(filterMech, wKnife);
+			const eligAll = L.eligibleOverwatchWeapons(filterMech);
+			ok(eligAll.map(e => e.id).join(",") === "w_rif,w_cqb", `守望合法武器过滤掉超重型、重火器、未装填、超重型占用挂载与已投出武器（实际：${eligAll.map(e => e.id).join(",")}）`);
+			await L.retrieveThrownWeapon(filterMech, "all", { notify: false });
+
+			// 4) 指示物移动检测（preUpdateToken + updateToken）与一键守望交火（含先锋 III 进入威胁、脱离/匿迹/传送忽略、未扫描 NPC 武器防剧透、取消退回反应）
+			const gridMock18 = {
+				size: 100,
+				distance: 1,
+				isGridless: false,
+				getOffset: pt => ({ i: Math.floor(pt.y / 100), j: Math.floor(pt.x / 100) }),
+				getCenterPoint: off => ({ x: off.j * 100 + 50, y: off.i * 100 + 50 }),
+				measurePath: ([p, q]) => ({ spaces: Math.max(Math.abs(Math.floor(p.x / 100) - Math.floor(q.x / 100)), Math.abs(Math.floor(p.y / 100) - Math.floor(q.y / 100))) }),
+			};
+			const watcherTortuga = mkRwActor("rw_tortuga", "托尔图加哨兵", {
+				frameLid: "mf_tortuga",
+				pilotItems: [{ type: "talent", system: { lid: "t_vanguard", curr_rank: 3 } }],
+				items: [wRifleDefault, wCqb3, wKnife],
+				mounts: [{ bracing: false, slots: [{ weapon: { value: wRifleDefault } }, { weapon: { value: wCqb3 } }, { weapon: { value: wKnife } }] }],
+			});
+			const watcherSecretNpc = mkRwActor("rw_sec_npc", "暗哨机兵", {
+				type: "npc",
+				isOwner: false,
+				items: [{ id: "npcw_1", uuid: "Item.npcw_1", name: "机密电浆刃", type: "npc_feature", system: { type: "Weapon", weapon_type: "Main Melee", range: [{ type: "Threat", val: 1 }], tags: [] } }],
+			});
+			const moverEnemy = mkRwActor("rw_mover_e", "突击敌机", { type: "npc", isOwner: false });
+			const moverFriendly = mkRwActor("rw_mover_f", "突进玩家机", { type: "mech", isOwner: true });
+
+			const tokTortuga = {
+				id: "t_tort", uuid: "Scene.s18.Token.t_tort", name: "托尔图加哨兵", actor: watcherTortuga,
+				x: 0, y: 0, center: { x: 50, y: 50 },
+				document: { id: "t_tort", uuid: "Scene.s18.Token.t_tort", name: "托尔图加哨兵", x: 0, y: 0, width: 1, height: 1, disposition: 1, actor: watcherTortuga },
+			};
+			const tokSecretNpc = {
+				id: "t_snpc", uuid: "Scene.s18.Token.t_snpc", name: "暗哨机兵", actor: watcherSecretNpc,
+				x: 0, y: 200, center: { x: 50, y: 250 },
+				document: { id: "t_snpc", uuid: "Scene.s18.Token.t_snpc", name: "暗哨机兵", x: 0, y: 200, width: 1, height: 1, disposition: -1, actor: watcherSecretNpc },
+			};
+			let moverTargetLocked = false;
+			const tokEnemy = {
+				id: "t_mov_e", uuid: "Scene.s18.Token.t_mov_e", name: "突击敌机", actor: moverEnemy,
+				x: 100, y: 0, center: { x: 150, y: 50 },
+				setTarget: active => { moverTargetLocked = Boolean(active); ctx.game.user.targets = active ? new Set([tokEnemy]) : new Set(); },
+				document: { id: "t_mov_e", uuid: "Scene.s18.Token.t_mov_e", name: "突击敌机", x: 100, y: 0, width: 1, height: 1, disposition: -1, actor: moverEnemy },
+			};
+			tokEnemy.document.object = tokEnemy;
+			const tokFriendly = {
+				id: "t_mov_f", uuid: "Scene.s18.Token.t_mov_f", name: "突进玩家机", actor: moverFriendly,
+				x: 100, y: 200, center: { x: 150, y: 250 },
+				document: { id: "t_mov_f", uuid: "Scene.s18.Token.t_mov_f", name: "突进玩家机", x: 100, y: 200, width: 1, height: 1, disposition: 1, actor: moverFriendly },
+			};
+			tokFriendly.document.object = tokFriendly;
+
+			docMap[tokTortuga.uuid] = tokTortuga.document;
+			docMap[watcherTortuga.uuid] = watcherTortuga;
+			docMap[tokSecretNpc.uuid] = tokSecretNpc.document;
+			docMap[watcherSecretNpc.uuid] = watcherSecretNpc;
+			docMap[tokEnemy.uuid] = tokEnemy.document;
+			docMap[moverEnemy.uuid] = moverEnemy;
+			docMap[tokFriendly.uuid] = tokFriendly.document;
+			docMap[moverFriendly.uuid] = moverFriendly;
+			ctx.fromUuidSync = u => docMap[u] ?? prevFromUuidSync18?.(u) ?? null;
+			ctx.fromUuid = async u => docMap[u] ?? (await prevFromUuid18?.(u)) ?? null;
+			ctx.canvas = {
+				grid: gridMock18,
+				tokens: {
+					placeables: [tokTortuga, tokSecretNpc, tokEnemy, tokFriendly],
+					get: id => [tokTortuga, tokSecretNpc, tokEnemy, tokFriendly].find(t => t.id === id) ?? null,
+				},
+			};
+			ctx.game.users = { activeGM: { isSelf: true } };
+			ctx.game.user.isGM = true;
+			L.resetOverwatchPromptDedup();
+
+			// 4a) 距离 4 -> 3：常规威胁 1 步枪不触发，先锋 III「永远警惕」CQB 霰弹枪（威胁 3）进入威胁触发！
+			tokEnemy.document.x = 400; tokEnemy.x = 400; tokEnemy.center = { x: 450, y: 50 };
+			L.onPreUpdateTokenOverwatch(tokEnemy.document, { x: 300 });
+			tokEnemy.document.x = 300; tokEnemy.x = 300; tokEnemy.center = { x: 350, y: 50 };
+			chatCreated.length = 0;
+			await L.onOverwatchTokenUpdate(tokEnemy.document, { x: 300 }, {}, "u1");
+			const owVanguardData = chatCreated.at(-1)?.flags?.["lancer-cn"]?.overwatchPrompt;
+			ok(owVanguardData?.watchers?.length === 1 && owVanguardData.watchers[0].weapons.map(w => `${w.id}:${w.triggerMode}`).join(",") === "w_cqb:vanguardEnter", "敌机从 4 格移入 3 格时，仅触发先锋 III「永远警惕」的 CQB 霰弹枪，不误触发威胁 1 步枪");
+
+			// 4b) 脱离（Disengage）、匿迹（Hidden）与瞬间移动（teleport）不触发守望
+			L.resetOverwatchPromptDedup();
+			moverEnemy.isOwner = true; // GM 对敌机执行脱离
+			await L.beginBasicAction(moverEnemy, "disengage");
+			tokEnemy.document.x = 100; tokEnemy.x = 100;
+			L.onPreUpdateTokenOverwatch(tokEnemy.document, { x: 200 });
+			tokEnemy.document.x = 200; tokEnemy.x = 200;
+			chatCreated.length = 0;
+			await L.onOverwatchTokenUpdate(tokEnemy.document, { x: 200 }, { forceOverwatchCheck: true }, "u1");
+			ok(chatCreated.length === 0, "已执行「脱离」的角色本回合移动不触发守望");
+			await moverEnemy.setFlag("lancer-cn", "combatState", {});
+			moverEnemy.isOwner = false;
+
+			moverEnemy.statuses.add("hidden");
+			tokEnemy.document.x = 100; tokEnemy.x = 100;
+			L.onPreUpdateTokenOverwatch(tokEnemy.document, { x: 200 });
+			tokEnemy.document.x = 200; tokEnemy.x = 200;
+			chatCreated.length = 0;
+			await L.onOverwatchTokenUpdate(tokEnemy.document, { x: 200 }, { forceOverwatchCheck: true }, "u1");
+			ok(chatCreated.length === 0, "处于「匿迹」的角色移动不触发守望");
+			moverEnemy.statuses.delete("hidden");
+
+			tokEnemy.document.x = 100; tokEnemy.x = 100;
+			L.onPreUpdateTokenOverwatch(tokEnemy.document, { x: 300 });
+			tokEnemy.document.x = 300; tokEnemy.x = 300;
+			chatCreated.length = 0;
+			await L.onOverwatchTokenUpdate(tokEnemy.document, { x: 300 }, { teleport: true, forceOverwatchCheck: true }, "u1");
+			ok(chatCreated.length === 0, "瞬间移动（options.teleport）不触发守望");
+
+			// 4c) 隐私防剧透：玩家移动触发未拥有 NPC 守望时，非 GM 客户端只看到等待提示，不泄露未扫描 NPC 武器名
+			L.resetOverwatchPromptDedup();
+			tokFriendly.document.x = 100; tokFriendly.x = 100;
+			L.onPreUpdateTokenOverwatch(tokFriendly.document, { x: 200 });
+			tokFriendly.document.x = 200; tokFriendly.x = 200;
+			chatCreated.length = 0;
+			await L.onOverwatchTokenUpdate(tokFriendly.document, { x: 200 }, { forceOverwatchCheck: true }, "u1");
+			const secOwMsg = chatCreated.at(-1);
+			ctx.game.user.isGM = false;
+			let playerOwHtml = "", gmOwHtml = "";
+			L.onRenderChatMessage(secOwMsg, { querySelector: sel => (sel === ".message-content" ? { insertAdjacentHTML: (_p, h) => { playerOwHtml = h; }, querySelector: () => null } : null) });
+			ctx.game.user.isGM = true;
+			L.onRenderChatMessage(secOwMsg, { querySelector: sel => (sel === ".message-content" ? { insertAdjacentHTML: (_p, h) => { gmOwHtml = h; }, querySelector: () => null } : null) });
+			ok(!playerOwHtml.includes("机密电浆刃") && playerOwHtml.includes("等待") && gmOwHtml.includes("机密电浆刃"), "守望提醒卡对非拥有者玩家隐藏敌方 NPC 具体武器名防剧透，对 GM 正常显示武器按钮");
+
+			// 4d) 执行守望攻击：取消面板无损返还反应；确认开火自动锁定目标、应用托尔图加「哨兵」+1 准度、且目标已移远时近战投掷刀仍保持近战挥砍不丢刀
+			let nextOwFlowOk = false;
+			let capturedOwState = null;
+			const owAtkSteps = new Map([
+				["initAttackData", async st => {
+					st.data = {
+						title: st.item?.name ?? "",
+						attack_type: "Melee",
+						acc_diff: { base: { accuracy: 0, difficulty: 0 }, weapon: { melee: true, thrown: true, engaged: false }, targets: [{ target: tokEnemy, accuracy: 0, difficulty: 0, cover: 0 }] },
+					};
+					return true;
+				}],
+			]);
+			ctx.game.lancer.flowSteps = owAtkSteps;
+			L.patchLancerFlows();
+			ctx.game.lancer.flows = new Map([
+				["WeaponAttackFlow", class {
+					constructor(uuid, data) {
+						this.state = { actor: watcherTortuga, item: wKnife, data: { ...data } };
+					}
+					async begin() {
+						if (!nextOwFlowOk) return false;
+						await owAtkSteps.get("initAttackData")(this.state, {});
+						capturedOwState = this.state;
+						return true;
+					}
+				}],
+			]);
+			ctx.game.user.isGM = false;
+			const cancelledOw = await L.executeOverwatchAttack(watcherTortuga, { weaponId: "w_knf", targetTokenOrUuid: tokEnemy.uuid, triggerDist: 1 });
+			ok(cancelledOw === false && !L.getCombatState(watcherTortuga).usedOverwatchRound && (L.getCombatState(watcherTortuga).reactionsUsedTurn || 0) === 0, "取消守望攻击面板后无损退回每回合反应与每轮守望次数");
+
+			// 目标在画布上已拖到 x=500（距离 5 格），点击守望按钮结算移动前（triggerDist=1）的战术刀交火
+			tokEnemy.document.x = 500; tokEnemy.x = 500; tokEnemy.center = { x: 550, y: 50 };
+			watcherTortuga.statuses.add("hidden");
+			nextOwFlowOk = true;
+			moverTargetLocked = false;
+			const doneOw = await L.executeOverwatchAttack(watcherTortuga, { weaponId: "w_knf", targetTokenOrUuid: tokEnemy.uuid, triggerDist: 1 });
+			ok(doneOw === true && moverTargetLocked === true && L.getCombatState(watcherTortuga).usedOverwatchRound === true && !watcherTortuga.statuses.has("hidden"), "守望攻击成功后自动锁定移动目标、标记本轮已守望并解除攻击者匿迹");
+			ok(capturedOwState?.data?.acc_diff?.base?.accuracy >= 1 && capturedOwState?.data?.acc_diff?.weapon?.thrown === false, "托尔图加守望自动获得「哨兵」+1 准度，且即使目标在画布上已移远仍保持战术刀近战挥砍（thrown=false）不误丢刀");
+
+			// 4e) 超体「本能反应」跨回合突破 1/轮守望限制（同回合仍受 1/回合反应限制）
+			const ultraSentinel = mkRwActor("rw_ultra_ow", "超体哨卫", {
+				type: "npc",
+				items: [
+					{ type: "npc_feature", name: "本能反应", system: { lid: "npcf_cn_ultra_9" } },
+					{ id: "uw_1", uuid: "Item.uw_1", name: "重型机炮", type: "npc_feature", system: { type: "Weapon", weapon_type: "Main Cannon", range: [{ type: "Range", val: 8 }], tags: [] } },
+				],
+			});
+			const uGate1 = await L.consumeReaction(ultraSentinel, { kind: "overwatch", label: "守望", roundFlag: "usedOverwatchRound" });
+			ok(uGate1.ok && !L.getCombatState(ultraSentinel).usedOverwatchRound && !L.checkReactionAvailability(ultraSentinel, { kind: "overwatch", label: "守望", roundFlag: "usedOverwatchRound" }).ok, "超体「本能反应」发动守望后不锁死 1/轮标记，但同回合仍受 1/回合反应限制");
+			ctx.game.combat.turn = 2;
+			ok(L.checkReactionAvailability(ultraSentinel, { kind: "overwatch", label: "守望", roundFlag: "usedOverwatchRound" }).ok === true, "进入同一轮的下一个角色回合后，超体「本能反应」可再次发动守望");
+
+			// 5) 伤害卡目标行内联「🛡 受身」按钮：点击消耗反应开启全抗性并实时刷新结算预览（8 动能 0 护甲 -> 4 HP）
+			const braceTargetMech = mkRwActor("rw_brace_t", "受击盾卫", { armor: 0, hp: 14 });
+			docMap["Scene.s18.Token.bt"] = { uuid: "Scene.s18.Token.bt", name: "受击盾卫", actor: braceTargetMech };
+			const mkMockEl = tag => ({
+				tagName: tag.toUpperCase(),
+				className: "",
+				style: {},
+				textContent: "",
+				title: "",
+				disabled: false,
+				children: [],
+				listeners: {},
+				append(ch) { this.children.push(ch); },
+				addEventListener(ev, fn) { this.listeners[ev] = fn; },
+			});
+			const mockCardDiv = mkMockEl("div");
+			const mockSelect = { value: "1", addEventListener() {} };
+			const mockTargetRow = {
+				querySelector: sel => {
+					if (sel === ".lancer-cn-dmg-preview") return null;
+					if (sel === ".lancer-damage-button-group") return { dataset: { target: "Scene.s18.Token.bt", addBurn: "true" }, querySelector: s => (s === "select" ? mockSelect : null) };
+					return null;
+				},
+				append(ch) { mockCardDiv.append(ch); },
+				closest: () => mockCardDiv,
+			};
+			const mockDmgRoot = {
+				ownerDocument: { createElement: mkMockEl },
+				querySelectorAll: sel => (sel === ".lancer-damage-target" ? [mockTargetRow] : []),
+				querySelector: () => null,
+			};
+			const mockDmgMsg = mkFlagMsg("dmg_brace_18", {
+				lancer: {
+					damageData: {
+						ap: false,
+						paracausal: false,
+						targetDamageResults: [{ target: "Scene.s18.Token.bt", damage: [{ type: "Kinetic", amount: 8 }], ap: false, paracausal: false }],
+					},
+				},
+			});
+			ctx.game.user.isGM = false;
+			L.onRenderChatMessage(mockDmgMsg, mockDmgRoot);
+			const previewBox = mockCardDiv.children[0];
+			const spanEl = previewBox?.children?.[0];
+			const inlineBraceBtn = previewBox?.children?.[1];
+			ok(spanEl?.textContent.includes("-8 HP") && inlineBraceBtn?.textContent === "🛡 受身", `伤害卡目标行生成结算预览（${spanEl?.textContent}）与内联「🛡 受身」按钮`);
+			await inlineBraceBtn.listeners.click({ preventDefault() {}, stopPropagation() {} });
+			ok(inlineBraceBtn.textContent === "✓ 已受身" && inlineBraceBtn.disabled === true && spanEl.textContent.includes("-4 HP"), `点击伤害卡内联「🛡 受身」后开启全抗性并将预览实时刷新为减半后 -4 HP（实际：${spanEl.textContent}）`);
+
+			ctx.fromUuidSync = prevFromUuidSync18;
+			ctx.fromUuid = prevFromUuid18;
+			ctx.ChatMessage = prevChatMsg18;
+			ctx.game.lancer.flows = prevFlows18;
+			ctx.game.lancer.flowSteps = prevFlowSteps18;
+			ctx.canvas = prevCanvas18;
+			ctx.ui = prevUi18;
+			ctx.game.actors = prevActors18;
+			ctx.game.users = prevUsers18;
+			ctx.game.user.isGM = prevIsGM18;
+			ctx.game.combat = prevCombat18;
+		}
+
+		// ---- v1.19.0 召唤物自动掩护圈与指示物跟随掩护区域回归测试
+		{
+			const L = ctx.LancerCN;
+			const prevCanvas19 = ctx.canvas;
+			const prevUsers19 = ctx.game.users;
+			const prevIsGM19 = ctx.game.user.isGM;
+			const prevUi19 = ctx.ui;
+
+			ctx.game.users = { activeGM: { isSelf: true } };
+			ctx.game.user.isGM = true;
+			ctx.ui = { notifications: { info() {}, warn() {}, error() {} } };
+
+			// 1) 部署物掩护规格自动推断（区分普通实体硬掩体、自身同享、内部掩体、软掩护场，并跳过未引爆地雷与矿渣爆爆）
+			const mkDepActor = (name, lid, detail = "", depType = "Deployable", hp = 10, hpMax = 10) => {
+				const statuses = new Set();
+				const flags = { "lancer-cn": {} };
+				return {
+					id: `a_${lid || name}`,
+					name,
+					type: "deployable",
+					isOwner: true,
+					is_deployable: () => true,
+					statuses,
+					flags,
+					getFlag: (sc, k) => flags[sc]?.[k],
+					setFlag: async (sc, k, v) => { (flags[sc] ||= {})[k] = v; },
+					toggleStatusEffect: async (sid, { active }) => { active ? statuses.add(sid) : statuses.delete(sid); },
+					system: {
+						lid,
+						type: depType,
+						detail,
+						hp: { value: hp, max: hpMax },
+					},
+				};
+			};
+
+			const jerichoSpec = L.inferDeployableCoverSpec(null, mkDepActor("耶利哥展开掩体 [埃弗勒斯]", "dep_耶利哥展开掩体"));
+			ok(jerichoSpec?.cover === "hard" && jerichoSpec.radius === 1 && jerichoSpec.includeSelfCells === false && jerichoSpec.grantToSelfActor === false, "耶利哥展开掩体自动识别为：硬性掩护·周边邻接1格·不含自身且自身不受益");
+
+			const shieldArraySpec = L.inferDeployableCoverSpec(null, mkDepActor("盾牌阵列无人机", "dep_盾牌阵列无人机", "", "Drone"));
+			ok(shieldArraySpec?.cover === "hard" && shieldArraySpec.radius === 1 && shieldArraySpec.includeSelfCells === true && shieldArraySpec.grantToSelfActor === true, "盾牌阵列无人机自动识别为：硬性掩护·含自身+周边1格·自身同享硬掩护");
+
+			const bunkerSpec = L.inferDeployableCoverSpec(null, mkDepActor("便携式地堡", "dep_便携式地堡"));
+			ok(bunkerSpec?.cover === "hard" && bunkerSpec.radius === 0 && bunkerSpec.includeSelfCells === true && bunkerSpec.grantToSelfActor === false, "便携式地堡自动识别为：硬性掩护·仅覆盖自身占地格·建筑自身不挂状态");
+
+			const hiveSpec = L.inferDeployableCoverSpec(null, mkDepActor("虫巢无人机", "dep_虫巢无人机", "", "Drone"));
+			ok(hiveSpec?.cover === "soft" && hiveSpec.radius === 2 && hiveSpec.includeSelfCells === true && hiveSpec.grantToSelfActor === true, "虫巢无人机自动识别为：软性掩护·爆发2·自身同享软掩护");
+
+			const smokeMineSpec = L.inferDeployableCoverSpec(null, mkDepActor("烟雾地雷", "dep_烟雾地雷", "引爆时爆发3区域得到软性掩护。", "Mine"));
+			const slagBombSpec = L.inferDeployableCoverSpec(null, mkDepActor("矿渣爆爆", "dep_矿渣爆爆", "被摧毁时在爆发2中引爆。"));
+			const customBarrierSpec = L.inferDeployableCoverSpec(null, mkDepActor("自制防爆盾板", "dep_custom_plate", "部署于邻接空格，可作为硬性掩护。"));
+			ok(smokeMineSpec === null && slagBombSpec === null && customBarrierSpec?.cover === "hard" && customBarrierSpec.includeSelfCells === false, "跳过未引爆的烟雾地雷与火蜥蜴矿渣爆爆，并通过语义兜底准确识别自定义硬掩体部署物");
+
+			// 2) 拖出自动创建 Region、周边角色自动获掩护、掩体自身不吃 -2、拖动跟随平移、HP=0 自动移除与修复恢复、删除清理
+			const grid19 = {
+				size: 100,
+				distance: 1,
+				isGridless: false,
+				getOffset: pt => ({ i: Math.floor(pt.y / 100), j: Math.floor(pt.x / 100) }),
+				getCenterPoint: off => ({ x: off.j * 100 + 50, y: off.i * 100 + 50 }),
+				getVertices: off => {
+					const x0 = off.j * 100, y0 = off.i * 100;
+					return [{ x: x0, y: y0 }, { x: x0 + 100, y: y0 }, { x: x0 + 100, y: y0 + 100 }, { x: x0, y: y0 + 100 }];
+				},
+				measurePath: ([p, q]) => ({ spaces: Math.max(Math.abs(Math.floor(p.x / 100) - Math.floor(q.x / 100)), Math.abs(Math.floor(p.y / 100) - Math.floor(q.y / 100))) }),
+			};
+			let regSeq = 1;
+			const scene19 = {
+				id: "sc19",
+				grid: grid19,
+				tokens: [],
+				regions: [],
+				async createEmbeddedDocuments(type, dataList) {
+					if (type !== "Region") return [];
+					const out = [];
+					for (const d of dataList) {
+						const flags = JSON.parse(JSON.stringify(d.flags ?? {}));
+						const reg = {
+							id: `reg19_${regSeq++}`,
+							name: d.name,
+							color: d.color,
+							visibility: d.visibility,
+							shapes: d.shapes,
+							behaviors: d.behaviors ?? [],
+							flags,
+							getFlag: (sc, k) => flags[sc]?.[k],
+							async update(u) {
+								if (u.name !== undefined) this.name = u.name;
+								if (u.color !== undefined) this.color = u.color;
+								if (u.visibility !== undefined) this.visibility = u.visibility;
+								if (u.shapes !== undefined) this.shapes = u.shapes;
+								if (u.behaviors !== undefined) this.behaviors = u.behaviors;
+								if (u["flags.lancer-cn"]) flags["lancer-cn"] = JSON.parse(JSON.stringify(u["flags.lancer-cn"]));
+							},
+						};
+						scene19.regions.push(reg);
+						out.push(reg);
+					}
+					return out;
+				},
+				async deleteEmbeddedDocuments(type, ids) {
+					if (type !== "Region") return;
+					scene19.regions = scene19.regions.filter(r => !ids.includes(r.id));
+				},
+			};
+
+			const mkTokDoc19 = (id, actor, x, y, w = 1, h = 1) => {
+				const flags = { "lancer-cn": {} };
+				const doc = {
+					id,
+					name: actor.name,
+					x,
+					y,
+					width: w,
+					height: h,
+					hidden: false,
+					isOwner: true,
+					parent: scene19,
+					actor,
+					actorId: actor.id,
+					regions: new Set(),
+					flags,
+					getFlag: (sc, k) => flags[sc]?.[k],
+					setFlag: async (sc, k, v) => { (flags[sc] ||= {})[k] = v; },
+					unsetFlag: async (sc, k) => { if (flags[sc]) delete flags[sc][k]; },
+				};
+				actor.token = doc;
+				return doc;
+			};
+
+			const mkMech19 = (id, name) => {
+				const statuses = new Set();
+				return {
+					id,
+					name,
+					type: "mech",
+					isOwner: true,
+					statuses,
+					system: { hp: { value: 12, max: 12 }, structure: { value: 4, max: 4 } },
+					toggleStatusEffect: async (sid, { active }) => { active ? statuses.add(sid) : statuses.delete(sid); },
+				};
+			};
+
+			const allyA = mkMech19("m_ally_a", "友军甲");
+			const allyB = mkMech19("m_ally_b", "友军乙");
+			const jerichoActor = mkDepActor("耶利哥展开掩体", "dep_耶利哥展开掩体");
+			const tokAllyA = mkTokDoc19("tok_a", allyA, 200, 100); // 格子 (1, 2)
+			const tokAllyB = mkTokDoc19("tok_b", allyB, 500, 100); // 格子 (1, 5)
+			const tokJericho = mkTokDoc19("tok_jer", jerichoActor, 100, 100); // 格子 (1, 1)，与友军甲邻接！
+			scene19.tokens.push(tokAllyA, tokAllyB, tokJericho);
+			ctx.canvas = { scene: scene19, grid: grid19, tokens: { controlled: [], placeables: [] } };
+
+			// 2a) 拖出耶利哥掩体：生成周围 8 格环状硬掩护区（不含自身 1,1），邻接友军甲自动获得 cover_hard，耶利哥自身不获得 cover_hard！
+			await L.onCoverAuraCreateToken(tokJericho);
+			const regJer = L.findBoundCoverRegions(scene19, "tok_jer")[0];
+			ok(Boolean(regJer) && regJer.shapes.length === 8 && !regJer.getFlag("lancer-cn", "auraCellKeys").includes("1,1"), `耶利哥展开掩体拖出后生成 8 格环状硬掩护区且不含自身格 (1,1)`);
+			ok(allyA.statuses.has("cover_hard") && !allyB.statuses.has("cover_hard") && !jerichoActor.statuses.has("cover_hard"), "邻接掩体的友军甲自动获得硬性掩护，远处友军乙无掩护，且耶利哥掩体自身不误吃 -2 硬性掩护");
+
+			// 2b) 拖动耶利哥掩体从 (100,100) 移到 (400,100)（格子 1,4，邻接友军乙 1,5）：掩护区跟着平移，友军甲自动摘除硬掩护，友军乙自动获得硬掩护！
+			tokJericho.x = 400; tokJericho.y = 100;
+			await L.onCoverAuraTokenUpdate(tokJericho, { x: 400, y: 100 });
+			ok(scene19.regions.length === 1 && regJer.getFlag("lancer-cn", "auraCellKeys").includes("1,5") && !regJer.getFlag("lancer-cn", "auraCellKeys").includes("1,2"), "拖动召唤物后绑定的同一个 Region 实时跟随平移至新位置");
+			ok(!allyA.statuses.has("cover_hard") && allyB.statuses.has("cover_hard"), "召唤物移走后原邻接友军甲自动摘除硬掩护，新邻接友军乙自动挂上硬掩护");
+
+			// 2c) 召唤物被打爆（HP 归零）：自动移除掩护区并摘除友军乙硬掩护；修复回血（HP -> 10）：自动重建掩护区并恢复友军乙硬掩护！
+			jerichoActor.system.hp.value = 0;
+			await L.onCoverAuraActorUpdate(jerichoActor, { system: { hp: { value: 0 } } });
+			ok(L.findBoundCoverRegions(scene19, "tok_jer").length === 0 && !allyB.statuses.has("cover_hard"), "召唤物 HP 归零（摧毁）但棋子未删时，自动移除绑定的掩护区并摘除周边硬掩护");
+
+			jerichoActor.system.hp.value = 10;
+			await L.onCoverAuraActorUpdate(jerichoActor, { system: { hp: { value: 10 } } });
+			ok(L.findBoundCoverRegions(scene19, "tok_jer").length === 1 && allyB.statuses.has("cover_hard"), "召唤物回血修复后自动恢复跟随掩护区");
+
+			// 2d) 盾牌阵列无人机（自身受益）与便携式地堡（仅内部受益、建筑自身不挂状态）对比验证
+			const shieldActor = mkDepActor("盾牌阵列无人机", "dep_盾牌阵列无人机", "", "Drone");
+			const tokShield = mkTokDoc19("tok_shd", shieldActor, 0, 400, 2, 2);
+			scene19.tokens.push(tokShield);
+			await L.onCoverAuraCreateToken(tokShield);
+			ok(shieldActor.statuses.has("cover_hard"), "盾牌阵列无人机明确写明自身也算作拥有硬性掩护，部署后自身自动获得 cover_hard");
+
+			const bunkerActor = mkDepActor("便携式地堡", "dep_便携式地堡");
+			const allyInside = mkMech19("m_inside", "地堡内机甲");
+			const tokInside = mkTokDoc19("tok_in", allyInside, 500, 500, 1, 1);
+			const tokBunker = mkTokDoc19("tok_bnk", bunkerActor, 400, 400, 4, 4);
+			scene19.tokens.push(tokInside, tokBunker);
+			await L.onCoverAuraCreateToken(tokBunker);
+			ok(allyInside.statuses.has("cover_hard") && !bunkerActor.statuses.has("cover_hard"), "便携式地堡覆盖自身 4×4 占地格，内部机甲自动获硬性掩护，地堡自身不挂硬掩护状态");
+
+			// 2e) 烟雾发生器一键扩圈（爆发 1 -> 爆发 2 -> 关闭）与机甲手动绑定 + 删除棋子自动清理
+			const smokeActor = mkDepActor("烟雾发生器", "dep_烟雾发生器");
+			const tokSmoke = mkTokDoc19("tok_smk", smokeActor, 800, 800, 1, 1);
+			scene19.tokens.push(tokSmoke);
+			await L.onCoverAuraCreateToken(tokSmoke);
+			ok(L.findBoundCoverRegions(scene19, "tok_smk")[0]?.shapes.length === 9, "烟雾发生器初始生成爆发 1（自身+8邻接=9格）软性掩护区");
+			await L.applyCoverAuraPreset(tokSmoke, "soft_b2");
+			ok(L.findBoundCoverRegions(scene19, "tok_smk")[0]?.shapes.length === 25, "烟雾发生器一键切换预设为爆发 2（25格）软性掩护区");
+			await L.applyCoverAuraPreset(tokSmoke, "off");
+			ok(L.findBoundCoverRegions(scene19, "tok_smk").length === 0, "一键切换关闭后立即移除该指示物的掩护区，且后续不再误自动重建");
+
+			// 为普通机甲手动绑定邻接硬掩护圈（如「守卫者」机甲），再删除棋子自动清理
+			await L.applyCoverAuraPreset(tokAllyA, "hard_ring1");
+			ok(L.findBoundCoverRegions(scene19, "tok_a").length === 1, "普通机甲也可通过快捷预设手动绑定跟随硬掩护圈");
+			scene19.tokens = scene19.tokens.filter(t => t.id !== "tok_jer");
+			await L.onCoverAuraDeleteToken(tokJericho);
+			ok(L.findBoundCoverRegions(scene19, "tok_jer").length === 0 && !allyB.statuses.has("cover_hard"), "删除召唤物棋子后自动销毁其绑定的掩护区并更新受影响角色状态");
+
+			// 3) Token HUD 盾牌按钮与部署物角色表「跟随掩护区域」卡片注入检查
+			const hudAppended = [];
+			const mockHudCol = { append: el => hudAppended.push(el) };
+			const mockHudRoot = {
+				ownerDocument: {
+					createElement: () => ({ type: "", className: "", dataset: {}, title: "", innerHTML: "", addEventListener() {} }),
+				},
+				querySelector: sel => (sel === ".lancer-cn-hud-cover-aura" ? null : sel === ".col.left" ? mockHudCol : null),
+			};
+			L.onRenderTokenHUD({ object: { document: tokShield } }, mockHudRoot);
+			ok(hudAppended.length === 1 && hudAppended[0].className.includes("lancer-cn-hud-cover-aura") && hudAppended[0].className.includes("active"), "右键 Token HUD 注入跟随掩护圈盾牌图标并高亮已启用状态");
+
+			const depCardHtml = L.deployableCoverAuraCardHTML(smokeActor);
+			ok(depCardHtml.includes("跟随掩护区域") && depCardHtml.includes('data-lancer-cn-cover-aura="preset:soft_b2"') && depCardHtml.includes('data-lancer-cn-cover-aura="preset:hard_ring1"'), "部署物角色表生成「跟随掩护区域」快捷预设控制卡片");
+
+			ctx.ui = prevUi19;
+			ctx.game.user.isGM = prevIsGM19;
+			ctx.game.users = prevUsers19;
+			ctx.canvas = prevCanvas19;
+		}
+
+		// ---- v1.19.1 锥形（扇形，Cone）范围模板几何外框与六角格零断层高亮回归测试
+		{
+			const L = ctx.LancerCN;
+			const prevCanvasCone = ctx.canvas;
+			const prevConfigCone = ctx.CONFIG;
+			const prevFoundryCone = ctx.foundry;
+			const prevLancerCone = ctx.game.lancer;
+
+			const mkTestHexGrid = ({ columns = false, even = false, size = 100 } = {}) => {
+				const SQRT3 = Math.sqrt(3);
+				const sizeX = columns ? (2 / SQRT3) * size : size;
+				const sizeY = columns ? size : (2 / SQRT3) * size;
+				return {
+					type: columns ? (even ? 5 : 4) : (even ? 3 : 2),
+					isHexagonal: true,
+					isSquare: false,
+					isGridless: false,
+					columns,
+					even,
+					size,
+					sizeX,
+					sizeY,
+					distance: 1,
+					getCenterPoint(off) {
+						const { i, j } = off;
+						if (!columns) {
+							const shift = (((i & 1) !== 0) !== even) ? 0.5 : 0;
+							return { x: (j + shift + 0.5) * sizeX, y: (0.75 * i + 0.5) * sizeY };
+						}
+						const shift = (((j & 1) !== 0) !== even) ? 0.5 : 0;
+						return { x: (0.75 * j + 0.5) * sizeX, y: (i + shift + 0.5) * sizeY };
+					},
+					getTopLeftPoint(off) {
+						const c = this.getCenterPoint(off);
+						return { x: c.x - sizeX / 2, y: c.y - sizeY / 2 };
+					},
+					getOffset(pt) {
+						const approxI = !columns ? Math.round((pt.y / sizeY - 0.5) / 0.75) : Math.round(pt.y / sizeY - 0.5);
+						const approxJ = !columns ? Math.round(pt.x / sizeX - 0.5) : Math.round((pt.x / sizeX - 0.5) / 0.75);
+						let best = { i: approxI, j: approxJ }, bestD = Infinity;
+						for (let di = -2; di <= 2; di++) {
+							for (let dj = -2; dj <= 2; dj++) {
+								const cand = { i: approxI + di, j: approxJ + dj };
+								const c = this.getCenterPoint(cand);
+								const d = (c.x - pt.x) ** 2 + (c.y - pt.y) ** 2;
+								if (d < bestD) { bestD = d; best = cand; }
+							}
+						}
+						return best;
+					},
+				};
+			};
+
+			// 1) 四种六角网格（尖顶/平顶 × 奇偶偏移）全角度几何不变量校验：不含起点、第 1 格零断层、轴向对称扇面与斜向等边三角锥
+			let allModesPass = true;
+			for (const columns of [false, true]) {
+				for (const even of [false, true]) {
+					const g = mkTestHexGrid({ columns, even, size: 100 });
+					const origOff = { i: 5, j: 5 };
+					const O = g.getCenterPoint(origOff);
+					for (let deg = 0; deg < 360; deg += 15) {
+						const c3 = L.computeLancerHexConeOffsets(g, O, deg, 3);
+						const hasOrig = c3.some(o => o.i === origOff.i && o.j === origOff.j);
+						const adjCount = c3.filter(o => {
+							const p = g.getCenterPoint(o);
+							return Math.hypot(p.x - O.x, p.y - O.y) <= 105;
+						}).length;
+						if (hasOrig || adjCount !== 1 || (c3.length !== 6 && c3.length !== 7)) {
+							allModesPass = false;
+							break;
+						}
+					}
+				}
+			}
+			ok(allModesPass, "全部 4 种六角格朝向下，锥形 3 在 0°~345° 均绝不含发射起点格、第 1 格恒为紧贴起点的 1 格（无空洞断层）、总格数恒为 6 或 7 格");
+
+			const pointyGrid = mkTestHexGrid({ columns: false, even: false, size: 100 });
+			const pointyOrig = pointyGrid.getCenterPoint({ i: 4, j: 4 });
+			const c3At0 = L.computeLancerHexConeOffsets(pointyGrid, pointyOrig, 0, 3);
+			const c3At65 = L.computeLancerHexConeOffsets(pointyGrid, pointyOrig, 65, 3);
+			const c3At90 = L.computeLancerHexConeOffsets(pointyGrid, pointyOrig, 90, 3);
+			ok(c3At0.length === 7 && c3At65.length === 7, `尖顶六角格 0° 与 65° 的锥形 3 均为 1+3+3=7 格对称扇面（修复第 2 格缩成单格细颈，实际 ${c3At0.length} / ${c3At65.length}）`);
+			const d1At90 = c3At90.filter(o => {
+				const p = pointyGrid.getCenterPoint(o);
+				return Math.hypot(p.x - pointyOrig.x, p.y - pointyOrig.y) <= 105;
+			});
+			ok(c3At90.length === 6 && d1At90.length === 1, `尖顶六角格 90° 的锥形 3 为 1+2+3=6 格标准等边六角锥，且第 1 格存在 1 个邻接格（消除原截图 90° 空洞断层）`);
+
+			const flatGrid = mkTestHexGrid({ columns: true, even: false, size: 100 });
+			const flatOrig = flatGrid.getCenterPoint({ i: 4, j: 4 });
+			const flatAt90 = L.computeLancerHexConeOffsets(flatGrid, flatOrig, 90, 5);
+			const flatAt0 = L.computeLancerHexConeOffsets(flatGrid, flatOrig, 0, 5);
+			ok(flatAt90.length === 17 && flatAt0.length === 15, `平顶六角格锥形 5 在 90°（邻接轴）为 17 格对称扇面、在 0°（顶点方向）为 15 格等边三角锥`);
+
+			// 2) MeasuredTemplate._computeShape 圆弧扇形外框、_getGridHighlightPositions 与 WeaponRangeTemplate.fromRange 角度修正
+			class MockBaseMeasuredTemplate {
+				constructor(document) {
+					this.document = document;
+					this.ray = { distance: (Number(document.distance) || 0) * 100 };
+				}
+				_computeShape() {
+					// 模拟 Foundry 原生返回歪斜四边形风筝（仅 4 个顶点 = 10 个坐标）
+					return { points: [0, 0, 260, -150, 346, 0, 260, 150, 0, 0], kind: "minkowski_kite" };
+				}
+				_getGridHighlightPositions() {
+					// 模拟方格原生包含起点格 (100, 100) 与前方 3 格
+					return [{ x: 100, y: 100 }, { x: 200, y: 100 }, { x: 300, y: 100 }, { x: 300, y: 200 }];
+				}
+			}
+			class MockWeaponRangeTemplate extends MockBaseMeasuredTemplate {
+				static fromRange(range) {
+					const isSq = Boolean(ctx.canvas?.grid?.isSquare);
+					const doc = {
+						t: range.type === "Cone" ? "cone" : "circle",
+						distance: Number(range.val),
+						direction: 0,
+						angle: isSq ? 51 : 59,
+						x: 0,
+						y: 0,
+						flags: { lancer: { range } },
+						getFlag(sc, k) { return this.flags?.[sc]?.[k]; },
+						updateSource(patch) { Object.assign(this, patch); },
+					};
+					return new this(doc);
+				}
+			}
+
+			let targetedResultIds = [];
+			let origTargetsCalledWith = null;
+			ctx.CONFIG = { ...(prevConfigCone || {}), MeasuredTemplate: { objectClass: MockBaseMeasuredTemplate, defaults: { angle: 53.13 } } };
+			ctx.foundry = { ...(prevFoundryCone || {}), canvas: { ...(prevFoundryCone?.canvas || {}), placeables: { MeasuredTemplate: MockBaseMeasuredTemplate } } };
+			ctx.canvas = {
+				ready: true,
+				grid: pointyGrid,
+				dimensions: { size: 100, distance: 1, distancePixels: 100 },
+				scene: {
+					dimensions: { distance: 1 },
+					templates: new Map(),
+					getEmbeddedDocument(_type, id) { return this.templates.get(id); },
+				},
+				templates: { get(id) { return ctx.canvas.scene.templates.get(id)?.object; } },
+				tokens: {
+					placeables: [],
+					setTargets: ids => { targetedResultIds = Array.from(ids); },
+				},
+			};
+			ctx.game.lancer = {
+				...(prevLancerCone || {}),
+				canvas: { WeaponRangeTemplate: MockWeaponRangeTemplate },
+				targetsFromTemplate: id => { origTargetsCalledWith = id; },
+			};
+			L.patchWeaponRangeTemplate();
+
+			const wrtHex = ctx.game.lancer.canvas.WeaponRangeTemplate.fromRange({ type: "Cone", val: "3" });
+			ok(wrtHex.document.angle === 60 && ctx.CONFIG.MeasuredTemplate.defaults.angle === 60, `六角格下 WeaponRangeTemplate 与默认锥角自动修正为 60°（替代上游 59° / 53.13°）`);
+			wrtHex.document.updateSource({ x: pointyOrig.x, y: pointyOrig.y, direction: 65 });
+			const smoothPoly = wrtHex._computeShape();
+			const arcSteps = smoothPoly.points.length / 2 - 3;
+			const midIdx = 2 + (arcSteps / 2) * 2;
+			const midX = smoothPoly.points[midIdx], midY = smoothPoly.points[midIdx + 1];
+			const expX = 300 * Math.cos((65 * Math.PI) / 180), expY = 300 * Math.sin((65 * Math.PI) / 180);
+			ok(
+				smoothPoly.kind !== "minkowski_kite" &&
+				smoothPoly.points.length >= 68 &&
+				smoothPoly.points[0] === 0 && smoothPoly.points[1] === 0 &&
+				Math.hypot(midX - expX, midY - expY) < 0.01 &&
+				smoothPoly.contains(expX * 0.9, expY * 0.9) &&
+				!smoothPoly.contains(-50, 0),
+				"锥形 _computeShape 输出平滑圆弧扇形多边形（替代歪斜四边形风筝），且圆弧正中顶点精确对齐距离手柄点"
+			);
+
+			const circleTmpl = new MockBaseMeasuredTemplate({ t: "circle", distance: 2 });
+			ok(circleTmpl._computeShape().kind === "minkowski_kite", "非锥形模板（circle/ray）保持原生 _computeShape 不受影响");
+
+			const hlHex90Doc = {
+				id: "tmpl_c90",
+				t: "cone",
+				x: pointyOrig.x,
+				y: pointyOrig.y,
+				direction: 90,
+				distance: 3,
+				angle: 60,
+				flags: { lancer: { range: { type: "Cone", val: 3 }, ignore: { tokens: ["tok_caster"], dispositions: [] } } },
+				getFlag(sc, k) { return this.flags?.[sc]?.[k]; },
+			};
+			const hlHex90Obj = new MockBaseMeasuredTemplate(hlHex90Doc);
+			hlHex90Doc.object = hlHex90Obj;
+			const hlPts90 = hlHex90Obj._getGridHighlightPositions();
+			const hlOffs90 = hlPts90.map(pt => pointyGrid.getOffset({ x: pt.x + pointyGrid.sizeX / 2, y: pt.y + pointyGrid.sizeY / 2 }));
+			ok(hlOffs90.length === 6 && !hlOffs90.some(o => o.i === 4 && o.j === 4), "已放置的原生 MeasuredTemplate 实例在尖顶 90° 同样输出 6 个无断层六角格左顶点且排除起点格");
+
+			// 3) targetsFromTemplate 自动索敌：精确锁定高亮六角格上的全部可见敌军（含外包围盒外的边角格），忽略起点与发射者
+			const nearEnemyCenter = pointyGrid.getCenterPoint(hlOffs90[0]);
+			const farCornerCenter = pointyGrid.getCenterPoint(hlOffs90[hlOffs90.length - 1]);
+			const outsideCenter = pointyGrid.getCenterPoint({ i: 0, j: 0 });
+			ctx.canvas.scene.templates.set("tmpl_c90", hlHex90Doc);
+			ctx.canvas.tokens.placeables = [
+				{ id: "tok_caster", isVisible: true, center: pointyOrig, document: { disposition: 1 } },
+				{ id: "tok_orig_ally", isVisible: true, center: pointyOrig, document: { disposition: 1 } },
+				{ id: "tok_d1_enemy", isVisible: true, center: nearEnemyCenter, document: { disposition: -1 } },
+				{ id: "tok_d3_corner", isVisible: true, center: farCornerCenter, document: { disposition: -1 } },
+				{ id: "tok_hidden", isVisible: false, center: nearEnemyCenter, document: { disposition: -1, hidden: true } },
+				{ id: "tok_outside", isVisible: true, center: outsideCenter, document: { disposition: -1 } },
+			];
+			ctx.game.lancer.targetsFromTemplate("tmpl_c90");
+			ok(
+				targetedResultIds.join(",") === "tok_d1_enemy,tok_d3_corner",
+				`锥形 targetsFromTemplate 精准锁定第 1 格与远端边角格敌军，不误锁起点格友军、发射者或不可见单位（实际 ${targetedResultIds.join(",")}）`
+			);
+
+			// 非锥形模板继续走原生 targetsFromTemplate
+			const circleDoc = { id: "tmpl_cir", t: "circle", object: circleTmpl };
+			ctx.canvas.scene.templates.set("tmpl_cir", circleDoc);
+			ctx.game.lancer.targetsFromTemplate("tmpl_cir");
+			ok(origTargetsCalledWith === "tmpl_cir", "非锥形模板调用 targetsFromTemplate 时正常透传给原生实现");
+
+			// 4) 方格（Square Grid）兼容：角度为 53.13°，且自动剔除发射起点方格 (1, 1)
+			const sqGrid = {
+				type: 1,
+				isHexagonal: false,
+				isSquare: true,
+				isGridless: false,
+				size: 100,
+				sizeX: 100,
+				sizeY: 100,
+				distance: 1,
+				getOffset: pt => ({ i: Math.floor(pt.y / 100), j: Math.floor(pt.x / 100) }),
+			};
+			ctx.canvas.grid = sqGrid;
+			const wrtSq = ctx.game.lancer.canvas.WeaponRangeTemplate.fromRange({ type: "Cone", val: 3 });
+			wrtSq.document.updateSource({ x: 150, y: 150, direction: 0 });
+			const sqHl = wrtSq._getGridHighlightPositions();
+			ok(
+				Math.abs(wrtSq.document.angle - 53.13) < 0.01 &&
+				sqHl.length === 3 &&
+				!sqHl.some(p => p.x === 100 && p.y === 100),
+				"方格地图下锥形角度设为 53.13°，且 _getGridHighlightPositions 自动排除发射者所在起点方格"
+			);
+
+			ctx.game.lancer = prevLancerCone;
+			ctx.foundry = prevFoundryCone;
+			ctx.CONFIG = prevConfigCone;
+			ctx.canvas = prevCanvasCone;
+		}
+
+		// ---- v1.19.2 目标选择面板一键投掷/掷骰确认与 AccDiffHudTarget(targetUuid) 解析回归测试
+		{
+			const L = ctx.LancerCN;
+			const prevDoc192 = ctx.document;
+			const prevCanvas192 = ctx.canvas;
+			const prevFromUuidSync192 = ctx.fromUuidSync;
+			const prevTargets192 = ctx.game.user.targets;
+
+			const knifeItem = {
+				id: "w_knife",
+				name: "战术匕首",
+				type: "mech_weapon",
+				is_mech_weapon: () => true,
+				system: {
+					lid: "mw_tactical_knife",
+					size: "Auxiliary",
+					active_profile: {
+						type: "Melee",
+						range: [{ type: "Threat", val: 1 }],
+						tags: [{ lid: "tg_thrown", val: "3", is_thrown: true }],
+						all_tags: [{ lid: "tg_thrown", val: "5", is_thrown: true }],
+					},
+				},
+				currentProfile() { return this.system.active_profile; },
+			};
+			const hunterPilot = {
+				type: "pilot",
+				items: [{ type: "talent", system: { lid: "t_hunter", curr_rank: 2 } }],
+			};
+			const knifeMech = {
+				id: "m_knife",
+				uuid: "Actor.m_knife",
+				name: "猎人机甲",
+				type: "mech",
+				is_mech: () => true,
+				isOwner: true,
+				statuses: new Set(),
+				items: [knifeItem],
+				getFlag: () => undefined,
+				system: {
+					pilot: { value: hunterPilot },
+					loadout: { frame: { value: { system: { lid: "mf_standard_pattern_i_everest" } } } },
+				},
+			};
+			knifeItem.actor = knifeMech;
+
+			const selfTok = { id: "tok_self", center: { x: 50, y: 50 }, actor: knifeMech, visible: true, document: { uuid: "Scene.s1.Token.tok_self", name: "猎人机甲", disposition: 1 } };
+			const scoutActor = {
+				id: "a_scout",
+				uuid: "Actor.a_scout",
+				name: "斥侯",
+				type: "npc",
+				statuses: new Set(["slow"]),
+				getFlag: () => undefined,
+				system: { statuses: { slow: true } },
+			};
+			const scoutTok = { id: "tok_scout", center: { x: 550, y: 50 }, actor: scoutActor, visible: true, document: { id: "tok_scout", uuid: "Scene.s1.Token.tok_scout", name: "斥侯", disposition: -1, object: null } };
+			scoutTok.document.object = scoutTok;
+
+			ctx.canvas = {
+				grid: {
+					size: 100,
+					distance: 1,
+					isGridless: false,
+					getOffset: pt => ({ i: Math.floor(pt.y / 100), j: Math.floor(pt.x / 100) }),
+					getCenterPoint: off => ({ x: off.j * 100 + 50, y: off.i * 100 + 50 }),
+					measurePath: ([a, b]) => ({ spaces: Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 100) }),
+				},
+				tokens: {
+					controlled: [selfTok],
+					placeables: [selfTok, scoutTok],
+					get: id => (id === "tok_scout" ? scoutTok : id === "tok_self" ? selfTok : null),
+				},
+			};
+			ctx.fromUuidSync = u => (u === "Scene.s1.Token.tok_scout" ? scoutTok.document : prevFromUuidSync192?.(u));
+
+			// 1) 当 AccDiffHudTarget 仅有 targetUuid（无 target 属性，与真实 Foundry LANCER v3.1.3 一致）且 game.user.targets 为空时，syncWeaponThrownMode 仍能准确测出 5 格 > 威胁 1 并开启投掷
+			ctx.game.user.targets = new Set();
+			const flowState = {
+				actor: knifeMech,
+				item: knifeItem,
+				data: {
+					attack_type: "Melee",
+					acc_diff: {
+						weapon: { melee: true, thrown: false, seeking: false },
+						base: { accuracy: 0, difficulty: 0 },
+						targets: [{ targetUuid: "Scene.s1.Token.tok_scout", accuracy: 0, difficulty: 0, cover: 1 }],
+					},
+				},
+			};
+			L.syncWeaponThrownMode(flowState);
+			ok(flowState.data.acc_diff.weapon.thrown === true, "AccDiffHudTarget 仅含 targetUuid 时，syncWeaponThrownMode 仍准确解析 5 格距离并自动勾选 thrown=true");
+
+			// 2) 目标面板针对 5 格目标渲染「投掷攻击」模式提示栏、「投掷射程内」标签与「🗡️ 投掷攻击」确认按钮，并支持手动切换与一键提交右侧 HUD
+			const mockSession = {
+				flow: { constructor: { name: "WeaponAttackFlow" }, state: flowState },
+				kind: "WeaponAttackFlow",
+				actor: knifeMech,
+				token: selfTok,
+				reach: 5,
+				rangeLabel: "威胁 1 / 投掷 5",
+				aoe: [],
+				collapsed: false,
+				title: "攻击：战术匕首",
+				lastIds: [],
+			};
+			const tpRows = [
+				{ token: scoutTok, id: "tok_scout", name: "斥侯", img: "", side: "enemy", distance: 5, inRange: true, targeted: true, last: false },
+			];
+			const tpThrownHtml = L.targetPanelHTML(mockSession, tpRows);
+			ok(
+				tpThrownHtml.includes("投掷攻击") &&
+				tpThrownHtml.includes("5 格 · 投掷射程内") &&
+				tpThrownHtml.includes('data-act="toggle-thrown"') &&
+				tpThrownHtml.includes('data-act="submit-hud"') &&
+				tpThrownHtml.includes("🗡️ 投掷攻击"),
+				"目标面板在选中 5 格目标时清晰显示「投掷攻击」状态栏、「5 格 · 投掷射程内」标识与底部「🗡️ 投掷攻击」一键开火按钮"
+			);
+
+			const prevPickerSetting = log.settingValues["lancer-cn.targetPicker"];
+			log.settingValues["lancer-cn.targetPicker"] = true;
+			ctx.game.user.targets = new Set([scoutTok]);
+			class WeaponAttackFlow {
+				constructor() { this.state = flowState; }
+			}
+			const wfInst = new WeaponAttackFlow();
+			L.openTargetPicker(wfInst);
+			const toggledVal = L.toggleTargetPanelThrownMode();
+			ok(toggledVal === false && flowState.data.acc_diff.weapon.thrown === false, "点击「切为近战」可手动切换为近战模式并同步改写右侧面板 weapon.thrown=false");
+			const toggledBack = L.toggleTargetPanelThrownMode();
+			ok(toggledBack === true && flowState.data.acc_diff.weapon.thrown === true, "再次点击「切为投掷」恢复投掷模式并同步 weapon.thrown=true");
+			let hudSubmitClicked = 0;
+			const fakeSubmitBtn = { click() { hudSubmitClicked += 1; } };
+			const fakeForm = { querySelector: sel => (sel.includes("submit") ? fakeSubmitBtn : null) };
+			ctx.document = {
+				getElementById: () => null,
+				querySelector: sel => (sel === "#accdiff-hud" ? fakeForm : null),
+			};
+			ok(L.submitActiveHud() === true && hudSubmitClicked === 1, "点击目标面板「🗡️ 投掷攻击」按钮直接触发右侧 #accdiff-hud 的掷骰提交");
+			ctx.document = prevDoc192;
+			L.closeTargetPicker(wfInst, false);
+			log.settingValues["lancer-cn.targetPicker"] = prevPickerSetting;
+
+			ctx.game.user.targets = prevTargets192;
+			ctx.fromUuidSync = prevFromUuidSync192;
+			ctx.canvas = prevCanvas192;
+			ctx.document = prevDoc192;
+		}
+
+		// ---- v1.19.3 崩溃检定（Cascade Check）死按钮消除、天赋 NHP 支持与失效 Token UUID 兜底回归测试
+		{
+			const L = ctx.LancerCN;
+			const prevUi193 = ctx.ui;
+			const prevActors193 = ctx.game.actors;
+			const prevFromUuidSync193 = ctx.fromUuidSync;
+			const prevLancer193 = ctx.game.lancer;
+
+			const infoLogs193 = [];
+			ctx.ui = {
+				notifications: {
+					info: m => { infoLogs193.push(String(m)); },
+					warn: m => { infoLogs193.push(String(m)); },
+					error: m => { infoLogs193.push(String(m)); },
+				},
+			};
+
+			const mkCascMech = (id, name, { items = [], pilotItems = [], type = "mech" } = {}) => {
+				const flags = { "lancer-cn": {} };
+				const statuses = new Set();
+				const itemArr = [...items];
+				itemArr.get = iid => itemArr.find(x => x.id === iid);
+				return {
+					id,
+					uuid: `Actor.${id}`,
+					name,
+					type,
+					isOwner: true,
+					is_mech: () => type === "mech",
+					is_npc: () => type === "npc",
+					statuses,
+					items: itemArr,
+					getFlag: (sc, k) => flags[sc]?.[k],
+					setFlag: async (sc, k, v) => { (flags[sc] ||= {})[k] = v; },
+					unsetFlag: async (sc, k) => { if (flags[sc]) delete flags[sc][k]; },
+					toggleStatusEffect: async (sid, { active }) => { active ? statuses.add(sid) : statuses.delete(sid); },
+					update: async () => {},
+					system: {
+						heat: { value: 2, max: 6 },
+						pilot: { value: { type: "pilot", items: pilotItems } },
+					},
+				};
+			};
+
+			// 1) COMP/CON、科技狂热者 III、已损毁 NHP 与 NPC：均判定为不可崩溃并给出对应中文原因，点击旧卡片按钮弹出明确提示而不静默失效
+			const compconMech = mkCascMech("m_cc", "助理号", {
+				items: [{ id: "i_cc", name: "COMP/CON 级助理单元", type: "mech_system", isAI: () => true, system: { lid: "ms_comp_con_class_assistant_unit", tags: [{ lid: "tg_ai" }] } }],
+			});
+			const tech3Mech = mkCascMech("m_t3", "启蒙号", {
+				items: [{ id: "i_osiris", name: "欧西里斯级 NHP", type: "mech_system", isAI: () => true, system: { lid: "ms_osiris_class_nhp", tags: [{ lid: "tg_ai" }] } }],
+				pilotItems: [{ type: "talent", system: { lid: "t_technophile", curr_rank: 3 } }],
+			});
+			const destroyedNhpMech = mkCascMech("m_dest", "战损号", {
+				items: [{ id: "i_nhp_d", name: "塞赫美特级 NHP", type: "mech_system", isAI: () => true, system: { lid: "ms_sekhmet_class_nhp", destroyed: true, tags: [{ lid: "tg_ai" }] } }],
+			});
+			const aiNpc = mkCascMech("n_ai", "AI敌兵", {
+				type: "npc",
+				items: [{ id: "i_npc_ai", name: "战术心智", type: "mech_system", isAI: () => true, system: { lid: "npcf_ai", tags: [{ lid: "tg_ai" }] } }],
+			});
+
+			ok(!L.collectCascadeableSources(compconMech).eligible && L.collectCascadeableSources(compconMech).blockedReason.includes("免疫崩溃"), "仅携带 COMP/CON 助理单元时判定无需崩溃检定");
+			ok(!L.collectCascadeableSources(tech3Mech).eligible && L.collectCascadeableSources(tech3Mech).blockedReason.includes("科技狂热者 III"), "具备科技狂热者 III 时判定全部 NHP 免疫崩溃");
+			ok(!L.collectCascadeableSources(destroyedNhpMech).eligible && L.collectCascadeableSources(destroyedNhpMech).blockedReason.includes("已损毁"), "NHP 已在系统创伤中损毁时明确提示已损毁原因");
+			ok(!L.collectCascadeableSources(aiNpc).eligible, "NPC 角色不生成崩溃检定按钮");
+
+			ctx.fromUuidSync = u => (u === compconMech.uuid ? compconMech : null);
+			infoLogs193.length = 0;
+			const ccRes = await L.executeCascadeCheck(compconMech.uuid);
+			ok(ccRes === false && infoLogs193.some(m => m.includes("COMP/CON")), "点击旧结构卡上仅含 COMP/CON 机甲的崩溃检定按钮时，立即弹出中文原因提示而不再静默无反应");
+
+			// 2) 驾驶员天赋自带 NHP（偶像破坏者 II「不稳定 NHP」、科技狂热者 II「学生级 NHP」）自动插入按钮并可正常掷骰与关机稳定
+			const iconoMech = mkCascMech("m_icono", "狂信机甲", {
+				pilotItems: [
+					{ type: "talent", system: { lid: "t_iconoclast", curr_rank: 2 } },
+					{ type: "talent", system: { lid: "t_technophile", curr_rank: 2 } },
+				],
+			});
+			const iconoSrc = L.collectCascadeableSources(iconoMech);
+			ok(iconoSrc.eligible === true && iconoSrc.talentNhps.length === 2, "科技狂热者 II「学生级 NHP」与偶像破坏者 II「不稳定 NHP」均识别为可崩溃 NHP");
+
+			const cascSteps = new Map([
+				["structureInsertCascadeRollButton", async () => true],
+				["initCascadeData", async () => false],
+				["cascadeRoll", async st => { st.data.result = { roll: { total: 1 } }; return true; }],
+				["cascadeUpdateItems", async () => true],
+			]);
+			ctx.game.lancer = { ...(prevLancer193 || {}), flowSteps: cascSteps, flows: new Map() };
+			L.patchLancerFlows();
+
+			const structBtnStateCompcon = { actor: compconMech, data: { embedButtons: [] } };
+			await cascSteps.get("structureInsertCascadeRollButton")(structBtnStateCompcon, {});
+			ok(structBtnStateCompcon.data.embedButtons.length === 0, "仅携带免崩溃 AI 的机甲在结构/过热卡上不再误插无效崩溃检定按钮");
+
+			const structBtnStateIcono = { actor: iconoMech, data: { embedButtons: [] } };
+			await cascSteps.get("structureInsertCascadeRollButton")(structBtnStateIcono, {});
+			ok(structBtnStateIcono.data.embedButtons.some(b => b.includes('data-flow-type="cascade"')), "仅携带天赋自带 NHP（不稳定/学生级 NHP）的机甲在结构/过热卡上自动补齐崩溃检定按钮");
+
+			const initIconoSt = { actor: iconoMech, data: { ai_systems: [] } };
+			const initIconoOk = await cascSteps.get("initCascadeData")(initIconoSt, {});
+			await cascSteps.get("cascadeRoll")(initIconoSt, {});
+			await cascSteps.get("cascadeUpdateItems")(initIconoSt, {});
+			ok(initIconoOk === true && initIconoSt.data.desc.includes("不稳定 NHP") && !L.collectCascadeableSources(iconoMech).eligible, "天赋 NHP 崩溃检定掷出 1 后写入崩溃状态并阻止重复检定");
+
+			await L.beginBasicAction(iconoMech, "shutDown");
+			ok(L.collectCascadeableSources(iconoMech).eligible === true, "执行「关机」动作后自动稳定崩溃中的天赋 NHP");
+
+			// 3) 旧卡片携带已移除 Token 的失效 UUID（Scene.s_old.Token.t_gone.Actor.m_real）时，自动回退解析至 game.actors 中的基础机甲并正常触发 CascadeFlow
+			const realNhpMech = mkCascMech("m_real", "重部署机甲", {
+				items: [{ id: "i_os", name: "欧西里斯级 NHP", type: "mech_system", isAI: () => true, system: { lid: "ms_osiris_class_nhp", tags: [{ lid: "tg_ai" }] } }],
+			});
+			ctx.fromUuidSync = () => null; // 模拟旧 Token 已从场景删除，fromUuidSync 返回 null
+			ctx.game.actors = { get: id => (id === "m_real" ? realNhpMech : null), [Symbol.iterator]: function* () { yield realNhpMech; } };
+			let cascadeFlowActorPassed = null;
+			class MockCascadeFlow {
+				constructor(actorArg) { cascadeFlowActorPassed = actorArg; }
+				async begin() { return true; }
+			}
+			ctx.game.lancer.flows = new Map([["CascadeFlow", MockCascadeFlow]]);
+			let clickStopped = false;
+			const mockCascadeBtn = {
+				dataset: { flowType: "cascade", actorId: "Scene.s_old.Token.t_gone.Actor.m_real" },
+				closest(sel) { return sel.includes("data-flow-type") ? this : null; },
+			};
+			L.onCascadeButtonClick({
+				target: mockCascadeBtn,
+				preventDefault() {},
+				stopPropagation() {},
+				stopImmediatePropagation() { clickStopped = true; },
+			});
+			await new Promise(r => setTimeout(r, 10));
+			ok(clickStopped === true && cascadeFlowActorPassed === realNhpMech, "当卡片上的旧 Token UUID 已失效时，点击崩溃检定按钮仍自动回退解析至基础机甲角色并启动 CascadeFlow");
+
+			ctx.game.lancer = prevLancer193;
+			ctx.fromUuidSync = prevFromUuidSync193;
+			ctx.game.actors = prevActors193;
+			ctx.ui = prevUi193;
+		}
 	}
 
 	// ---- zip 与 dist

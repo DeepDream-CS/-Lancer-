@@ -32,7 +32,7 @@ const PACKS = {
 		lcp: "lancer-cn-expansions.lcp", audit: "FVTT-LCP-AUDIT.md", todo: "zh-overrides.todo.json",
 		overrides: "zh-overrides.json", baseDirs: ["official"], kinds: KINDS, select: x => x.ext,
 		manifest: {
-			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.6.0",
+			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.6.2",
 			description: "简易车卡器收录的扩展骨架、装备、天赋与核心奖励（中文），以及官方模组与第三方书的 NPC 职业、模板与特性。官方补充书条目会覆盖 Foundry 自带的英文版；其余为新增内容。",
 		},
 	},
@@ -40,7 +40,7 @@ const PACKS = {
 		lcp: "lancer-cn-core.lcp", audit: "FVTT-LCP-CORE-AUDIT.md", todo: "zh-overrides-core.todo.json",
 		overrides: "zh-overrides-core.json", baseDirs: ["core"], kinds: CORE_KINDS, select: x => !x.ext,
 		manifest: {
-			name: "枪骑兵简易车卡器：核心规则书（中文）", author: "DeepDream-CS", version: "1.1.0",
+			name: "枪骑兵简易车卡器：核心规则书（中文）", author: "DeepDream-CS", version: "1.1.1",
 			description: "核心规则书的骨架、装备、天赋、核心奖励、驾驶员装备、技能与标签，以及 NPC 职业、模板与特性（中文，译名依 v3.5 规则书）。导入后覆盖 Foundry 核心数据的英文版。",
 		},
 	},
@@ -67,7 +67,7 @@ const BUILDER_ONLY = ["ext", "pack", "zh_name", "maker_note", "variant_of", "no_
 	"stack_tags", "restricted_types", "types", "efficient", "special_equipment", "reference_image"];
 
 // 显示在 Foundry 里的文字字段
-const TEXT_FIELDS = ["description", "effect", "on_hit", "on_crit", "on_attack", "terse", "mounted_effect", "detail", "trigger",
+const TEXT_FIELDS = ["description", "effect", "on_hit", "on_crit", "on_attack", "terse", "mounted_effect", "detail", "trigger", "init",
 	"passive_name", "passive_effect", "active_name", "active_effect"];
 
 const clone = x => JSON.parse(JSON.stringify(x));
@@ -202,15 +202,16 @@ function build(packId = "ext") {
 	const licByName = {};
 	for (const f of D.frames) { licByName[f.name] = f.id; licByName[frameZh(f)] = f.id; }
 	const plById = Object.fromEntries((D.professional_licenses || []).map(p => [p.id, p]));
-	const coreBonusName = id => (D.core_bonuses.find(c => c.id === id) || {}).name || id;
+	const coreBonusName = id => { const c = D.core_bonuses.find(y => y.id === id); return c ? nameOf("core_bonuses", c) : id; };
 	const talentById = Object.fromEntries(D.talents.map(t => [t.id, t]));
+	const talentName = id => (talentById[id] ? nameOf("talents", talentById[id]) : id);
 	const itemName = id => {
 		for (const k of KINDS) { const x = D[k].find(y => y.id === id); if (x) return nameOf(k, x); }
 		return id;
 	};
 
 	const DMG = { Kinetic: "动能", Energy: "能量", Explosive: "爆炸", Heat: "热度", Burn: "燃烧", Variable: "可变" };
-	const RNG = { Range: "射程", Threat: "威胁", Thrown: "投掷", Line: "线形", Cone: "锥形", Blast: "爆炸", Burst: "爆发" };
+	const RNG = { Range: "射程", Threat: "威胁", Thrown: "投掷", Line: "线形", Cone: "锥形", Blast: "溅射", Burst: "爆发" };
 	const WTYPE = { Rifle: "步枪", Cannon: "大炮", Launcher: "发射器", CQB: "CQB", Nexus: "巢房", Melee: "近战" };
 	const tagText = t => { const d = D.tags.find(x => x.id === t.id); return d ? d.name.replace("{VAL}", t.val ?? "") : t.id; };
 	const profileText = pf => [pf.type && WTYPE[pf.type], (pf.range || []).map(r => `${RNG[r.type] || r.type} ${r.val}`).join("，"),
@@ -231,7 +232,7 @@ function build(packId = "ext") {
 			const pl = plById[x.professional_license];
 			n.push(`专业牌照：${pl ? pl.name : x.license} ${x.license_level} 级（Foundry 没有专业牌照，不会自动解锁）。`);
 		}
-		if (x.talent_item) n.push(`天赋装备：由天赋「${talentById[x.talent_id]?.name || x.talent_id}」${x.talent_rank} 级获得，不需要牌照。`);
+		if (x.talent_item) n.push(`天赋装备：由天赋「${talentName(x.talent_id)}」${x.talent_rank} 级获得，不需要牌照。`);
 		if (kind === "weapons") {
 			if (x.mount === "Drone") n.push("无人机武器：由无人机使用，机甲本身不能使用（Foundry 中暂按主武器挂载记录）。");
 			if (x.types && x.types.length > 1) n.push(`同时视为${x.types.map(t => WTYPE[t] || t).join("与")}武器。`);

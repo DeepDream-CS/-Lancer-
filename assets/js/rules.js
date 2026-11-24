@@ -84,7 +84,7 @@ function limitedTags(tags, p, m) {
   return (tags || []).map(t => t.id === 'tg_limited' && bonus ? { ...t, val: Number.isFinite(+t.val) ? +t.val + bonus : `${t.val}+${bonus}` } : t);
 }
 function configuredWeapon(w, m, slot) {
-  if(w.select_profile) { const pf=w.profiles[int(slot?.profile,0,w.profiles.length-1)]; return {...w,...pf,id:w.id,name:w.name,profiles:w.profiles,selected_profile:pf.name}; }
+  if(w.select_profile) { const pf=w.profiles[int(slot?.profile,0,w.profiles.length-1)]; return {...w,...pf,effect:[w.effect,pf.effect].filter(Boolean).join(' '),id:w.id,name:w.name,profiles:w.profiles,selected_profile:pf.name}; }
   if (!w.id.startsWith('mw_prototype_')) return w;
   const type = ['Melee','CQB','Rifle','Cannon','Launcher','Nexus'].includes(m.prototypeType) ? m.prototypeType : 'Rifle';
   const damage = ['Kinetic','Explosive','Energy'].includes(m.prototypeDamage) ? m.prototypeDamage : 'Kinetic';

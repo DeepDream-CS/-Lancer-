@@ -241,7 +241,7 @@
         effect: "在车卡器 NPC 构筑中手动调整的数值：" + adj.map(([k, v]) => STATS.find(x => x[0] === k)[1] + " " + signed(v)).join("，") };
       items.push(foundryFeature(f, { name: "车卡器" }, tier, "Class"));
     }
-    const size = Math.max(0.5, s.size);
+    const size = Math.max(1, s.size);
     return {
       name: npc.name || cls.name,
       type: "npc",

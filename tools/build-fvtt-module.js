@@ -112,6 +112,13 @@ function checkHardcoded(snapshot, hc, words) {
 			else for (const [pk, pv] of Object.entries(v.pieces)) checkPair(pk, pv);
 		} else checkPair(k, v);
 	}
+	for (const [k, v] of Object.entries(hc.extra || {})) {
+		if (v === null) continue;
+		if (v && typeof v === "object") {
+			if (!v.pieces || !Object.keys(v.pieces).length) problems.push(`extra pieces 为空：${JSON.stringify(k)}`);
+			else for (const [pk, pv] of Object.entries(v.pieces)) checkPair(pk, pv);
+		} else checkPair(k, v);
+	}
 	for (const [w, v] of Object.entries(words)) if (typeof v !== "string" || !v) problems.push(`枚举词译文为空：${w}`);
 	for (const [sel, dict] of Object.entries(hc.context || {})) {
 		for (const [k, v] of Object.entries(dict)) {
@@ -127,10 +134,12 @@ function compileHardcoded(hc, words) {
 	const exact = {};
 	const patterns = [];
 	const add = (k, v) => (k.includes("{x}") ? patterns.push([k, v]) : (exact[k] = v));
-	for (const [k, v] of Object.entries(hc.text || {})) {
-		if (v === null) continue;
-		if (typeof v === "object") for (const [pk, pv] of Object.entries(v.pieces)) add(pk, pv);
-		else add(k, v);
+	for (const srcObj of [hc.text || {}, hc.extra || {}]) {
+		for (const [k, v] of Object.entries(srcObj)) {
+			if (v === null) continue;
+			if (typeof v === "object") for (const [pk, pv] of Object.entries(v.pieces)) add(pk, pv);
+			else add(k, v);
+		}
 	}
 	patterns.sort((a, b) => literalLength(b[0]) - literalLength(a[0]) || a[0].localeCompare(b[0]));
 	return { exact, patterns, words, context: hc.context || {} };

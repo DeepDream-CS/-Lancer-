@@ -3,7 +3,7 @@ const BattleMap = (() => {
  const KEY='lancer-battle-map-v1', NS='http://www.w3.org/2000/svg';
  const fresh=()=>({v:1,minQ:0,minR:0,w:14,h:10,cells:{},units:[],lines:[],round:1});
  let state=fresh(), selected='', mode='move', color='#506f46', terrain='软性掩护', start=null, history=[], status='', placing=false, zoom=1;
- const conditions=['伏卧','受损','离散','受扰','晕眩','固定','缓慢','锁定','隐形','躲藏','交战','燃烧','关机','超温危域'];
+ const conditions=['伏卧','受损','离散','受扰','晕眩','固定','缓慢','锁定','隐形','匿迹','交战','燃烧','关机','超温危域'];
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const num=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
  function valid(x){
