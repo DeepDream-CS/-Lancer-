@@ -179,7 +179,7 @@ async function drawPilotCard(p) {
 	const gearLine = id => {
 		const it = GEAR[id];
 		if (!it) return "";
-		const meta = [it.range ? rngText(it.range) : "", it.damage ? dmgText(it.damage) : "", tagsPlain(it.tags)].filter(Boolean).join(" · ");
+		const meta = [it.range ? rngText(it.range) : "", it.damage ? dmgText(it.damage) : "", pilotGearActionText(it), tagsPlain(it.tags)].filter(Boolean).join(" · ");
 		return (zhOf("gear", it) || it.name) + (meta ? "　" + meta : "");
 	};
 	const sect = (zh, en, y) => { text(g, zh, 42, y + 14, 16); text(g, en, 42, y + 32, 17, { bold: true }); };
@@ -203,23 +203,40 @@ async function drawPilotCard(p) {
 function weaponRows(p, m) {
 	const f = FRAMES[m.frame];
 	const rows = [];
-	const add = (w, mountName, mod, note = '') => {
-		const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
-		const eff = [mod ? `${weaponModSummary(mod, p, m)}：${stripHtml(mod.effect)}` : "", stripHtml(w.effect), w.on_hit ? "命中：" + stripHtml(txt(w.on_hit)) : "", w.on_crit ? "会心一击：" + stripHtml(txt(w.on_crit)) : "", w.on_attack ? "攻击时：" + stripHtml(txt(w.on_attack)) : ""].filter(Boolean).join(" ");
-		const modLimited = mod && limitedTags(mod.tags, p, m).find(t => t.id === "tg_limited");
-		const tagSummary = [modLimited ? `模块${tagText(modLimited)}` : "", tagsPlain(prof.tags || w.tags)].filter(Boolean).join("；");
-		rows.push([plain("item", w), mountName + " / " + (T.mount[w.mount] || w.mount) + (T.wtype[w.type] || w.type || ""), rngText(prof.range), dmgText(prof.damage), tagSummary, [note, eff].filter(Boolean).join(' ') ]);
-	};
-	integratedOf(f, p, m).filter(w => w.mount).forEach(w => add(w, "内建", null, buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})));
-	equippedWeapons(p, m).forEach(e => add(e.w, (T.mount[e.mount.type] || e.mount.type), e.mod, buildWeaponNote(p,m,e)));
+	const prevCtx = STAT_CTX, st = mechStats(p, m);
+	STAT_CTX = st ? { ...st, grit: LV(p.ll).grit, drone_hp: staticBonus(p,m,'drone_hp'), deployable_hp: staticBonus(p,m,'deployable_hp') } : {};
+	try {
+		const add = (w, mountName, mod, note = '') => {
+			const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
+			const profileSummary = !w.select_profile && w.profiles?.length
+				? (() => {
+						const shared = w.profiles.length > 1 && w.profiles.every(pf => pf.effect && pf.effect === w.profiles[0].effect) ? w.profiles[0].effect : "";
+						return (shared ? stripHtml(shared) + " " : "") + w.profiles.map(raw => {
+							const pf = effectiveProfile({...w, select_profile: false}, raw, mod, p, m);
+							const stats = [rngText(pf.range), dmgText(pf.damage)].filter(Boolean).join("·");
+							const body = pf.effect && pf.effect !== shared ? stripHtml(pf.effect) : "";
+							return `【${pf.name}】${[stats, body, pf.on_attack ? "攻击时：" + stripHtml(txt(pf.on_attack)) : "", stripHtml(actsHtml(pf))].filter(Boolean).join(" ")}`;
+						}).join(" ");
+					})()
+				: "";
+			const eff = [mod ? `${weaponModSummary(mod, p, m)}：${stripHtml(mod.effect)}` : "", stripHtml(w.effect), w.on_hit ? "命中：" + stripHtml(txt(w.on_hit)) : "", w.on_crit ? "会心一击：" + stripHtml(txt(w.on_crit)) : "", w.on_attack ? "攻击时：" + stripHtml(txt(w.on_attack)) : "", profileSummary, stripHtml(actsHtml(w))].filter(Boolean).join(" ");
+			const modLimited = mod && limitedTags(mod.tags, p, m).find(t => t.id === "tg_limited");
+			const tagSummary = [modLimited ? `模块${tagText(modLimited)}` : "", tagsPlain(prof.tags || w.tags)].filter(Boolean).join("；");
+			rows.push([plain("item", w), mountName + " / " + (T.mount[w.mount] || w.mount) + (T.wtype[w.type] || w.type || ""), summaryRangeText(w, prof), summaryDmgText(w, prof), tagSummary, [note, eff].filter(Boolean).join(' ') ]);
+		};
+		integratedOf(f, p, m).filter(w => w.mount).forEach(w => add(w, "内建", null, buildWeaponNote(p,m,{w,mount:{type:'Integrated',key:'integrated'},i:0})));
+		equippedWeapons(p, m).forEach(e => add(e.w, (T.mount[e.mount.type] || e.mount.type), e.mod, buildWeaponNote(p,m,e)));
+	} finally { STAT_CTX = prevCtx; }
 	return rows;
 }
 function systemRows(m, p) {
-	return [...m.systems.map(id => SYSTEMS[id]).filter(Boolean), ...integratedOf(FRAMES[m.frame],p,m).filter(s=>!s.mount)].map(s => {
-		const acts = asList(s.actions).map(a => `${a.name ? a.name + "：" : ""}${stripHtml(a.detail)}`);
-		const deps = asList(s.deployables).map(d => `${d.name}：${stripHtml(d.detail)}`);
-		return [plain("item", s), s.sp || 0, tagsPlain(systemTags(s,p,m)), [stripHtml(s.effect), professionalSystemSummary(s,m,p), ...acts, ...deps].filter(Boolean).join(" ")];
-	});
+	const prevCtx = STAT_CTX, st = mechStats(p, m);
+	STAT_CTX = st ? { ...st, grit: LV(p.ll).grit, drone_hp: staticBonus(p,m,'drone_hp'), deployable_hp: staticBonus(p,m,'deployable_hp') } : {};
+	try {
+		return [...m.systems.map(id => SYSTEMS[id]).filter(Boolean), ...integratedOf(FRAMES[m.frame],p,m).filter(s=>!s.mount)].map(s => {
+			return [plain("item", s), s.sp || 0, tagsPlain(systemTags(s,p,m)), [stripHtml(s.effect), professionalSystemSummary(s,m,p), stripHtml(actsHtml(s))].filter(Boolean).join(" ")];
+		});
+	} finally { STAT_CTX = prevCtx; }
 }
 
 function drawMechCard(p, m) {
@@ -273,8 +290,10 @@ function drawMechCard(p, m) {
 	const coreLines = [];
 	if (f) {
 		const cs = f.core_system;
-		coreLines.push(`【核心系统】${cs.name}${cs.active_name ? "：" + cs.active_name : ""} — ${stripHtml(cs.active_effect)}`);
-		if (cs.passive_name) coreLines.push(`【被动】${cs.passive_name} — ${stripHtml(cs.passive_effect)}`);
+		const actMore = asList(cs.active_actions).filter(a => a.name && !(a.name === "防御脉冲" && String(cs.active_effect || "").includes("防御脉冲")) && !String(cs.active_effect || "").includes(stripHtml(a.detail || "\0"))).map(a => `${a.name}：${stripHtml(a.detail)}`).join(" ");
+		coreLines.push(`【核心系统】${cs.name}${cs.active_name ? "：" + cs.active_name : ""} — ${[stripHtml(cs.active_effect), actMore].filter(Boolean).join(" ")}`);
+		const passText = [stripHtml(cs.passive_effect), ...asList(cs.passive_actions).map(a => `${a.name && a.name !== cs.passive_name ? a.name + "：" : ""}${stripHtml(a.detail)}`)].filter(Boolean).join(" ");
+		if (cs.passive_name || passText) coreLines.push(`【被动】${cs.passive_name || cs.name}${passText ? " — " + passText : ""}`);
 	}
 	p.coreBonuses.forEach(id => {
 		const c = CBS[id];

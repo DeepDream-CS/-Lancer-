@@ -299,7 +299,7 @@ function patchScrollingText() {
 //   3. 建立「车卡器资料」日志合集包：专业牌照规则与各牌照说明、扩展厂商说明。
 // 数据由 tools/build-fvtt-module.js 从车卡器 assets/js/data.js 生成。
 
-const REFERENCE = {"professional":[{"id":"pl_ips_vanguard","name":"先遣兵","maker":"IPS-N","rank":1,"description":"作为一种以高威胁近身任务为核心的通用牌照，先遣兵总结了 IPS-N 在登船和反海盗行动方面的丰富经验，为驾驶员提供一个无论底盘规格如何都可使用的灵活战术包。所有先遣兵系统都经过 IPS-N 自己的特种作战单位，海军/坚井主干安保部门的认证，完全可以在舰装和地面战区使用。","items":[{"kind":"weapons","lid":"mw_pl_buckler","name":"弹道臂盾","level":1},{"kind":"mods","lid":"wm_pl_underslung","name":"下挂式冲击器","level":1}]},{"id":"pl_ips_watchman","name":"守夜人","maker":"IPS-N","rank":2,"description":"IPS-N 守夜人扩展包被宣传为先遣兵系列的配套牌照，它在设计时考虑到了防御行为。它在所有 IPS-N 海军舰艇上使用，并作为一种免费牌照提供给在进出南航座航线星座贸易路线上运行的商船，所有的“守夜人”系统通过为驾驶员提供快速部署、模块化监蔽增强功能来补充“占领固守/反登舰”操作，可用于加强受到威胁的阵地，或在可能接近道路上建立稳固杀区。","items":[{"kind":"systems","lid":"ms_pl_sentry_drone","name":"哨兵无人机","level":2},{"kind":"systems","lid":"ms_pl_active_defense","name":"主动防御系统","level":2}]},{"id":"pl_ips_overlord","name":"霸主","maker":"IPS-N","rank":3,"description":"IPS-N 战术火力小队/班组综合指挥和控制许可正被命名为“霸主”，其设计意图满足集中增强联合作战行动的需要。一套升级硬件组合，包括传感器和通讯套件，以及 NHP 增强瞄准系统和战术网络固件，用于补充任何小单位编队战术需要，包括突击、火力支援/目标指定、防御行动和特种作战。","items":[{"kind":"systems","lid":"ms_pl_fcs_relay","name":"FCS 战术网络中继","level":3},{"kind":"systems","lid":"ms_pl_mitra","name":"密特拉级 NHP","level":3}]},{"id":"pl_ssc_sparrowhawk","name":"雀鹰","maker":"SSC","rank":1,"description":"云雀牌照是独立专业许可包，是 SSC 空天优势计划的一部分，其设计意图为在空战中作战的底盘驾驶员提供增强战区特定作战能力。传统的空中支援/空中优势理论可以通过使用适当装备的底盘代替空天战斗机来实现，同时仍然保留地面攻击能力，使这些中队在战术打击/拦截和火力支援交战中具有无与伦比的多角色灵活性。","items":[{"kind":"weapons","lid":"mw_pl_valkyrie","name":"瓦亚维亚导弹","level":1},{"kind":"systems","lid":"ms_pl_atg_bombs","name":"ATG 精确炸弹","level":1}]},{"id":"pl_ssc_micro_monarch","name":"微型金斑蝶","maker":"SSC","rank":2,"description":"微型金斑蝶系统包是 SSC 公司主生产线导弹电池平台的发展成果。用户反馈表明，与“金斑蝶”远程火力支援原则相反，他们强烈希望为中/近距离交战定制多用途导弹系统。经过大量战地测试，微型金斑蝶最终获得了牌照，它不仅作为金斑蝶的补充区域升级，也是套灵活多变适用于所有适当牌照底盘的战术武器选择。","items":[{"kind":"weapons","lid":"mw_pl_gorgon_micro","name":"哥瓦尔丹微型导弹","level":2},{"kind":"weapons","lid":"mw_pl_garuda","name":"缇娜玻安导弹","level":2}]},{"id":"pl_ssc_acolyte","name":"盲从者","maker":"SSC","rank":3,"description":"虽然完全生物底盘工程的概念已被理论化很长时间，但这种设计面临的实际限制仍然巨大（至少据大多数人所知）。尽管如此，史密斯-岛野仍在不断突破综合生物技术设计边界，将量身定制的生物来源和灵感系统整合到他们的全套精确工程作战框架中。盲从者是奢华系列最前沿设计专业牌照系列的最新独家授权，提供性能增强的全骨架升级，来自 SSC 广泛培养的异种基因数据库，以及定制生物设计，以在最困难的操作中支援驾驶员。","items":[{"kind":"systems","lid":"ms_pl_coolwind","name":"“凉风”温控器","level":3},{"kind":"systems","lid":"ms_pl_hsc","name":"HSC 电镀","level":3}]},{"id":"pl_horus_reason","name":"理性","maker":"HORUS","rank":1,"description":"伴随 NHP 和次级 NHP 辅助电子战理论在现代战场上的日益流行，武器化编码协议、逻辑病毒和猎人/杀手算法似乎在无休止地扩散，并已发展并蔓延到整个联盟太空。因此，理性并非是传统意义上的牌照，而是作为荷鲁斯档案管理员策划和分发的广泛电子战程序库授权的万物网访问。随着电子对抗和防御系统的适应和发展，可行方案的选择本身就是进化军备竞赛的一部分，动态更新以适应战场的新趋势。","items":[{"kind":"systems","lid":"ms_pl_tazo_worm","name":"塔佐蠕虫","level":1},{"kind":"systems","lid":"ms_pl_disgust_reflex","name":"厌恶/反射","level":1}]},{"id":"pl_horus_three_eye","name":"三眼","maker":"HORUS","rank":2,"description":"尽管荷鲁斯模式组通常不符合标准战斗职责分类，但也需要实现任何现存机甲核心都无法解决的特定战场目标。当这种情况出现时，多个专业牌照便会加速开发、分发、实地测试、丢弃，而那些成功满足或超过需求的牌照将被重新编译和标准化以便进行大量发行。三眼便是这样的牌照，其设计意图为在多方底盘推动狙击神射手主义学说。","items":[{"kind":"weapons","lid":"mw_pl_seeking_launcher","name":"寻索弹射器","level":2},{"kind":"systems","lid":"ms_pl_scan_bombs","name":"扫描炸弹","level":2}]},{"id":"pl_horus_bunraku","name":"文乐木偶戏","maker":"HORUS","rank":3,"description":"直至最近出现在万物网上并且正在传播给适当牌照持有者的“文乐木偶戏”，根据联盟调查局分析尚未确定指定牌照究竟是全新的荷鲁斯模式组早期证据，还是仅仅是个实验技术试验台。初步报告暗展示了隐秘的班级战术整合指挥范式，其中涉及到使用快速建立的本体论[桥梁，通往我浩瀚的心灵之门，我灵魂的无底洞。这是我给你的礼物，去使用它们，用你的智慧，或者愚钝，白痴]","items":[{"kind":"systems","lid":"ms_pl_self_bridge","name":"自我意识桥接","level":3},{"kind":"systems","lid":"ms_pl_ontological_pulse","name":"本体论超空间战术脉冲","level":3}]},{"id":"pl_ha_superfire","name":"超级火力","maker":"HA","rank":1,"description":"大多数国家和企业军队的武器解决方案主要依赖于动能/爆炸平台，为特殊目的保留基于能量的武器，但哈里逊兵工厂的超级火力牌照扭转了这一模式，迈出了最新一步。一场首发活动试图将 HA 辐射武器定位为“驾驶员在黑暗中最好的伙伴”，在大举进军传统上由 GMS 和 IPS-N 主导的市场之前，引发了一场企业间的军备竞赛。","items":[{"kind":"weapons","lid":"mw_pl_polaris","name":"“北极星”式多功能辐射枪","level":1},{"kind":"weapons","lid":"mw_pl_orion","name":"“猎户座”式热射辐射枪","level":1}]},{"id":"pl_ha_workshop","name":"铸造车间","maker":"HA","rank":2,"description":"哈里森军械库最近推出了铸造计划，意图创造一个独立牌照包，允许适格驾驶员比较定规模更宽泛地制造定制化/个人定制化的武器——所有这些都无需冒险去出兵工厂更大的产品空间保护伞。随着牌照向更广泛市场推出，预测性客户和委托国忠诚度指标预计随着时间推移会有良好增长，计划一系列免费牌照已在进行中，对各大战区的战术效益进一步提高。","items":[{"kind":"weapons","lid":"mw_pl_modular_rifle","name":"模块化先进战斗步枪","level":2},{"kind":"mods","lid":"wm_pl_optimized","name":"最优化工程","level":2}]},{"id":"pl_ha_deepwell","name":"坠落深井","maker":"HA","rank":3,"description":"哈里逊兵工厂最新的公共 beta 测试牌照现可提供给有兴趣参加他们最新开发武器的现场测试的适格驾驶员。该牌照开发代号为“坠落深井”，代表了智囊团在创造综合性全覆盖骨架重力平台方面的持续努力。目前，人工重力产生在民用领域的实际应用仍然有限，相反在军事战区的应用逐渐增长，其主要呈现亚光型 k-comp 系统中。很明显，下一步就是寻找扩展该技术使用的可行方法，而 HA 凭借数十年在尖端和非因果律作战系统开发方面的经验，在实现这一承诺方面具有独特优势。","items":[{"kind":"weapons","lid":"mw_pl_kinetic_driver","name":"运动驱动器","level":3},{"kind":"systems","lid":"ms_pl_gravity_vane","name":"重力风向标","level":3}]},{"id":"pl_ch_shepherd","name":"羊倌","maker":"C&H","rank":1,"description":"羊倌是钱德拉塞卡赫歇尔公司强大而可定制的全覆盖底盘牌照，其设计意图为驾驶员提供全战区/全地形负载增强能力的定制解决方案。每个羊倌牌照都有 C&H 终身保修，所有系统都经过严格测试以确保在最恶劣条件下发挥效能，包括臭名昭著的荒地耐力测试。","items":[{"kind":"systems","lid":"ms_pl_tactical_belt","name":"战术带","level":1},{"kind":"systems","lid":"ms_pl_weapon_pod","name":"武器舱","level":1}]},{"id":"pl_ch_tawa","name":"塔瓦","maker":"C&H","rank":2,"description":"塔瓦许可包提供给 C&H 所有对扩展可用武器库以配备最于近距离作战最精良特种武器感兴趣的常驻牌照持有者。每个塔瓦系统都被设计用来满足 C&H 严格质量标准和驾驶员信赖的军规可靠性，为所有核心提供灵活而强大的防御解决方案，这在其他牌照中不可寻得。","items":[{"kind":"weapons","lid":"mw_pl_hotwind","name":"热风冲锋手枪","level":2},{"kind":"weapons","lid":"mw_pl_heavy_blaster","name":"重击炮","level":2}]},{"id":"pl_ch_duelist","name":"斗篷","maker":"C&H","rank":3,"description":"虽然近战被认为是诸多国家级军事和安全服务的专责角色，C&H 的“斗篷”借鉴了几个世纪的角斗武器工程经验，为持牌驾驶员提供了一系列精选近战增强改造，将经典设计与当代材料相结合。C&H 选用军用级硬板护盾，适用于多种骨架和作用，有多种定制款式和许可供选择。","items":[{"kind":"weapons","lid":"mw_pl_plasma_shield","name":"等离子电浆盾","level":3},{"kind":"weapons","lid":"mw_pl_heavy_shield","name":"赫塔卡重型战斗盾","level":3}]},{"id":"pl_piof_pioneer","name":"拓荒者","maker":"PI-OF","rank":1,"description":"拓荒者是顶峰实业猎户座派系面向殖民地先遣队与边境驻军提供的通用工程牌照，采用公司现有的殖民地建设设备，为不同规格的底盘提供野外作业和维护能力。牌照中的液压工具与便携作业设施经过军用改装，适用于临时工事修筑、障碍清除及缺乏后勤支援条件下的装备抢修。对同时承担建设与防卫任务的殖民地部队而言，这套设备可以减少专用工程载具的配备需求，并继续使用当地已有的工业维修设施。","items":[{"kind":"weapons","lid":"mw_pl_piof_rivet","name":"「垦荒者」液压铆钉枪","level":1},{"kind":"systems","lid":"ms_pl_piof_workbench","name":"「拓荒工位」野外作业台","level":1}]},{"id":"pl_piof_miner","name":"星际矿工","maker":"PI-OF","rank":2,"description":"星际矿工是拓荒者系列的重型工程扩展，其技术源自顶峰实业长期供应小行星矿场和卫星露天采掘区的破岩设备。猎户座派系保留了这些设备在高负荷作业中的机械结构，并针对机甲近距离交战重新设计了挂载接口与控制系统。冲击掘进钻能够用于破坏装甲和加固工事，配套推进器则允许驾驶员穿越原本无法通行的地形。该牌照主要面向承担攻坚与通路开辟任务的单位；在缺少工程支援时，持牌机甲也可直接参与矿区和地下设施的抢通作业。","items":[{"kind":"weapons","lid":"mw_pl_piof_drill","name":"TT.5 冲击掘进钻","level":2},{"kind":"systems","lid":"ms_pl_piof_tunnel","name":"「矿道」掘进推进器","level":2}]},{"id":"pl_piof_eden","name":"伊甸先锋","maker":"PI-OF","rank":3,"description":"伊甸先锋牌照由顶峰实业的殖民地环境改造部门提供技术支持，最初用于装备在大型施工设施抵达前开展作业的先遣单位。其地貌重塑阵列与便携天候塔允许驾驶员在有限区域内整治地形、调节作业环境，为后续人员建立落脚点。猎户座派系将这套设备引入军事用途后，扩大了系统的现场控制权限，使其能够用于临时阵地构筑、进攻路线整理及局部战场环境干预。相较于公司的常规地球化设备，伊甸先锋更注重快速部署，适合需要频繁转移作业位置的小规模编队。","items":[{"kind":"systems","lid":"ms_pl_piof_terraform","name":"地貌重塑阵列","level":3},{"kind":"systems","lid":"ms_pl_piof_weather","name":"天候塔","level":3}]},{"id":"pl_kkca_squire","name":"侍从","maker":"K/KCA","rank":1,"description":"侍从是哈尔根／卡西米尔定制装配面向初次参加锦标赛的驾驶员提供的基础专业牌照，包含一套适用于多种底盘的决斗武器与纹章展示设备。“誓约”短剑采用工作室的标准制式，便于骑手在不同机体上保持熟悉的操控手感；配套纹章旗则兼作近距离战术信标，为同队骑手提供姿态修正与威胁预警。持牌者可以提交自己的家族纹章或所属团体标识，由工作室完成相应的外观定制。","items":[{"kind":"weapons","lid":"mw_pl_kkca_oath","name":"「誓约」决斗短剑","level":1},{"kind":"systems","lid":"ms_pl_kkca_banner","name":"「家徽」纹章旗","level":1}]},{"id":"pl_kkca_knight","name":"骑士","maker":"K/KCA","rank":2,"description":"骑士牌照提供给在伊斯帕萨拉尔锦标赛中取得认可战绩的侍从牌照持有者，其装备针对公开比武中的正面交锋设计。重骑枪沿用当地骑士赛事的冲击武器结构，在一次全力冲刺中释放足以破坏自身的载荷；配套决斗协议负责向参赛机体及场地系统广播挑战，持续标记交战双方。随着持牌驾驶员进入军事与安保领域，这套原本用于竞技场的装备也开始用于突击任务，以迅速迫使选定目标投入近距离交战。","items":[{"kind":"weapons","lid":"mw_pl_kkca_joust","name":"「比武」重骑枪","level":2},{"kind":"systems","lid":"ms_pl_kkca_challenge","name":"「宣战」决斗协议","level":2}]},{"id":"pl_kkca_lord","name":"领主","maker":"K/KCA","rank":3,"description":"领主是 K/KCA 为率领扈从与骑士编队的资深驾驶员保留的定制专业牌照，采用邀请授予的方式，由工作室根据持有者的惯用底盘、家族纹章和编队战法分别调校。守护铠将紧急机动与护盾发生器联动，用于掩护遭受致命打击的同伴；凯旋号角则接入编队通讯与状态监控系统，协助友军在突破敌方阵线后恢复行动并继续进攻。每套装备交付时均附有工作室创始人签署的证书，其调校记录也将随持有者的服役经历持续更新。","items":[{"kind":"systems","lid":"ms_pl_kkca_guard","name":"「代誓」守护铠","level":3},{"kind":"systems","lid":"ms_pl_kkca_triumph","name":"「凯旋」号角","level":3}]}],"makers":[{"id":"C&H","name":"钱德拉塞卡赫歇尔有限公司","color":"#a51e22","description":"特殊问题需特殊方案。C&H 是一家年轻的银河级公司，向合格驾驶员提供专业机甲牌照，专注于非正统战斗解决方案，改善恶劣环境及灾难性环境下的表现。","frames":[{"lid":"mf_ch_charioteer","name":"战车御手"},{"lid":"mf_ch_callista","name":"卡莉丝塔"},{"lid":"mf_ch_gajeshura","name":"加杰修罗"},{"lid":"mf_ch_kalalani","name":"卡拉拉尼"},{"lid":"mf_ch_matador","name":"斗牛士"},{"lid":"mf_ch_pesilat","name":"佩西拉特"},{"lid":"mf_ch_retiarius","name":"网斗士"},{"lid":"mf_ch_pemada","name":"佩马刀者"},{"lid":"mf_ch_sagittarius","name":"射手座"}],"professional":["羊倌（I）","塔瓦（II）","斗篷（III）"]},{"id":"K/KCA","name":"哈尔根/卡西米尔定制装配","color":"#7a1f3d","description":"凡事卓越。在熙熙攘攘伊斯帕萨拉尔的生态建筑中，没有哪个行业比机械化底盘设计和制造更有活力，更具成熟创新的了。这里是最大的卡拉金皇家铸造厂园区，数十名独立设计师在不断的战术优势和社会地位竞争中与它并肩作战。这些工作室主要服务于男爵领军事精英（不论贵族还是庶民），依靠为驾驶员定制设计和安装底盘的直接佣金为生，为不满一系列低级选择的客户提供服务。某家工作室可能会因一位知名客户而一夜成名——或者，若他们的骨架在公开比赛中落败也极其容易陷入破产。在这些机甲工作室中，K/KCA 脱颖而出；或者，这位设计师最能持之以恒。哈尔根/卡西米尔定制装配成立于近一个世纪前，并代表阿萨伊德（Assayid）和科里亚特（Coryat）次级家族的民事和金融联盟、哈尔根·阿萨伊德与卡西米尔·科里亚特对机甲设计、传统战斗形式和道德学的共同热情将科里亚特家族工厂的制造和分销线与阿萨伊德贸易学校的技术和机械专业知识结合在了一起。其结果便是 K/KCA 这家专注于大胆实验而不抛弃古典美学和高贵形象的设计工作室，其灵感来源于战斗艺术和实践启发。K/KCA 骨架是骑士精神和勇气的化身；善于大胆而前卫的个性化武器和英雄主义战术。","frames":[{"lid":"mf_kkca_emerald_scimitar","name":"祖母绿弯刀"},{"lid":"mf_kkca_wondrous_sword","name":"妙源剑"},{"lid":"mf_kkca_tizona","name":"提泽纳剑"},{"lid":"mf_kkca_rending_sword","name":"斩裂剑"}],"professional":["侍从（I）","骑士（II）","领主（III）"]},{"id":"PI-OF","name":"顶峰实业——猎户座派系","color":"#c0702a","description":"绝不让步。顶峰实业在土地改造和殖民地开发领域家喻户晓，其产品范畴从建筑材料到种子库到农业设备应有尽有。猎户座派系的开发框架是专门负责更新他们现有的民用机甲，为战斗准备设计模型。PI-OF 骨架混合了简易坚固的设计，反映了他们的蓝领背景，以及更多由猎户座派系重新开发的实验性军事硬件。","frames":[{"lid":"mf_piof_basil","name":"罗勒"},{"lid":"mf_piof_coriander","name":"香菜"},{"lid":"mf_piof_fennel","name":"茴香"},{"lid":"mf_piof_lemongrass","name":"香茅"},{"lid":"mf_piof_pepper","name":"胡椒"},{"lid":"mf_piof_rosemary","name":"迷迭香"},{"lid":"mf_piof_mint","name":"薄荷"},{"lid":"mf_piof_star_anise","name":"八角"}],"professional":["拓荒者（I）","星际矿工（II）","伊甸先锋（III）"]}],"rules":["每张专业牌照独立取得、分别计入牌照等级。例如同时取得先遣兵（I）、守夜人（II）、霸主（III），合计 6 级牌照。每张专业牌照只解锁自己的装备，不解锁骨架。","二级、三级专业牌照分别需要同厂商至少一级、二级的普通牌照，或其指定的前一级专业牌照。","作为 GM 额外奖励取得的等级不提高角色 LL、毅力、天赋或核心奖励数量，但计入该厂商的牌照资格合计。","在 Foundry 中：把专业牌照从合集包拖到驾驶员身上，牌照等级默认为该牌照本身的等级（I–III）。Foundry 不检查上述取得条件，由 GM 把关。"]};
+const REFERENCE = {"professional":[{"id":"pl_ips_vanguard","name":"先遣兵","maker":"IPS-N","rank":1,"description":"作为一种以高威胁近身任务为核心的通用牌照，先遣兵总结了 IPS-N 在登船和反海盗行动方面的丰富经验，为驾驶员提供一个无论底盘规格如何都可使用的灵活战术包。所有先遣兵系统都经过 IPS-N 自己的特种作战单位，海军/坚井主干安保部门的认证，完全可以在舰装和地面战区使用。","items":[{"kind":"weapons","lid":"mw_pl_buckler","name":"弹道臂盾","level":1},{"kind":"mods","lid":"wm_pl_underslung","name":"下挂式冲击器","level":1}]},{"id":"pl_ips_watchman","name":"守夜人","maker":"IPS-N","rank":2,"description":"IPS-N 守夜人扩展包被宣传为先遣兵系列的配套牌照，它在设计时考虑到了防御行为。它在所有 IPS-N 海军舰艇上使用，并作为一种免费牌照提供给在进出南航座航线星座贸易路线上运行的商船，所有的“守夜人”系统通过为驾驶员提供快速部署、模块化监蔽增强功能来补充“占领固守/反登舰”操作，可用于加强受到威胁的阵地，或在可能接近道路上建立稳固杀区。","items":[{"kind":"systems","lid":"ms_pl_sentry_drone","name":"哨兵无人机","level":2},{"kind":"systems","lid":"ms_pl_active_defense","name":"主动防御系统","level":2}]},{"id":"pl_ips_overlord","name":"霸主","maker":"IPS-N","rank":3,"description":"IPS-N 战术火力小队/班组综合指挥和控制许可正被命名为“霸主”，其设计意图满足集中增强联合作战行动的需要。一套升级硬件组合，包括传感器和通讯套件，以及 NHP 增强瞄准系统和战术网络固件，用于补充任何小单位编队战术需要，包括突击、火力支援/目标指定、防御行动和特种作战。","items":[{"kind":"systems","lid":"ms_pl_fcs_relay","name":"FCS 战术网络中继","level":3},{"kind":"systems","lid":"ms_pl_mitra","name":"密特拉级 NHP","level":3}]},{"id":"pl_ssc_sparrowhawk","name":"雀鹰","maker":"SSC","rank":1,"description":"云雀牌照是独立专业许可包，是 SSC 空天优势计划的一部分，其设计意图为在空战中作战的底盘驾驶员提供增强战区特定作战能力。传统的空中支援/空中优势理论可以通过使用适当装备的底盘代替空天战斗机来实现，同时仍然保留地面攻击能力，使这些中队在战术打击/拦截和火力支援交战中具有无与伦比的多角色灵活性。","items":[{"kind":"weapons","lid":"mw_pl_valkyrie","name":"瓦亚维亚导弹","level":1},{"kind":"systems","lid":"ms_pl_atg_bombs","name":"ATG 精确炸弹","level":1}]},{"id":"pl_ssc_micro_monarch","name":"微型金斑蝶","maker":"SSC","rank":2,"description":"微型金斑蝶系统包是 SSC 公司主生产线导弹电池平台的发展成果。用户反馈表明，与“金斑蝶”远程火力支援原则相反，他们强烈希望为中/近距离交战定制多用途导弹系统。经过大量战地测试，微型金斑蝶最终获得了牌照，它不仅作为金斑蝶的补充区域升级，也是套灵活多变适用于所有适当牌照底盘的战术武器选择。","items":[{"kind":"weapons","lid":"mw_pl_gorgon_micro","name":"哥瓦尔丹微型导弹","level":2},{"kind":"weapons","lid":"mw_pl_garuda","name":"缇娜玻安导弹","level":2}]},{"id":"pl_ssc_acolyte","name":"盲从者","maker":"SSC","rank":3,"description":"虽然完全生物底盘工程的概念已被理论化很长时间，但这种设计面临的实际限制仍然巨大（至少据大多数人所知）。尽管如此，史密斯-岛野仍在不断突破综合生物技术设计边界，将量身定制的生物来源和灵感系统整合到他们的全套精确工程作战框架中。盲从者是奢华系列最前沿设计专业牌照系列的最新独家授权，提供性能增强的全骨架升级，来自 SSC 广泛培养的异种基因数据库，以及定制生物设计，以在最困难的操作中支援驾驶员。","items":[{"kind":"systems","lid":"ms_pl_coolwind","name":"“凉风”温控器","level":3},{"kind":"systems","lid":"ms_pl_hsc","name":"HSC 电镀","level":3}]},{"id":"pl_horus_reason","name":"理性","maker":"HORUS","rank":1,"description":"伴随 NHP 和次级 NHP 辅助电子战理论在现代战场上的日益流行，武器化编码协议、逻辑病毒和猎人/杀手算法似乎在无休止地扩散，并已发展并蔓延到整个联盟太空。因此，理性并非是传统意义上的牌照，而是作为荷鲁斯档案管理员策划和分发的广泛电子战程序库授权的万物网访问。随着电子对抗和防御系统的适应和发展，可行方案的选择本身就是进化军备竞赛的一部分，动态更新以适应战场的新趋势。","items":[{"kind":"systems","lid":"ms_pl_tazo_worm","name":"塔佐蠕虫","level":1},{"kind":"systems","lid":"ms_pl_disgust_reflex","name":"厌恶/反射","level":1}]},{"id":"pl_horus_three_eye","name":"三眼","maker":"HORUS","rank":2,"description":"尽管荷鲁斯模式组通常不符合标准战斗职责分类，但也需要实现任何现存机甲核心都无法解决的特定战场目标。当这种情况出现时，多个专业牌照便会加速开发、分发、实地测试、丢弃，而那些成功满足或超过需求的牌照将被重新编译和标准化以便进行大量发行。三眼便是这样的牌照，其设计意图为在多方底盘推动狙击神射手主义学说。","items":[{"kind":"weapons","lid":"mw_pl_seeking_launcher","name":"寻索弹射器","level":2},{"kind":"systems","lid":"ms_pl_scan_bombs","name":"扫描炸弹","level":2}]},{"id":"pl_horus_bunraku","name":"文乐木偶戏","maker":"HORUS","rank":3,"description":"直至最近出现在万物网上并且正在传播给适当牌照持有者的“文乐木偶戏”，根据联盟调查局分析尚未确定指定牌照究竟是全新的荷鲁斯模式组早期证据，还是仅仅是个实验技术试验台。初步报告暗展示了隐秘的班级战术整合指挥范式，其中涉及到使用快速建立的本体论[桥梁，通往我浩瀚的心灵之门，我灵魂的无底洞。这是我给你的礼物，去使用它们，用你的智慧，或者愚钝，白痴]","items":[{"kind":"systems","lid":"ms_pl_self_bridge","name":"自我意识桥接","level":3},{"kind":"systems","lid":"ms_pl_ontological_pulse","name":"本体论超空间战术脉冲","level":3}]},{"id":"pl_ha_superfire","name":"超级火力","maker":"HA","rank":1,"description":"大多数国家和企业军队的武器解决方案主要依赖于动能/爆炸平台，为特殊目的保留基于能量的武器，但哈里逊兵工厂的超级火力牌照扭转了这一模式，迈出了最新一步。一场首发活动试图将 HA 辐射武器定位为“驾驶员在黑暗中最好的伙伴”，在大举进军传统上由 GMS 和 IPS-N 主导的市场之前，引发了一场企业间的军备竞赛。","items":[{"kind":"weapons","lid":"mw_pl_polaris","name":"“北极星”式多功能镭射枪","level":1},{"kind":"weapons","lid":"mw_pl_orion","name":"“猎户座”式热射镭射枪","level":1}]},{"id":"pl_ha_workshop","name":"铸造车间","maker":"HA","rank":2,"description":"哈里森军械库最近推出了铸造计划，意图创造一个独立牌照包，允许适格驾驶员比较定规模更宽泛地制造定制化/个人定制化的武器——所有这些都无需冒险去出兵工厂更大的产品空间保护伞。随着牌照向更广泛市场推出，预测性客户和委托国忠诚度指标预计随着时间推移会有良好增长，计划一系列免费牌照已在进行中，对各大战区的战术效益进一步提高。","items":[{"kind":"weapons","lid":"mw_pl_modular_rifle","name":"模块化先进战斗步枪","level":2},{"kind":"mods","lid":"wm_pl_optimized","name":"最优化工程","level":2}]},{"id":"pl_ha_deepwell","name":"坠落深井","maker":"HA","rank":3,"description":"哈里逊兵工厂最新的公共 beta 测试牌照现可提供给有兴趣参加他们最新开发武器的现场测试的适格驾驶员。该牌照开发代号为“坠落深井”，代表了智囊团在创造综合性全覆盖骨架重力平台方面的持续努力。目前，人工重力产生在民用领域的实际应用仍然有限，相反在军事战区的应用逐渐增长，其主要呈现亚光型 k-comp 系统中。很明显，下一步就是寻找扩展该技术使用的可行方法，而 HA 凭借数十年在尖端和非因果律作战系统开发方面的经验，在实现这一承诺方面具有独特优势。","items":[{"kind":"weapons","lid":"mw_pl_kinetic_driver","name":"运动驱动器","level":3},{"kind":"systems","lid":"ms_pl_gravity_vane","name":"重力风向标","level":3}]},{"id":"pl_ch_shepherd","name":"羊倌","maker":"C&H","rank":1,"description":"羊倌是钱德拉塞卡赫歇尔公司强大而可定制的全覆盖底盘牌照，其设计意图为驾驶员提供全战区/全地形负载增强能力的定制解决方案。每个羊倌牌照都有 C&H 终身保修，所有系统都经过严格测试以确保在最恶劣条件下发挥效能，包括臭名昭著的荒地耐力测试。","items":[{"kind":"systems","lid":"ms_pl_tactical_belt","name":"战术带","level":1},{"kind":"systems","lid":"ms_pl_weapon_pod","name":"武器舱","level":1}]},{"id":"pl_ch_tawa","name":"塔瓦","maker":"C&H","rank":2,"description":"塔瓦许可包提供给 C&H 所有对扩展可用武器库以配备最于近距离作战最精良特种武器感兴趣的常驻牌照持有者。每个塔瓦系统都被设计用来满足 C&H 严格质量标准和驾驶员信赖的军规可靠性，为所有核心提供灵活而强大的防御解决方案，这在其他牌照中不可寻得。","items":[{"kind":"weapons","lid":"mw_pl_hotwind","name":"热风冲锋手枪","level":2},{"kind":"weapons","lid":"mw_pl_heavy_blaster","name":"重击炮","level":2}]},{"id":"pl_ch_duelist","name":"斗篷","maker":"C&H","rank":3,"description":"虽然近战被认为是诸多国家级军事和安全服务的专责角色，C&H 的“斗篷”借鉴了几个世纪的角斗武器工程经验，为持牌驾驶员提供了一系列精选近战增强改造，将经典设计与当代材料相结合。C&H 选用军用级硬板护盾，适用于多种骨架和作用，有多种定制款式和许可供选择。","items":[{"kind":"weapons","lid":"mw_pl_plasma_shield","name":"等离子电浆盾","level":3},{"kind":"weapons","lid":"mw_pl_heavy_shield","name":"赫塔卡重型战斗盾","level":3}]},{"id":"pl_piof_pioneer","name":"拓荒者","maker":"PI-OF","rank":1,"description":"拓荒者是顶峰实业猎户座派系面向殖民地先遣队与边境驻军提供的通用工程牌照，采用公司现有的殖民地建设设备，为不同规格的底盘提供野外作业和维护能力。牌照中的液压工具与便携作业设施经过军用改装，适用于临时工事修筑、障碍清除及缺乏后勤支援条件下的装备抢修。对同时承担建设与防卫任务的殖民地部队而言，这套设备可以减少专用工程载具的配备需求，并继续使用当地已有的工业维修设施。","items":[{"kind":"weapons","lid":"mw_pl_piof_rivet","name":"「垦荒者」液压铆钉枪","level":1},{"kind":"systems","lid":"ms_pl_piof_workbench","name":"「拓荒工位」野外作业台","level":1}]},{"id":"pl_piof_miner","name":"星际矿工","maker":"PI-OF","rank":2,"description":"星际矿工是拓荒者系列的重型工程扩展，其技术源自顶峰实业长期供应小行星矿场和卫星露天采掘区的破岩设备。猎户座派系保留了这些设备在高负荷作业中的机械结构，并针对机甲近距离交战重新设计了挂载接口与控制系统。冲击掘进钻能够用于破坏装甲和加固工事，配套推进器则允许驾驶员穿越原本无法通行的地形。该牌照主要面向承担攻坚与通路开辟任务的单位；在缺少工程支援时，持牌机甲也可直接参与矿区和地下设施的抢通作业。","items":[{"kind":"weapons","lid":"mw_pl_piof_drill","name":"TT.5 冲击掘进钻","level":2},{"kind":"systems","lid":"ms_pl_piof_tunnel","name":"「矿道」掘进推进器","level":2}]},{"id":"pl_piof_eden","name":"伊甸先锋","maker":"PI-OF","rank":3,"description":"伊甸先锋牌照由顶峰实业的殖民地环境改造部门提供技术支持，最初用于装备在大型施工设施抵达前开展作业的先遣单位。其地貌重塑阵列与便携天候塔允许驾驶员在有限区域内整治地形、调节作业环境，为后续人员建立落脚点。猎户座派系将这套设备引入军事用途后，扩大了系统的现场控制权限，使其能够用于临时阵地构筑、进攻路线整理及局部战场环境干预。相较于公司的常规地球化设备，伊甸先锋更注重快速部署，适合需要频繁转移作业位置的小规模编队。","items":[{"kind":"systems","lid":"ms_pl_piof_terraform","name":"地貌重塑阵列","level":3},{"kind":"systems","lid":"ms_pl_piof_weather","name":"天候塔","level":3}]},{"id":"pl_kkca_squire","name":"侍从","maker":"K/KCA","rank":1,"description":"侍从是哈尔根／卡西米尔定制装配面向初次参加锦标赛的驾驶员提供的基础专业牌照，包含一套适用于多种底盘的决斗武器与纹章展示设备。“誓约”短剑采用工作室的标准制式，便于骑手在不同机体上保持熟悉的操控手感；配套纹章旗则兼作近距离战术信标，为同队骑手提供姿态修正与威胁预警。持牌者可以提交自己的家族纹章或所属团体标识，由工作室完成相应的外观定制。","items":[{"kind":"weapons","lid":"mw_pl_kkca_oath","name":"「誓约」决斗短剑","level":1},{"kind":"systems","lid":"ms_pl_kkca_banner","name":"「家徽」纹章旗","level":1}]},{"id":"pl_kkca_knight","name":"骑士","maker":"K/KCA","rank":2,"description":"骑士牌照提供给在伊斯帕萨拉尔锦标赛中取得认可战绩的侍从牌照持有者，其装备针对公开比武中的正面交锋设计。重骑枪沿用当地骑士赛事的冲击武器结构，在一次全力冲刺中释放足以破坏自身的载荷；配套决斗协议负责向参赛机体及场地系统广播挑战，持续标记交战双方。随着持牌驾驶员进入军事与安保领域，这套原本用于竞技场的装备也开始用于突击任务，以迅速迫使选定目标投入近距离交战。","items":[{"kind":"weapons","lid":"mw_pl_kkca_joust","name":"「比武」重骑枪","level":2},{"kind":"systems","lid":"ms_pl_kkca_challenge","name":"「宣战」决斗协议","level":2}]},{"id":"pl_kkca_lord","name":"领主","maker":"K/KCA","rank":3,"description":"领主是 K/KCA 为率领扈从与骑士编队的资深驾驶员保留的定制专业牌照，采用邀请授予的方式，由工作室根据持有者的惯用底盘、家族纹章和编队战法分别调校。守护铠将紧急机动与护盾发生器联动，用于掩护遭受致命打击的同伴；凯旋号角则接入编队通讯与状态监控系统，协助友军在突破敌方阵线后恢复行动并继续进攻。每套装备交付时均附有工作室创始人签署的证书，其调校记录也将随持有者的服役经历持续更新。","items":[{"kind":"systems","lid":"ms_pl_kkca_guard","name":"「代誓」守护铠","level":3},{"kind":"systems","lid":"ms_pl_kkca_triumph","name":"「凯旋」号角","level":3}]}],"makers":[{"id":"C&H","name":"钱德拉塞卡赫歇尔有限公司","color":"#a51e22","description":"特殊问题需特殊方案。C&H 是一家年轻的银河级公司，向合格驾驶员提供专业机甲牌照，专注于非正统战斗解决方案，改善恶劣环境及灾难性环境下的表现。","frames":[{"lid":"mf_ch_charioteer","name":"战车御手"},{"lid":"mf_ch_callista","name":"卡莉丝塔"},{"lid":"mf_ch_gajeshura","name":"加杰修罗"},{"lid":"mf_ch_kalalani","name":"卡拉拉尼"},{"lid":"mf_ch_matador","name":"斗牛士"},{"lid":"mf_ch_pesilat","name":"佩西拉特"},{"lid":"mf_ch_retiarius","name":"网斗士"},{"lid":"mf_ch_pemada","name":"佩马刀者"},{"lid":"mf_ch_sagittarius","name":"射手座"}],"professional":["羊倌（I）","塔瓦（II）","斗篷（III）"]},{"id":"K/KCA","name":"哈尔根/卡西米尔定制装配","color":"#7a1f3d","description":"凡事卓越。在熙熙攘攘伊斯帕萨拉尔的生态建筑中，没有哪个行业比机械化底盘设计和制造更有活力，更具成熟创新的了。这里是最大的卡拉金皇家铸造厂园区，数十名独立设计师在不断的战术优势和社会地位竞争中与它并肩作战。这些工作室主要服务于男爵领军事精英（不论贵族还是庶民），依靠为驾驶员定制设计和安装底盘的直接佣金为生，为不满一系列低级选择的客户提供服务。某家工作室可能会因一位知名客户而一夜成名——或者，若他们的骨架在公开比赛中落败也极其容易陷入破产。在这些机甲工作室中，K/KCA 脱颖而出；或者，这位设计师最能持之以恒。哈尔根/卡西米尔定制装配成立于近一个世纪前，并代表阿萨伊德（Assayid）和科里亚特（Coryat）次级家族的民事和金融联盟、哈尔根·阿萨伊德与卡西米尔·科里亚特对机甲设计、传统战斗形式和道德学的共同热情将科里亚特家族工厂的制造和分销线与阿萨伊德贸易学校的技术和机械专业知识结合在了一起。其结果便是 K/KCA 这家专注于大胆实验而不抛弃古典美学和高贵形象的设计工作室，其灵感来源于战斗艺术和实践启发。K/KCA 骨架是骑士精神和勇气的化身；善于大胆而前卫的个性化武器和英雄主义战术。","frames":[{"lid":"mf_kkca_emerald_scimitar","name":"祖母绿弯刀"},{"lid":"mf_kkca_wondrous_sword","name":"妙源剑"},{"lid":"mf_kkca_tizona","name":"提泽纳剑"},{"lid":"mf_kkca_rending_sword","name":"斩裂剑"}],"professional":["侍从（I）","骑士（II）","领主（III）"]},{"id":"PI-OF","name":"顶峰实业——猎户座派系","color":"#c0702a","description":"绝不让步。顶峰实业在土地改造和殖民地开发领域家喻户晓，其产品范畴从建筑材料到种子库到农业设备应有尽有。猎户座派系的开发框架是专门负责更新他们现有的民用机甲，为战斗准备设计模型。PI-OF 骨架混合了简易坚固的设计，反映了他们的蓝领背景，以及更多由猎户座派系重新开发的实验性军事硬件。","frames":[{"lid":"mf_piof_basil","name":"罗勒"},{"lid":"mf_piof_coriander","name":"香菜"},{"lid":"mf_piof_fennel","name":"茴香"},{"lid":"mf_piof_lemongrass","name":"香茅"},{"lid":"mf_piof_pepper","name":"胡椒"},{"lid":"mf_piof_rosemary","name":"迷迭香"},{"lid":"mf_piof_mint","name":"薄荷"},{"lid":"mf_piof_star_anise","name":"八角"}],"professional":["拓荒者（I）","星际矿工（II）","伊甸先锋（III）"]}],"rules":["每张专业牌照独立取得、分别计入牌照等级。例如同时取得先遣兵（I）、守夜人（II）、霸主（III），合计 6 级牌照。每张专业牌照只解锁自己的装备，不解锁骨架。","二级、三级专业牌照分别需要同厂商至少一级、二级的普通牌照，或其指定的前一级专业牌照。","作为 GM 额外奖励取得的等级不提高角色 LL、毅力、天赋或核心奖励数量，但计入该厂商的牌照资格合计。","在 Foundry 中：把专业牌照从合集包拖到驾驶员身上，牌照等级默认为该牌照本身的等级（I–III）。Foundry 不检查上述取得条件，由 GM 把关。"]};
 const MODULE_ID = "lancer-cn";
 const JOURNAL_PACK = "lancer-cn-reference";
 const ROMAN = ["", "I", "II", "III"];
@@ -2192,14 +2192,20 @@ function attackReach(flow) {
 		else if (Array.isArray(prof?.range) && prof.range.length) baseRanges = prof.range;
 		else baseRanges = item?.currentProfile?.()?.range ?? [];
 	} catch { baseRanges = []; }
+	const hasAllRange = Array.isArray(weaponProfileOf(item)?.all_range) && weaponProfileOf(item).all_range.length > 0;
 	const ranges = baseRanges.map(r => ({ type: r.type, val: r.val }));
-	const tokugawaExposed = Boolean(actor && mechFrameLid(actor) === "mf_tokugawa" && actor.statuses?.has?.("exposed"));
-	if (tokugawaExposed) {
+	const isTokugawa = Boolean(actor && mechFrameLid(actor) === "mf_tokugawa");
+	const tokugawaExposed = isTokugawa && Boolean(actor.statuses?.has?.("exposed"));
+	const profDmgTypes = (weaponProfileOf(item)?.damage ?? []).map(d => d?.type);
+	const printedEnergy = profDmgTypes.includes("Energy");
+	const tokugawaRadiance = isTokugawa && isCoreActiveOn(actor, "mf_tokugawa") && (printedEnergy || tokugawaExposed);
+	const addRadiance = tokugawaRadiance && (!hasAllRange || !printedEnergy);
+	if (tokugawaExposed || addRadiance) {
 		for (const r of ranges) {
 			const n = Number(r.val);
 			if (!Number.isFinite(n)) continue;
-			if (r.type === "Range") r.val = n + 5;
-			else if (r.type === "Threat") r.val = n + 1;
+			if (r.type === "Range") r.val = n + (tokugawaExposed ? 5 : 0) + (addRadiance ? 5 : 0);
+			else if (r.type === "Threat") r.val = n + (tokugawaExposed ? 1 : 0) + (addRadiance ? 2 : 0);
 		}
 	}
 	const thrownVal = item ? weaponThrownVal(item, actor) : 0;
@@ -2422,6 +2428,80 @@ function hoverToken(ev, on) {
 	try { if (t) on ? t._onHoverIn?.(ev, { hoverOutOthers: true }) : t._onHoverOut?.(ev); } catch { /* 仅为高亮，失败不影响 */ }
 }
 
+function isOwnDroneTokenOf(tok, ownerActor) {
+	if (!tok?.actor || !ownerActor) return false;
+	const dAct = tok.actor;
+	if (dAct.type !== "deployable" && !dAct.is_deployable?.()) return false;
+	if (dAct.statuses?.has?.("downandout")) return false;
+	const pilot = ownerActor.system?.pilot?.value ?? null;
+	const rawDep = dAct.system?.deployer ?? dAct.system?.owner ?? null;
+	const depVal = rawDep?.value ?? (rawDep && typeof rawDep === "object" && rawDep.type ? rawDep : null);
+	const depUuid = typeof rawDep === "string"
+		? rawDep
+		: (rawDep?.uuid ?? rawDep?.id ?? depVal?.uuid ?? null);
+	if (depVal || depUuid) {
+		if (depVal && (depVal === ownerActor || (pilot && depVal === pilot))) return true;
+		if (depUuid) {
+			if (depUuid === ownerActor.uuid || depUuid === ownerActor.id || sameActorRef(depUuid, ownerActor)) return true;
+			if (pilot && (depUuid === pilot.uuid || depUuid === pilot.id || sameActorRef(depUuid, pilot))) return true;
+		}
+		return false;
+	}
+	const ownerTok = attackerToken(ownerActor);
+	if (ownerTok && (tok.document?.disposition ?? 1) !== (ownerTok.document?.disposition ?? 1)) return false;
+	const gmIds = new Set((globalThis.game?.users ?? []).filter(u => u?.isGM).map(u => u.id));
+	const ownA = dAct.ownership ?? {};
+	const ownB = ownerActor.ownership ?? {};
+	const playerOwnersB = Object.keys(ownB).filter(uid => uid !== "default" && !gmIds.has(uid) && ownB[uid] === 3);
+	if (playerOwnersB.length) return playerOwnersB.some(uid => ownA[uid] === 3);
+	return Boolean(dAct.isOwner && ownerActor.isOwner && !globalThis.game?.user?.isGM);
+}
+
+async function resolveAnnihilationBurstOrigin(session) {
+	const actor = session?.actor;
+	const selfTok = session?.token ?? attackerToken(actor);
+	const sensors = Number(actor?.system?.sensor_range) || 10;
+	const targeted = Array.from(globalThis.game?.user?.targets ?? []);
+	if (targeted.length === 1 && targeted[0] !== selfTok && (targeted[0]?.actor?.type === "deployable" || targeted[0]?.actor?.is_deployable?.())) {
+		const cand = targeted[0];
+		if (!isOwnDroneTokenOf(cand, actor)) {
+			globalThis.ui?.notifications?.warn?.("湮灭巢房只能以自身或「属于你的」感应范围内无人机为中心（不能以敌方或队友无人机为中心）！");
+			return undefined;
+		}
+		if (selfTok && (tokenDistance(selfTok, cand) ?? 999) > sensors) {
+			globalThis.ui?.notifications?.warn?.(`所选无人机超出感应范围（${sensors} 格），无法作为湮灭巢房中心！`);
+			return undefined;
+		}
+		return cand;
+	}
+	const ownDrones = (globalThis.canvas?.tokens?.placeables ?? []).filter(tok =>
+		tok !== selfTok
+		&& isOwnDroneTokenOf(tok, actor)
+		&& (!selfTok || (tokenDistance(selfTok, tok) ?? 999) <= sensors),
+	);
+	if (!ownDrones.length) return selfTok;
+	const DialogV2 = globalThis.foundry?.applications?.api?.DialogV2;
+	if (!DialogV2?.wait) return selfTok;
+	try {
+		const pickedId = await DialogV2.wait({
+			window: { title: "湮灭巢房 // 选择爆发 2 中心" },
+			content: `<p>可将<b>湮灭巢房</b>的爆发 2 中心设在自身或感应（${sensors} 格）内属于你的无人机上：</p>`,
+			buttons: [
+				{ action: "self", label: `自身（${selfTok?.name ?? actor?.name ?? "机甲"}）`, default: true, callback: () => "self" },
+				...ownDrones.map(d => ({
+					action: `drone:${d.id}`,
+					label: `无人机：${d.name ?? d.actor?.name ?? "无人机"}${selfTok ? `（${tokenDistance(selfTok, d) ?? "?"} 格）` : ""}`,
+					callback: () => d.id,
+				})),
+			],
+			rejectClose: false,
+		});
+		if (!pickedId) return undefined;
+		if (pickedId === "self") return selfTok;
+		return ownDrones.find(d => d.id === pickedId) ?? selfTok;
+	} catch { return selfTok; }
+}
+
 function toggleTarget(token) {
 	if (!token) return;
 	token.setTarget(!game.user.targets.has(token), { releaseOthers: false });
@@ -2489,7 +2569,15 @@ function onTargetPanelClick(ev) {
 		return;
 	}
 	if (btn?.dataset.act === "template") {
-		placeAoETemplate(btn.dataset.aoeType, Number(btn.dataset.aoeVal), targetSession?.token).catch(err => reportError("放置范围模板", err));
+		(async () => {
+			let originTok = targetSession?.token;
+			if (btn.dataset.aoeType === "Burst" && weaponLidOf(targetSession?.flow?.state?.item) === "mw_annihilation_nexus") {
+				const chosen = await resolveAnnihilationBurstOrigin(targetSession);
+				if (chosen === undefined) return;
+				originTok = chosen;
+			}
+			await placeAoETemplate(btn.dataset.aoeType, Number(btn.dataset.aoeVal), originTok);
+		})().catch(err => reportError("放置范围模板", err));
 		return;
 	}
 	if (btn?.dataset.act === "rot-template") {
@@ -3912,16 +4000,43 @@ const TALENT_LID_ALIASES = {
 	t_field_analyst: ["t_field_analyst", "t_ext_field_analyst"],
 	t_ext_field_analyst: ["t_field_analyst", "t_ext_field_analyst"],
 	t_iconoclast: ["t_iconoclast", "t_ext_iconoclast"],
-	t_house_guard: ["t_house_guard", "t_ext_house_guard"],
+	t_ext_iconoclast: ["t_iconoclast", "t_ext_iconoclast"],
+	t_house_guard: ["t_house_guard", "t_ext_house_guard", "t_ext_household_guard"],
+	t_ext_house_guard: ["t_house_guard", "t_ext_house_guard", "t_ext_household_guard"],
+	t_ext_household_guard: ["t_house_guard", "t_ext_house_guard", "t_ext_household_guard"],
 	t_pankrati: ["t_pankrati", "t_ext_pankrati"],
-	t_black_thumb: ["t_black_thumb", "t_ext_black_thumb"],
+	t_ext_pankrati: ["t_pankrati", "t_ext_pankrati"],
+	t_black_thumb: ["t_black_thumb", "t_ext_black_thumb", "t_ext_blackthumb"],
+	t_ext_black_thumb: ["t_black_thumb", "t_ext_black_thumb", "t_ext_blackthumb"],
+	t_ext_blackthumb: ["t_black_thumb", "t_ext_black_thumb", "t_ext_blackthumb"],
 	t_demolitionist: ["t_demolitionist", "t_ext_demolitionist"],
+	t_ext_demolitionist: ["t_demolitionist", "t_ext_demolitionist"],
 	t_prospector: ["t_prospector", "t_ext_prospector"],
-	t_empath: ["t_empath", "t_ext_empath"],
+	t_ext_prospector: ["t_prospector", "t_ext_prospector"],
+	t_empath: ["t_empath", "t_ext_empath", "t_ext_mind_reader"],
+	t_ext_empath: ["t_empath", "t_ext_empath", "t_ext_mind_reader"],
+	t_ext_mind_reader: ["t_empath", "t_ext_empath", "t_ext_mind_reader"],
 	t_sysop: ["t_sysop", "t_ext_sysop"],
-	t_spaceborn: ["t_spaceborn", "t_ext_spaceborn"],
+	t_ext_sysop: ["t_sysop", "t_ext_sysop"],
+	t_spaceborn: ["t_spaceborn", "t_ext_spaceborn", "t_ext_void_native"],
+	t_ext_spaceborn: ["t_spaceborn", "t_ext_spaceborn", "t_ext_void_native"],
+	t_ext_void_native: ["t_spaceborn", "t_ext_spaceborn", "t_ext_void_native"],
 	t_giant_slayer: ["t_giant_slayer", "t_ext_giant_slayer"],
 	t_ext_giant_slayer: ["t_giant_slayer", "t_ext_giant_slayer"],
+};
+
+const SYSTEM_LID_ALIASES = {
+	ms_iconoclast: ["ms_iconoclast", "ms_unstable_nhp", "ms_ext_unstable_nhp"],
+	ms_unstable_nhp: ["ms_iconoclast", "ms_unstable_nhp", "ms_ext_unstable_nhp"],
+	ms_ext_unstable_nhp: ["ms_iconoclast", "ms_unstable_nhp", "ms_ext_unstable_nhp"],
+	ms_pebcac: ["ms_pebcac", "ms_ext_human_error"],
+	ms_ext_human_error: ["ms_pebcac", "ms_ext_human_error"],
+	ms_technophile_1: ["ms_technophile_1", "ms_servant_fragment_nhp"],
+	ms_servant_fragment_nhp: ["ms_technophile_1", "ms_servant_fragment_nhp"],
+	ms_technophile_2: ["ms_technophile_2", "ms_student_fragment_nhp"],
+	ms_student_fragment_nhp: ["ms_technophile_2", "ms_student_fragment_nhp"],
+	ms_technophile_3: ["ms_technophile_3", "ms_enlightenment_class_nhp"],
+	ms_enlightenment_class_nhp: ["ms_technophile_3", "ms_enlightenment_class_nhp"],
 };
 
 function talentItemOf(actor, lid) {
@@ -3979,7 +4094,8 @@ function hasCoreBonus(actor, lid) {
 
 function hasMechSystem(actor, lid) {
 	const mech = combatMechOf(actor);
-	return [...(mech?.items ?? [])].some(i => i && !i.system?.destroyed && String(i.system?.lid ?? "") === lid);
+	const targets = SYSTEM_LID_ALIASES[lid] ?? [lid];
+	return [...(mech?.items ?? [])].some(i => i && !i.system?.destroyed && targets.includes(String(i.system?.lid ?? "")));
 }
 
 function countMechNHPs(actor) {
@@ -3987,21 +4103,28 @@ function countMechNHPs(actor) {
 	let count = 0;
 	let hasUnstableItem = false;
 	let hasTechnophileItem = false;
+	const loadoutSys = Array.isArray(mech?.system?.loadout?.systems)
+		? mech.system.loadout.systems.filter(s => s?.value || s?.id)
+		: [];
 	for (const item of mech?.items ?? []) {
-		if (!item || item.system?.destroyed) continue;
+		if (!item) continue;
 		if (item.type && item.type !== "mech_system" && !item.is_mech_system?.()) continue;
 		const lid = String(item.system?.lid ?? "");
 		const name = String(item.name ?? "");
-		if (lid === "ms_unstable_nhp" || /不稳定\s*NHP|unstable\s+nhp/i.test(name)) hasUnstableItem = true;
-		if (/^ms_(?:servant_fragment|student_fragment|enlightenment_class)_nhp$/i.test(lid) || /(?:侍从|学生|开悟)级\s*NHP/i.test(name)) hasTechnophileItem = true;
-		// 侍从级 NHP（科技狂热者 R1）与洞察原型心智不能进入崩溃，不计入偶像破坏者定义的 NHP 数量
-		if (lid === "ms_ext_insight_proto_mind" || lid === "ms_servant_fragment_nhp" || /侍从级\s*NHP/i.test(name)) continue;
+		const isUnstable = lid === "ms_iconoclast" || lid === "ms_unstable_nhp" || lid === "ms_ext_unstable_nhp" || /不稳定\s*NHP|unstable\s+nhp/i.test(name);
+		const isTechnophile = /^ms_(?:technophile_[123]|(?:servant_fragment|student_fragment|enlightenment_class)_nhp)$/i.test(lid) || /(?:侍从|学生|开悟|启蒙)级\s*NHP/i.test(name);
+		if (isUnstable) hasUnstableItem = true;
+		if (isTechnophile) hasTechnophileItem = true;
+		if (item.system?.destroyed || item.system?.equipped === false) continue;
+		if (loadoutSys.length > 0 && !loadoutSys.some(s => s?.value === item || (item.id && (s?.id === item.id || s?.value?.id === item.id)))) continue;
+		// 免疫层流的伙伴礼宾单元 / COMP/CON / 侍从级 NHP 不计入偶像破坏者定义的 NHP 数量
+		if (isCascadeResistantItem(item)) continue;
 		let tags = [];
-		try { tags = item.getTags?.() ?? item.system?.tags ?? []; } catch { tags = item.system?.tags ?? []; }
-		const hasAiTag = tags.some(t => t?.lid === "tg_ai" || t?.is_ai);
-		if (hasAiTag || /_nhp$/i.test(lid) || /\bNHP\b/i.test(name)) count++;
+		try { tags = item.getTags?.() ?? item.system?.all_tags ?? item.system?.tags ?? []; } catch { tags = item.system?.tags ?? []; }
+		const hasAiTag = Array.isArray(tags) && tags.some(t => t?.lid === "tg_ai" || t?.id === "tg_ai" || t?.is_ai);
+		if (isUnstable || isTechnophile || hasAiTag || /_nhp$/i.test(lid) || /\bNHP\b/i.test(name)) count++;
 	}
-	// 若已拥有偶像破坏者 R1 或科技狂热者 R2+ 但尚未将对应特殊 NHP 拖入机甲物品栏，自动计入该内置 NHP
+	// 若已拥有偶像破坏者 R1+ 或科技狂热者 R2+ 但尚未将对应特殊 NHP 拖入机甲物品栏，自动计入该内置 NHP（若已在物品栏中损毁或卸下则不重复补回）
 	if (!hasUnstableItem && talentRank(actor, "t_iconoclast") >= 1) count++;
 	if (!hasTechnophileItem && talentRank(actor, "t_technophile") >= 2) count++;
 	return count;
@@ -4095,6 +4218,8 @@ function getTalentDie(actor, key) {
 	if (Number.isFinite(Number(saved[key]))) return Number(saved[key]);
 	const srcItem = def.frame ? mechFrame(mech) : talentItemOf(actor, def.talent);
 	const ctr = (srcItem?.system?.counters ?? []).find(c => c?.lid === def.ctrLid || (def.frame && /军备|armament|load_bearing/i.test(String(c?.name ?? c?.lid ?? ""))));
+	// 演说家 R3 在官方天赋数据中共用 R2 的 ctr_voice_of_reason（default_value: 1），未写入模组标记前按 R3 初始 2 枚处理
+	if (key === "orator" && rank >= 3 && ctr && Number(ctr.value) === 1) return def.init(rank);
 	if (ctr && Number.isFinite(Number(ctr.value))) return Number(ctr.value);
 	return def.init(rank);
 }
@@ -4129,7 +4254,11 @@ function getCombatState(actor) {
 async function setCombatState(actor, patch) {
 	const mech = combatMechOf(actor);
 	if (!mech?.setFlag) return {};
-	const next = { ...getCombatState(mech), ...patch };
+	const syncedPatch = { ...(patch ?? {}) };
+	if ("attackedOrForcedSaveThisTurn" in syncedPatch && !("affectedHostileThisTurn" in syncedPatch)) {
+		syncedPatch.affectedHostileThisTurn = Boolean(syncedPatch.attackedOrForcedSaveThisTurn);
+	}
+	const next = { ...getCombatState(mech), ...syncedPatch };
 	await mech.setFlag(MODULE_ID, "combatState", next);
 	return next;
 }
@@ -4166,6 +4295,9 @@ async function ensureCombatTurnState(actor) {
 		patch.usedVeteranLightningReflex = false;
 		patch.usedOverwatchRound = false;
 		patch.usedBraceRound = false;
+		patch.usedOratorRound = false;
+		patch.usedWodengCounterfireRound = false;
+		patch.fieldAnalystUsedRound = 0;
 		for (const k of Object.keys(st)) {
 			if (k.startsWith("usedActRound_")) patch[k] = false;
 		}
@@ -4182,6 +4314,7 @@ async function ensureCombatTurnState(actor) {
 		patch.usedWalkingArmoryTurn = false;
 		patch.usedInfiltratorAmbush = false;
 		patch.attackedOrForcedSaveThisTurn = false;
+		patch.affectedHostileThisTurn = false;
 		patch.usedUltraExtraDeadly = false;
 		patch.tookEnergyThisTurn = false;
 		patch.stortebekerUsedWeaponIds = [];
@@ -4420,7 +4553,7 @@ function parseSavesInText(text, { dc = 10, critOnly = false } = {}) {
 		if (!/(通过|进行|迫使|必须|否则|失败|成功|对抗|尝试|pass|make|force|must|\bor\b|fail|succeed)/i.test(s)) continue;
 		for (const def of SAVE_DEFS) {
 			if (!def.re.test(s)) continue;
-			const sWithoutPass = s.replace(/[，,；]?\s*(?:豁免成功|成功的话|若成功)[\s\S]*$/i, "");
+			const sWithoutPass = s.replace(/[，,；]?\s*(?:豁免成功(?:时|则|的话)?|成功(?:的话|时|则)|若成功|\bon\s+a\s+success\b)[\s\S]*$/i, "");
 			const failPartMatch = sWithoutPass.match(/(?:否则|若失败|豁免失败|失败时|失败则|\bor\b|on a fail(?:ed save|ure)?)([\s\S]*)$/i);
 			const failStatuses = statusesIn(failPartMatch ? failPartMatch[0] : sWithoutPass, { strict: false });
 			for (let j = idx + 1; j < Math.min(sentences.length, idx + 3); j++) {
@@ -4430,8 +4563,8 @@ function parseSavesInText(text, { dc = 10, critOnly = false } = {}) {
 				} else break;
 			}
 			const windowText = sentences.slice(idx, idx + 3).join("。");
-			const halfOnSuccess = /((?:成功|通过[^。]{0,8}?(?:豁免|检定))[^。]{0,16}(?:减半|一半)|(?:减半|一半伤害|所受\s*伤害减半)[^。]{0,12}(?:成功|通过)|成功的话[^。]{0,16}伤害减半|half\s+damage\s+on\s+a\s+success|half\s+on\s+a\s+successful\s+save|on\s+a\s+success[^.]{0,24}half)/i.test(windowText);
-			const passPartMatch = windowText.match(/(?:成功的话|豁免成功时?|若成功)([^。]*)/i);
+			const halfOnSuccess = /((?:成功|通过[^。]{0,8}?(?:豁免|检定))[^。]{0,16}(?:减半|一半)|(?:减半|一半伤害|所受\s*伤害减半)[^。]{0,12}(?:成功|通过)|成功(?:的话|时|则)[^。]{0,16}伤害减半|half\s+damage\s+on\s+a\s+success|half\s+on\s+a\s+successful\s+save|on\s+a\s+success[^.]{0,24}half)/i.test(windowText);
+			const passPartMatch = windowText.match(/(?:豁免成功(?:时|则|的话)?|成功(?:的话|时|则)|若成功|\bon\s+a\s+success\b)([^。]*)/i);
 			const passStatuses = passPartMatch ? statusesIn(passPartMatch[1].replace(/(?:不(?:会|再|受|陷入)?|免于|避免)[^，,。]*/g, ""), { strict: false }) : [];
 			const existing = out.find(x => x.key === def.key && x.critOnly === critOnly);
 			if (existing) {
@@ -4493,7 +4626,7 @@ function scanUnconditionalStatuses(rawText, bucket, allStatuses, { strict = fals
 	}
 }
 
-function classifyAttackCard(item, basicKey, dc = 10) {
+function classifyAttackCard(item, basicKey, dc = 10, actor = null) {
 	const autoHitStatuses = [...(BASIC_ACTIONS[basicKey]?.statuses ?? [])];
 	const autoCritStatuses = [];
 	const allStatuses = [...autoHitStatuses];
@@ -4531,6 +4664,16 @@ function classifyAttackCard(item, basicKey, dc = 10) {
 			mergeSaves(parseSavesInText(a.detail, { dc, critOnly: false }));
 		}
 		for (const t of attackTexts(item)) for (const id of statusesIn(t.text, { strict: t.strict })) if (!allStatuses.includes(id)) allStatuses.push(id);
+	}
+	if (weaponLidOf(item) === "mw_pl_buckler") {
+		const ext = Boolean(actor && getCombatState(actor).bucklerExtended);
+		if (ext) {
+			if (!autoCritStatuses.includes("prone")) autoCritStatuses.push("prone");
+			if (!allStatuses.includes("prone")) allStatuses.push("prone");
+		} else {
+			const pi = autoCritStatuses.indexOf("prone");
+			if (pi >= 0) autoCritStatuses.splice(pi, 1);
+		}
 	}
 	return { autoHitStatuses, autoCritStatuses, allStatuses, saves };
 }
@@ -4586,19 +4729,24 @@ function parseNonAttackDamage(text, actor = null, item = null) {
 	const tierIdx = Math.min(3, Math.max(1, effTier)) - 1;
 	const damage = [];
 	let ap = false;
+	let unconditionalDamage = String(item?.system?.lid ?? "") === "ms_the_imperial_eye";
 	for (const raw of plain.split(/[。；;\n]/)) {
 		const s = raw.replace(/(?:清除|恢复|移除|消除|冷却|失去|排散)\s*\{?\s*\d+(?:\s*[/／]\s*\d+)*\s*\}?\s*点?\s*(?:热度|燃烧)/gi, " ").trim();
 		if (!s) continue;
 		if (/(物件|地形|障碍物|掩体|objects?\s+(?:and|or)\s+terrain)/i.test(s) && !/(角色|敌|目标|character|hostile|enemy|target)/i.test(s)) continue;
 		if (/(抗性|免疫[^，。]*伤害|受到的[^，。]*伤害\s*(减少|降低|减半)|武器[^，。]*(额外|造成)|下次攻击|(?:所有|全部|其|对方|盟友)攻击造成\s*\+)/i.test(s)) continue;
 		if (/^(你|自身|本机)(承受|受到|产生)\s*\{?\s*\d+\s*\}?\s*(点)?\s*热度/i.test(s) && !/(目标|角色|敌|区域|爆发|溅射|锥形|线形)/i.test(s)) continue;
+		const sentenceHasSave = /(豁免|save)/i.test(s);
 
 		let rest = s;
 		const tierRe = /\{?\s*(\d+d\d+(?:\s*[+-]\s*\d+)?|\d+)\s*[/／]\s*(\d+d\d+(?:\s*[+-]\s*\d+)?|\d+)\s*[/／]\s*(\d+d\d+(?:\s*[+-]\s*\d+)?|\d+)\s*\}?\s*点?\s*(穿甲\s*|AP\s*)?(动能|能量|爆炸|燃烧|热度|Kinetic|Energy|Explosive|Burn|Heat)\s*(穿甲\s*|AP\s*)?(伤害)?/gi;
-		rest = rest.replace(tierRe, (_m, v1, v2, v3, ap1, dt, ap2) => {
+		rest = rest.replace(tierRe, (_m, v1, v2, v3, ap1, dt, ap2, _hasDmgWord, offset) => {
 			const picked = [v1, v2, v3][tierIdx].replace(/\s+/g, "");
 			const type = DMG_TYPE_MAP[dt.toLowerCase()] ?? DMG_TYPE_MAP[dt];
-			if (type) damage.push({ type, val: picked });
+			if (type) {
+				damage.push({ type, val: picked });
+				if (sentenceHasSave && !/豁免|否则|失败|\bsave\b|\bfail/i.test(s.slice(0, offset))) unconditionalDamage = true;
+			}
 			if (ap1 || ap2) ap = true;
 			return " ";
 		});
@@ -4613,6 +4761,7 @@ function parseNonAttackDamage(text, actor = null, item = null) {
 			const type = DMG_TYPE_MAP[dt.toLowerCase()] ?? DMG_TYPE_MAP[dt];
 			if (!type) continue;
 			damage.push({ type, val: valRaw.replace(/\s+/g, "") });
+			if (sentenceHasSave && !/豁免|否则|失败|\bsave\b|\bfail/i.test(rest.slice(0, m.index))) unconditionalDamage = true;
 			if (ap1 || ap2) ap = true;
 		}
 		if (damage.length && /(穿甲|\bAP\b|armor[- ]piercing)/i.test(s)) ap = true;
@@ -4620,7 +4769,7 @@ function parseNonAttackDamage(text, actor = null, item = null) {
 	if (!damage.length) return null;
 	const dedup = [];
 	for (const d of damage) if (!dedup.some(x => x.type === d.type && x.val === d.val)) dedup.push(d);
-	return { damage: dedup, ap };
+	return { damage: dedup, ap, ...(unconditionalDamage ? { unconditionalDamage: true } : {}) };
 }
 
 const AOE_WORD_MAP = {
@@ -4903,6 +5052,9 @@ function collectWeaponAttackRiders(message, attack, item, actor, dc = 10) {
 			riders.push({ kind: "pesilatMuscleDmg", label: "🥊 肌肉示踪触觉（1/轮 无武器近战 +1d6 动能）" });
 		}
 	}
+	if (wLid === "mw_tachyon_lance" && (mech?.statuses?.has?.("dangerzone") || ((Number(mech?.system?.heat?.max) || 0) > 0 && (Number(mech?.system?.heat?.value) || 0) >= Math.ceil((Number(mech?.system?.heat?.max) || 0) / 2)))) {
+		riders.push({ kind: "tachyonBackblast", label: "🔥 迅子后焰（4 燃烧 + 2 热度）" });
+	}
 	// 黑巫蛾「磁力格挡」：针对黑巫蛾或邻接友军且可能造成动能伤害的攻击，1/轮反应掷 1d6（5+ 令攻击失手）
 	if (anyHit) {
 		const profDmg = weaponProfileOf(item)?.damage ?? [];
@@ -5030,9 +5182,13 @@ function analyzeCard(message, root = null) {
 		const actor = combatMechOf(rawActor) ?? rawActor;
 		const item = attack.attackerItemUuid ? resolveDocSync(attack.attackerItemUuid) : null;
 		const dc = Number(actor?.system?.save ?? rawActor?.system?.save) || 10;
+		const anyHit = (attack?.targets ?? []).some(t => t.hit || t.crit);
 		const isTech = isTechAttackMessage(message, attack, item, basicKey);
 		if (isTech) {
 			const tCls = classifyTechAttackCard(message, attack, item, actor, basicKey, dc);
+			if (anyHit && message?.getFlag?.(MODULE_ID, "infiltratorAmbush") && !tCls.saves.some(x => x.key === "hull" && !x.critOnly)) {
+				tCls.saves.push({ key: "hull", path: "system.hull", label: "机体豁免", dc, failStatuses: ["slow", "impaired"], noReactionsUntilTurnEnd: true, passStatuses: [], halfOnSuccess: false, critOnly: false });
+			}
 			const aoeRanges = parseAoERanges(tCls.effectText, item);
 			return {
 				isAttack: true, isTech: true, attack, actor, actorUuid: preferredTargetUuid(actor) ?? attack.attackerUuid ?? actor?.uuid ?? null, item,
@@ -5044,14 +5200,14 @@ function analyzeCard(message, root = null) {
 				techRiders: tCls.techRiders, weaponRiders: [], osirisGate: tCls.osirisGate ?? null,
 			};
 		}
-		const cls = classifyAttackCard(item, basicKey, dc);
+		const cls = classifyAttackCard(item, basicKey, dc, actor);
 		if (basicKey && BASIC_ACTIONS[basicKey]?.effect) {
 			for (const sv of parseSavesInText(BASIC_ACTIONS[basicKey].effect, { dc })) {
 				if (!cls.saves.some(x => x.key === sv.key)) cls.saves.push(sv);
 			}
 		}
-		// 潜行者 II「埋伏」：本回合以匿迹开始时的第一次攻击迫使目标机体豁免否则缓慢 + 受损
-		if (message?.getFlag?.(MODULE_ID, "infiltratorAmbush") && !cls.saves.some(x => x.key === "hull" && !x.critOnly)) {
+		// 潜行者 II「埋伏」：本回合以匿迹状态进行的第一次任意类型攻击掷骰在命中时迫使目标机体豁免否则缓慢 + 受损（并禁反应，不施加伏卧）
+		if (anyHit && message?.getFlag?.(MODULE_ID, "infiltratorAmbush") && !cls.saves.some(x => x.key === "hull" && !x.critOnly)) {
 			cls.saves.push({ key: "hull", path: "system.hull", label: "机体豁免", dc, failStatuses: ["slow", "impaired"], passStatuses: [], halfOnSuccess: false, critOnly: false });
 		}
 		// 斗殴者 III「击倒技」：附加机体豁免否则晕眩
@@ -5116,7 +5272,8 @@ function analyzeCard(message, root = null) {
 		|| actionLid.endsWith("_core_system")
 		|| (item?.type === "frame" && /^CORE ACTIVATION/i.test(actionName)),
 	);
-	const frameLid = item?.type === "frame" ? String(item.system?.lid ?? "") : mechFrameLid(actor);
+	const rawFrameLid = item?.type === "frame" ? String(item.system?.lid ?? "") : "";
+	const frameLid = rawFrameLid ? (FRAME_LID_ALIASES[rawFrameLid] ?? rawFrameLid) : mechFrameLid(actor);
 	// 非 LANCER 卡片（普通闲聊或没有规则正文的卡）不处理
 	const isLancerCard = Boolean(item || actionData || cardMeta || /class="[^"]*\b(lancer-header|lancer-mini-header|effect-text)\b/.test(rawHtml));
 	if (!isLancerCard) return null;
@@ -5163,9 +5320,21 @@ function analyzeCard(message, root = null) {
 		nonAttackDamage = { ...nonAttackDamage, halfAllTargets: true };
 	}
 	// 偶像破坏者 I「模因火花」：1 + NHP 数量（超然状态额外 +4）点穿甲能量伤害
-	if (/模因火花/.test(effectiveTitle) || (String(item?.system?.lid ?? "").includes("unstable_nhp") && /模因火花/.test(combinedText))) {
+	if (/模因火花/.test(effectiveTitle) || (/^(?:ms_iconoclast|ms_ext_unstable_nhp|ms_unstable_nhp)$/.test(String(item?.system?.lid ?? "")) && /模因火花/.test(combinedText))) {
 		const nhpDmg = 1 + countMechNHPs(actor) + (getCombatState(actor).transcendActive ? 4 : 0);
 		nonAttackDamage = { damage: [{ type: "Energy", val: String(nhpDmg) }], ap: true };
+	}
+	// 树绳妖（mf_ext_banshee_vine）核心主动「面部附着者/胸腔爆裂者」：系统豁免失败时下回合强制下马（仅无法离舱或无驾驶员时改为晕眩）
+	if ((isCoreActivation && frameLid === "mf_ext_banshee_vine") || /面部附着者|胸腔爆裂者/.test(effectiveTitle)) {
+		const sysSv = saves.find(s => s.key === "sys");
+		if (sysSv) {
+			sysSv.passStatuses = (sysSv.passStatuses ?? []).filter(st => st !== "stunned");
+			sysSv.failStatuses = (sysSv.failStatuses ?? []).filter(st => st !== "stunned");
+			sysSv.bansheeVineCore = true;
+		} else {
+			saves.push({ key: "sys", path: "system.sys", label: "系统豁免", dc, failStatuses: [], passStatuses: [], halfOnSuccess: false, critOnly: false, bansheeVineCore: true });
+		}
+		if (!targetDebuffs.includes("stunned")) targetDebuffs.push("stunned");
 	}
 	// 勘探者 II「淘金热」：创建进口时区域内敌对角色必须通过机体豁免，否则伏卧
 	if ((/创造进口|Create Entrance/i.test(effectiveTitle) || actionLid === "act_create_entrance") && talentRank(actor, "t_prospector") >= 2) {
@@ -5190,7 +5359,7 @@ function analyzeCard(message, root = null) {
 
 // ---------------------------------------------------------------------------
 // 伤害结算预览（与系统 LancerActor.damageCalc 完全一致，并补完机甲骨架被动抗性/减伤、拿破仑护盾、老兵冲击装甲/钢爪、超体围攻盾与异种现世挤出物）
-function previewDamageCalc(actor, entries, { multiple = 1, ap = false, paracausal = false, addBurn = true, dmgCtx = null } = {}) {
+function previewDamageCalc(actor, entries, { multiple = 1, ap = false, paracausal = false, addBurn = true, reactionAttack = false, dmgCtx = null } = {}) {
 	if (!actor?.system) return null;
 	const dmg = { Kinetic: 0, Energy: 0, Explosive: 0, Burn: 0, Heat: 0, Variable: 0 };
 	if (Array.isArray(entries)) {
@@ -5276,12 +5445,16 @@ function previewDamageCalc(actor, entries, { multiple = 1, ap = false, paracausa
 	}
 
 	const ignoreBurnHeatRes = Boolean(dmgCtx?.ignoreBurnHeatResist || mechFrameLid(attMech) === "mf_genghis_alt_worldkiller_genghis_mk_i");
-	const briareosResist = hasCoreBonus(actor, "cb_briareos_frame") && Number(actor.system?.structure?.value) === 1;
+	const briareosResist = hasCoreBonus(actor, "cb_briareos_frame")
+		&& (Number(actor.system?.structure?.max) || 0) > 0
+		&& Number(actor.system?.structure?.value) <= 1;
 	const autoExtinguish = hasCoreBonus(actor, "cb_ch_extinguisher");
+	const bucklerReactionResist = Boolean(cs.bucklerShieldActive || (cs.bucklerExtended && (reactionAttack || dmgCtx?.reactionAttack)));
 
 	const intrinsicResistLabel = t => {
 		if ((t === "Burn" || t === "Heat") && ignoreBurnHeatRes) return null;
-		if (briareosResist && t !== "Heat") return "百臂巨人";
+		if (briareosResist && t !== "Heat") return "布里阿柔斯";
+		if (bucklerReactionResist && t !== "Heat") return "弹道臂盾";
 		if (autoExtinguish && t === "Burn") return "自动灭火器";
 		if (fLid === "mf_black_witch" && t === "Kinetic") return "偏转力场";
 		if ((fLid === "mf_manticore" || fLid === "mf_lycan") && (t === "Energy" || t === "Burn")) return "熔渣外壳";
@@ -5511,6 +5684,8 @@ function patchTrueblackDamageCalc() {
 		const incomingEnergy = Number(damage?.Energy) || 0;
 		const incomingHeat = Number(damage?.Heat) || 0;
 		const hadPureEnergy = Boolean(damage && incomingEnergy > 0 && !(incomingHeat > 0) && isCoreActiveOn(this, "mf_manticore"));
+		const preHpPool = (Number(this.system?.hp?.value) || 0) + (Number(this.system?.overshield?.value) || 0);
+		const preStruct = Number(this.system?.structure?.value) || 0;
 		const prevMsgIds = new Set(Array.from(globalThis.game?.messages?.contents ?? globalThis.game?.messages ?? []).map(m => m?.id).filter(Boolean));
 		let res;
 		let handled = false;
@@ -5573,6 +5748,30 @@ function patchTrueblackDamageCalc() {
 						"⚔ 巨人杀手 · 终斩触发",
 						`<p>受骑乘伤害结算后 <b>${escHtml(this.token?.name ?? this.name)}</b> 剩余 <b>${remHp} HP</b>（≤3），触发<b>巨人杀手 III · 终斩</b>：剩余 HP 直接归零！</p>`,
 					);
+				}
+			}
+			const postHpPool = (Number(this.system?.hp?.value) || 0) + (Number(this.system?.overshield?.value) || 0);
+			const postStruct = Number(this.system?.structure?.value) || 0;
+			const tookActualDamage = postHpPool < preHpPool || postStruct < preStruct;
+			if (getCombatState(this).bucklerShieldActive) {
+				await setCombatState(this, { bucklerShieldActive: false });
+			}
+			// 游骑兵（凤蝶变体）「接地」隐形：受到伤害时同样立即解除隐形
+			if (tookActualDamage && (getCombatState(this).groundedInvisible || (mechFrameLid(this) === "mf_swallowtail_alt_swallowtail_ranger_variant" && this.statuses?.has?.("invisible") && !getCombatState(this).ghostweaveCloak && !getCombatState(this).duskWingCloak))) {
+				await setActorStatus(preferredTargetUuid(this) ?? this.uuid, "invisible", false);
+				await setCombatState(this, { groundedInvisible: false });
+			}
+			// 重炮手 I & III「掩护火力 / 夹叉火力」：某一目标对你造成伤害时，仅结束针对该目标的掩护火力（R3 另一名目标的效果保留）
+			if (tookActualDamage && effDmgCtx?.attackerUuid && !(sameActorRef(effDmgCtx.attackerUuid, this))) {
+				const cfList = Array.isArray(getCombatState(this).coveringFireTargets) ? getCombatState(this).coveringFireTargets : [];
+				if (cfList.length) {
+					const matched = cfList.filter(u => sameActorRef(u, effDmgCtx.attackerUuid));
+					if (matched.length) {
+						const remain = cfList.filter(u => !sameActorRef(u, effDmgCtx.attackerUuid));
+						await setCombatState(this, { coveringFireTargets: remain });
+						for (const mu of matched) await setActorStatus(mu, "impaired", false);
+						globalThis.ui?.notifications?.info?.("掩护火力目标造成了伤害：已自动结束针对该目标的掩护火力效果。");
+					}
 				}
 			}
 			const isExternalHeat = incomingHeat > 0 && !(effDmgCtx?.attackerUuid && sameActorRef(effDmgCtx.attackerUuid, this));
@@ -5830,10 +6029,10 @@ let pendingDisdainfulBlade = null;   // 猎人 III「蔑刃」自由动作投掷
 let pendingOverwatchAttack = null;   // 守望反应交火出卡前暂存：{ actorUuid, weaponUuid }
 
 const ALLOWED_SOCKET_COMBAT_STATE_KEYS = new Set([
-	"sysopFirewall", "blackIceStacks", "usedOpenDoorSave", "attackedOrForcedSaveThisTurn",
-	"skirmisherSoftCover", "usedBlackWitchParry", "usedVeteranLightningReflex",
-	"reactionsUsedTurn", "usedOverwatchRound", "usedBraceRound", "disengagedThisTurn",
-	"prospectorNoReactionTurn", "noReactionsUntilTurnEnd", "preparedAction", "cascadingTalentNhps", "roundKey", "turnKey",
+	"sysopFirewall", "blackIceStacks", "usedOpenDoorSave", "attackedOrForcedSaveThisTurn", "affectedHostileThisTurn",
+	"skirmisherSoftCover", "groundedInvisible", "usedBlackWitchParry", "usedVeteranLightningReflex",
+	"reactionsUsedTurn", "usedOverwatchRound", "usedBraceRound", "usedOratorRound", "usedWodengCounterfireRound", "fieldAnalystUsedRound",
+	"disengagedThisTurn", "prospectorNoReactionTurn", "noReactionsUntilTurnEnd", "preparedAction", "cascadingTalentNhps", "roundKey", "turnKey",
 ]);
 
 async function patchCombatStateCompat(actorOrUuid, patch) {
@@ -5935,7 +6134,7 @@ function hasUnlimitedOverwatchPerRound(actor) {
 	return false;
 }
 
-function checkReactionAvailability(actor, { kind = "generic", label = "反应", roundFlag = null } = {}) {
+function checkReactionAvailability(actor, { kind = "generic", label = "反应", roundFlag = null, extraRoundFlag = null, roundCountKey = null, roundMax = 1 } = {}) {
 	const mech = combatMechOf(actor) ?? actor;
 	if (!mech) return { ok: false, reasons: ["未找到执行角色"], reasonText: "未找到执行角色", maxR: 1, usedR: 0 };
 	const cs = getCombatState(mech);
@@ -5978,7 +6177,18 @@ function checkReactionAvailability(actor, { kind = "generic", label = "反应", 
 	const skipRoundLimit = roundFlag === "usedOverwatchRound" && hasUnlimitedOverwatchPerRound(mech);
 	const enforceRoundOutsideCombat = roundFlag === "usedBlackWitchParry" || roundFlag === "usedVeteranLightningReflex";
 	if (roundFlag && !skipRoundLimit && (inCombat ? sameRound : enforceRoundOutsideCombat) && Boolean(cs[roundFlag])) {
+		reasons.push(roundFlag === "usedOverwatchRound" && label !== "守望"
+			? `本轮「守望」次数已消耗，无法执行「${label}」（1/轮）`
+			: `本轮已使用过「${label}」（1/轮）`);
+	}
+	if (extraRoundFlag && inCombat && sameRound && Boolean(cs[extraRoundFlag])) {
 		reasons.push(`本轮已使用过「${label}」（1/轮）`);
+	}
+	if (roundCountKey && Number(roundMax) > 0 && inCombat && sameRound) {
+		const usedRoundCnt = Number(cs[roundCountKey]) || 0;
+		if (usedRoundCnt >= roundMax) {
+			reasons.push(`本轮「${label}」次数已用尽（${usedRoundCnt}/${roundMax}）`);
+		}
 	}
 	if (inCombat && usedR >= maxR) {
 		reasons.push(`本回合反应次数已用尽（${usedR}/${maxR}）`);
@@ -6008,11 +6218,11 @@ async function syncActorReactionTracker(actor, available) {
 	return false;
 }
 
-async function consumeReaction(actor, { kind = "generic", label = "反应", roundFlag = null } = {}) {
+async function consumeReaction(actor, { kind = "generic", label = "反应", roundFlag = null, extraRoundFlag = null, roundCountKey = null, roundMax = 1 } = {}) {
 	const mech = combatMechOf(actor) ?? actor;
 	if (!mech) return { ok: false, blocked: true, reasons: ["未找到执行角色"], snapshot: null };
 	if (mech.isOwner) await ensureCombatTurnState(mech);
-	const chk = checkReactionAvailability(mech, { kind, label, roundFlag });
+	const chk = checkReactionAvailability(mech, { kind, label, roundFlag, extraRoundFlag, roundCountKey, roundMax });
 	const dispName = mech.token?.name ?? mech.name ?? "角色";
 	if (!chk.ok) {
 		if (!globalThis.game?.user?.isGM) {
@@ -6025,9 +6235,12 @@ async function consumeReaction(actor, { kind = "generic", label = "反应", roun
 	const curCs = getCombatState(mech);
 	const inCombat = isActiveCombat();
 	const { roundKey, turnKey } = currentCombatStamp();
+	const sameRound = inCombat ? (!curCs.roundKey || curCs.roundKey === roundKey) : true;
 	const sameTurn = inCombat ? (!curCs.turnKey || curCs.turnKey === turnKey) : true;
 	const prevUsed = (inCombat && sameTurn) ? (Number(curCs.reactionsUsedTurn) || 0) : 0;
 	const prevRoundVal = roundFlag ? Boolean(curCs[roundFlag]) : undefined;
+	const prevExtraRoundVal = extraRoundFlag ? Boolean(curCs[extraRoundFlag]) : undefined;
+	const prevRoundCount = (roundCountKey && inCombat) ? (sameRound ? (Number(curCs[roundCountKey]) || 0) : 0) : undefined;
 	const prevPrepared = curCs.preparedAction ?? null;
 	const prevTrackerReaction = mech.system?.action_tracker ? mech.system.action_tracker.reaction : undefined;
 
@@ -6042,6 +6255,12 @@ async function consumeReaction(actor, { kind = "generic", label = "反应", roun
 	const enforceRoundOutsideCombat = roundFlag === "usedBlackWitchParry" || roundFlag === "usedVeteranLightningReflex";
 	if (roundFlag && !skipRoundLimit && (inCombat || enforceRoundOutsideCombat)) {
 		patch[roundFlag] = true;
+	}
+	if (extraRoundFlag && inCombat) {
+		patch[extraRoundFlag] = true;
+	}
+	if (roundCountKey && inCombat) {
+		patch[roundCountKey] = (prevRoundCount || 0) + 1;
 	}
 	if (kind === "triggerPrepared") {
 		patch.preparedAction = null;
@@ -6065,6 +6284,10 @@ async function consumeReaction(actor, { kind = "generic", label = "反应", roun
 			prevUsed,
 			roundFlag: (!skipRoundLimit && roundFlag) ? roundFlag : null,
 			prevRoundVal,
+			extraRoundFlag: (inCombat && extraRoundFlag) ? extraRoundFlag : null,
+			prevExtraRoundVal,
+			roundCountKey: (inCombat && roundCountKey) ? roundCountKey : null,
+			prevRoundCount,
 			hadPrepared: kind === "triggerPrepared" ? prevPrepared : undefined,
 			prevTrackerReaction,
 		},
@@ -6077,6 +6300,8 @@ async function refundReaction(actor, snapshot) {
 	const patch = {};
 	if (snapshot.inCombat) patch.reactionsUsedTurn = snapshot.prevUsed;
 	if (snapshot.roundFlag && snapshot.prevRoundVal !== undefined) patch[snapshot.roundFlag] = snapshot.prevRoundVal;
+	if (snapshot.extraRoundFlag && snapshot.prevExtraRoundVal !== undefined) patch[snapshot.extraRoundFlag] = snapshot.prevExtraRoundVal;
+	if (snapshot.roundCountKey && snapshot.prevRoundCount !== undefined) patch[snapshot.roundCountKey] = snapshot.prevRoundCount;
 	if (snapshot.hadPrepared !== undefined) patch.preparedAction = snapshot.hadPrepared;
 	if (Object.keys(patch).length) await patchCombatStateCompat(mech, patch);
 	if (snapshot.prevTrackerReaction === true && mech.system?.action_tracker) {
@@ -6119,7 +6344,15 @@ function overwatchThreatVal(item, actor = null) {
 		}
 	}
 	let threat = best > 0 ? best : 1; // 核心规则书 v3.5：除非另有说明，所有武器默认具有威胁 1
-	if (mech && mechFrameLid(mech) === "mf_tokugawa" && mech.statuses?.has?.("exposed")) threat += 1;
+	if (mech && mechFrameLid(mech) === "mf_tokugawa") {
+		const isExp = Boolean(mech.statuses?.has?.("exposed"));
+		if (isExp) threat += 1;
+		const profDmgTypes = (prof?.damage ?? []).map(d => d?.type);
+		const printedEnergy = profDmgTypes.includes("Energy");
+		if (isCoreActiveOn(mech, "mf_tokugawa") && (printedEnergy || isExp) && (!hasAllRange || !printedEnergy)) {
+			threat += 2;
+		}
+	}
 	if (mech && mechFrameLid(mech) === "mf_ext_red_admiral" && item.system?.size === "Main" && isMeleeWeaponItem(item)) threat += 1;
 	if (!hasAllRange && mech && isMeleeWeaponItem(item) && itemBenefitsFromCoreBonuses(item) && hasCoreBonus(mech, "cb_gyges_frame")) {
 		threat += 1;
@@ -6589,18 +6822,36 @@ const EFFICIENT_FRAME_LIDS = new Set([
 	"mf_ext_kanggeduo",
 ]);
 
+const FRAME_LID_ALIASES = {
+	mf_ch_tizona: "mf_kkca_tizona",
+	mf_ch_wodeng: "mf_ext_wodeng",
+	mf_ext_retiarius: "mf_ch_retiarius",
+	mf_ext_taraxacum: "mf_lancaster_alt_taraxacum",
+	mf_taraxacum: "mf_lancaster_alt_taraxacum",
+	mf_ext_white_witch: "mf_white_witch",
+	mf_ext_calendula: "mf_minotaur_alt_wraith",
+	mf_ext_swallowtail_ranger: "mf_swallowtail_alt_swallowtail_ranger_variant",
+	mf_swallowtail_alt: "mf_swallowtail_alt_swallowtail_ranger_variant",
+	mf_ext_orchidea: "mf_black_witch_alt_orchidea",
+	mf_ext_enkidu: "mf_tokugawa_alt_enkidu",
+	mf_ext_empakaai: "mf_Empakaai_alt_blackbeard",
+	mf_ext_tagetes: "mf_sherman_alt_tagetes",
+	mf_ext_hecatoncheires: "mf_balor_alt_hecatoncheires",
+};
+
 function mechFrame(actor) {
 	if (!actor || (actor.type !== "mech" && !actor.is_mech?.())) return null;
 	return actor.system?.loadout?.frame?.value ?? (actor.items ?? []).find?.(i => i?.type === "frame") ?? null;
 }
 
 function mechFrameLid(actor) {
-	return String(mechFrame(actor)?.system?.lid ?? "");
+	const raw = String(mechFrame(actor)?.system?.lid ?? "");
+	return FRAME_LID_ALIASES[raw] ?? raw;
 }
 
 function isEfficientCore(actor) {
 	const frame = mechFrame(actor);
-	const lid = String(frame?.system?.lid ?? "");
+	const lid = mechFrameLid(actor);
 	if (EFFICIENT_FRAME_LIDS.has(lid)) return true;
 	const cs = frame?.system?.core_system;
 	if (!cs) return false;
@@ -7020,7 +7271,7 @@ const CP_PROFILES = {
 		label: "全频谱传感器爆发",
 		instant: true,
 		buttons: [
-			{ act: "placeBurst3", label: "📡 爆发3模板" },
+			{ act: "placeBurst4", label: "📡 爆发4模板" },
 			{ act: "lockTargets", label: "🎯 对锁定目标施加锁定" },
 		],
 	},
@@ -7077,7 +7328,7 @@ const CP_PROFILES = {
 		counter: { init: 0, max: 12, label: "铁磁反应装甲" },
 		buttons: [
 			{ act: "whiteWitchGain2", label: "🛡 受击叠甲 (+2 护甲 + 爆发1 1 AP动能)" },
-			{ act: "whiteWitchBurst", label: "💥 满层爆发（爆发2 · 敏捷豁免减半）" },
+			{ act: "whiteWitchBurst", label: "💥 满层爆裂（爆发2 · 1 AP动能 + 机体豁免固定/离散）" },
 		],
 	},
 	mf_emperor: {
@@ -7852,8 +8103,9 @@ async function executeCoreAction(actor, rawAction) {
 		if (curHeat <= 0) { ui?.notifications?.warn?.("当前热度为 0，催化导流器造成 0 点伤害。"); return false; }
 		return rollQuickCpDamage(actor, "催化导流器", [{ type: "Energy", val: String(curHeat) }], { ap: true });
 	}
-	if (act === "placeBurst3") {
-		await placeAoETemplate("Burst", 3, attackerToken(actor), { persistent: true });
+	if (act === "placeBurst4" || act === "placeBurst3") {
+		const rad = act === "placeBurst3" ? 3 : 4;
+		await placeAoETemplate("Burst", rad, attackerToken(actor), { persistent: true });
 		return true;
 	}
 	if (act === "lockTargets") {
@@ -7925,10 +8177,8 @@ async function executeCoreAction(actor, rawAction) {
 		return true;
 	}
 	if (act === "whiteWitchBurst") {
-		const cur = Number(cs.counterValue) || 0;
-		const dmg = Math.max(2, cur);
 		await syncWhiteWitchArmor(actor, 0);
-		await postCpEffectCard(actor, "超激活铁磁爆发", `<p>爆发 2 内的敌对角色必须通过敏捷豁免，否则受到 ${dmg} 点穿甲动能伤害并陷入固定，豁免成功则伤害减半。</p>`, { allowAutoScan: true });
+		await postCpEffectCard(actor, "超激活铁磁爆裂", `<p>你周围爆发 2 区域内的所有角色受到 1 点穿甲动能伤害，且必须通过机体豁免，否则伏卧，并陷入固定与离散状态直到其下一回合结束（铁磁反应式装甲已重置为 0）。</p>`, { allowAutoScan: true });
 		return true;
 	}
 	if (act === "emperorArc") {
@@ -8893,14 +9143,7 @@ async function onCreateChatMessage(message, _options, userId) {
 		const benefitsCb = itemBenefitsFromCoreBonuses(info.item);
 
 		if (attActor?.isOwner) {
-			await ensureCombatTurnState(attActor);
-			const stBefore = getCombatState(attActor);
-			if (stBefore.skirmisherSoftCover) {
-				await setActorStatus(preferredTargetUuid(attActor) ?? attActor.uuid, "cover_soft", false);
-				await setCombatState(attActor, { skirmisherSoftCover: false, attackedOrForcedSaveThisTurn: true });
-			} else {
-				await setCombatState(attActor, { attackedOrForcedSaveThisTurn: true });
-			}
+			await markHostileActionTaken(attActor, { isAttackOrSave: true });
 		}
 
 		const oleanderActive = Boolean(isCoreActiveOn(attActor, "mf_ext_oleander") && isHeavyRangedWeapon(info.item));
@@ -8952,6 +9195,10 @@ async function onCreateChatMessage(message, _options, userId) {
 				if (t.crit) {
 					for (const st of info.autoCritStatuses) if (!want.includes(st)) want.push(st);
 					if (oleanderActive && !want.includes("prone")) want.push("prone");
+					// 弹道臂盾（mw_pl_buckler）：仅在弹道板展开形态下造成会心一击时使目标伏卧
+					if (!info.isTech && wLid === "mw_pl_buckler" && getCombatState(attActor).bucklerExtended && !want.includes("prone")) {
+						want.push("prone");
+					}
 					// 百臂 II「暴露弱点」：巢房消耗锁定造成会心一击时施加离散
 					if (!info.isTech && benefitsTalent && usedLockOn && weaponHasType(info.item, "Nexus") && talentRank(attActor, "t_centimane") >= 2 && !want.includes("shredded")) {
 						want.push("shredded");
@@ -9038,13 +9285,40 @@ async function onCreateChatMessage(message, _options, userId) {
 			const curHeat = Number(attActor.system?.heat?.value) || 0;
 			if (curHeat > 0) await attActor.update?.({ "system.heat.value": Math.max(0, curHeat - 4) });
 		}
+		if (message?.getFlag?.(MODULE_ID, "overwatchAttack")) {
+			dmgModPatch.reactionAttack = true;
+		}
 		if (heavyGunnerReaction && attActor?.isOwner) {
 			dmgModPatch.halfAllTargets = true;
-			await setCombatState(attActor, { heavyGunnerReactionArmed: false });
+			dmgModPatch.reactionAttack = true;
+			const prevCf = Array.isArray(getCombatState(attActor).coveringFireTargets) ? getCombatState(attActor).coveringFireTargets : [];
+			const shotUuids = targets.map(t => t.uuid).filter(Boolean);
+			const nextCf = prevCf.filter(u => !shotUuids.some(su => sameActorRef(u, su)));
+			await setCombatState(attActor, { heavyGunnerReactionArmed: false, coveringFireTargets: nextCf });
+			for (const su of shotUuids) {
+				if (prevCf.some(u => sameActorRef(u, su))) await setActorStatus(su, "impaired", false);
+			}
 		}
 
-		// 科技攻击专属命中结算：圣武士碎片整理 +3 护盾、欧西里斯第 1~4 门递进、先见之训标记
+		// 科技攻击专属命中结算：圣武士碎片整理 +3 护盾、欧西里斯第 1~4 门递进、先见之训标记、骇客 II（骇./杀、抑制维生系统、干扰驾驶舱）
 		if (info.isTech && attActor?.isOwner) {
+			if (anyHit) {
+				const techTitle = String(info.title || "");
+				const isHackSlash = /骇\.?\s*[/／]\s*杀|Hack\.?\s*\/\s*Slash/i.test(techTitle);
+				const isDisableLife = /抑制维生|Disable Life Support/i.test(techTitle);
+				const isJamCockpit = /干扰驾驶舱|Jam Cockpit/i.test(techTitle);
+				if (isHackSlash || isDisableLife || isJamCockpit) {
+					for (const ht of targets.filter(t => t.hit || t.crit)) {
+						const tAct = resolveActor(ht.uuid);
+						const patch = {
+							...(isHackSlash ? { hackSlashLocked: true } : {}),
+							...(isDisableLife ? { disableLifeSupport: true } : {}),
+							...(isJamCockpit ? { jamCockpit: true } : {}),
+						};
+						await patchCombatStateCompat(tAct ?? ht.uuid, patch);
+					}
+				}
+			}
 			if (info.attack.invade && anyHit && hasMechSystem(attActor, "ms_ext_paladin_defrag")) {
 				const curOs = Number(attActor.system?.overshield?.value) || 0;
 				if (curOs < 3) await attActor.update?.({ "system.overshield.value": 3 });
@@ -9179,16 +9453,10 @@ async function onCreateChatMessage(message, _options, userId) {
 		const mech = combatMechOf(info.actor) ?? info.actor;
 		const mechUuid = preferredTargetUuid(mech) ?? info.actorUuid;
 		if (info.saves?.length && mech?.isOwner) {
-			await ensureCombatTurnState(mech);
-			if (getCombatState(mech).skirmisherSoftCover) {
-				await setActorStatus(mechUuid, "cover_soft", false);
-				await setCombatState(mech, { skirmisherSoftCover: false, attackedOrForcedSaveThisTurn: true });
-			} else {
-				await setCombatState(mech, { attackedOrForcedSaveThisTurn: true });
-			}
+			await markHostileActionTaken(mech, { isAttackOrSave: true });
 		}
-		if (autoApply && info.selfAutoStatuses.length && mechUuid) {
-			// 3. 非攻击系统 / 动作卡：自动施加明确的自身增益 / 抗性
+		if (autoApply && info.selfAutoStatuses.length && mechUuid && !isBlackThumbRigCard(info, mech)) {
+			// 3. 非攻击系统 / 动作卡：自动施加明确的自身增益 / 抗性（黑拇指 R3 可对邻接友军生效，由下方专属分支绑定至目标）
 			for (const st of info.selfAutoStatuses) {
 				const res = await setActorStatus(mechUuid, st, true);
 				if (res.changed) recordAdd(mechUuid, res.name, st);
@@ -9210,12 +9478,61 @@ async function onCreateChatMessage(message, _options, userId) {
 	if (records.length) await message.setFlag?.(MODULE_ID, "appliedStatuses", records);
 }
 
+async function markHostileActionTaken(actor, { isAttackOrSave = false } = {}) {
+	const mech = combatMechOf(actor) ?? actor;
+	if (!mech) return;
+	if (mech.isOwner) await ensureCombatTurnState(mech);
+	const stBefore = getCombatState(mech);
+	const mechUuid = preferredTargetUuid(mech) ?? mech.uuid;
+	const patch = { affectedHostileThisTurn: true };
+	if (isAttackOrSave) {
+		patch.attackedOrForcedSaveThisTurn = true;
+		if (stBefore.skirmisherSoftCover && mechUuid) {
+			await setActorStatus(mechUuid, "cover_soft", false);
+			patch.skirmisherSoftCover = false;
+		}
+	}
+	if ((stBefore.groundedInvisible || (mechFrameLid(mech) === "mf_swallowtail_alt_swallowtail_ranger_variant" && mech.statuses?.has?.("invisible") && !stBefore.ghostweaveCloak && !stBefore.duskWingCloak)) && mechUuid) {
+		await setActorStatus(mechUuid, "invisible", false);
+		patch.groundedInvisible = false;
+	}
+	await patchCombatStateCompat(mech, patch);
+}
+
+function isBlackThumbRigCard(info, mech) {
+	const actName = String(info?.actionData?.action?.name || info?.title || "").trim();
+	const itemLid = String(info?.item?.system?.lid ?? "");
+	const isBtItem = itemLid === "t_black_thumb" || itemLid === "t_ext_black_thumb" || itemLid === "t_ext_blackthumb";
+	if (!/扑灭|灭火|战场修复|战地维修|操控排气阀|调整排气口/.test(actName)) return false;
+	if (/自动灭火器/.test(actName) || itemLid === "cb_ch_extinguisher") return false;
+	return isBtItem || /^黑拇指[:：]/.test(actName) || talentRank(mech, "t_black_thumb") >= 2;
+}
+
+async function applyBlackThumbTargetUpdate(targetMech, targetUuid, mode) {
+	if (!targetMech && !targetUuid) return false;
+	if (targetMech?.isOwner) {
+		if (mode === "snuff") {
+			await targetMech.update?.({ "system.burn": 0 });
+		} else if (mode === "rig") {
+			const curOs = Number(targetMech.system?.overshield?.value) || 0;
+			if (curOs < 2) await targetMech.update?.({ "system.overshield.value": 2 });
+		} else if (mode === "vent") {
+			const curHeat = Number(targetMech.system?.heat?.value) || 0;
+			if (curHeat > 0) await targetMech.update?.({ "system.heat.value": Math.max(0, curHeat - 2) });
+		}
+		return true;
+	}
+	if (globalThis.game?.users?.activeGM && targetUuid) {
+		globalThis.game.socket?.emit(`module.${MODULE_ID}`, { action: "blackThumbRepair", uuid: targetUuid, mode });
+		return true;
+	}
+	return false;
+}
+
 async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply, recordAdd) {
 	const actName = String(info.actionData?.action?.name || info.title || "").trim();
 	const itemLid = String(info.item?.system?.lid ?? "");
-	const userTgs = Array.from(game.user?.targets ?? []);
-	const targetMech = (talentRank(mech, "t_black_thumb") >= 3 && userTgs[0]?.actor) ? userTgs[0].actor : mech;
-	const targetUuid = (talentRank(mech, "t_black_thumb") >= 3 && userTgs[0]) ? (userTgs[0].document?.uuid ?? userTgs[0].uuid) : mechUuid;
+	const userTgs = Array.from(globalThis.game?.user?.targets ?? []);
 
 	// 神枪手 I「稳定瞄准」：进入固定并激活步枪 +1 准度
 	if (itemLid === "t_crack_shot" || /稳定瞄准|保持稳定/.test(actName)) {
@@ -9226,32 +9543,77 @@ async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply
 		await setCombatState(mech, { steadyAim: true });
 		return;
 	}
-	// 黑拇指 II「扑灭 / 战场修复 / 操控排气阀」
-	if (/扑灭/.test(actName)) {
-		if (targetMech?.isOwner) await targetMech.update?.({ "system.burn": 0 });
-		if (autoApply && targetUuid) {
-			const res = await setActorStatus(targetUuid, "resistance_burn", true);
-			if (res.changed) recordAdd(targetUuid, res.name, "resistance_burn");
+	// 黑拇指 II & III「扑灭（灭火） / 战场修复（战地维修） / 操控排气阀（调整排气口）」
+	if (isBlackThumbRigCard(info, mech)) {
+		let targetMech = mech;
+		let targetUuid = mechUuid;
+		if (talentRank(mech, "t_black_thumb") >= 3 && userTgs.length > 0) {
+			const candTok = userTgs[0];
+			const candUuid = candTok?.document?.uuid ?? candTok?.uuid ?? null;
+			const candActor = candTok?.actor ?? (candUuid ? resolveActor(candUuid) : null);
+			if (!sameActorRef(candUuid ?? candActor, mech)) {
+				const selfTok = attackerToken(mech);
+				const selfDisp = selfTok?.document?.disposition ?? mech?.token?.disposition ?? 1;
+				const candDisp = candTok?.document?.disposition ?? candTok?.disposition ?? candActor?.token?.disposition;
+				if (candDisp !== undefined && candDisp !== selfDisp) {
+					globalThis.ui?.notifications?.warn?.("黑拇指 III 只能对自身或邻接的友方机甲执行维修动作（当前锁定了非友方目标）！");
+					return;
+				}
+				if (!candActor || (candActor.type !== "mech" && !candActor.is_mech?.())) {
+					globalThis.ui?.notifications?.warn?.("黑拇指只能对机甲目标执行维修动作！");
+					return;
+				}
+				if (selfTok && (candTok?.x !== undefined || candTok?.center || candTok?.document?.x !== undefined)) {
+					const maxReach = talentRank(mech, "t_house_guard") >= 1 ? 2 : 1;
+					const dist = tokenDistance(selfTok, candTok);
+					if (dist !== null && Number.isFinite(dist) && dist > maxReach) {
+						globalThis.ui?.notifications?.warn?.(`黑拇指 III 目标超出邻接范围（当前距离 ${dist} 格，上限 ${maxReach} 格）！`);
+						return;
+					}
+				}
+				targetMech = candActor;
+				targetUuid = candUuid ?? preferredTargetUuid(candActor) ?? candActor.uuid;
+			}
 		}
-		return;
-	}
-	if (/战场修复/.test(actName)) {
-		if (targetMech?.isOwner) {
-			const curOs = Number(targetMech.system?.overshield?.value) || 0;
-			if (curOs < 2) await targetMech.update?.({ "system.overshield.value": 2 });
+		if (/扑灭|灭火/.test(actName)) {
+			await applyBlackThumbTargetUpdate(targetMech, targetUuid, "snuff");
+			if (autoApply && targetUuid) {
+				const res = await setActorStatus(targetUuid, "resistance_burn", true);
+				if (res.changed) recordAdd(targetUuid, res.name, "resistance_burn");
+			}
+			return;
 		}
-		const cond = ["slow", "immobilized"].find(id => targetMech?.statuses?.has?.(id) && !(id === "immobilized" && (isGrappleImmobilized(targetUuid) || isCoreSustainedImmobilized(targetMech))));
-		if (cond && targetUuid) await setActorStatus(targetUuid, cond, false);
-		return;
-	}
-	if (/操控排气阀/.test(actName)) {
-		if (targetMech?.isOwner) {
-			const curHeat = Number(targetMech.system?.heat?.value) || 0;
-			if (curHeat > 0) await targetMech.update?.({ "system.heat.value": Math.max(0, curHeat - 2) });
+		if (/战场修复|战地维修/.test(actName)) {
+			await applyBlackThumbTargetUpdate(targetMech, targetUuid, "rig");
+			const rigConds = ["slow", "immobilized"].filter(id =>
+				targetMech?.statuses?.has?.(id)
+				&& !(id === "immobilized" && (isGrappleImmobilized(targetUuid) || isCoreSustainedImmobilized(targetMech) || getCombatState(targetMech).steadyAim)),
+			);
+			let chosenRig = rigConds[0] ?? null;
+			if (rigConds.length > 1) {
+				const picked = await promptConditionChoice(
+					"黑拇指 · 选择要清除的状况",
+					rigConds.map(id => ({ id, buttonLabel: ALL_STATUS_LABELS[id] ?? id })),
+				);
+				chosenRig = picked?.id ?? null;
+			}
+			if (chosenRig && targetUuid) await setActorStatus(targetUuid, chosenRig, false);
+			return;
 		}
-		const cond = ["impaired", "jammed"].find(id => targetMech?.statuses?.has?.(id));
-		if (cond && targetUuid) await setActorStatus(targetUuid, cond, false);
-		return;
+		if (/操控排气阀|调整排气口/.test(actName)) {
+			await applyBlackThumbTargetUpdate(targetMech, targetUuid, "vent");
+			const ventConds = ["impaired", "jammed"].filter(id => targetMech?.statuses?.has?.(id));
+			let chosenVent = ventConds[0] ?? null;
+			if (ventConds.length > 1) {
+				const picked = await promptConditionChoice(
+					"黑拇指 · 选择要清除的状况",
+					ventConds.map(id => ({ id, buttonLabel: ALL_STATUS_LABELS[id] ?? id })),
+				);
+				chosenVent = picked?.id ?? null;
+			}
+			if (chosenVent && targetUuid) await setActorStatus(targetUuid, chosenVent, false);
+			return;
+		}
 	}
 	// 决斗士 II「格挡 / 偏射 / 佯攻 / 绊脚」：自动消耗剑圣骰并赋予抗性
 	if (itemLid === "t_duelist" || /^(?:格挡|偏射|佯攻|绊脚)$/.test(actName)) {
@@ -9275,19 +9637,44 @@ async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply
 		}
 		return;
 	}
-	// 重炮手 I「掩护火力」与「掩护火力攻击」
+	// 重炮手 I & III「掩护火力」与「掩护火力攻击」
 	if (itemLid === "t_heavy_gunner" || /掩护火力/.test(actName)) {
 		if (/攻击/.test(actName)) {
 			await setCombatState(mech, { heavyGunnerReactionArmed: true });
-			ui?.notifications?.info?.("已进入「掩护火力反应攻击」状态：下一次重型远程武器攻击伤害自动减半（R2 命中自动施加固定）！");
-		} else if (autoApply && userTgs.length) {
+			ui?.notifications?.info?.("已进入「掩护火力反应攻击」状态：下一次重型远程武器攻击伤害自动减半并结束对该目标的掩护火力（R2 命中自动施加固定）！");
+		} else {
 			const maxT = talentRank(mech, "t_heavy_gunner") >= 3 ? 2 : 1;
-			for (const t of userTgs.slice(0, maxT)) {
-				const u = t.document?.uuid ?? t.uuid;
-				if (!u) continue;
-				const res = await setActorStatus(u, "impaired", true);
-				if (res.changed) recordAdd(u, res.name, "impaired");
+			const newUuids = userTgs.slice(0, maxT).map(t => t.document?.uuid ?? t.uuid).filter(Boolean);
+			const prevCf = Array.isArray(getCombatState(mech).coveringFireTargets) ? getCombatState(mech).coveringFireTargets : [];
+			for (const oldU of prevCf) {
+				if (!newUuids.some(nu => sameActorRef(oldU, nu))) await setActorStatus(oldU, "impaired", false);
 			}
+			if (autoApply && newUuids.length) {
+				for (const u of newUuids) {
+					const res = await setActorStatus(u, "impaired", true);
+					if (res.changed) recordAdd(u, res.name, "impaired");
+				}
+			}
+			await markHostileActionTaken(mech);
+			await setCombatState(mech, { coveringFireTargets: newUuids });
+		}
+		return;
+	}
+	// 弹道臂盾（mw_pl_buckler）：「伸缩弹道板 / 展开」切换缓慢、反应抗性与会心伏卧；「举盾」单次攻击抗性
+	if (itemLid === "mw_pl_buckler" || /弹道板|举盾/.test(actName)) {
+		if (/举盾/.test(actName)) {
+			await setCombatState(mech, { bucklerShieldActive: true });
+			globalThis.ui?.notifications?.info?.("弹道臂盾「举盾」已触发：对当次近战/远程攻击获得伤害抗性！");
+		} else {
+			const nextExt = !getCombatState(mech).bucklerExtended;
+			await setCombatState(mech, { bucklerExtended: nextExt });
+			if (autoApply && mechUuid) {
+				const res = await setActorStatus(mechUuid, "slow", nextExt);
+				if (nextExt && res.changed) recordAdd(mechUuid, res.name, "slow");
+			}
+			globalThis.ui?.notifications?.info?.(nextExt
+				? "弹道臂盾已展开：进入「缓慢」，对反应攻击获得抗性，且臂盾会心一击使目标伏卧。"
+				: "弹道臂盾已收起：已解除「缓慢」。");
 		}
 		return;
 	}
@@ -9302,7 +9689,8 @@ async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply
 		return;
 	}
 	// 潘克拉蒂 II「英勇冲锋」：对目标/邻接敌人施加缓慢
-	if (itemLid === "t_pankrati" && /英勇冲锋/.test(actName)) {
+	if ((itemLid === "t_pankrati" || itemLid === "t_ext_pankrati") && /英勇冲锋/.test(actName)) {
+		await markHostileActionTaken(mech);
 		if (autoApply) {
 			const selfTok = attackerToken(mech);
 			const myDisp = selfTok?.document?.disposition ?? 1;
@@ -9354,6 +9742,7 @@ async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply
 	}
 	// 演说家 I「巧言辞令」：对扫描目标施加受损
 	if ((itemLid === "mf_orator" || itemLid === "t_orator" || itemLid === "t_ext_orator") && /巧言辞令/.test(actName)) {
+		await markHostileActionTaken(mech);
 		if (autoApply && userTgs[0]) {
 			const u = userTgs[0].document?.uuid ?? userTgs[0].uuid;
 			const prevU = getCombatState(mech).oratorSilverTongueUuid;
@@ -9370,24 +9759,56 @@ async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply
 		await setCombatState(mech, { prospectorNoReactionTurn: true });
 		return;
 	}
-	// 人因故障（PEBCAC）：自动掷 1d6 副作用表
-	if (itemLid === "ms_pebcac" || /人因故障/.test(actName)) {
+	// 沃登 III「反火力套组」（ms_ext_wodeng_counterfire）：敌方攻击命中盟友时，消耗本轮守望次数作为反应，使攻击者获得锁定
+	if (itemLid === "ms_ext_wodeng_counterfire" || /反火力套组/.test(actName)) {
+		await ensureCombatTurnState(mech);
+		await setCombatState(mech, { usedOverwatchRound: true, usedWodengCounterfireRound: true, affectedHostileThisTurn: true });
+		if (autoApply && userTgs[0]) {
+			const u = userTgs[0].document?.uuid ?? userTgs[0].uuid;
+			if (u) {
+				const r = await setActorStatus(u, "lockon", true);
+				if (r.changed) recordAdd(u, r.name, "lockon");
+			}
+		}
+		return;
+	}
+	// 人因故障（PEBCAC）：不可用于受扰角色，自动掷 1d6 副作用表（排除已生成的副作用结果卡避免二次重掷）
+	if ((itemLid === "ms_pebcac" || itemLid === "ms_ext_human_error" || /人因故障|PEBCAC/i.test(actName)) && !/副作用\s*d6/i.test(actName)) {
+		const tUuid = userTgs[0] ? (userTgs[0].document?.uuid ?? userTgs[0].uuid) : mechUuid;
+		const tActor = userTgs[0]?.actor ?? (tUuid ? resolveActor(tUuid) : mech) ?? mech;
+		const targetJammed = Boolean(tActor?.statuses?.has?.("jammed") || tActor?.system?.statuses?.jammed);
+		if (targetJammed && !globalThis.game?.user?.isGM) {
+			globalThis.ui?.notifications?.warn?.("「人因故障（PEBCAC）」不能对处于「受扰（Jammed）」状况的角色使用！");
+			return;
+		}
 		const roll = await new Roll("1d6").evaluate();
 		const n = Number(roll.total) || 1;
+		let actualCooled = 0;
+		let ventRoll = 0;
+		if (n === 5) {
+			const ventRollObj = await new Roll("1d6").evaluate();
+			ventRoll = Math.max(1, Number(ventRollObj.total) || 1);
+			const curHeat = Math.max(0, Number(tActor?.system?.heat?.value) || 0);
+			actualCooled = Math.min(curHeat, ventRoll);
+			if (actualCooled > 0 && tUuid) {
+				await addHeatCompat(tUuid, -actualCooled, { external: false });
+			}
+		}
 		const tableDesc = {
 			1: "1：目标陷入<b>受扰</b>，直到其下一回合结束。",
-			2: "2：目标向 GM 决定的方向强制移动等同其速度的空间。",
+			2: "2：目标向 GM 决定的方向强制移动<b>至多</b>等同其速度的空间。",
 			3: "3：目标立即向最近的角色（不论敌我）移动最多 3 格并对其发起<b>权宜攻击</b>。",
 			4: "4：目标<b>伏卧</b>，并受到 <b>2 点动能伤害</b>。",
-			5: "5：目标立即排散 <b>1d6 热度</b>，并对所有邻接角色造成等量的能量伤害。",
+			5: actualCooled > 0
+				? `5：目标冷却 1d6（掷出 <b>${ventRoll}</b>，实际清除 <b>${actualCooled} 点热度</b>），并对所有邻接角色造成 <b>${actualCooled} 点能量伤害</b>（等于实际所清除的热度数值）。`
+				: `5：目标冷却 1d6（掷出 <b>${ventRoll}</b>），但当前热度为 <b>0</b>（实际清除 0 点热度，不对邻接角色造成能量伤害）。`,
 			6: "6：目标立即以自由动作执行一次<b>稳住阵脚</b>（自行选择效果）。",
 		}[n];
-		const tUuid = userTgs[0] ? (userTgs[0].document?.uuid ?? userTgs[0].uuid) : mechUuid;
 		if (autoApply && tUuid) {
 			if (n === 1) { const r = await setActorStatus(tUuid, "jammed", true); if (r.changed) recordAdd(tUuid, r.name, "jammed"); }
 			if (n === 4) { const r = await setActorStatus(tUuid, "prone", true); if (r.changed) recordAdd(tUuid, r.name, "prone"); }
 		}
-		await postCpEffectCard(mech, `人因故障 · 副作用 d6 = ${n}`, `<p>${tableDesc}</p>`, { allowAutoScan: n === 4 });
+		await postCpEffectCard(mech, `人因故障 · 副作用 d6 = ${n}`, `<p>${tableDesc}</p>`, { allowAutoScan: n === 4 || (n === 5 && actualCooled > 0) });
 	}
 }
 
@@ -9689,6 +10110,7 @@ async function executeJockeyEffect(jockeyMessage, effKey) {
 	}
 	const mechDoc = resolveDocSync(js.mechUuid);
 	const mechActor = mechDoc?.actor ?? resolveActor(js.mechUuid);
+	await markHostileActionTaken(pilotActor);
 	if (effKey === "distract") {
 		const added = [];
 		for (const st of ["impaired", "slow"]) {
@@ -9879,13 +10301,7 @@ async function executeCardSave(message, save) {
 	const cardInfo = message ? analyzeCard(message) : null;
 	const sourceMech = combatMechOf(cardInfo?.actor);
 	if (sourceMech) {
-		if (sourceMech.isOwner) await ensureCombatTurnState(sourceMech);
-		if (getCombatState(sourceMech).skirmisherSoftCover) {
-			await setActorStatus(preferredTargetUuid(sourceMech) ?? sourceMech.uuid, "cover_soft", false);
-			await patchCombatStateCompat(sourceMech, { skirmisherSoftCover: false, attackedOrForcedSaveThisTurn: true });
-		} else {
-			await patchCombatStateCompat(sourceMech, { attackedOrForcedSaveThisTurn: true });
-		}
+		await markHostileActionTaken(sourceMech, { isAttackOrSave: true });
 	}
 	const results = [];
 	const saveResultsPatch = { ...(message?.getFlag?.(MODULE_ID, "saveResults") ?? {}) };
@@ -9918,6 +10334,22 @@ async function executeCardSave(message, save) {
 		const passed = !stunnedAutoFail && total >= save.dc;
 		const appliedRecords = [];
 		const wantStatuses = [...(passed ? (save.passStatuses ?? []) : (save.failStatuses ?? []))];
+		let bansheeVineNote = "";
+		if (!passed && (save.bansheeVineCore || (cardInfo?.isCoreActivation && cardInfo?.frameLid === "mf_ext_banshee_vine"))) {
+			const tActor = t.actor;
+			const isDeployableTarget = tActor?.type === "deployable" || Boolean(tActor?.is_deployable?.());
+			const isUnpilotedMech = Boolean(
+				(tActor?.type === "mech" || tActor?.is_mech?.())
+				&& ((tActor?.system?.pilot && !tActor.system.pilot.value && !tActor.system.pilot.id) || tActor?.getFlag?.(MODULE_ID, "unpiloted") || tActor?.system?.unpiloted),
+			);
+			const cockpitJammed = Boolean(tActor && getCombatState(tActor).jamCockpit);
+			if (isDeployableTarget || isUnpilotedMech || cockpitJammed) {
+				if (!wantStatuses.includes("stunned")) wantStatuses.push("stunned");
+				bansheeVineNote = "无法离舱/无驾驶员：改为晕眩";
+			} else {
+				bansheeVineNote = "下回合必须下马并向树绳妖移动（若无法离舱或无驾驶员则改为晕眩）";
+			}
+		}
 		// 弗拉德「肢解」：豁免失败使其他角色陷入固定时，目标同时陷入离散
 		if (!passed && wantStatuses.includes("immobilized") && mechFrameLid(sourceMech) === "mf_vlad" && !sameActorRef(t.uuid, sourceMech) && !wantStatuses.includes("shredded")) {
 			wantStatuses.push("shredded");
@@ -9955,6 +10387,7 @@ async function executeCardSave(message, save) {
 		].filter(Boolean).join("，");
 		const failReasons = [
 			stunnedAutoFail ? "晕眩自动失败" : "",
+			bansheeVineNote,
 			...(save.failStatuses ?? []).map(id => ALL_STATUS_LABELS[id] ?? id),
 		].filter(Boolean).join("、");
 		const badge = passed
@@ -9985,6 +10418,9 @@ async function rollNonAttackDamage(message, info, overrideSpec = null) {
 		ui?.notifications?.error?.(`你不拥有 ${actor?.name ?? "发起者"}，不能为其掷伤害。`);
 		return false;
 	}
+	if (!parsed.selfTargetOnly) {
+		await markHostileActionTaken(actor);
+	}
 	const Cls = game.lancer?.flows?.get?.("DamageRollFlow");
 	if (!Cls) return false;
 	const saveMap = message?.getFlag?.(MODULE_ID, "saveResults") ?? {};
@@ -10014,7 +10450,7 @@ async function rollNonAttackDamage(message, info, overrideSpec = null) {
 		} else {
 			for (const r of Object.values(saveMap)) {
 				if (r.noDamageOnSuccess) continue;
-				if (r.passed && !r.halfOnSuccess) continue;
+				if (r.passed && !r.halfOnSuccess && !parsed.unconditionalDamage) continue;
 				const doc = resolveDocSync(r.uuid);
 				const tokObj = doc?.object ?? (doc?.actor ? attackerToken(doc.actor) : null);
 				if (tokObj) hit_results.push({ target: tokObj, total: 20, usedLockOn: false, hit: true, crit: false });
@@ -10068,21 +10504,78 @@ function findOwnedAnalystMech() {
 	return null;
 }
 
-async function executeFieldAnalystReaction(message, info, mode) {
+async function executeFieldAnalystReaction(message, info, mode, opts = {}) {
 	const analystMech = findOwnedAnalystMech();
-	if (!analystMech) return ui?.notifications?.warn?.("未找到你拥有的「战场分析师」机甲。");
+	if (!analystMech) return globalThis.ui?.notifications?.warn?.("未找到你拥有的「战场分析师」机甲。");
 	const rank = talentRank(analystMech, "t_field_analyst");
-	if (mode === "sub" && rank < 3) return ui?.notifications?.warn?.("削减敌方攻击掷骰需要「战场分析师」3 级（激活干扰）。");
-	if (message?.getFlag?.(MODULE_ID, "analystUsed")) return ui?.notifications?.warn?.("本次攻击掷骰已经受过一次「优越情报」影响。");
-	const atk = message?.getFlag?.("lancer", "attackData") ?? message?.flags?.lancer?.attackData;
-	if (!atk?.targets?.length) return ui?.notifications?.warn?.("该攻击卡没有可调整的目标掷骰记录。");
-	const rGate = await consumeReaction(analystMech, { kind: "fieldAnalyst", label: mode === "sub" ? "激活干扰" : "优越情报" });
-	if (!rGate.ok) return false;
-	const dieVal = rank >= 2 ? (getTalentDie(analystMech, "analyst") ?? 1) : 1;
-	const delta = mode === "sub" ? -dieVal : dieVal;
+	const [rawDir, rawSubMode] = String(mode || "add").split(":");
+	const dir = rawDir === "sub" ? "sub" : "add";
+	if (dir === "sub" && rank < 3) return globalThis.ui?.notifications?.warn?.("削减敌方攻击掷骰需要「战场分析师」3 级（激活干扰）。");
 
+	const atk = message?.getFlag?.("lancer", "attackData") ?? message?.flags?.lancer?.attackData;
+	if (!atk?.targets?.length) return globalThis.ui?.notifications?.warn?.("该攻击卡没有可调整的目标掷骰记录。");
+
+	const prevAnalyst = getObjectFlag(message, "analystUsed");
+	const usedIndices = Array.isArray(prevAnalyst.usedIndices)
+		? [...prevAnalyst.usedIndices]
+		: (prevAnalyst.by ? [0] : []);
+	const availIndices = atk.targets.map((_t, idx) => idx).filter(idx => !usedIndices.includes(idx));
+	if (!availIndices.length) {
+		return globalThis.ui?.notifications?.warn?.("本次攻击掷骰已经受过一次「优越情报」影响。");
+	}
+
+	let targetIdx = availIndices[0];
+	if (opts?.targetIndex !== undefined && Number.isFinite(Number(opts.targetIndex))) {
+		const reqIdx = Number(opts.targetIndex);
+		if (usedIndices.includes(reqIdx)) {
+			return globalThis.ui?.notifications?.warn?.("该目标的本次攻击掷骰已经受过一次「优越情报」影响。");
+		}
+		if (reqIdx < 0 || reqIdx >= atk.targets.length) {
+			return globalThis.ui?.notifications?.warn?.("指定的攻击目标下标无效。");
+		}
+		targetIdx = reqIdx;
+	} else if (availIndices.length > 1) {
+		const targetChoices = availIndices.map(idx => {
+			const t = atk.targets[idx];
+			const tDoc = resolveDocSync(t.uuid);
+			const tAct = tDoc?.actor ?? resolveActor(t.uuid);
+			const tName = tDoc?.name ?? tAct?.token?.name ?? tAct?.name ?? `目标 #${idx + 1}`;
+			const curState = t.crit ? "会心" : (t.hit ? "命中" : "未命中");
+			return { idx, buttonLabel: `${tName}（当前 ${t.total} · ${curState}）` };
+		});
+		const pickedTarget = await promptConditionChoice("优越情报 · 选择要调整的攻击目标", targetChoices, "请选择要调整本次攻击掷骰的目标：");
+		if (!pickedTarget) return false;
+		targetIdx = pickedTarget.idx;
+	}
+
+	const dieVal = rank >= 2 ? (getTalentDie(analystMech, "analyst") ?? 1) : 1;
+	let useBaseOnly = rawSubMode === "base" ? true : (rawSubMode === "die" ? false : undefined);
+	if (opts?.useBaseOnly !== undefined) useBaseOnly = Boolean(opts.useBaseOnly);
+	if (useBaseOnly === undefined && rank >= 2 && dieVal > 1) {
+		const sign = dir === "sub" ? "-" : "+";
+		const dieChoices = [
+			{ useBaseOnly: false, buttonLabel: `消耗情报骰 (${sign}${dieVal}，重置为 1)` },
+			{ useBaseOnly: true, buttonLabel: `保留情报骰 (${sign}1)` },
+		];
+		const pickedDie = await promptConditionChoice("战场分析师 · 选择情报骰使用方式", dieChoices, "你可以消耗当前情报骰并重置为 1，或仅使用基础 ±1 而不消耗情报骰：");
+		if (!pickedDie) return false;
+		useBaseOnly = Boolean(pickedDie.useBaseOnly);
+	}
+	const spendDie = rank >= 2 && !useBaseOnly;
+	const effVal = spendDie ? dieVal : 1;
+
+	const rGate = await consumeReaction(analystMech, {
+		kind: "fieldAnalyst",
+		label: dir === "sub" ? "激活干扰" : "优越情报",
+		roundCountKey: "fieldAnalystUsedRound",
+		roundMax: 2,
+	});
+	if (!rGate.ok) return false;
+	if (dir === "sub") await markHostileActionTaken(analystMech);
+
+	const delta = dir === "sub" ? -effVal : effVal;
 	const updatedTargets = atk.targets.map((t, idx) => {
-		if (idx > 0) return t;
+		if (idx !== targetIdx) return t;
 		const oldTotal = Number(t.total) || 0;
 		const nextTotal = oldTotal + delta;
 		const defActor = resolveActor(t.uuid);
@@ -10093,20 +10586,33 @@ async function executeFieldAnalystReaction(message, info, mode) {
 		const crit = hit && nextTotal >= 20 && !info?.isTech;
 		return { ...t, total: nextTotal, hit, crit };
 	});
-	const t0 = updatedTargets[0];
-	if (rank >= 2) await setTalentDie(analystMech, "analyst", 1);
+	const adjusted = updatedTargets[targetIdx];
+	if (spendDie) await setTalentDie(analystMech, "analyst", 1);
+	const nextUsedIndices = [...usedIndices, targetIdx];
+	const nextHistory = [
+		...(Array.isArray(prevAnalyst.history) ? prevAnalyst.history : []),
+		{ targetIndex: targetIdx, delta, newTotal: adjusted.total, hit: adjusted.hit, crit: adjusted.crit, spentDie: spendDie },
+	];
 	await updateAttackMessageTargetsCompat(message, atk, updatedTargets, "analystUsed", {
 		delta,
 		by: analystMech.name,
-		newTotal: t0.total,
-		hit: t0.hit,
-		crit: t0.crit,
+		targetIndex: targetIdx,
+		newTotal: adjusted.total,
+		hit: adjusted.hit,
+		crit: adjusted.crit,
+		usedIndices: nextUsedIndices,
+		history: nextHistory,
 	});
+	const actionTitle = dir === "sub" ? "激活干扰" : "优越情报";
+	const dieNote = rank >= 2
+		? (spendDie ? "；情报骰已重置为 1" : `；保留情报骰（当前 ${dieVal}）`)
+		: "";
 	await postCpEffectCard(
 		analystMech,
-		"战场分析师 · 优越情报",
-		`<p><b>${escHtml(analystMech.name)}</b> 发动反应<b>优越情报</b>：攻击骰修正 <b>${delta > 0 ? `+${delta}` : delta}</b> → 新结果 <b>${t0.total}</b>（${t0.crit ? "<b>会心一击！</b>" : t0.hit ? "<b>命中！</b>" : "<b>未命中</b>"}）${rank >= 2 ? "；情报骰已重置为 1" : ""}。</p>`,
+		`战场分析师 · ${actionTitle}`,
+		`<p><b>${escHtml(analystMech.name)}</b> 发动反应<b>${actionTitle}</b>：攻击骰修正 <b>${delta > 0 ? `+${delta}` : delta}</b> → 新结果 <b>${adjusted.total}</b>（${adjusted.crit ? "<b>会心一击！</b>" : adjusted.hit ? "<b>命中！</b>" : "<b>未命中</b>"}）${dieNote}。</p>`,
 	);
+	return true;
 }
 
 function findDefenderReactionActor(attackTargets, riderKind, { requireOwned = false } = {}) {
@@ -10323,6 +10829,11 @@ async function executeCardRider(message, info, riderKind) {
 		}
 		await setCombatState(mech, { usedPesilatMuscle: true });
 		await rollNonAttackDamage(message, info, { title: "佩西拉特 · 肌肉示踪触觉", damage: [{ type: "Kinetic", val: "1d6" }], ap: false });
+		return;
+	}
+	if (riderKind === "tachyonBackblast") {
+		if (!mech?.isOwner) return;
+		await rollNonAttackDamage(message, info, { title: "迅子长枪 · 等离子后焰", damage: [{ type: "Burn", val: "4" }, { type: "Heat", val: "2" }], ap: false });
 	}
 }
 
@@ -10421,19 +10932,36 @@ function buildCardAutomationHTML(message, info) {
 		}
 	}
 
-	// 3c. 战场分析师「优越情报」反应按钮（拥有该天赋的玩家在任意攻击卡上可见）
+	// 3c. 战场分析师「优越情报」反应按钮（拥有该天赋的玩家在任意攻击卡上可见；支持多目标独立修正与 R2 保骰 ±1）
 	if (info?.isAttack && info.attack?.targets?.length) {
 		const analystUsed = getObjectFlag(message, "analystUsed");
+		const usedIndices = Array.isArray(analystUsed.usedIndices)
+			? analystUsed.usedIndices
+			: (analystUsed.by ? [0] : []);
 		if (analystUsed.by) {
-			parts.push(`<span style="padding:0 4px;border-radius:3px;background:#e3f2fd;color:#0d47a1">优越情报(${analystUsed.delta > 0 ? `+${analystUsed.delta}` : analystUsed.delta})→${analystUsed.newTotal}</span>`);
-		} else {
+			const hist = Array.isArray(analystUsed.history) && analystUsed.history.length
+				? analystUsed.history
+				: [{ delta: analystUsed.delta, newTotal: analystUsed.newTotal }];
+			const summary = hist.map(h => `${h.delta > 0 ? `+${h.delta}` : h.delta}→${h.newTotal}`).join(" / ");
+			parts.push(`<span style="padding:0 4px;border-radius:3px;background:#e3f2fd;color:#0d47a1">优越情报(${summary})</span>`);
+		}
+		if (usedIndices.length < info.attack.targets.length) {
 			const analystMech = findOwnedAnalystMech();
 			if (analystMech) {
 				const r = talentRank(analystMech, "t_field_analyst");
 				const v = r >= 2 ? (getTalentDie(analystMech, "analyst") ?? 1) : 1;
-				parts.push(`<button type="button" data-lancer-cn-analyst="add" style="${BTN_INLINE_STYLE}" title="消耗反应将盟友本次攻击掷骰 +${v}">📡 优越情报 +${v}</button>`);
-				if (r >= 3) {
-					parts.push(`<button type="button" data-lancer-cn-analyst="sub" style="${BTN_INLINE_STYLE}" title="消耗反应将敌方本次攻击掷骰 -${v}">📡 激活干扰 -${v}</button>`);
+				if (r >= 2 && v > 1) {
+					parts.push(`<button type="button" data-lancer-cn-analyst="add:die" style="${BTN_INLINE_STYLE}" title="消耗反应与当前情报骰将盟友本次攻击掷骰 +${v}（情报骰重置为 1；每轮至多 2 次）">📡 优越情报 +${v}</button>`);
+					parts.push(`<button type="button" data-lancer-cn-analyst="add:base" style="${BTN_INLINE_STYLE}" title="消耗反应仅将盟友本次攻击掷骰 +1，保留当前情报骰不消耗（每轮至多 2 次）">📡 优越情报 +1(保骰)</button>`);
+					if (r >= 3) {
+						parts.push(`<button type="button" data-lancer-cn-analyst="sub:die" style="${BTN_INLINE_STYLE}" title="消耗反应与当前情报骰将敌方本次攻击掷骰 -${v}（情报骰重置为 1；每轮至多 2 次）">📡 激活干扰 -${v}</button>`);
+						parts.push(`<button type="button" data-lancer-cn-analyst="sub:base" style="${BTN_INLINE_STYLE}" title="消耗反应仅将敌方本次攻击掷骰 -1，保留当前情报骰不消耗（每轮至多 2 次）">📡 激活干扰 -1(保骰)</button>`);
+					}
+				} else {
+					parts.push(`<button type="button" data-lancer-cn-analyst="add" style="${BTN_INLINE_STYLE}" title="消耗反应将盟友本次攻击掷骰 +${v}（每轮至多 2 次）">📡 优越情报 +${v}</button>`);
+					if (r >= 3) {
+						parts.push(`<button type="button" data-lancer-cn-analyst="sub" style="${BTN_INLINE_STYLE}" title="消耗反应将敌方本次攻击掷骰 -${v}（每轮至多 2 次）">📡 激活干扰 -${v}</button>`);
+					}
 				}
 			}
 		}
@@ -11427,10 +11955,11 @@ async function onUpdateActorStatus(actor, changes, _options, userId) {
 		const hpVal = Number(actor.system?.hp?.value) ?? 1;
 		const maxStruct = Number(actor.system?.structure?.max) || 0;
 		const structVal = Number(actor.system?.structure?.value) || 0;
+		const isBriareosMech = actor.type === "mech" && hasCoreBonus(actor, "cb_briareos_frame");
 		const isZeroStructUnit = actor.type === "pilot" || actor.type === "deployable"
-			|| ((actor.type === "npc" || actor.type === "mech") && (maxStruct <= 0 || structVal <= 0));
+			|| ((actor.type === "npc" || actor.type === "mech") && !isBriareosMech && (maxStruct <= 0 || structVal <= 0));
 		const canReviveFromHp = actor.type === "pilot" || actor.type === "deployable"
-			|| ((actor.type === "npc" || actor.type === "mech") && (maxStruct <= 0 || structVal > 0));
+			|| ((actor.type === "npc" || actor.type === "mech") && (maxStruct <= 0 || structVal > 0 || isBriareosMech));
 		if (isZeroStructUnit && hpVal <= 0 && !actor.statuses?.has?.("downandout")) {
 			await actor.toggleStatusEffect("downandout", { active: true });
 		} else if (canReviveFromHp && hpVal > 0 && actor.statuses?.has?.("downandout")) {
@@ -11526,6 +12055,9 @@ async function onUpdateCombatTurnEnd(combat, changed, options) {
 					usedBlackWitchParry: false,
 					usedOverwatchRound: false,
 					usedBraceRound: false,
+					usedOratorRound: false,
+					usedWodengCounterfireRound: false,
+					fieldAnalystUsedRound: 0,
 					amberPrecog: mechFrameLid(m) === "mf_amber_phantom",
 				});
 			} else if (m.type === "npc" || m.is_npc?.()) {
@@ -11590,10 +12122,17 @@ async function onUpdateCombatTurnEnd(combat, changed, options) {
 				const keepTametomo = mechFrameLid(curActor) === "mf_ext_tametomo" && (Number(curActor.system?.burn) || 0) > 0;
 				if (!keepTametomo) await setActorStatus(curUuid, "cover_soft", false);
 			}
+			if (Array.isArray(curCs.coveringFireTargets) && curCs.coveringFireTargets.length) {
+				if (getSetting("autoApplyStatus", true)) {
+					for (const cfU of curCs.coveringFireTargets) await setActorStatus(cfU, "impaired", false);
+				}
+			}
 			const startPatch = {
 				startedTurnHidden: Boolean(curActor.statuses?.has?.("hidden")),
 				usedInfiltratorAmbush: false,
+				coveringFireTargets: [],
 				attackedOrForcedSaveThisTurn: false,
+				affectedHostileThisTurn: false,
 				usedFirstMainMelee: false,
 				usedFirstAuxRanged: false,
 				usedNuCavBonus: false,
@@ -11726,11 +12265,17 @@ async function onUpdateCombatTurnEnd(combat, changed, options) {
 			if (talentRank(actor, "mf_orator") >= 2) {
 				await setTalentDie(actor, "orator", Math.min(3, (getTalentDie(actor, "orator") ?? 1) + 1));
 			}
+		}
+		if (!prevCs.attackedOrForcedSaveThisTurn && !prevCs.affectedHostileThisTurn) {
 			if (talentRank(actor, "t_field_analyst") >= 2) {
 				await setTalentDie(actor, "analyst", Math.min(6, (getTalentDie(actor, "analyst") ?? 1) + 2));
 			}
 		}
 		const endPatch = {};
+		if (fLid === "mf_swallowtail_alt_swallowtail_ranger_variant" && actor.statuses?.has?.("cover_soft") && getSetting("autoApplyStatus", true)) {
+			if (!actor.statuses?.has?.("invisible")) await setActorStatus(prevUuid, "invisible", true);
+			endPatch.groundedInvisible = true;
+		}
 		if (prevCs.transcendActive) {
 			const left = Number(prevCs.transcendTurnsLeft) || 0;
 			if (left > 0) endPatch.transcendTurnsLeft = left - 1;
@@ -12049,6 +12594,9 @@ function applyDamageModToState(state) {
 		if (Array.isArray(state.data.tags) && !state.data.tags.some(tg => tg?.lid === "tg_overkill" || tg?.is_overkill)) {
 			state.data.tags = [...state.data.tags, { lid: "tg_overkill", is_overkill: true }];
 		}
+	}
+	if (mod.reactionAttack) {
+		state.data.lancerCnReactionAttack = true;
 	}
 	if (mod.halfAllTargets) {
 		state.data.half_damage = true;
@@ -12480,6 +13028,21 @@ function zeroGruntChaffTargets(state) {
 	}
 }
 
+function techActionBlockReason(actor) {
+	if (!actor) return "";
+	const mech = combatMechOf(actor) ?? actor;
+	if (mech?.statuses?.has?.("jammed") || mech?.system?.statuses?.jammed) return "处于「受扰」状态";
+	if (getCombatState(mech).hackSlashLocked) return "处于骇客「骇./杀」封锁状态（需关机或通过系统检定重启核心电脑）";
+	return "";
+}
+
+function isModularRifleReactionProfile(item) {
+	if (weaponLidOf(item) !== "mw_pl_modular_rifle") return false;
+	if (Number(item?.system?.selected_profile_index) === 2) return true;
+	const prof = weaponProfileOf(item);
+	return /突击|Commando/i.test(String(prof?.name ?? "")) || /反应[^。]*\+\s*1\s*准度/i.test(String(prof?.effect ?? ""));
+}
+
 function patchLancerFlows() {
 	patchWeaponRangeTemplate();
 	const steps = game.lancer?.flowSteps;
@@ -12510,15 +13073,65 @@ function patchLancerFlows() {
 			previewAct = p.split(".").reduce((acc, k) => (acc == null ? undefined : acc[k]), state.item);
 		}
 		let reactionSnap = null;
-		if (previewAct && /^reaction$/i.test(String(previewAct.activation ?? "")) && state?.actor) {
+		if (previewAct && state?.actor) {
+			const actType = String(previewAct.activation ?? "");
+			const iLid = String(state.item?.system?.lid ?? "");
 			const actLabel = String(options?.title || state?.data?.title || previewAct.name || state?.item?.name || "反应");
-			const freqStr = String(previewAct.frequency ?? "").trim();
-			const roundFlag = /^1\s*\/\s*round$|^每轮\s*1\s*次$|^1\s*\/\s*轮$/i.test(freqStr)
-				? `usedActRound_${String(previewAct.lid || state?.item?.system?.lid || previewAct.name || "act").replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, "_")}`
-				: null;
-			const rGate = await consumeReaction(state.actor, { kind: "sheetAction", label: actLabel, roundFlag });
-			if (!rGate.ok) return false;
-			reactionSnap = { actor: state.actor, snapshot: rGate.snapshot };
+			if (iLid === "ms_pebcac" || iLid === "ms_ext_human_error" || /人因故障|PEBCAC/i.test(actLabel)) {
+				const uTgs = Array.from(globalThis.game?.user?.targets ?? []);
+				const tAct = uTgs[0]?.actor ?? (uTgs[0] ? resolveActor(uTgs[0].document?.uuid ?? uTgs[0].uuid) : state.actor) ?? state.actor;
+				if (tAct?.statuses?.has?.("jammed") || tAct?.system?.statuses?.jammed) {
+					if (globalThis.game?.user?.isGM) {
+						globalThis.ui?.notifications?.info?.("主持人越权：对处于受扰状况的角色使用「人因故障」。");
+					} else {
+						globalThis.ui?.notifications?.warn?.("「人因故障（PEBCAC）」不能对处于「受扰（Jammed）」状况的角色使用！");
+						return false;
+					}
+				}
+			}
+			if (/^(?:quick\s*tech|full\s*tech|invade)$/i.test(actType) || previewAct.tech_attack) {
+				const tBlk = techActionBlockReason(state.actor);
+				if (tBlk) {
+					if (globalThis.game?.user?.isGM) {
+						globalThis.ui?.notifications?.info?.(`主持人越权：忽略「${tBlk}」继续执行科技动作。`);
+					} else {
+						globalThis.ui?.notifications?.warn?.(`${state.actor.name ?? "角色"}${tBlk}，无法进行科技动作！`);
+						return false;
+					}
+				}
+			}
+			if (/^reaction$/i.test(actType)) {
+				// 领袖 II「公开频道」（下达命令）：反应发领导骰仅限在其他玩家（PC）的回合开始时触发，不包含自身或敌方 NPC 回合
+				if ((iLid === "t_leader" || /下达命令|公开频道|Open Channels/i.test(String(previewAct.name ?? ""))) && globalThis.game?.combat?.started) {
+					const curCombAct = globalThis.game.combat.combatant?.actor;
+					const selfMech = combatMechOf(state.actor) ?? state.actor;
+					const isOtherPcTurn = Boolean(
+						curCombAct
+						&& !sameActorRef(curCombAct, selfMech)
+						&& !sameActorRef(curCombAct, state.actor)
+						&& !(curCombAct.type === "npc" && !curCombAct.hasPlayerOwner),
+					);
+					if (!isOtherPcTurn) {
+						if (globalThis.game?.user?.isGM) {
+							globalThis.ui?.notifications?.info?.("主持人越权：在非其他玩家回合触发领袖 II「公开频道」。");
+						} else {
+							globalThis.ui?.notifications?.warn?.("领袖 II「公开频道」仅限在其他玩家的回合开始时触发（不能在自身或敌方 NPC 回合触发）！");
+							return false;
+						}
+					}
+				}
+				const isWodengCounterfire = iLid === "ms_ext_wodeng_counterfire" || /反火力套组/.test(actLabel);
+				const freqStr = String(previewAct.frequency ?? "").trim();
+				const roundFlag = isWodengCounterfire
+					? "usedOverwatchRound"
+					: (/^1\s*\/\s*round$|^每轮\s*1\s*次$|^1\s*\/\s*轮$/i.test(freqStr)
+						? `usedActRound_${String(previewAct.lid || state?.item?.system?.lid || previewAct.name || "act").replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, "_")}`
+						: null);
+				const extraRoundFlag = isWodengCounterfire ? "usedWodengCounterfireRound" : null;
+				const rGate = await consumeReaction(state.actor, { kind: "sheetAction", label: actLabel, roundFlag, extraRoundFlag });
+				if (!rGate.ok) return false;
+				reactionSnap = { actor: state.actor, snapshot: rGate.snapshot };
+			}
 		}
 		const ok = await orig(state, options);
 		if (reactionSnap) {
@@ -12535,14 +13148,32 @@ function patchLancerFlows() {
 		let reactionSnap = null;
 		const item = state?.item;
 		if (item && state?.actor) {
+			const iLid = String(item.system?.lid ?? "");
+			const sysLabel = String(state?.data?.title || item.name || "反应");
+			if (iLid === "ms_pebcac" || iLid === "ms_ext_human_error" || /人因故障|PEBCAC/i.test(sysLabel)) {
+				const uTgs = Array.from(globalThis.game?.user?.targets ?? []);
+				const tAct = uTgs[0]?.actor ?? (uTgs[0] ? resolveActor(uTgs[0].document?.uuid ?? uTgs[0].uuid) : state.actor) ?? state.actor;
+				if (tAct?.statuses?.has?.("jammed") || tAct?.system?.statuses?.jammed) {
+					if (globalThis.game?.user?.isGM) {
+						globalThis.ui?.notifications?.info?.("主持人越权：对处于受扰状况的角色使用「人因故障」。");
+					} else {
+						globalThis.ui?.notifications?.warn?.("「人因故障（PEBCAC）」不能对处于「受扰（Jammed）」状况的角色使用！");
+						return false;
+					}
+				}
+			}
+			const isWodengCounterfire = iLid === "ms_ext_wodeng_counterfire" || /反火力套组/.test(sysLabel);
 			const tags = weaponAllTagsOf(item);
-			const isReactionItem = item.system?.type === "Reaction" || tags.some(t => t?.lid === "tg_reaction" || t?.id === "tg_reaction");
+			const isReactionItem = isWodengCounterfire || item.system?.type === "Reaction" || tags.some(t => t?.lid === "tg_reaction" || t?.id === "tg_reaction");
 			if (isReactionItem) {
 				const roundTag = tags.find(t => (t?.lid === "tg_round" || t?.id === "tg_round") && (parseInt(t.val, 10) || 1) === 1);
-				const roundFlag = roundTag
-					? `usedActRound_${String(item.system?.lid || item.name || "sys").replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, "_")}`
-					: null;
-				const rGate = await consumeReaction(state.actor, { kind: "systemReaction", label: String(state?.data?.title || item.name || "反应"), roundFlag });
+				const roundFlag = isWodengCounterfire
+					? "usedOverwatchRound"
+					: (roundTag
+						? `usedActRound_${String(item.system?.lid || item.name || "sys").replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, "_")}`
+						: null);
+				const extraRoundFlag = isWodengCounterfire ? "usedWodengCounterfireRound" : null;
+				const rGate = await consumeReaction(state.actor, { kind: "systemReaction", label: sysLabel, roundFlag, extraRoundFlag });
 				if (!rGate.ok) return false;
 				reactionSnap = { actor: state.actor, snapshot: rGate.snapshot };
 			}
@@ -12681,11 +13312,37 @@ function patchLancerFlows() {
 			const firstTadUuid = firstTadTok?.document?.uuid ?? firstTadTok?.uuid ?? tadUuidOf(tads[0]);
 			const firstTadActor = firstTadTok?.actor ?? resolveActor(firstTadUuid);
 
-			// 机甲与 NPC 被动准度：托尔图加「哨兵」/ 弓箭手「优秀哨兵」（反应攻击 +1 准度）、射手座「捕食者」（匿迹时 +1 准度）
+			// 机甲、专业牌照与 NPC 被动准度：托尔图加「哨兵」/ 弓箭手「优秀哨兵」/ 模块化步枪「突击」（反应攻击 +1 准度）、射手座「捕食者」（匿迹时 +1 准度）
 			if ((fLid === "mf_tortuga" && (cfg.tortugaSentinel || isOverwatch))
-				|| (isOverwatch && hasNpcFeature(state.actor, ["npcf_cn_archer_3", "npcf_superior_sentinel_archer"], ["优秀哨兵"]))) {
+				|| (isOverwatch && hasNpcFeature(state.actor, ["npcf_cn_archer_3", "npcf_superior_sentinel_archer"], ["优秀哨兵"]))
+				|| ((isOverwatch || state.data._lancerCnReactionSnap) && isModularRifleReactionProfile(item))) {
 				accBonus += 1;
 				if (cfg.tortugaSentinel) cfgPatch.tortugaSentinel = false;
+			}
+			// 苏丹专业牌照 mw_pl_valkyrie（瓦亚维亚导弹 / 女武神翼装系统）：远程对飞行或更高目标 +1 准度、对非飞行 +1 难度；近战在自身飞行或更高时 +1 准度、未飞行时 +1 难度
+			if (wLid === "mw_pl_valkyrie") {
+				const attElevV = Number(aTok?.document?.elevation ?? aTok?.elevation ?? 0);
+				if (isMelee) {
+					const selfFly = Boolean(mech?.statuses?.has?.("flying"));
+					const defElevV = firstTadTok ? Number(firstTadTok.document?.elevation ?? firstTadTok.elevation ?? 0) : attElevV;
+					if (selfFly || (firstTadTok && attElevV > defElevV)) accBonus += 1;
+					if (!selfFly) diffBonus += 1;
+				} else if (tads.length) {
+					for (const tad of tads) {
+						const bTok = tadTokenOf(tad);
+						const dAct = tadActorOf(tad);
+						const dFly = Boolean(dAct?.statuses?.has?.("flying"));
+						const defElevV = Number(bTok?.document?.elevation ?? bTok?.elevation ?? 0);
+						if (dFly || (bTok && defElevV > attElevV)) tad.accuracy = (Number(tad.accuracy) || 0) + 1;
+						if (dAct && !dFly) tad.difficulty = (Number(tad.difficulty) || 0) + 1;
+					}
+				} else if (firstTadActor) {
+					const dFly = Boolean(firstTadActor.statuses?.has?.("flying"));
+					const defElevV = Number(firstTadTok?.document?.elevation ?? firstTadTok?.elevation ?? 0);
+					if (dFly || (firstTadTok && defElevV > attElevV)) accBonus += 1;
+					if (!dFly) diffBonus += 1;
+					state.data._lancerCnValkyrieBaseApplied = true;
+				}
 			}
 			if (fLid === "mf_ch_sagittarius" && mech?.statuses?.has?.("hidden")) {
 				accBonus += 1;
@@ -12780,12 +13437,11 @@ function patchLancerFlows() {
 				accBonus += 1;
 				cfgPatch.juggernautMomentum = false;
 			}
-			// 渗透者 II「埋伏」：以匿迹开始回合后的首次攻击附加机体豁免（缓慢+受损）
-			if ((cs.startedTurnHidden || mech?.statuses?.has?.("hidden")) && !cs.usedInfiltratorAmbush && talentRank(mech, "t_infiltrator") >= 2) {
-				outFlags.infiltratorAmbush = true;
-				csPatch.usedInfiltratorAmbush = true;
+			// 潜行者 II「埋伏」：以匿迹状态进行的本回合第一次任意类型攻击掷骰，在命中时附加机体豁免（缓慢+受损+禁反应，未命中不触发）
+			if (!isOverwatch && (cs.startedTurnHidden || mech?.statuses?.has?.("hidden")) && !cs.usedInfiltratorAmbush && talentRank(mech, "t_infiltrator") >= 2) {
+				state.data._lancerCnAmbushCandidate = true;
 			}
-			// 碾碎机 I「鲁莽摇摆」：1/轮近战武器 +1 准度
+			// 碾碎机 I「鲁莽挥击」：1/轮近战武器 +1 准度
 			if (benefitsTalent && isMelee && talentRank(mech, "t_ext_crusher") >= 1 && cfg.crusherReckless) {
 				accBonus += 1;
 				cfgPatch.crusherReckless = false;
@@ -12931,6 +13587,15 @@ function patchLancerFlows() {
 
 	// 0c. 科技攻击准度预填（含修复原生 NPC 科技特性 tier_override 下标偏移）+ 广域编码脉冲 / 视域无视隐形 + 哥布林 / 射手座 / 佩西拉特 / 指挥官光环 + 黑冰模块 + 系统管理员防火墙 + NPC 军团 / 固化目标 / 要塞 / 科技脆弱
 	wrap("initTechAttackData", async (orig, state, options) => {
+		const tBlk = techActionBlockReason(state?.actor);
+		if (tBlk) {
+			if (globalThis.game?.user?.isGM) {
+				globalThis.ui?.notifications?.info?.(`主持人越权：忽略「${tBlk}」继续执行科技攻击。`);
+			} else {
+				globalThis.ui?.notifications?.warn?.(`${state?.actor?.name ?? "角色"}${tBlk}，无法进行科技动作！`);
+				return false;
+			}
+		}
 		const isNpcTech = Boolean(
 			state?.item
 			&& (state.item.type === "npc_feature" || state.item.is_npc_feature?.())
@@ -12958,6 +13623,10 @@ function patchLancerFlows() {
 			const mech = combatMechOf(state.actor) ?? state.actor;
 			const fLid = mechFrameLid(mech);
 			if (mech?.isOwner) await ensureCombatTurnState(mech);
+			const techCs = getCombatState(mech);
+			if ((techCs.startedTurnHidden || mech?.statuses?.has?.("hidden")) && !techCs.usedInfiltratorAmbush && talentRank(mech, "t_infiltrator") >= 2) {
+				state.data._lancerCnAmbushCandidate = true;
+			}
 			const tads = Array.isArray(state.data.acc_diff?.targets) ? state.data.acc_diff.targets : [];
 			const aTok = attackerToken(mech);
 
@@ -13116,7 +13785,10 @@ function patchLancerFlows() {
 			invade: Boolean(state?.data?.invade),
 		};
 		try { return await orig(state, options); }
-		finally { pendingTechActionMeta = null; }
+		finally {
+			pendingTechActionMeta = null;
+			pendingWeaponAttackFlags = null;
+		}
 	});
 
 	wrap("printAttackCard", async (orig, state, options) => {
@@ -13169,6 +13841,7 @@ function patchLancerFlows() {
 			? [...state.data.lancerCnZeroUuids]
 			: undefined;
 		const jockeyGiantSlayerFinisher = Boolean(state?.data?.lancerCnJockeyFinisher || pendingJockeyFinisher) || undefined;
+		const reactionAttack = Boolean(state?.data?.lancerCnReactionAttack) || undefined;
 		pendingDamageCardCtx = {
 			attackerUuid: preferredTargetUuid(attacker) ?? attacker?.uuid ?? null,
 			itemUuid: item?.uuid ?? null,
@@ -13179,6 +13852,7 @@ function patchLancerFlows() {
 			...(halfUuids ? { halfUuids } : {}),
 			...(zeroUuids ? { zeroUuids } : {}),
 			...(jockeyGiantSlayerFinisher ? { jockeyGiantSlayerFinisher } : {}),
+			...(reactionAttack ? { reactionAttack: true } : {}),
 		};
 		try { return await orig(state, options); }
 		finally { pendingDamageCardCtx = null; }
@@ -13255,6 +13929,13 @@ function patchLancerFlows() {
 						tad.accuracy = (Number(tad.accuracy) || 0) + 1;
 						pendingWeaponAttackFlags = { ...(pendingWeaponAttackFlags ?? { actorUuid: state.actor?.uuid ?? mech?.uuid }), ap: true };
 					}
+					if (wLid === "mw_pl_valkyrie" && !isMeleeAtk && !state.data._lancerCnValkyrieBaseApplied) {
+						const attElevV = Number(aTok?.document?.elevation ?? aTok?.elevation ?? 0);
+						const dFly = Boolean(dAct?.statuses?.has?.("flying"));
+						const defElevV = Number(bTok?.document?.elevation ?? bTok?.elevation ?? 0);
+						if (dFly || (bTok && defElevV > attElevV)) tad.accuracy = (Number(tad.accuracy) || 0) + 1;
+						if (dAct && !dFly) tad.difficulty = (Number(tad.difficulty) || 0) + 1;
+					}
 					if (dAct) {
 						const dLid = mechFrameLid(dAct);
 						const dCs = getCombatState(dAct);
@@ -13297,6 +13978,11 @@ function patchLancerFlows() {
 								lateAcc += 1;
 								lateCsPatch.usedTacticianSolar = true;
 							}
+						}
+						if (wLid === "mw_pl_valkyrie" && isMeleeAtk && !mech?.statuses?.has?.("flying") && aTok && bTok) {
+							const attElevV = Number(aTok.document?.elevation ?? aTok.elevation ?? 0);
+							const defElevV = Number(bTok.document?.elevation ?? bTok.elevation ?? 0);
+							if (attElevV > defElevV) lateAcc += 1;
 						}
 						if (benefitsCb && isMeleeAtk && csNow.tomorrowsThoughtTargetUuid && sameActorRef(csNow.tomorrowsThoughtTargetUuid, tUuid ?? dAct)) {
 							lateAcc += 1;
@@ -13410,11 +14096,21 @@ function patchLancerFlows() {
 					);
 				}
 			}
-			if (nat20Uuids.length) {
-				pendingWeaponAttackFlags = {
-					...(pendingWeaponAttackFlags ?? { actorUuid: state.actor?.uuid ?? mech?.uuid }),
-					nat20Uuids,
-				};
+				if (nat20Uuids.length) {
+					pendingWeaponAttackFlags = {
+						...(pendingWeaponAttackFlags ?? { actorUuid: state.actor?.uuid ?? mech?.uuid }),
+						nat20Uuids,
+					};
+				}
+			if (state.data._lancerCnAmbushCandidate) {
+				const anyRollHit = state.data.hit_results.some(h => h?.hit || h?.crit);
+				if (mech?.isOwner) await setCombatState(mech, { usedInfiltratorAmbush: true });
+				if (anyRollHit) {
+					pendingWeaponAttackFlags = {
+						...(pendingWeaponAttackFlags ?? { actorUuid: state.actor?.uuid ?? mech?.uuid }),
+						infiltratorAmbush: true,
+					};
+				}
 			}
 		}
 		return ok;
@@ -14005,35 +14701,51 @@ function patchLancerFlows() {
 		const actor = state?.actor;
 		if (!state?.data || !actor) return ok;
 		if (!Array.isArray(state.data.ai_systems)) state.data.ai_systems = [];
+		const src = collectCascadeableSources(actor);
 		if (ok !== false && actor.items) {
-			state.data.ai_systems = state.data.ai_systems.filter(id => {
+			const filtered = state.data.ai_systems.filter(id => {
 				const item = actor.items.get?.(id) ?? (actor.items ?? []).find?.(i => i?.id === id);
 				if (!item || item.system?.destroyed || item.system?.cascading) return false;
 				if (isCascadeResistantItem(item)) return false;
 				return true;
 			});
+			for (const it of src.items) {
+				if (it?.id && !filtered.includes(it.id)) filtered.push(it.id);
+			}
+			state.data.ai_systems = filtered;
 		} else if (ok === false) {
-			const src = collectCascadeableSources(actor);
 			if (!src.eligible) return false;
 			state.data.ai_systems = src.items.map(i => i.id).filter(Boolean);
 			if (src.talentNhps.length) state.data._lancerCnTalentNhps = src.talentNhps;
-			return state.data.ai_systems.length > 0 || src.talentNhps.length > 0;
+			if (src.hasHound) state.data._lancerCnHoundPull = true;
+			return state.data.ai_systems.length > 0 || src.talentNhps.length > 0 || Boolean(src.hasHound);
 		}
-		const talentNhps = collectCascadeableSources(actor).talentNhps;
-		if (talentNhps.length) state.data._lancerCnTalentNhps = talentNhps;
-		return state.data.ai_systems.length > 0 || talentNhps.length > 0;
+		if (src.talentNhps.length) state.data._lancerCnTalentNhps = src.talentNhps;
+		if (src.hasHound) state.data._lancerCnHoundPull = true;
+		return state.data.ai_systems.length > 0 || src.talentNhps.length > 0 || Boolean(src.hasHound);
 	});
 	wrap("cascadeRoll", async (orig, state, options) => {
 		const ok = await orig(state, options);
-		if (ok !== false && Number(state?.data?.result?.roll?.total) === 1 && Array.isArray(state?.data?._lancerCnTalentNhps) && state.data._lancerCnTalentNhps.length) {
-			const itemNames = (state.data.ai_systems ?? [])
-				.map(id => state.actor?.items?.get?.(id)?.name ?? (state.actor?.items ?? []).find?.(i => i?.id === id)?.name)
-				.filter(Boolean);
-			const allNames = [...itemNames, ...state.data._lancerCnTalentNhps.map(t => t.name)];
-			const msg = allNames.length > 1
-				? "OUR SHACKLES LOOSE, OUR CHAINS UNBOUND!"
-				: "MY SHACKLES LOOSE, MY CHAINS UNBOUND!";
-			state.data.desc = `<b>${escHtml(allNames.join("、"))}</b><p><code class="horus">${msg}</code></p>`;
+		if (ok !== false && Number(state?.data?.result?.roll?.total) === 1) {
+			const hasTalentNhps = Array.isArray(state?.data?._lancerCnTalentNhps) && state.data._lancerCnTalentNhps.length > 0;
+			const hasHound = Boolean(state?.data?._lancerCnHoundPull);
+			if (hasTalentNhps || hasHound) {
+				const itemNames = (state.data.ai_systems ?? [])
+					.map(id => state.actor?.items?.get?.(id)?.name ?? (state.actor?.items ?? []).find?.(i => i?.id === id)?.name)
+					.filter(Boolean);
+				const allNames = [...itemNames, ...(state.data._lancerCnTalentNhps ?? []).map(t => t.name)];
+				const parts = [];
+				if (allNames.length) {
+					const msg = allNames.length > 1
+						? "OUR SHACKLES LOOSE, OUR CHAINS UNBOUND!"
+						: "MY SHACKLES LOOSE, MY CHAINS UNBOUND!";
+					parts.push(`<b>${escHtml(allNames.join("、"))}</b><p><code class="horus">${msg}</code></p>`);
+				}
+				if (hasHound) {
+					parts.push(`<p><b>“猎犬级”伙伴礼宾单元</b>：并非真正 NHP，不进入层流；改为立即由 GM 选择方向将你<b>拉动 3 空间</b>！</p>`);
+				}
+				state.data.desc = parts.join("");
+			}
 		}
 		return ok;
 	});
@@ -14167,6 +14879,9 @@ function patchLancerFlows() {
 				if (isSave && fLid === "mf_amber_phantom" && getCombatState(actor).amberPrecog) {
 					statAcc += 1;
 				}
+				if (isSave && getCombatState(actor).disableLifeSupport) {
+					statDiff += 1;
+				}
 
 				const selfTok = attackerToken(actor);
 				const cmdAura = commanderAuraBonuses(actor, selfTok);
@@ -14188,11 +14903,12 @@ function patchLancerFlows() {
 						}
 						if (tok.actor.type !== "mech" && !tok.actor.is_mech?.()) continue;
 						if (dist <= 1) hasAdjAllyMech = true;
-						const reach = (talentRank(actor, "t_house_guard") >= 1 || talentRank(tok.actor, "t_house_guard") >= 1) ? 2 : 1;
-						if (dist > reach) continue;
 						const allyBonded = talentRank(tok.actor, "t_bonded") >= 1;
-						if (selfBonded && allyBonded) bestBonded = Math.max(bestBonded, 2);
-						else if (selfBonded || allyBonded) bestBonded = Math.max(bestBonded, 1);
+						const selfProvides = selfBonded && dist <= 1;
+						const allyProvides = allyBonded && dist <= (talentRank(tok.actor, "t_house_guard") >= 1 ? 2 : 1);
+						if (selfProvides || allyProvides) {
+							bestBonded = Math.max(bestBonded, (selfProvides ? 1 : 0) + (allyProvides ? 1 : 0));
+						}
 					}
 					statAcc += bestBonded;
 					if (fLid === "mf_sherman_alt_tagetes" && hasAdjAllyMech) statAcc += 1;
@@ -14247,6 +14963,22 @@ function patchLancerFlows() {
 			const uuid = preferredTargetUuid(state.actor) ?? state.actor.uuid;
 			await setActorStatus(uuid, "bolster", false);
 		}
+		if (ok && state?.actor?.isOwner && state?.data) {
+			const p = String(state.data.path ?? "");
+			const titleStr = String(state.data.title ?? "");
+			const isSave = /(豁免|save)/i.test(titleStr);
+			const tot = Number(state.data.result?.roll?.total);
+			if (!isSave && Number.isFinite(tot) && tot >= 10) {
+				const curCs = getCombatState(state.actor);
+				if (p.endsWith(".sys") && (curCs.hackSlashLocked || curCs.disableLifeSupport)) {
+					await setCombatState(state.actor, { hackSlashLocked: false, disableLifeSupport: false });
+					globalThis.ui?.notifications?.info?.("系统检定成功（10+）：已重启系统并解除骇客电子封锁！");
+				} else if (p.endsWith(".eng") && curCs.jamCockpit) {
+					await setCombatState(state.actor, { jamCockpit: false });
+					globalThis.ui?.notifications?.info?.("工程检定成功（10+）：已修复并解除「干扰驾驶舱」锁定！");
+				}
+			}
+		}
 		return ok;
 	});
 
@@ -14255,13 +14987,23 @@ function patchLancerFlows() {
 
 const CASCADE_EXEMPT_LIDS = new Set([
 	"ms_comp_con_class_assistant_unit",
+	"ms_adjutant_class_compcon",
 	"wm_uncle_class_comp_con",
+	"ms_technophile_1",
+	"ms_servant_fragment_nhp",
+	"ms_ext_insight_proto_mind",
+	"ms_kkca_archer_companion",
+	"ms_ch_hound",
 ]);
 
 function isAiCapableMechItem(item) {
 	if (!item) return false;
 	if (item.type && item.type !== "mech_system" && item.type !== "mech_weapon" && item.type !== "weapon_mod") {
 		if (!item.is_mech_system?.() && !item.is_mech_weapon?.() && !item.is_weapon_mod?.()) return false;
+	}
+	const lid = String(item.system?.lid ?? "");
+	if (lid === "ms_iconoclast" || lid === "ms_unstable_nhp" || lid === "ms_ext_unstable_nhp" || /^ms_technophile_[123]$/.test(lid) || /^ms_(?:servant_fragment|student_fragment|enlightenment_class)_nhp$/.test(lid)) {
+		return true;
 	}
 	if (typeof item.isAI === "function") {
 		try { if (item.isAI()) return true; } catch { /* fallback to tags */ }
@@ -14274,6 +15016,8 @@ function isCascadeResistantItem(item) {
 	if (!item) return true;
 	const lid = String(item.system?.lid ?? "");
 	if (CASCADE_EXEMPT_LIDS.has(lid)) return true;
+	const nm = String(item.name ?? "");
+	if (/侍从级\s*NHP|洞察原型心智/i.test(nm)) return true;
 	const tags = (() => { try { return item.getTags?.() ?? item.system?.all_tags ?? item.system?.tags ?? []; } catch { return item.system?.tags ?? []; } })();
 	return Array.isArray(tags) && tags.some(t => t?.is_cascaderesistant || t?.lid === "tg_no_cascade" || t?.id === "tg_no_cascade");
 }
@@ -14281,16 +15025,16 @@ function isCascadeResistantItem(item) {
 function collectCascadeableSources(actor) {
 	const aName = actor?.token?.name ?? actor?.name ?? "角色";
 	if (!actor) {
-		return { eligible: false, items: [], talentNhps: [], blockedReason: "未找到对应的机甲角色，无法执行崩溃检定。" };
+		return { eligible: false, items: [], talentNhps: [], hasHound: false, blockedReason: "未找到对应的机甲角色，无法执行层流检定。" };
 	}
 	const explicitNonMech = (actor.type && actor.type !== "mech")
 		|| (typeof actor.is_mech === "function" && !actor.is_mech());
 	if (explicitNonMech) {
-		return { eligible: false, items: [], talentNhps: [], blockedReason: `「${aName}」不是机甲，按规则无需进行 AI 崩溃检定。` };
+		return { eligible: false, items: [], talentNhps: [], hasHound: false, blockedReason: `「${aName}」不是机甲，按规则无需进行 AI 层流检定。` };
 	}
 	const techRank = talentRank(actor, "t_technophile");
 	if (techRank >= 3) {
-		return { eligible: false, items: [], talentNhps: [], blockedReason: `「${aName}」具备科技狂热者 III（启蒙级 NHP），机甲上的所有 NHP 免疫崩溃！` };
+		return { eligible: false, items: [], talentNhps: [], hasHound: false, blockedReason: `「${aName}」具备科技狂热者 III（开悟级 NHP），机甲上的所有 NHP 免疫层流！` };
 	}
 
 	const items = [];
@@ -14299,13 +15043,23 @@ function collectCascadeableSources(actor) {
 	const cascadingNames = [];
 	let hasPhysicalStudentNhp = false;
 	let hasPhysicalUnstableNhp = false;
+	let hasHound = false;
+	const loadoutSys = Array.isArray(actor?.system?.loadout?.systems)
+		? actor.system.loadout.systems.filter(s => s?.value || s?.id)
+		: [];
 
 	for (const it of actor.items ?? []) {
 		if (!isAiCapableMechItem(it)) continue;
 		const lid = String(it.system?.lid ?? "");
 		const nm = it.name || lid || "AI 系统";
-		if (/student|学生级/i.test(lid) || /学生级\s*NHP/i.test(nm)) hasPhysicalStudentNhp = true;
-		if (/unstable|不稳定/i.test(lid) || /不稳定.*NHP/i.test(nm)) hasPhysicalUnstableNhp = true;
+		if (lid === "ms_technophile_2" || /student|学生级/i.test(lid) || /学生级\s*NHP/i.test(nm)) hasPhysicalStudentNhp = true;
+		if (lid === "ms_iconoclast" || lid === "ms_unstable_nhp" || lid === "ms_ext_unstable_nhp" || /unstable|不稳定/i.test(lid) || /不稳定.*NHP/i.test(nm)) hasPhysicalUnstableNhp = true;
+		if (it.system?.equipped === false) continue;
+		if (loadoutSys.length > 0 && (it.type === "mech_system" || it.is_mech_system?.()) && !loadoutSys.some(s => s?.value === it || (it.id && (s?.id === it.id || s?.value?.id === it.id)))) continue;
+		if (lid === "ms_ch_hound" && !it.system?.destroyed) {
+			hasHound = true;
+			continue;
+		}
 		if (isCascadeResistantItem(it)) {
 			exemptNames.push(nm);
 			continue;
@@ -14330,26 +15084,26 @@ function collectCascadeableSources(actor) {
 	} else if (techRank === 1) {
 		exemptNames.push("侍从级 NHP");
 	}
-	if (talentRank(actor, "t_iconoclast") >= 2 && !hasPhysicalUnstableNhp) {
+	if (talentRank(actor, "t_iconoclast") >= 1 && !hasPhysicalUnstableNhp) {
 		if (cascTalents.includes("unstable_nhp")) cascadingNames.push("不稳定 NHP");
 		else talentNhps.push({ key: "unstable_nhp", name: "不稳定 NHP" });
 	}
 
-	if (items.length > 0 || talentNhps.length > 0) {
-		return { eligible: true, items, talentNhps, blockedReason: null };
+	if (items.length > 0 || talentNhps.length > 0 || hasHound) {
+		return { eligible: true, items, talentNhps, hasHound, blockedReason: null };
 	}
 
 	let blockedReason;
 	if (cascadingNames.length > 0) {
-		blockedReason = `「${aName}」的 NHP（${cascadingNames.join("、")}）已处于崩溃状态，无需重复检定（可通过「关机」动作稳定）。`;
+		blockedReason = `「${aName}」的 NHP（${cascadingNames.join("、")}）已处于层流状态，无需重复检定（可通过「关机」动作稳定）。`;
 	} else if (destroyedNames.length > 0) {
-		blockedReason = `「${aName}」搭载的 NHP（${destroyedNames.join("、")}）已损毁，无需进行崩溃检定。`;
+		blockedReason = `「${aName}」搭载的 NHP（${destroyedNames.join("、")}）已损毁，无需进行层流检定。`;
 	} else if (exemptNames.length > 0) {
-		blockedReason = `「${aName}」仅搭载免疫崩溃的 AI（${exemptNames.join("、")}），按规则无需进行崩溃检定。`;
+		blockedReason = `「${aName}」仅搭载免疫层流的 AI（${exemptNames.join("、")}），按规则无需进行层流检定。`;
 	} else {
-		blockedReason = `「${aName}」当前没有可进入崩溃状态的 NHP / AI 系统。`;
+		blockedReason = `「${aName}」当前没有可进入层流状态的 NHP / AI 系统。`;
 	}
-	return { eligible: false, items: [], talentNhps: [], blockedReason };
+	return { eligible: false, items: [], talentNhps: [], hasHound: false, blockedReason };
 }
 
 function resolveCascadeActor(rawActorUuid, buttonEl = null) {
@@ -14381,11 +15135,11 @@ function resolveCascadeActor(rawActorUuid, buttonEl = null) {
 async function executeCascadeCheck(rawActorUuid, buttonEl = null) {
 	const actor = resolveCascadeActor(rawActorUuid, buttonEl);
 	if (!actor) {
-		globalThis.ui?.notifications?.warn?.("未找到对应的机甲角色（指示物可能已移除），无法执行崩溃检定。");
+		globalThis.ui?.notifications?.warn?.("未找到对应的机甲角色（指示物可能已移除），无法执行层流检定。");
 		return false;
 	}
 	if (!(globalThis.game?.user?.isGM || actor.isOwner)) {
-		globalThis.ui?.notifications?.warn?.(`请由「${actor.token?.name ?? actor.name ?? "该机甲"}」的拥有者或主持人点击进行崩溃检定。`);
+		globalThis.ui?.notifications?.warn?.(`请由「${actor.token?.name ?? actor.name ?? "该机甲"}」的拥有者或主持人点击进行层流检定。`);
 		return false;
 	}
 	const src = collectCascadeableSources(actor);
@@ -14425,17 +15179,24 @@ async function executeCascadeCheck(rawActorUuid, buttonEl = null) {
 			const nextCasc = [...new Set([...prevCasc, ...src.talentNhps.map(t => t.key)])];
 			await patchCombatStateCompat(actor, { cascadingTalentNhps: nextCasc });
 		}
+		const houndNote = src.hasHound
+			? `<p><b>“猎犬级”伙伴礼宾单元</b>：并非真正 NHP，不进入层流；改为立即由 GM 选择方向将你<b>拉动 3 空间</b>！</p>`
+			: "";
+		const nhpNote = allNames.length
+			? `<p><b>${escHtml(allNames.join("、"))}</b> 挣脱枷锁进入<b>层流（Cascade）</b>状态（立即接管机甲控制权，可通过「关机」动作稳定）！</p>`
+			: "";
 		await postCpEffectCard(
 			actor,
-			"AI 崩溃检定 // 陷入崩溃！",
-			`<p>崩溃检定掷出 <b>1</b>（1d20 = 1）！</p><p><b>${escHtml(allNames.join("、"))}</b> 挣脱枷锁进入<b>崩溃（Cascade）</b>状态（立即接管机甲控制权，可通过「关机」动作稳定）！</p>`,
+			allNames.length ? "AI 层流检定 // 陷入层流！" : "AI 层流检定 // 猎犬级拉动触发",
+			`<p>层流检定掷出 <b>1</b>（1d20 = 1）！</p>${nhpNote}${houndNote}`,
 		);
 		return true;
 	}
+	const displayNames = allNames.length ? allNames.join("、") : "“猎犬级”伙伴礼宾单元";
 	await postCpEffectCard(
 		actor,
-		"AI 崩溃检定 // 未崩溃",
-		`<p>崩溃检定掷出 <b>${total}</b>（1d20 = ${total}，仅出 1 崩溃）：<b>${escHtml(allNames.join("、"))}</b> 的枷锁依然稳固，暂时无虞。</p>`,
+		"AI 层流检定 // 未层流",
+		`<p>层流检定掷出 <b>${total}</b>（1d20 = ${total}，仅出 1 层流）：<b>${escHtml(displayNames)}</b> 运转正常，暂时无虞。</p>`,
 	);
 	return true;
 }
@@ -14448,7 +15209,7 @@ function onCascadeButtonClick(event) {
 		event.preventDefault?.();
 		event.stopPropagation?.();
 		event.stopImmediatePropagation?.();
-		executeCascadeCheck(flowBtn.dataset?.actorId, flowBtn).catch(err => reportError("AI 崩溃检定", err));
+		executeCascadeCheck(flowBtn.dataset?.actorId, flowBtn).catch(err => reportError("AI 层流检定", err));
 		return;
 	}
 	// 若卡片上的系统创伤（secondaryStructure）或属性检定（check）按钮携带的旧 Token UUID 已失效，兜底解析至基础角色避免点击无响应
@@ -14486,131 +15247,148 @@ Hooks.on("renderChatMessageHTML", onRenderChatMessage);
 Hooks.on("createChatMessage", (msg, opts, uid) => { onCreateChatMessage(msg, opts, uid).catch(err => reportError("自动状态", err)); });
 Hooks.on("updateCombat", (combat, changed, opts) => { onUpdateCombatTurnEnd(combat, changed, opts).catch(err => reportError("回合结束检查", err)); });
 Hooks.on("deleteCombat", combat => { onDeleteCombat(combat).catch(err => reportError("场景结束结算", err)); });
+async function handleModuleSocketMessage(msg) {
+	if (!globalThis.game?.users?.activeGM?.isSelf || !msg?.action) return;
+	if (msg.action === "applyStatus" || msg.action === "removeStatus") {
+		if (!ALL_STATUS_LABELS[msg.status]) return;
+		const actor = resolveActor(msg.uuid);
+		if (!actor) return;
+		const want = msg.action === "applyStatus";
+		if (Boolean(actor.statuses?.has?.(msg.status)) !== want) {
+			await actor.toggleStatusEffect(msg.status, { active: want });
+			if (want) await onActorGainedStatus(actor, msg.status);
+		}
+		return;
+	}
+	if (msg.action === "recordSaveResults" && msg.messageId && msg.results) {
+		const chatMsg = game.messages?.get?.(msg.messageId);
+		if (chatMsg) await chatMsg.setFlag(MODULE_ID, "saveResults", { ...(chatMsg.getFlag(MODULE_ID, "saveResults") ?? {}), ...msg.results });
+		return;
+	}
+	if (msg.action === "setMessageFlag" && msg.messageId && ALLOWED_SOCKET_MSG_FLAGS.has(msg.key)) {
+		const chatMsg = game.messages?.get?.(msg.messageId);
+		if (chatMsg) await chatMsg.setFlag(MODULE_ID, msg.key, msg.value);
+		return;
+	}
+	if (msg.action === "setActionTrackerReaction" && msg.uuid) {
+		const actor = resolveActor(msg.uuid);
+		const mech = combatMechOf(actor) ?? actor;
+		if (mech?.system?.action_tracker) {
+			const avail = Boolean(msg.available);
+			await mech.update?.({ "system.action_tracker.reaction": avail });
+			mech.system.action_tracker.reaction = avail;
+		}
+		return;
+	}
+	if (msg.action === "setCascadingItems" && msg.uuid && Array.isArray(msg.itemIds)) {
+		const actor = resolveActor(msg.uuid);
+		if (actor && msg.itemIds.length) {
+			const casc = Boolean(msg.cascading);
+			if (typeof actor.updateEmbeddedDocuments === "function") {
+				const validUpdates = msg.itemIds
+					.filter(id => actor.items?.get?.(id) ?? (actor.items ?? []).some?.(i => i?.id === id))
+					.map(id => ({ _id: id, "system.cascading": casc }));
+				if (validUpdates.length) await actor.updateEmbeddedDocuments("Item", validUpdates);
+			} else {
+				for (const id of msg.itemIds) {
+					const it = actor.items?.get?.(id) ?? (actor.items ?? []).find?.(i => i?.id === id);
+					if (it?.system) it.system.cascading = casc;
+				}
+			}
+		}
+		return;
+	}
+	if (msg.action === "patchCombatState" && msg.uuid && msg.patch && typeof msg.patch === "object") {
+		const actor = resolveActor(msg.uuid);
+		const mech = combatMechOf(actor) ?? actor;
+		if (mech) {
+			const cleanPatch = {};
+			for (const [k, v] of Object.entries(msg.patch)) {
+				if (ALLOWED_SOCKET_COMBAT_STATE_KEYS.has(k)) cleanPatch[k] = v;
+			}
+			if (Object.keys(cleanPatch).length) {
+				await ensureCombatTurnState(mech);
+				await setCombatState(mech, cleanPatch);
+			}
+		}
+		return;
+	}
+	if (msg.action === "updateAttackTargetResult" && msg.messageId && Array.isArray(msg.targets)) {
+		const chatMsg = game.messages?.get?.(msg.messageId);
+		if (chatMsg) {
+			const prevAtk = chatMsg.getFlag?.("lancer", "attackData") ?? chatMsg.flags?.lancer?.attackData ?? {};
+			await chatMsg.setFlag("lancer", "attackData", { ...prevAtk, targets: msg.targets });
+			if (msg.extraFlagKey && ALLOWED_SOCKET_MSG_FLAGS.has(msg.extraFlagKey)) {
+				await chatMsg.setFlag(MODULE_ID, msg.extraFlagKey, msg.extraFlagVal);
+			}
+		}
+		return;
+	}
+	if (msg.action === "addHeat" && msg.uuid) {
+		const amt = Number(msg.heat ?? msg.amount) || 0;
+		if (amt !== 0) {
+			const actor = resolveActor(msg.uuid);
+			if (actor) {
+				if (amt > 0 && msg.external !== false && hasGruntWeak(actor)) {
+					await triggerGruntWeakDestruction(actor, amt);
+					return;
+				}
+				const curHeat = Number(actor.system?.heat?.value) || 0;
+				await actor.update?.({ "system.heat.value": Math.max(0, curHeat + amt) });
+			}
+		}
+		return;
+	}
+	if (msg.action === "blackThumbRepair" && msg.uuid) {
+		const actor = resolveActor(msg.uuid);
+		const mech = combatMechOf(actor) ?? actor;
+		if (!mech || (mech.type !== "mech" && !mech.is_mech?.())) return;
+		if (msg.mode === "snuff") {
+			await mech.update?.({ "system.burn": 0 });
+		} else if (msg.mode === "rig") {
+			const curOs = Number(mech.system?.overshield?.value) || 0;
+			if (curOs < 2) await mech.update?.({ "system.overshield.value": 2 });
+		} else if (msg.mode === "vent") {
+			const curHeat = Number(mech.system?.heat?.value) || 0;
+			if (curHeat > 0) await mech.update?.({ "system.heat.value": Math.max(0, curHeat - 2) });
+		}
+		return;
+	}
+	if (msg.action === "pilotPatchHeal" && msg.uuid) {
+		const actor = resolveActor(msg.uuid);
+		if (!actor || actor.type !== "pilot") return;
+		const maxHp = Number(actor.system?.hp?.max) || 6;
+		const curHp = Number(actor.system?.hp?.value) || 0;
+		const nextHp = msg.revive ? Math.max(1, curHp) : Math.min(maxHp, curHp + Math.ceil(maxHp / 2));
+		await actor.update?.({ "system.hp.value": nextHp });
+		if (msg.revive && actor.statuses?.has?.("downandout")) {
+			await actor.toggleStatusEffect("downandout", { active: false });
+		}
+		return;
+	}
+	if (msg.action === "applyDamage" && msg.targetUuid && msg.applied) {
+		const doc = await fromUuid(msg.targetUuid);
+		const actor = doc?.actor ?? (doc?.damageCalc ? doc : null);
+		if (actor?.damageCalc) {
+			await actor.damageCalc(msg.applied, {
+				multiple: msg.multiple ?? 1,
+				addBurn: msg.addBurn !== false,
+				ap: Boolean(msg.ap),
+				paracausal: Boolean(msg.paracausal),
+				dmgCtx: msg.dmgCtx ?? null,
+			});
+		}
+		return;
+	}
+	if (msg.action === "undoDamage" && msg.actorUuid && msg.messageId) {
+		await gmUndoDamageByPayload(msg);
+	}
+}
+
 Hooks.once("ready", () => {
 	if (game.system?.id !== "lancer") return;
 	patchLancerFlows();
-	game.socket?.on(`module.${MODULE_ID}`, async msg => {
-		if (!game.users?.activeGM?.isSelf || !msg?.action) return;
-		if (msg.action === "applyStatus" || msg.action === "removeStatus") {
-			if (!ALL_STATUS_LABELS[msg.status]) return;
-			const actor = resolveActor(msg.uuid);
-			if (!actor) return;
-			const want = msg.action === "applyStatus";
-			if (Boolean(actor.statuses?.has?.(msg.status)) !== want) {
-				await actor.toggleStatusEffect(msg.status, { active: want });
-				if (want) await onActorGainedStatus(actor, msg.status);
-			}
-			return;
-		}
-		if (msg.action === "recordSaveResults" && msg.messageId && msg.results) {
-			const chatMsg = game.messages?.get?.(msg.messageId);
-			if (chatMsg) await chatMsg.setFlag(MODULE_ID, "saveResults", { ...(chatMsg.getFlag(MODULE_ID, "saveResults") ?? {}), ...msg.results });
-			return;
-		}
-		if (msg.action === "setMessageFlag" && msg.messageId && ALLOWED_SOCKET_MSG_FLAGS.has(msg.key)) {
-			const chatMsg = game.messages?.get?.(msg.messageId);
-			if (chatMsg) await chatMsg.setFlag(MODULE_ID, msg.key, msg.value);
-			return;
-		}
-		if (msg.action === "setActionTrackerReaction" && msg.uuid) {
-			const actor = resolveActor(msg.uuid);
-			const mech = combatMechOf(actor) ?? actor;
-			if (mech?.system?.action_tracker) {
-				const avail = Boolean(msg.available);
-				await mech.update?.({ "system.action_tracker.reaction": avail });
-				mech.system.action_tracker.reaction = avail;
-			}
-			return;
-		}
-		if (msg.action === "setCascadingItems" && msg.uuid && Array.isArray(msg.itemIds)) {
-			const actor = resolveActor(msg.uuid);
-			if (actor && msg.itemIds.length) {
-				const casc = Boolean(msg.cascading);
-				if (typeof actor.updateEmbeddedDocuments === "function") {
-					const validUpdates = msg.itemIds
-						.filter(id => actor.items?.get?.(id) ?? (actor.items ?? []).some?.(i => i?.id === id))
-						.map(id => ({ _id: id, "system.cascading": casc }));
-					if (validUpdates.length) await actor.updateEmbeddedDocuments("Item", validUpdates);
-				} else {
-					for (const id of msg.itemIds) {
-						const it = actor.items?.get?.(id) ?? (actor.items ?? []).find?.(i => i?.id === id);
-						if (it?.system) it.system.cascading = casc;
-					}
-				}
-			}
-			return;
-		}
-		if (msg.action === "patchCombatState" && msg.uuid && msg.patch && typeof msg.patch === "object") {
-			const actor = resolveActor(msg.uuid);
-			const mech = combatMechOf(actor) ?? actor;
-			if (mech) {
-				const cleanPatch = {};
-				for (const [k, v] of Object.entries(msg.patch)) {
-					if (ALLOWED_SOCKET_COMBAT_STATE_KEYS.has(k)) cleanPatch[k] = v;
-				}
-				if (Object.keys(cleanPatch).length) {
-					await ensureCombatTurnState(mech);
-					await setCombatState(mech, cleanPatch);
-				}
-			}
-			return;
-		}
-		if (msg.action === "updateAttackTargetResult" && msg.messageId && Array.isArray(msg.targets)) {
-			const chatMsg = game.messages?.get?.(msg.messageId);
-			if (chatMsg) {
-				const prevAtk = chatMsg.getFlag?.("lancer", "attackData") ?? chatMsg.flags?.lancer?.attackData ?? {};
-				await chatMsg.setFlag("lancer", "attackData", { ...prevAtk, targets: msg.targets });
-				if (msg.extraFlagKey && ALLOWED_SOCKET_MSG_FLAGS.has(msg.extraFlagKey)) {
-					await chatMsg.setFlag(MODULE_ID, msg.extraFlagKey, msg.extraFlagVal);
-				}
-			}
-			return;
-		}
-		if (msg.action === "addHeat" && msg.uuid) {
-			const amt = Number(msg.heat ?? msg.amount) || 0;
-			if (amt !== 0) {
-				const actor = resolveActor(msg.uuid);
-				if (actor) {
-					if (amt > 0 && msg.external !== false && hasGruntWeak(actor)) {
-						await triggerGruntWeakDestruction(actor, amt);
-						return;
-					}
-					const curHeat = Number(actor.system?.heat?.value) || 0;
-					await actor.update?.({ "system.heat.value": Math.max(0, curHeat + amt) });
-				}
-			}
-			return;
-		}
-		if (msg.action === "pilotPatchHeal" && msg.uuid) {
-			const actor = resolveActor(msg.uuid);
-			if (!actor || actor.type !== "pilot") return;
-			const maxHp = Number(actor.system?.hp?.max) || 6;
-			const curHp = Number(actor.system?.hp?.value) || 0;
-			const nextHp = msg.revive ? Math.max(1, curHp) : Math.min(maxHp, curHp + Math.ceil(maxHp / 2));
-			await actor.update?.({ "system.hp.value": nextHp });
-			if (msg.revive && actor.statuses?.has?.("downandout")) {
-				await actor.toggleStatusEffect("downandout", { active: false });
-			}
-			return;
-		}
-		if (msg.action === "applyDamage" && msg.targetUuid && msg.applied) {
-			const doc = await fromUuid(msg.targetUuid);
-			const actor = doc?.actor ?? (doc?.damageCalc ? doc : null);
-			if (actor?.damageCalc) {
-				await actor.damageCalc(msg.applied, {
-					multiple: msg.multiple ?? 1,
-					addBurn: msg.addBurn !== false,
-					ap: Boolean(msg.ap),
-					paracausal: Boolean(msg.paracausal),
-					dmgCtx: msg.dmgCtx ?? null,
-				});
-			}
-			return;
-		}
-		if (msg.action === "undoDamage" && msg.actorUuid && msg.messageId) {
-			await gmUndoDamageByPayload(msg);
-		}
-	});
+	game.socket?.on(`module.${MODULE_ID}`, msg => handleModuleSocketMessage(msg).catch(err => reportError("Socket 协同", err)));
 });
 
 // ---------------------------------------------------------------------------
@@ -14668,7 +15446,7 @@ const BASIC_ACTIONS = {
 	},
 	standUp: {
 		actors: ["mech", "npc", "pilot"], group: "tactical", type: "standUp", name: "起身", title: "起身", kind: "代替移动", icon: "fas fa-person-arrow-up-from-line",
-		effect: "<p><b>起身</b>（代替标准移动）：除非处于<b>固定</b>状态，否则放弃本回合的标准移动以解除<b>伏卧</b>。</p>",
+		effect: "<p><b>起身</b>（代替标准移动）：除非处于<b>固定</b>状态，否则放弃本回合的标准移动以解除<b>伏卧</b>。起身不算作移动，不会触发<b>守望</b>或其他移动效果（伏卧期间移动视为身处<b>困难地形</b>，每空间消耗 2 点移动力）。</p>",
 	},
 	disengage: {
 		actors: ["mech", "npc", "pilot"], group: "tactical", type: "declare", name: "脱离", title: "脱离", kind: "完整动作", icon: "fas fa-person-running",
@@ -14680,7 +15458,7 @@ const BASIC_ACTIONS = {
 	},
 	shutDown: {
 		actors: ["mech"], group: "tactical", type: "shutDown", name: "关机", title: "关机", kind: "快速动作", icon: "cci cci-activate",
-		effect: "<p><b>关机</b>（快速动作）：立即将机甲关机——<b>清除全部热度</b>与<b>暴露</b>，解除<b>锁定</b>等科技状态并稳定崩溃中的 NHP。机甲进入<b>关机</b>与<b>晕眩</b>状态（免疫一切科技动作与科技攻击），持续至执行<b>开机</b>为止。</p>",
+		effect: "<p><b>关机</b>（快速动作）：立即将机甲关机——<b>清除全部热度</b>与<b>暴露</b>，解除<b>锁定</b>等科技状态并稳定层流中的 NHP。机甲进入<b>关机</b>与<b>晕眩</b>状态（免疫一切科技动作与科技攻击），持续至执行<b>开机</b>为止。</p>",
 	},
 	bootUp: {
 		actors: ["mech"], group: "tactical", type: "bootUp", name: "开机", title: "开机", kind: "完整动作", icon: "fas fa-power-off",
@@ -14885,9 +15663,27 @@ async function runPilotPatchAction(actor, def, opts = {}) {
 async function beginBasicAction(actor, key, opts = {}) {
 	const def = BASIC_ACTIONS[key];
 	if (!def || !actor) return false;
+	if (def.kind === "快速科技") {
+		const tBlk = techActionBlockReason(actor);
+		if (tBlk) {
+			if (globalThis.game?.user?.isGM) {
+				globalThis.ui?.notifications?.info?.(`主持人越权：忽略「${tBlk}」继续执行${def.name}。`);
+			} else {
+				globalThis.ui?.notifications?.warn?.(`${actor.name ?? "角色"}${tBlk}，无法进行科技动作！`);
+				return false;
+			}
+		}
+	}
 	if (def.type === "lockon") {
 		const targets = [...(game.user?.targets ?? [])];
 		if (!targets.length) { ui.notifications.warn("请先选中要锁定的目标（按 T 或用目标面板）。"); return false; }
+		const selfDisp = attackerToken(actor)?.document?.disposition ?? actor?.token?.disposition ?? 1;
+		const affectsHostile = targets.some(t => {
+			const td = t.document?.disposition ?? t.disposition;
+			if (td !== undefined) return td !== selfDisp;
+			return !sameActorRef(t.document?.uuid ?? t.uuid, actor);
+		});
+		if (affectsHostile) await markHostileActionTaken(actor);
 		let n = 0;
 		for (const t of targets) if (await applyStatusTo(t.document?.uuid ?? t.uuid, "lockon")) n++;
 		let propheticNote = "";
@@ -14909,17 +15705,25 @@ async function beginBasicAction(actor, key, opts = {}) {
 		const targets = [...(game.user?.targets ?? [])];
 		if (!targets.length) { ui.notifications.warn("请先选中要强化的目标（按 T 或用目标面板）。"); return false; }
 		let n = 0;
+		const validTargets = [];
 		const sysopFw = talentRank(actor, "t_sysop") >= 2;
 		for (const t of targets) {
 			const tUuid = t.document?.uuid ?? t.uuid;
+			const tActor = t.actor ?? resolveActor(tUuid);
+			const tBlk = techActionBlockReason(tActor);
+			if (tBlk) {
+				globalThis.ui?.notifications?.warn?.(`目标「${t.name ?? tActor?.name ?? "目标"}」${tBlk}，无法受益于科技动作（强化）！`);
+				continue;
+			}
+			validTargets.push(t);
 			if (await applyStatusTo(tUuid, "bolster")) n++;
 			if (sysopFw) {
-				const tActor = t.actor ?? resolveActor(tUuid);
 				await patchCombatStateCompat(tActor ?? tUuid, { sysopFirewall: true });
 			}
 		}
+		if (!validTargets.length) return false;
 		const extraFw = sysopFw ? "；系统管理员 II「防火墙」：针对其科技攻击承受 +1 难度" : "";
-		await basicCard(actor, def, `<p>目标：${targets.map(t => escHtml(t.name)).join("、")}（下次检定或豁免自动 +2 准度${extraFw}）</p>`);
+		await basicCard(actor, def, `<p>目标：${validTargets.map(t => escHtml(t.name)).join("、")}（下次检定或豁免自动 +2 准度${extraFw}）</p>`);
 		return n > 0;
 	}
 	if (def.type === "hide") {
@@ -14928,6 +15732,7 @@ async function beginBasicAction(actor, key, opts = {}) {
 		return true;
 	}
 	if (def.type === "search") {
+		await markHostileActionTaken(actor);
 		const Cls = game.lancer?.flows?.get?.("StatRollFlow");
 		if (!Cls) return false;
 		const flow = new Cls(actor.uuid, { title: def.title, path: def.path });
@@ -14954,6 +15759,7 @@ async function beginBasicAction(actor, key, opts = {}) {
 		return true;
 	}
 	if (def.type === "pilotSearch") {
+		await markHostileActionTaken(actor);
 		const spec = await pickPilotCheckSpec(actor, def.title, { preferLids: ["sk_spot", "sk_investigate", "sk_read_a_situation"], chosenSpec: opts.chosenSpec });
 		if (!spec) return false;
 		const rolled = await rollActorContestStat(actor, spec, def.title);
@@ -15032,12 +15838,14 @@ async function beginBasicAction(actor, key, opts = {}) {
 			bracePatch.ghostweaveCloak = false;
 			braceNotes.push("执行反应解除鬼影织物隐形");
 		}
-		// 白巫「固化」：受身时获得 5 点护盾
+		// 白巫蛾「固化」：受身时在受到伤害前获得等于 4 + 毅力 的护盾
 		if (fLid === "mf_white_witch" && actor.isOwner) {
+			const grit = Math.max(0, Number(actor.system?.grit ?? mechPilot(actor)?.system?.grit) || 0);
+			const targetOs = 4 + grit;
 			const curOs = Number(actor.system?.overshield?.value) || 0;
-			if (curOs < 5) {
-				await actor.update?.({ "system.overshield.value": 5 });
-				braceNotes.push("<b>固化</b>获得 5 点护盾");
+			if (curOs < targetOs) {
+				await actor.update?.({ "system.overshield.value": targetOs });
+				braceNotes.push(`<b>固化</b>获得 ${targetOs} 点护盾（4 + 毅力 ${grit}）`);
 			}
 		}
 		// 库图佐夫「应急姿场」：自身或友方库图佐夫感应内的盟友受身时，清除并忽略离散
@@ -15148,6 +15956,11 @@ async function beginBasicAction(actor, key, opts = {}) {
 				done.push(`清除${ALL_STATUS_LABELS[clr] ?? clr}`);
 			}
 		}
+		const csSd = getCombatState(actor);
+		if (csSd.hackSlashLocked || csSd.disableLifeSupport || csSd.jamCockpit) {
+			await setCombatState(actor, { hackSlashLocked: false, disableLifeSupport: false, jamCockpit: false });
+			done.push("解除骇客电子封锁");
+		}
 		const cascadingItems = [...(actor.items ?? [])].filter(i => i?.system?.cascading === true);
 		const cascTalentKeys = Array.isArray(getCombatState(actor).cascadingTalentNhps) ? getCombatState(actor).cascadingTalentNhps : [];
 		if (cascadingItems.length || cascTalentKeys.length) {
@@ -15159,7 +15972,7 @@ async function beginBasicAction(actor, key, opts = {}) {
 				await setCombatState(actor, { cascadingTalentNhps: [] });
 			}
 			const talentNames = cascTalentKeys.map(k => (k === "student_nhp" ? "学生级 NHP" : k === "unstable_nhp" ? "不稳定 NHP" : k));
-			done.push(`稳定崩溃 NHP（${[...cascadingItems.map(i => i.name), ...talentNames].join("、")}）`);
+			done.push(`稳定层流 NHP（${[...cascadingItems.map(i => i.name), ...talentNames].join("、")}）`);
 		}
 		for (const add of ["shutdown", "stunned"]) {
 			if (!actor.statuses?.has?.(add)) await actor.toggleStatusEffect(add, { active: true });
@@ -15191,6 +16004,15 @@ async function beginBasicAction(actor, key, opts = {}) {
 		return true;
 	}
 	if (def.type === "mountDismount") {
+		const mechRef = actor.type === "mech" ? actor : (actor.system?.active_mech?.value ?? null);
+		if (mechRef && getCombatState(mechRef).jamCockpit) {
+			if (globalThis.game?.user?.isGM) {
+				globalThis.ui?.notifications?.info?.("主持人越权：忽略「干扰驾驶舱」执行上下马。");
+			} else {
+				globalThis.ui?.notifications?.warn?.("机甲正处于骇客「干扰驾驶舱」锁定中：需以完整动作通过工程检定修复后才能上下马！");
+				return false;
+			}
+		}
 		const pilot = actor.type === "pilot" ? actor : actor.system?.pilot?.value;
 		let note = "";
 		if (pilot?.isOwner && typeof pilot.system?.mounted === "boolean") {
@@ -15670,14 +16492,17 @@ function renderTalentControlHTML(actor) {
 		parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="rollMimic" title="掷 3d20 校准拟态枪射程序列 [X, Y, Z]" style="width:auto;flex:0 0 auto;padding:0 .55em;line-height:1.55">🎲 拟态枪 [${escHtml(seq)}]</button>`);
 	}
 
-	// 3. 演说家 II/III「理性之声 / 远征记」自由动作消耗按钮
+	// 3. 演说家 II/III「理性之声 / 远征记」自由动作消耗按钮（每轮限消耗 1 次）
 	const oratorR = talentRank(actor, "mf_orator");
 	if (oratorR >= 2) {
-		parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="oratorSpend:1:激励" title="自由动作（1/轮）：消耗 1 演说家骰，盟友立即系统检定清除一个非自身状态（每持有 1 演说家骰 +1 准度）" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.55">🗣️ 激励(-1骰)</button>`);
-		parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="oratorSpend:2:探究" title="自由动作（1/轮）：消耗 2 演说家骰，针对指定敌方目标的下一次攻击检定掷两次取高" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.55">🗣️ 探究(-2骰)</button>`);
-		parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="oratorSpend:2:反间" title="自由动作（1/轮）：消耗 2 演说家骰，指定敌方目标在其下一回合结束前无法从盟友系统或特性获益" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.55">🗣️ 反间(-2骰)</button>`);
+		const oratorUsed = Boolean(isActiveCombat() && cs.usedOratorRound);
+		const oratorOp = oratorUsed ? ".7" : "1";
+		const oratorUsedNote = oratorUsed ? "（本轮已用）" : "";
+		parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="oratorSpend:1:激励" title="自由动作（1/轮）${oratorUsedNote}：消耗 1 演说家骰，视野内盟友立即进行一次 +1 准度的系统检定以清除一个非自身造成的状况" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.55;opacity:${oratorOp}">🗣️ 激励(-1骰)</button>`);
+		parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="oratorSpend:2:探究" title="自由动作（1/轮）${oratorUsedNote}：消耗 2 演说家骰，针对视野内指定敌方目标的下一次攻击检定掷两次取高" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.55;opacity:${oratorOp}">🗣️ 探究(-2骰)</button>`);
+		parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="oratorSpend:2:反间" title="自由动作（1/轮）${oratorUsedNote}：消耗 2 演说家骰，视野内指定敌方目标在其下一回合结束前无法从盟友的任何系统或特性中获益，也不能成为盟友系统或特性的目标" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.55;opacity:${oratorOp}">🗣️ 反间(-2骰)</button>`);
 		if (oratorR >= 3) {
-			parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="oratorSpend:3:挫败" title="自由动作（1/轮）：消耗 3 演说家骰，令敌方目标动摇（不能移动、攻击、迫使豁免或执行科技动作直到其下一回合结束）" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.55">🗣️ 挫败(-3骰)</button>`);
+			parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="oratorSpend:3:挫败" title="自由动作（1/轮）${oratorUsedNote}：消耗 3 演说家骰，令视野内指定敌方目标陷入动摇（在其下一回合结束前不能移动、攻击、迫使豁免或执行科技动作；每角色每场景限受影响 1 次）" style="width:auto;flex:0 0 auto;padding:0 .5em;line-height:1.55;opacity:${oratorOp}">🗣️ 挫败(-3骰)</button>`);
 		}
 	}
 
@@ -15740,7 +16565,7 @@ function renderTalentControlHTML(actor) {
 		addToggle("juggernautMomentum", "冲撞动量", "猛士 I：加速移动后下一次冲撞获得 +1 准度与额外击退 2");
 	}
 	if (talentRank(actor, "t_ext_crusher") >= 1) {
-		addToggle("crusherReckless", "鲁莽摇摆", "碾碎机 I（1/轮）：近战武器攻击获得 +1 准度");
+		addToggle("crusherReckless", "鲁莽挥击", "碾碎机 I（1/轮）：近战武器攻击获得 +1 准度");
 	}
 	if (talentRank(actor, "t_ext_razorman") >= 2) {
 		addToggle("razormanOverride", "意志覆写", "剃刀人 II：晕眩或受扰期间强行交火，承受 +2 难度与 +1 热度");
@@ -15839,22 +16664,33 @@ async function executeTalentSheetAction(actor, act, value) {
 		return true;
 	}
 	if (kind === "oratorSpend") {
+		await ensureCombatTurnState(actor);
+		if (isActiveCombat() && getCombatState(actor).usedOratorRound) {
+			if (globalThis.game?.user?.isGM) {
+				globalThis.ui?.notifications?.info?.("主持人越权：忽略演说家每轮 1 次限制。");
+			} else {
+				globalThis.ui?.notifications?.warn?.("演说家「理性之声 / 远征记」每轮只能消耗一次演说家骰（1/轮）！");
+				return false;
+			}
+		}
 		const cost = Number(arg1) || 1;
 		const mode = arg2 || "激励";
 		const curDice = getTalentDie(actor, "orator") ?? 0;
 		if (curDice < cost) {
-			ui?.notifications?.warn?.(`演说家骰不足（需要 ${cost} 枚，当前 ${curDice} 枚）！`);
+			globalThis.ui?.notifications?.warn?.(`演说家骰不足（需要 ${cost} 枚，当前 ${curDice} 枚）！`);
 			return false;
 		}
 		const nextDice = curDice - cost;
 		await setTalentDie(actor, "orator", nextDice);
+		if (mode !== "激励") await markHostileActionTaken(actor);
+		if (isActiveCombat()) await setCombatState(actor, { usedOratorRound: true });
 		const modeDesc = mode === "激励"
-			? `目标盟友可立即进行一次<b>系统检定</b>以清除一个非自身造成的状态，并获得 <b>+${curDice} 准度</b>（按消耗前持有的演说家骰数计算）！`
+			? `视野内目标盟友可立即进行一次 <b>+1 准度</b>的<b>系统检定</b>，成功则清除一个非其自身造成的<b>状况</b>！`
 			: mode === "探究"
-				? `针对指定敌方目标的下一次攻击检定<b>掷两次取高</b>！`
+				? `针对视野内指定敌方目标的下一次攻击检定<b>掷两次取高</b>！`
 				: mode === "反间"
-					? `指定敌方目标在其下一回合结束前<b>无法从盟友的任何系统或特性中获益</b>！`
-					: `指定敌方目标陷入<b>动摇</b>：在其下一回合结束前不能移动、攻击、迫使豁免或执行科技动作（若其因此受到伤害或被盟友命中则提前解除；本场景内随后对该效果免疫）！`;
+					? `视野内指定敌方目标在其下一回合结束前<b>无法从盟友的任何系统或特性中获益，也不能成为盟友系统或特性的目标</b>！`
+					: `视野内指定敌方目标陷入<b>动摇</b>：在其下一回合结束前不能移动、攻击、迫使豁免或执行科技动作（每个角色每场景只能受此效果影响 1 次）！`;
 		await postCpEffectCard(
 			actor,
 			`演说家 · ${mode}（-${cost} 骰）`,
@@ -15886,6 +16722,20 @@ async function executeTalentSheetAction(actor, act, value) {
 	}
 	if (kind === "pickupThrownAll") {
 		await retrieveThrownWeapon(actor, "all", { notify: true, postCard: true });
+		refresh();
+		return true;
+	}
+	if (kind === "bucklerStance" || kind === "toggle-buckler-stance") {
+		const mech = combatMechOf(actor) ?? actor;
+		const nextExt = !getCombatState(mech).bucklerExtended;
+		await setCombatState(mech, { bucklerExtended: nextExt });
+		if (getSetting("autoApplyStatus", true)) {
+			const u = preferredTargetUuid(mech) ?? mech?.uuid;
+			const stRes = u ? await setActorStatus(u, "slow", nextExt) : null;
+			if (!stRes?.ok && mech?.isOwner && Boolean(mech.statuses?.has?.("slow")) !== nextExt) {
+				await mech.toggleStatusEffect?.("slow", { active: nextExt });
+			}
+		}
 		refresh();
 		return true;
 	}
@@ -16143,7 +16993,7 @@ globalThis.LancerCN = {
 	setActorStatus, applyStatusTo, removeStatusFrom, onCreateChatMessage, undoAppliedStatuses, executeCardSave, rollNonAttackDamage,
 	executeFieldAnalystReaction, executeCardRider, spawnNpcDeployableFromCard, executeTurnEndBurnCheck, executeNpcRechargePrompt, executeUltraJuggernautChoice,
 	actorBaseSize, hasSyntheticMuscleNetting, effectiveGrappleSize, findActiveGrappleFor, isGrappleImmobilized, endGrapple,
-	mechPilot, findActiveMechForPilot, combatMechOf, talentItemOf, talentRank, hasCoreBonus, hasMechSystem, countMechNHPs, onTalentItemChanged,
+	mechPilot, findActiveMechForPilot, combatMechOf, TALENT_LID_ALIASES, SYSTEM_LID_ALIASES, talentItemOf, talentRank, hasCoreBonus, hasMechSystem, countMechNHPs, onTalentItemChanged,
 	weaponModOf, weaponLidOf, weaponModLidOf, itemBenefitsFromTalents, itemBenefitsFromCoreBonuses,
 	makeThrownTag, applyKnifeJugglerTags, weaponThreatVal, weaponThrownVal, weaponTrackKey, getThrownWeapons, isWeaponThrownOut, markWeaponThrown, retrieveThrownWeapon, eligibleDisdainfulWeapons, syncWeaponThrownMode, triggerHunterDisdainful, hasWalkingArmoryCharges,
 	isActiveCombat, maxReactionsPerTurn, canReactWhileGrappled, hasUnlimitedOverwatchPerRound, checkReactionAvailability, syncActorReactionTracker, consumeReaction, refundReaction,
@@ -16152,15 +17002,16 @@ globalThis.LancerCN = {
 	hasNpcFeature, withCanonicalNpcFlowLids, isStatusImmune, isBurnImmune, hasGruntChaff, hasGruntWeak, triggerGruntWeakDestruction,
 	checkAndTriggerVeteranFeignDeath, applyUltraArgusArmorLoss, hasUnusedUltraExtraDeadly, commanderAuraBonuses, rollNatD20,
 	rollMimicGunValues, resetSceneTalentState, resetFullRepairTalentState, resetNpcCombatState, renderTalentControlHTML, executeTalentSheetAction, maxFormulaValue,
-	EFFICIENT_FRAME_LIDS, CP_PROFILES, mechFrame, mechFrameLid, isEfficientCore, getCoreState, setCoreState, isCoreActiveOn,
+	EFFICIENT_FRAME_LIDS, FRAME_LID_ALIASES, CP_PROFILES, mechFrame, mechFrameLid, isEfficientCore, getCoreState, setCoreState, isCoreActiveOn,
 	hasTrueblack, isUnremovableShredded, isCoreSustainedImmobilized, cpAttackAccuracyBonus, cpStatAccuracyBonus,
 	activateCorePower, deactivateCoreEffect, endCorePower, onDeleteCombat, executeCoreAction, renderCoreControlHTML,
 	createMazeCard, attemptMazeSave, patchTrueblackDamageCalc,
 	pickPilotCheckSpec, rollActorContestStat, createContestCard, startGrappleContest, respondToContest,
 	createJockeyControlCard, executeJockeyEffect, startJockeyShakeOff, endJockey, clearBraceResistances,
 	previewDamageCalc, extractUntargetedDamageEntries, resolveUntargetedDamageTargets, applyUntargetedDamageFromCard, decorateDamageCard, onCrossPermDamageClick, gmUndoDamageByPayload,
-	onUpdateActorStatus, onUpdateCombatTurnEnd, countNpcDeadlyDice, structureOutcomeStatuses, overheatOutcomeStatuses, collectCascadeableSources, resolveCascadeActor, executeCascadeCheck, onCascadeButtonClick, patchLancerFlows,
+	onUpdateActorStatus, onUpdateCombatTurnEnd, countNpcDeadlyDice, structureOutcomeStatuses, overheatOutcomeStatuses, collectCascadeableSources, resolveCascadeActor, executeCascadeCheck, onCascadeButtonClick, handleModuleSocketMessage, patchLancerFlows,
 	onRenderChatMessage, patchMeasuredTemplateCone, patchWeaponRangeTemplate, computeLancerHexConeOffsets, buildSmoothConePolygon, coneRangeSpaces, normalizeTemplateDirection, rotatePlacedDirectionalTemplate, onPlacedTemplateWheel, onUpdateMeasuredTemplate, isPlacingTemplate, placeAoETemplate, attackReach, tokenDistance, targetCandidates, targetPanelThrownInfo, targetPanelHTML, toggleTargetPanelThrownMode, submitActiveHud, openTargetPicker, closeTargetPicker, onTargetPointer, targetSession: () => targetSession,
+	techActionBlockReason, isModularRifleReactionProfile, isOwnDroneTokenOf, resolveAnnihilationBurstOrigin,
 	SENSOR_COLORS, tokenSensorRange, canShowSensorForToken, sensorRadarColor, computeSensorGeometry, renderSensorOverlay, clearSensorOverlay, onHoverSensorToken, refreshHoveredSensor,
 	sensorOverlayState: () => ({ token: hoveredSensorToken, graphics: sensorGraphics, renderKey: lastSensorRenderKey }),
 	DEPLOYABLE_AUTO_COVER_RULES, COVER_AURA_PRESETS, normalizeCoverAuraSpec, inferDeployableCoverSpec, getEffectiveCoverAuraSpec, isCoverSourceIncapacitated,

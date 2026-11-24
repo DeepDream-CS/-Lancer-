@@ -61,10 +61,10 @@ function collect() {
 	const push = (id, path, field, list) => {
 		for (const a of list) (drafts[id] = drafts[id] || []).push({ ...(path ? { path } : {}), ...(field ? { field } : {}), ...a });
 	};
-	for (const kind of ["systems", "weapons", "frames", "talents"]) {
+	for (const kind of ["systems", "weapons", "mods", "core_bonuses", "frames", "talents"]) {
 		for (const x of out[kind]) {
 			if (!added.has(x.id)) continue;
-			if (kind === "systems" || kind === "weapons") {
+			if (["systems", "weapons", "mods", "core_bonuses"].includes(kind)) {
 				if (!(x.actions || []).length) push(x.id, "", "", draftsFor(x.effect, x.name));
 			} else if (kind === "frames") {
 				(x.traits || []).forEach((t, i) => { if (!(t.actions || []).length) push(x.id, `traits[${i}]`, "", draftsFor(t.description, t.name)); });

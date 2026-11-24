@@ -20,10 +20,16 @@ function frameIdentity(f) {
 function frameRulesHtml(f, prefix='frame', m=null) {
   const cs=f.core_system;
   const traits=m?mechTraits({...m,frame:f.id}):f.traits;
+  const passiveActs=actsHtml({id:f.id,passive_actions:cs.passive_actions,deployables:cs.deployables});
+  const activeActs=actsHtml({id:f.id,active_effect:cs.active_effect,actions:cs.actions,active_actions:cs.active_actions,active_deployables:cs.active_deployables});
+  const hasPassive=!!(cs.passive_name||cs.passive_effect||passiveActs);
+  const deact=cs.deactivation?`（${ACT[cs.deactivation]||cs.deactivation}关闭）`:'';
+  const integIds=prefix==='preview'?[...new Set([...(cs.integrated||[]),...traits.flatMap(t=>t.integrated||[])])]:[];
+  const integHtml=integIds.map(id=>WEAPONS[id]||SYSTEMS[id]).filter(Boolean).map(it=>`<div class="fc-core-part"><span class="fc-kicker">骨架内建${it.mount?'武器':'系统'}</span><b>${esc(plain('item',it))}</b>${it.mount?weaponInfo(it,null,P(),m||M()):integratedSystemInfo(it,P(),m||M())}</div>`).join('');
   return `<section class="fc-rules"><h4>骨架特征</h4>${traits.map(t=>`<article class="blk"><div class="blk-h">${esc(t.name)}</div><p>${t.description}</p>${actsHtml(t)}</article>`).join('')}
     <h4>核心系统 <small>${cs.efficient?'高效 · 场景结束时返还 1 CP':'每任务通常可启动一次'}</small></h4><article class="fc-core"><h5>${esc(cs.name)}</h5>
-    ${cs.passive_name?`<div class="fc-core-part"><span class="fc-kicker">被动</span><b>${esc(cs.passive_name)}</b><p>${cs.passive_effect||''}</p></div>`:''}
-    <div class="fc-core-part"><span class="fc-kicker">${esc(ACT[cs.activation]||cs.activation||'主动')} · 1 CP</span><b>${esc(cs.active_name||cs.name)}</b><p>${cs.active_effect||''}</p></div>${actsHtml(cs)}</article>
+    ${hasPassive?`<div class="fc-core-part"><span class="fc-kicker">被动</span>${cs.passive_name?`<b>${esc(cs.passive_name)}</b>`:''}${cs.passive_effect?`<p>${cs.passive_effect}</p>`:''}${passiveActs}</div>`:''}
+    <div class="fc-core-part"><span class="fc-kicker">${esc(ACT[cs.activation]||cs.activation||'主动')} · 1 CP${esc(deact)}</span><b>${esc(cs.active_name||cs.name)}</b><p>${cs.active_effect||''}</p>${activeActs}</div>${integHtml}</article>
     ${extRulesNote(f)}${officialSupplementHtml(f)}${det(prefix+'-lore-'+f.id,'设定与骨架介绍',`<div class="fc-lore">${f.description||'暂无介绍。'}</div>`)}</section>`;
 }
 function frameCatalogList(p) {

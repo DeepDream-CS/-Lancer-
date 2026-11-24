@@ -8,6 +8,7 @@ const tip = (html, cls = "") => `<div class="wiz-tip ${cls}">${html}</div>`;
 // 背景的「触发例子」→ 触发 id
 function bgSuggestedSkills(p) {
 	const bg = BGS[p.background];
+	if (bg?.skills?.length) return bg.skills.map(id => SKILLS[id]).filter(Boolean);
 	const z = bg && Z.bg[bg.name.toLowerCase()];
 	if (!z) return [];
 	const names = z.triggers.replace(/^[^：:]*[：:]/, "").split(/[、,，]/).map(s => s.trim()).filter(Boolean);

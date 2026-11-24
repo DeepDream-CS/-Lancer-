@@ -2,27 +2,28 @@
 
 由 `node tools/build-lcp.js` 生成，请勿手改。
 
-内容包：枪骑兵简易车卡器：扩展内容（中文） 1.6.2
+内容包：枪骑兵简易车卡器：扩展内容（中文） 1.6.4
 
 | 类别 | 条目数 |
 |---|---|
 | frames | 74 |
 | weapons | 118 |
-| systems | 187 |
+| systems | 188 |
 | mods | 9 |
 | core_bonuses | 21 |
 | talents | 21 |
 | pilot_gear | 1 |
+| tags | 1 |
 | npc_classes | 52 |
 | npc_templates | 13 |
 | npc_features | 644 |
 
 其中来自车卡器「NPC 构筑」：职业 52、模板 10、特性 612（数据见 `source/npc/`）。
 
-- 覆盖官方条目：108
+- 覆盖官方条目：110
 - 新增条目：323
-- 写入的车卡器说明：99 条
-- 补译：323 处
+- 写入的车卡器说明：125 条
+- 补译：341 处
 
 官方数据版本：@massif/dustgrave-data 1.4.0，@massif/ktb-data 1.2.4，@massif/long-rim-data 1.2.2，@massif/osr-data 1.2.0，@massif/ows-data 1.0.1，@massif/sotw-data 1.0.2，@massif/ssmr-data 1.7.0，@massif/wallflower-data 2.1.0
 
@@ -36,12 +37,6 @@
 
 官方与车卡器的动作、部署物等数量不同时保留官方结构，对应文字仍是英文。
 
-- mw_ext_shock_claws → mw_integrated_shock_claws：官方有 3 组数据，车卡器 1 组，保留官方各组数值
-- mw_ext_reversal_loop → mw_retort_loop：官方有 4 组数据，车卡器 1 组，保留官方各组数值
-- mw_ext_arrow_nexus → mw_bolt_nexus：官方有 2 组数据，车卡器 1 组，保留官方各组数值
-- mw_ext_terashima_blade → mw_terashima_blade：官方有 5 组数据，车卡器 1 组，保留官方各组数值
-- mw_ext_hhs155_cannibal → mw_hhs_155_cannibal：官方有 2 组数据，车卡器 1 组，保留官方各组数值
-- ms_ext_forge_ii → ms_forge_2_subaltern_squad 的 deployables：官方 4 项，车卡器 1 项，保留官方结构（英文）
 - ms_ext_camus_edge → ms_camuss_razor 的 actions：官方 2 项，车卡器 1 项，保留官方结构（英文）
 
 ## 覆盖后仍为英文的文字
@@ -124,6 +119,7 @@
 - mw_piof_grim_harvest_scythe「召回镰刀无人机」→ Quick（ext-actions.json）
 - mw_piof_furnace_hammer「上泵」→ Quick（ext-actions.json）
 - mw_piof_furnace_hammer「停止上泵」→ Free（ext-actions.json）
+- mw_ch_tether「锚定信标」→ 部署物 Deployable（ext-deployables.json）
 - mw_ch_demons_fang「恶魔之牙」→ Free（ext-actions.json）
 - mw_ch_typhoon「台风空爆投射器」→ Free（ext-actions.json）
 - mw_ch_model96「切换盾炮数据」→ Protocol（ext-actions.json）
@@ -132,58 +128,118 @@
 - mw_ch_explosive_chain「拉回擒拿目标」→ Free（ext-actions.json）
 - mw_ch_explosive_chain「引爆锁链地雷」→ Quick（ext-actions.json）
 - mw_ch_blackjack「张弓」→ Quick（ext-actions.json）
+- mw_pl_modular_rifle「选定打印数据」→ Free（ext-actions.json）
+- ms_ext_curtain_aem「谢幕 AEM」→ Quick（动作标签）
+- ms_ext_swordfish_lfcm「矛鱼 LFCM」→ Full（动作标签）
+- ms_ext_needle_and_thread「针与线」→ Quick（动作标签）
 - ms_ext_unsigned_surrender「插旗坚守」→ Quick（ext-actions.json）
 - ms_ext_unsigned_surrender「停止坚守」→ Protocol（ext-actions.json）
 - ms_ext_cbnrn_sealing「CBNRN 密封技术」→ Protocol（ext-actions.json）
 - ms_ext_gas_grenade_dispenser「瓦斯榴弹抛洒器」→ Quick（ext-actions.json）
+- ms_ext_local_sterilization_vent「局部灭菌气口」→ Protocol（动作标签）
 - ms_ext_thresher_drone「长尾鲨无人机」→ Quick（ext-actions.json）
 - ms_ext_boarding_rail「启动导轨」→ Quick（ext-actions.json）
 - ms_ext_boarding_rail「停止导轨」→ Quick（ext-actions.json）
 - ms_ext_boarding_rail「进入导轨（由盟友执行）」→ Quick（ext-actions.json）
+- ms_ext_sonic_explosives「腹语手雷」→ Quick（ext-actions.json）
+- ms_ext_sonic_explosives「女妖地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_ext_point_jet_cluster「点弹射流形簇」→ Quick（动作标签）
 - ms_ext_judas_exploit「犹大漏洞」→ Free（ext-actions.json）
+- ms_ext_iridescent_holoscales「虹彩全息鳞」→ Quick（动作标签）
+- ms_ext_ionizing_explosives「偏光榴弹」→ Quick（ext-actions.json）
+- ms_ext_ionizing_explosives「放电地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_ext_em_induction_welder「电磁感应焊机」→ Quick（动作标签）
 - ms_ext_evaporative_cooling_plating「蒸发冷却镀层」→ Reaction（ext-actions.json）
+- ms_ext_offering_arrow「祭品电箭」→ Quick（动作标签）
 - ms_ext_wodeng_turret_mount「安装 / 拆卸炮塔阵地」→ Quick（ext-actions.json）
 - ms_ext_wodeng_turret_mount「炮塔射击（由操作手执行）」→ Full（ext-actions.json）
+- ms_ext_wodeng_giant_bag「巨质包」→ Quick（动作标签）
 - ms_ext_wodeng_counterfire「反火力套组」→ Reaction（ext-actions.json）
 - ms_ext_comet_sabr「SABR 引擎」→ Protocol（ext-actions.json）
 - ms_ext_comet_white_star「中继协议」→ Invade（说明块）
 - ms_ext_comet_white_star「战术网络回声」→ Invade（说明块）
 - ms_ext_ifrit_entangler「篡改」→ Invade（说明块）
 - ms_ext_ifrit_entangler「莫比乌斯锚定」→ Invade（说明块）
+- ms_ext_agrippa_bridge「重启桥梁系统」→ Full（ext-actions.json）
 - ms_ext_agrippa_bridge「可展开桥梁」→ 部署物 Deployable（ext-deployables.json）
 - ms_ext_agrippa_tower「部署休克桥塔」→ Quick（ext-actions.json）
 - ms_ext_agrippa_tower「调整 / 关闭屏障」→ Quick（ext-actions.json）
 - ms_ext_agrippa_tower「休克桥塔」→ 部署物 Deployable（ext-deployables.json）
 - ms_ext_agrippa_crane「扶起 / 搬运盟友」→ Quick（ext-actions.json）
 - ms_ext_agrippa_crane「收起起重装置」→ Protocol（ext-actions.json）
+- ms_ext_agrippa_optimizer「系统优化程序」→ Quick Tech（动作标签）
 - ms_kkca_cricket_art_1「蟋蟀印尼术一式」→ Free（ext-actions.json）
 - ms_kkca_transdomain_plating「展开跨域镀层」→ Quick（ext-actions.json）
 - ms_kkca_transdomain_plating「摧毁镀层抵消攻击」→ Reaction（ext-actions.json）
+- ms_kkca_suppression_explosives「抑制榴弹」→ Quick（ext-actions.json）
+- ms_kkca_suppression_explosives「剪切地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_kkca_pankration_gambit「潘克拉辛弃兵法套组」→ Full（动作标签）
+- ms_kkca_bulwark_engine「壁垒引擎」→ Quick（动作标签）
+- ms_kkca_rps_chariot_guard「RPS：战车卫士」→ Protocol（动作标签）
 - ms_kkca_rps_world_guard「RPS：世界卫士」→ Quick（ext-actions.json）
+- ms_kkca_emergency_shunt「应急系统分流」→ Protocol（动作标签）
+- ms_piof_overgrowth_explosives「荆棘手雷」→ Quick（ext-actions.json）
+- ms_piof_overgrowth_explosives「繁茂地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_piof_tt7_snowblind「TT.7 雪盲」→ Full（动作标签）
 - ms_piof_carbon_steel_autosaw「加速机械锯」→ Quick（ext-actions.json）
 - ms_piof_carbon_steel_autosaw「切割」→ Full（ext-actions.json）
+- ms_piof_overgrowth_charges「蔓生手雷」→ Quick（ext-actions.json）
+- ms_piof_overgrowth_charges「水蛭地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_piof_trap_explosives「流星锤榴弹」→ Quick（ext-actions.json）
+- ms_piof_trap_explosives「剃刀地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_piof_carrier_clamp「载体夹」→ Quick（动作标签）
+- ms_piof_cherenkov_manifold「切伦科夫流形簇」→ Protocol（动作标签）
 - ms_piof_cicada_chatter「激活蝉鸣叨叨」→ Protocol（ext-actions.json）
 - ms_piof_cicada_chatter「集中噪音」→ Quick（ext-actions.json）
+- ms_piof_shock_explosives「过载手雷」→ Quick（ext-actions.json）
+- ms_piof_shock_explosives「火花地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_piof_bmx_platform「B.M.X.自动打印平台」→ Quick（动作标签）
+- ms_piof_plasma_tread「等离子胎面」→ Protocol（动作标签）
+- ms_piof_grease_explosives「燃油手雷」→ Quick（ext-actions.json）
+- ms_piof_grease_explosives「油膜地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_piof_spike_driver「钢钉驱动器」→ Quick（动作标签）
+- ms_piof_seismic_explosives「震颤手雷」→ Quick（ext-actions.json）
+- ms_piof_seismic_explosives「里氏地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_piof_frost_explosives「冰川手雷」→ Quick（ext-actions.json）
+- ms_piof_frost_explosives「暴雪地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_piof_frost_explosives「冰川冰块」→ 部署物 Deployable（ext-deployables.json）
 - ms_piof_springlock_seeder「弹簧锁播种机」→ Quick（ext-actions.json）
+- ms_piof_avalanche_charge「雪崩冲锋」→ Protocol（动作标签）
 - ms_piof_amphora_drone「双耳瓶无人机」→ Quick（ext-actions.json）
+- ms_piof_resupply_explosives「白浴手雷」→ Quick（ext-actions.json）
+- ms_piof_resupply_explosives「补给地雷」→ 部署物 Mine（ext-deployables.json）
+- ms_piof_ceramic_coating「陶制外层涂料」→ Quick Tech（动作标签）
+- ms_piof_nano_ceramsite「展开纳米陶粒场」→ Quick（ext-actions.json）
+- ms_piof_nano_ceramsite「停止纳米陶粒场」→ Free（ext-actions.json）
+- ms_piof_nano_ceramsite「陶粒墙体」→ 部署物 Deployable（ext-deployables.json）
 - ms_ext_demolitions_toolkit「引爆远程地雷」→ Quick（ext-actions.json）
+- ms_ch_submunitions「子母弹发射器」→ Free（动作标签）
+- ms_ch_geometry「可变几何机体」→ Protocol（动作标签）
 - ms_ch_reactive_armor「爆破/反应装甲（ERA）分层」→ Full（ext-actions.json）
-- ms_ch_spider_bombs「蜘蛛炸弹」→ Protocol（ext-actions.json）
+- ms_ch_spider_bombs「哨兵手雷」→ Quick（ext-actions.json）
+- ms_ch_spider_bombs「移动蜘蛛地雷」→ Protocol（ext-actions.json）
+- ms_ch_spider_bombs「蜘蛛地雷」→ 部署物 Mine（ext-deployables.json）
 - ms_ch_saboteur「部署并骑乘」→ Quick（ext-actions.json）
 - ms_ch_saboteur「执行骑乘选项」→ Free（ext-actions.json）
 - ms_ch_saboteur「召回 / 更换目标」→ Quick（ext-actions.json）
 - ms_ch_saboteur「破坏者无人机」→ 部署物 Drone（ext-deployables.json）
+- ms_ch_cascade_collapse「级联雪崩模块」→ Protocol（动作标签）
 - ms_ch_shadow_fist「孤立编码」→ Invade（说明块）
 - ms_ch_shadow_fist「静滞腔室」→ Invade（说明块）
+- ms_ch_falling_star「落星模块」→ Quick（动作标签）
 - ms_ch_serpent_fang「不确定性陷阱」→ Invade（说明块）
 - ms_ch_serpent_fang「阈限级联」→ Invade（说明块）
 - ms_ch_shatter_palm「释放」→ Invade（说明块）
 - ms_ch_shatter_palm「内伤」→ Invade（说明块）
+- ms_ch_sling_bombs「流星锤手雷」→ Quick（ext-actions.json）
+- ms_ch_sling_bombs「跳线地雷」→ 部署物 Mine（ext-deployables.json）
 - ms_ch_seismic_pulse「激活脉冲场」→ Protocol（ext-actions.json）
 - ms_ch_seismic_pulse「震碎地形」→ Quick（ext-actions.json）
 - ms_ch_shield_array「无人机格挡」→ Reaction（说明块）
 - ms_ch_shield_array「盾牌阵列无人机」→ 部署物 Drone（ext-deployables.json）
 - ms_ch_arcturus「阿尔忒弥斯协定」→ Protocol（说明块）
+- ms_ch_holo_bombs「魔影手雷」→ Quick（ext-actions.json）
+- ms_ch_holo_bombs「全息诱饵」→ 部署物 Mine（ext-deployables.json）
 - ms_ch_nightjar「部署夜莺无人机」→ Quick（ext-actions.json）
 - ms_ch_nightjar「移动夜莺无人机」→ Quick（ext-actions.json）
 - ms_ch_nightjar「夜莺无人机」→ 部署物 Drone（ext-deployables.json）
@@ -192,11 +248,19 @@
 - ms_ch_echo_mirage「回声斗篷」→ Protocol（ext-actions.json）
 - ms_pl_disgust_reflex「贱民毒株」→ Invade（说明块）
 - ms_pl_disgust_reflex「//没中/_乐了」→ Invade（说明块）
+- ms_pl_scan_bombs「脉冲手雷」→ Quick（ext-actions.json）
+- ms_pl_scan_bombs「回声地雷」→ 部署物 Mine（ext-deployables.json）
+- wm_ext_seek_devour_canister「发射空爆病毒罐」→ Quick（ext-actions.json）
+- cb_ext_enhanced_system_upgrade「增强系统升级」→ Free（ext-actions.json）
+- cb_ext_quality_logistics「高品质后勤」→ Quick（ext-actions.json）
+- cb_kkca_signature_move「招牌动作」→ Free（ext-actions.json）
 - t_ext_blade_dancer ranks[2]「苦行僧步调」→ Free（ext-actions.json）
 - t_ext_blade_dancer ranks[2]「连锁反击」→ Free（ext-actions.json）
 - t_ext_crusher ranks[2]「全力一击」→ Free（ext-actions.json）
 - t_ext_scavenger ranks[1]「使用回收武器攻击」→ Free（ext-actions.json）
 - t_ext_bricklayer ranks[2]「步步为营」→ Protocol（ext-actions.json）
+- t_ext_razorman ranks[0]「神经连接」→ Free（ext-actions.json）
+- t_ext_razorman ranks[2]「全脑同步」→ Free（ext-actions.json）
 - wm_pl_underslung → 附带武器「下挂式冲击器（附带武器）」（mw_pl_underslung_data）
 
 ## 覆盖的官方条目
@@ -253,6 +317,7 @@
 | weapons | mw_ext_warp_rifle | mw_warp_rifle | long-rim | 扭曲步枪 | Warp Rifle |
 | weapons | mw_ext_tiger_hunter_gauntlets | mw_xiaoli_combat_sheathe | long-rim | “猎虎”格斗臂套 | Tiger-Hunter Combat Sheathe |
 | weapons | mw_ext_dd288 | mw_d_d_288 | long-rim | D/D288 | D/D 288 |
+| systems | ms_spaceborn_1 | ms_spaceborn_1 | long-rim | 太空民 EVA | Spaceborn EVA |
 | systems | ms_ext_unstable_nhp | ms_iconoclast | dustgrave | 不稳定 NHP | Unstable NHP |
 | systems | ms_ext_emergency_repair_module | ms_emergency_repair_module | ows | 紧急维修模块 | Emergency Repair Module |
 | systems | ms_ext_multirole_drone | ms_utility_drone | ows | 多功能无人机 | Utility Drone |
@@ -261,7 +326,7 @@
 | systems | ms_ext_fabi | ms_field_approved_brass_ignorant_modifications | wallflower | 临场全武适配傻瓜式改造（FABI） | Field-Approved, Brass Ignorant Modifications |
 | systems | ms_ext_universal_plate | ms_omnibus_plate | wallflower | 万用基板 | Omnibus Plate |
 | systems | ms_ext_forge_ii | ms_forge_2_subaltern_squad | wallflower | “锻炉二型”副官班组 | FORGE-2 Subaltern Squad |
-| systems | ms_ext_chimney_cold_source | ms_smokestack_heatsink | wallflower | “烟窗”冷源 | SMOKESTACK Heat Sink |
+| systems | ms_ext_chimney_cold_source | ms_smokestack_heatsink | wallflower | “烟囱”冷源 | SMOKESTACK Heat Sink |
 | systems | ms_ext_redundant_armament | ms_armament_redundancy | dustgrave | 武备冗余 | Armament Redundancy |
 | systems | ms_ext_spike_spiral | ms_pinning_spire | ktb | 钉刺螺旋 | Pinning Spire |
 | systems | ms_ext_empathic_shield | ms_sympathetic_shield | ktb | 共感护盾 | Sympathetic Shield |
@@ -296,7 +361,7 @@
 | systems | ms_ext_power_assembly_1 | ms_total_strength_suite_i | long-rim | 力量总成套组 I | Total Strength Suite I |
 | systems | ms_ext_power_assembly_2 | ms_total_strength_suite_ii | long-rim | 力量总成套组 II | Total Strength Suite II |
 | systems | ms_ext_power_assembly_3 | ms_total_strength_suite_iii | long-rim | 力量总成套组 III | Total Strength Suite III |
-| mods | wm_ext_hypermass_mod | wm_supermassive_mod | long-rim | 超巨质量模组 | Supermassive Mod |
+| mods | wm_ext_hypermass_mod | wm_supermassive_mod | long-rim | 超巨质量模块 | Supermassive Mod |
 | mods | wm_ext_thermal_shroud | wm_molten_wreathe | long-rim | 热熔缭绕 | Molten Wreathe |
 | core_bonuses | cb_ext_superheavy_mounting | cb_superheavy_mounting | dustgrave | 超重挂载 | Superheavy Mounting |
 | talents | t_ext_field_analyst | t_field_analyst | dustgrave | 战场分析师 | Field Analyst |
@@ -311,6 +376,7 @@
 | talents | t_ext_blackthumb | t_black_thumb | long-rim | 黑拇指 | Black Thumb |
 | talents | t_ext_void_native | t_spaceborn | long-rim | 太空民 | Spaceborn |
 | pilot_gear | pg_ext_personal_kinetic_barrier | pg_personal_shielding | sotw | 个人动能屏障 | Personal Kinetic Shielding |
+| tags | tg_efficient | tg_efficient | ktb | 高效 | Efficient |
 
 ## 官方补充书中未覆盖的条目（导入后仍为英文）
 
@@ -332,7 +398,6 @@
 | weapons | mw_exo_brood_siblings_molt | Brood-Sibling’s Molt | wallflower |
 | systems | ms_cockpit_integrated_stim_pump | Cockpit-Integrated Stim Pump | dustgrave |
 | systems | ms_mesmertrance_dampener | MesmerTrance Dampener | dustgrave |
-| systems | ms_spaceborn_1 | Spaceborn EVA | long-rim |
 | systems | ms_adjutant_class_compcon | ADJUTANT-Class Comp/Con | osr |
 | systems | ms_pattern_c_advanced_charges | Pattern-C Advanced Charges | osr |
 | systems | ms_miniaturized_linac_coherent_beam_cannon | Miniaturized LinAc Coherent Beam Cannon | osr |
@@ -478,7 +543,7 @@
 | weapons | mw_piof_dazzle | 炫彩 |
 | weapons | mw_piof_current_swarm | 电流虫群 |
 | weapons | mw_piof_grinder_uzi | “研磨者”战斗 UZI |
-| weapons | mw_piof_plasma_caster | 等离子脚轮 |
+| weapons | mw_piof_plasma_caster | 等离子投射器 |
 | weapons | mw_piof_furnace_hammer | 火炉之锤 |
 | weapons | mw_piof_snap_crusher | 卡扣式挤压采矿钳 |
 | weapons | mw_piof_geomorph_wrecking_ball | 地质形态粉碎球 |
@@ -595,7 +660,7 @@
 | systems | ms_piof_cicada_chatter | 蝉鸣叨叨 |
 | systems | ms_piof_shock_explosives | 电击炸药 |
 | systems | ms_piof_bmx_platform | B.M.X.自动打印平台 |
-| systems | ms_piof_plasma_tread | 血浆胎面 |
+| systems | ms_piof_plasma_tread | 等离子胎面 |
 | systems | ms_piof_grease_explosives | 油脂炸药 |
 | systems | ms_piof_mercury_nhp | 墨丘利级 NHP |
 | systems | ms_piof_all_terrain_muscle | 全地形合成肌 |

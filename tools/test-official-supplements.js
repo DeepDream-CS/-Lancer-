@@ -11,11 +11,13 @@ const kinds=['frames','weapons','systems','mods','core_bonuses','talents','pilot
 const items=JSON.parse(run('JSON.stringify('+JSON.stringify(kinds)+'.flatMap(k=>D[k]))'));
 const by=new Map(items.map(x=>[x.id,x]));let count=0;
 for(const [id,fields]of Object.entries(overrides)){
- if(id.startsWith('_'))continue;
+ if(id.startsWith('_')||id.startsWith('tg_')||id.startsWith('st_'))continue;
+ const texts=Object.values(fields).filter(v=>typeof v==='string');
+ if(!texts.length)continue;
  const item=by.get(reverse[id]||id);assert(item?.ext,id);
- assert.deepEqual(item.official_supplement.entries.map(x=>x.text),Object.values(fields),id);
+ assert.deepEqual(item.official_supplement.entries.map(x=>x.text),texts,id);
  const html=run('officialSupplementHtml('+JSON.stringify(item)+')');assert.match(html,/官方补充说明/);
- for(const text of Object.values(fields)){assert(html.includes(text),id);count++;}
+ for(const text of texts){assert(html.includes(text),id);count++;}
 }
 assert.equal(run("officialSupplementHtml({id:'empty'})"),'');
 assert.match(run("frameRulesHtml(FRAMES.mf_ext_chomolungma)"),/关停平衡控制/);

@@ -4,7 +4,7 @@
 
 本表由 `node tools/build-equipment-lore.js` 根据当前本地数据生成。请修改源数据后重新构建，不直接编辑本表；生成日期不代表已同步上游最新资料。
 
-已补中文 489 项；仅有英文原文 0 项；尚未可靠匹配独立风味文本 41 项。
+已补中文 489 项；仅有英文原文 0 项；尚未可靠匹配独立风味文本 42 项。
 
 缺项可能是原书没有独立段落，也可能是名称或排版差异导致未能可靠匹配，需按条目进一步核对。GMS武器沿用上游提供的系列共用介绍；天赋装备的获取说明不作为风味文本，也未用规则效果或牌照总介绍代替缺失段落。
 
@@ -52,7 +52,8 @@
 | 系统 | 弹药库 I | GMS · 核心规则书 | ms_walking_armory_1 |
 | 系统 | 弹药库 II | GMS · 核心规则书 | ms_walking_armory_2 |
 | 系统 | 弹药库 III | GMS · 核心规则书 | ms_walking_armory_3 |
-| 系统 | “烟窗”冷源 | Kidd · 所有扩展 | ms_ext_chimney_cold_source |
+| 系统 | 太空民 EVA | GMS · 所有扩展 | ms_spaceborn_1 |
+| 系统 | “烟囱”冷源 | Kidd · 所有扩展 | ms_ext_chimney_cold_source |
 | 系统 | 帕尔瓦蒂级 NHP | 阿格里帕 · 所有扩展 | ms_ext_agrippa_parvati |
 | 系统 | 爆破者工具箱 | GMS · 所有扩展 | ms_ext_demolitions_toolkit |
 | 系统 | “捕蝇夹”反侵入追踪器 v.2.3 | 斗牛士 · 所有扩展 | ms_ch_flytrap |

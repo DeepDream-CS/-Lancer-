@@ -61,7 +61,7 @@ function pageIntro(p) {
     sheet: ['角色卡与备份','把角色卡带到游戏桌，也为下一次编辑保留备份。']
   }[tab];
   const level=LV(p.ll), spent=Object.values(p.talents).reduce((n,r)=>n+r,0);
-  return `<section class="page-intro"><div><p class="eyebrow">${esc(p.callsign || p.name || '新驾驶员')} · LL${p.ll}</p><h1>${content[0]}</h1><p>${content[1]}</p></div><div class="resource-summary"><span>毅力 <b>+${level.grit}</b></span><span>天赋 <b>${spent}/${level.talents}</b></span><span>机甲 <b>${p.mechs.length}</b></span></div></section>${db.ignoreLimits ? '<div class="gm-banner" role="status"><span class="gm-banner-message">GM 模式已开启：可选未解锁的装备与骨架。</span><button data-ui="disableGM">恢复牌照限制</button></div>' : ''}`;
+  return `<section class="page-intro"><div><p class="eyebrow">${esc(p.callsign || p.name || '新驾驶员')} · LL${p.ll}</p><h1>${content[0]}</h1><p>${content[1]}</p></div><div class="resource-summary"><span>毅力 <b>+${level.grit}</b></span><span>天赋 <b>${spent}/${talentBudget(p)}</b></span><span>机甲 <b>${p.mechs.length}</b></span></div></section>${db.ignoreLimits ? '<div class="gm-banner" role="status"><span class="gm-banner-message">GM 模式已开启：可选未解锁的装备与骨架。</span><button data-ui="disableGM">恢复牌照限制</button></div>' : ''}`;
 }
 function talentToolbar() {
   return `<div class="catalog-toolbar"><label class="search-field"><span>查找天赋</span><input type="search" data-ui="talentSearch" value="${esc(uiState.talentQuery)}" placeholder="中文、英文名称或效果关键词"></label><label class="chk"><input type="checkbox" data-ui="selectedTalents" ${uiState.selectedTalents?'checked':''}>只看已选</label><button data-ui="resetTalents">重置筛选</button><span class="muted" data-talent-count role="status"></span></div><p class="empty-state" data-talent-empty hidden>没有匹配的天赋，试试其他关键词或重置筛选。</p>`;
@@ -292,7 +292,9 @@ function weaponEffectHtml(w) {
   if (w.on_attack) h += `<p><b>攻击时：</b>${txt(w.on_attack)}</p>`;
   if (w.on_hit) h += `<p><b>命中时：</b>${txt(w.on_hit)}</p>`;
   if (w.on_crit) h += `<p><b>会心一击时：</b>${txt(w.on_crit)}</p>`;
-  for (const pf of w.profiles || []) h += `<div class="wt-profile"><b>${esc(pf.name || '')}</b>：${esc([rngText(pf.range || w.range), dmgText(pf.damage || w.damage), tagsPlain(pf.tags)].filter(Boolean).join(' · '))}${pf.effect ? `<p>${pf.effect}</p>` : ''}${pf.on_hit ? `<p><b>命中时：</b>${txt(pf.on_hit)}</p>` : ''}${pf.on_crit ? `<p><b>会心一击时：</b>${txt(pf.on_crit)}</p>` : ''}${pf.on_attack ? `<p><b>攻击时：</b>${txt(pf.on_attack)}</p>` : ''}</div>`;
+  const sharedEffect = w.profiles?.length > 1 && w.profiles.every(pf => pf.effect && pf.effect === w.profiles[0].effect) ? w.profiles[0].effect : '';
+  if (sharedEffect) h += `<p>${sharedEffect}</p>`;
+  for (const pf of w.profiles || []) h += `<div class="wt-profile"><b>${esc(pf.name || '')}</b>：${esc([rngText(pf.range || w.range), dmgText(pf.damage || w.damage), tagsPlain(pf.tags)].filter(Boolean).join(' · '))}${pf.effect && pf.effect !== sharedEffect ? `<p>${pf.effect}</p>` : ''}${pf.on_hit ? `<p><b>命中时：</b>${txt(pf.on_hit)}</p>` : ''}${pf.on_crit ? `<p><b>会心一击时：</b>${txt(pf.on_crit)}</p>` : ''}${pf.on_attack ? `<p><b>攻击时：</b>${txt(pf.on_attack)}</p>` : ''}${actsHtml(pf)}</div>`;
   h += actsHtml(w);
   h += equipmentLoreHtml(w);
   return h || '<span class="muted">—</span>';
@@ -318,6 +320,9 @@ function renderWeaponTable() {
     sel('src', s.src, [['', '全部来源'], ['GMS', 'GMS（无需牌照）'], ...MAKERS.slice(1).map(m => [m, makerName(m)]), ['talent', '天赋'], ['integrated', '骨架内建'], ['core', '核心规则书'], ['ext', '扩展']]) +
     `<label class="chk"><input type="checkbox" data-wt="avail" ${s.avail ? 'checked' : ''}>只看当前角色可用</label>`;
   const order = ['GMS', ...MAKERS.slice(1), 'talent', 'integrated'];
+  const prevCtx = STAT_CTX;
+  STAT_CTX = {};
+  try {
   const rows = D.weapons.filter(w => weaponTableMatches(w, p)).sort((a, b) => {
     const oa = weaponOrigin(a), ob = weaponOrigin(b);
     return order.indexOf(oa.key) - order.indexOf(ob.key) || oa.text.localeCompare(ob.text, 'zh') || (a.license_level || 0) - (b.license_level || 0) || mounts.indexOf(a.mount) - mounts.indexOf(b.mount);
@@ -327,9 +332,10 @@ function renderWeaponTable() {
     const o = weaponOrigin(w), ok = !w.source || itemAvailable(p, w);
     return `<tr class="${ok ? '' : 'locked'}"><td class="wt-name"><b>${esc(plain('item', w))}</b>${extBadge(w)}${plain('item', w) !== w.name ? `<small>${esc(w.name)}</small>` : ''}</td>
       <td>${esc(o.text)}</td><td>${esc(T.mount[w.mount] || w.mount)}</td><td>${esc(T.wtype[w.type] || (w.type === '???' ? '特殊' : w.type))}</td>
-      <td>${esc(rngText(w.range || w.profiles?.[0]?.range)) || '—'}</td><td>${esc(dmgText(w.damage || w.profiles?.[0]?.damage)) || '—'}</td><td>${esc(tagsPlain(w.tags?.length ? w.tags : w.profiles?.[0]?.tags)) || '—'}</td><td>${w.sp || '—'}</td>
+      <td>${esc(summaryRangeText(w)) || '—'}</td><td>${esc(summaryDmgText(w)) || '—'}</td><td>${esc(tagsPlain(w.tags?.length ? w.tags : w.profiles?.[0]?.tags)) || '—'}</td><td>${w.sp || '—'}</td>
       <td class="wt-effect">${weaponEffectHtml(w)}</td></tr>`;
   }).join('') : '<tr><td colspan="9" class="empty-state">没有符合条件的武器。</td></tr>';
+  } finally { STAT_CTX = prevCtx; }
   highlightTerms(box.querySelector('.wt-body'));
 }
 function openWeaponTable() { const box = document.getElementById('weaponTable'); if (!box) return; box.hidden = false; renderWeaponTable(); box.querySelector('[data-wt="q"]').focus(); }

@@ -25,14 +25,15 @@ const FVTT = path.join(ROOT, "source", "fvtt");
 const MAP_FILE = path.join(FVTT, "official-map.json");
 
 const KINDS = ["frames", "weapons", "systems", "mods", "core_bonuses", "talents", "pilot_gear"];
+const EXT_KINDS = [...KINDS, "tags"];
 const CORE_KINDS = [...KINDS, "skills", "tags"];
 
 const PACKS = {
 	ext: {
 		lcp: "lancer-cn-expansions.lcp", audit: "FVTT-LCP-AUDIT.md", todo: "zh-overrides.todo.json",
-		overrides: "zh-overrides.json", baseDirs: ["official"], kinds: KINDS, select: x => x.ext,
+		overrides: "zh-overrides.json", baseDirs: ["official"], kinds: EXT_KINDS, select: x => x.ext,
 		manifest: {
-			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.6.2",
+			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.6.4",
 			description: "简易车卡器收录的扩展骨架、装备、天赋与核心奖励（中文），以及官方模组与第三方书的 NPC 职业、模板与特性。官方补充书条目会覆盖 Foundry 自带的英文版；其余为新增内容。",
 		},
 	},
@@ -40,7 +41,7 @@ const PACKS = {
 		lcp: "lancer-cn-core.lcp", audit: "FVTT-LCP-CORE-AUDIT.md", todo: "zh-overrides-core.todo.json",
 		overrides: "zh-overrides-core.json", baseDirs: ["core"], kinds: CORE_KINDS, select: x => !x.ext,
 		manifest: {
-			name: "枪骑兵简易车卡器：核心规则书（中文）", author: "DeepDream-CS", version: "1.1.1",
+			name: "枪骑兵简易车卡器：核心规则书（中文）", author: "DeepDream-CS", version: "1.1.3",
 			description: "核心规则书的骨架、装备、天赋、核心奖励、驾驶员装备、技能与标签，以及 NPC 职业、模板与特性（中文，译名依 v3.5 规则书）。导入后覆盖 Foundry 核心数据的英文版。",
 		},
 	},
@@ -221,7 +222,10 @@ function build(packId = "ext") {
 	function builderNotes(kind, x) {
 		const n = [];
 		if (kind === "frames") {
-			if (x.variant_of) n.push(`变体骨架：沿用${itemName(x.variant_of)}的牌照，牌照等级 2 可用；与原骨架互斥。`);
+			if (x.variant_of) {
+				if (x.source === "GMS") n.push("GMS 变体骨架：牌照等级 0 起即可使用。");
+				else n.push(`变体骨架：沿用${itemName(x.variant_of)}的牌照，牌照等级 2 可用；与原骨架互斥。`);
+			}
 			if (x.maker_note) n.push(x.maker_note);
 			// Foundry 对官方帝王蝶（mf_emperor）已自动扣除毅力，其他骨架需要手动扣除
 			if (x.no_grit_hp && outId(x.id) !== "mf_emperor") n.push("HP 不加毅力（Foundry 会照常加上，需手动扣除）。");
@@ -257,8 +261,9 @@ function build(packId = "ext") {
 	}
 
 	// ---- 修正 Foundry 不接受的值
-	function fixActions(list, where) {
+	function fixActions(list, where, fallbackName = "") {
 		for (const a of list || []) {
+			if (!a.name && fallbackName) a.name = fallbackName;
 			if (a.activation && !ENUM.activation.includes(a.activation)) { audit.fixes.push(`${where}「${a.name}」动作类型 ${a.activation} → Quick`); a.activation = "Quick"; }
 			if (!freqOk(a.frequency)) {
 				audit.fixes.push(`${where}「${a.name}」频率「${a.frequency}」Foundry 无法解析，改写进说明`);
@@ -297,8 +302,9 @@ function build(packId = "ext") {
 	}
 	function finalize(item, kind) {
 		for (const k of BUILDER_ONLY) delete item[k];
+		if (item.actions && !Array.isArray(item.actions)) item.actions = [item.actions];
 		const where = item.id;
-		fixActions(item.actions, where);
+		fixActions(item.actions, where, item.name);
 		fixDeployables(item.deployables, where);
 		if (kind === "frames") {
 			const cs = item.core_system;
@@ -371,6 +377,20 @@ function build(packId = "ext") {
 		});
 		return { actions, rest };
 	}
+	const TAG_ACT_MAP = [
+		["tg_quick_tech", "Quick Tech"],
+		["tg_full_tech", "Full Tech"],
+		["tg_quick_action", "Quick"],
+		["tg_full_action", "Full"],
+		["tg_protocol", "Protocol"],
+		["tg_reaction", "Reaction"],
+		["tg_free_action", "Free"],
+	];
+	function tagActivationOf(tags) {
+		const ids = new Set((tags || []).map(t => t?.id));
+		const hit = TAG_ACT_MAP.find(([tid]) => ids.has(tid));
+		return hit ? hit[1] : null;
+	}
 	function autoActions(item, kind) {
 		const apply = (holder, textField, actField, where) => {
 			if (!holder || (holder[actField] || []).length || typeof holder[textField] !== "string") return;
@@ -379,7 +399,7 @@ function build(packId = "ext") {
 			holder[actField] = actions;
 			holder[textField] = rest;
 		};
-		if (["systems", "weapons", "mods"].includes(kind)) apply(item, "effect", "actions", item.id);
+		if (["systems", "weapons", "mods", "core_bonuses"].includes(kind)) apply(item, "effect", "actions", item.id);
 		if (kind === "frames") {
 			(item.traits || []).forEach(t => apply(t, "description", "actions", `${item.id} 特征「${t.name}」`));
 			apply(item.core_system, "passive_effect", "passive_actions", `${item.id} 核心被动`);
@@ -405,6 +425,41 @@ function build(packId = "ext") {
 			holder[field] = [...(holder[field] || []), d];
 			audit.autoActions.push(`${item.id}${add.path ? " " + add.path : ""}「${d.name}」→ 部署物 ${d.type}（ext-deployables.json）`);
 		}
+		// 带动作标签但无动作/部署物的条目：按标签补齐同名动作按钮；已有部署物但缺 activation 时按标签补部署动作类型
+		const tagAct = tagActivationOf(item.tags);
+		if (tagAct && ["systems", "weapons", "mods"].includes(kind)) {
+			if ((item.deployables || []).length > 0) {
+				for (const d of item.deployables) if (!d.activation) d.activation = tagAct;
+			} else if (!(item.actions || []).length && !(Array.isArray(EXT_ACTIONS[item.id]) && EXT_ACTIONS[item.id].length === 0) && typeof item.effect === "string" && item.effect.trim()) {
+				const plainEff = strip(item.effect);
+				const a = { name: item.name, activation: tagAct, detail: html(item.effect) };
+				const leadFreq = plainEff.match(/^\s*(\d+\s*\/\s*(?:轮|回合|场景|任务))/);
+				if (leadFreq) {
+					const fq = frequencyOf(leadFreq[1]);
+					if (fq) a.frequency = fq;
+				}
+				const hsTag = (item.tags || []).find(t => t?.id === "tg_heat_self" && Number.isFinite(Number(t.val)));
+				if (hsTag) a.heat_cost = Number(hsTag.val);
+				if (tagAct === "Reaction") {
+					const tm = plainEff.match(/当([^，。]{2,40})时/);
+					if (tm) a.trigger = `当${tm[1]}时`;
+				}
+				item.actions = [a];
+				audit.autoActions.push(`${item.id}「${a.name}」→ ${a.activation}（动作标签）`);
+			}
+		}
+	}
+
+	function applyCoreBonusZhHtml(item, x) {
+		const zh = Z.cb[nk(x.name)]?.html || Z.cb[x.name]?.html || "";
+		if (!zh) return;
+		const paras = zh.match(/<p>[\s\S]*?<\/p>|<ul>[\s\S]*?<\/ul>|<ol>[\s\S]*?<\/ol>|<table[\s\S]*?<\/table>/g) || [];
+		const flavor = paras.filter(p => /^<p><i>[\s\S]*<\/i><\/p>$/.test(p));
+		const rules = paras.filter(p => !flavor.includes(p));
+		if (rules.length) {
+			if (flavor.length && (!(item.description || "").trim() || !CJK.test(item.description || ""))) item.description = flavor.join("");
+			item.effect = rules.join("");
+		}
 	}
 
 	function convert(kind, x) {
@@ -421,6 +476,7 @@ function build(packId = "ext") {
 		}
 		if (kind === "weapons" && x.types?.length) item.type = x.types[0];
 		if (kind === "mods") delete item.profiles;
+		if (kind === "core_bonuses") applyCoreBonusZhHtml(item, x);
 		if (!(item.description || "").trim() && lore(x.id)) item.description = lore(x.id);
 		if (kind === "talents") {
 			const zh = D.zh.talents[x.name];
@@ -470,10 +526,16 @@ function build(packId = "ext") {
 		dst[field] = clone(x[field]);
 	}
 	function overlayText(dst, src, where) {
-		for (const f of TEXT_FIELDS) if (typeof src[f] === "string" && CJK.test(src[f])) dst[f] = html(src[f]);
+		for (const f of TEXT_FIELDS) {
+			const val = typeof src[f] === "string" ? src[f] : src[f]?.detail;
+			const canWrite = f === "description"
+				? (dst[f] === undefined || typeof dst[f] === "string")
+				: (typeof dst[f] === "string" && dst[f].trim() !== "");
+			if (typeof val === "string" && CJK.test(val) && canWrite) dst[f] = html(val);
+		}
 		if (typeof src.name === "string" && CJK.test(src.name) && dst.name !== undefined) dst.name = src.name;
 		for (const arr of ["actions", "deployables", "traits", "profiles", "active_actions", "passive_actions"]) {
-			const a = dst[arr] || [], b = src[arr] || [];
+			const a = Array.isArray(dst[arr]) ? dst[arr] : [], b = Array.isArray(src[arr]) ? src[arr] : src[arr] ? [src[arr]] : [];
 			// 官方没有这一项：车卡器的文字已在效果说明里，不另加动作（以免与 Foundry 的核心系统按钮重复）
 			if (!b.length || !a.length) continue;
 			if (a.length !== b.length) {
@@ -484,26 +546,30 @@ function build(packId = "ext") {
 		}
 	}
 	// 天赋等级的中文说明里，动作写成说明块（名称 + 类型，触发 / 效果）。按块给官方动作换上中文：
-	// 块数与动作数相同时逐个对应；只有一个动作时，名称与等级同名就用等级中文名，说明用整段等级中文。
+	// 优先按真正带动作词的说明块对齐（忽略「阅读说明」等 FAQ 块）；只有一个动作时，名称与等级同名就用等级中文名。
 	function blocksOf(h) {
 		return String(h || "").split('<div class="blk">').slice(1).map(seg => {
-			const m = seg.match(/^<div class="blk-h">([\s\S]*?) <span class="muted">[\s\S]*?<\/span><\/div>([\s\S]*)$/);
+			const m = seg.match(/^<div class="blk-h">([\s\S]*?) <span class="muted">([\s\S]*?)<\/span><\/div>([\s\S]*)$/);
 			if (!m) return null;
-			let body = m[2].replace(/<\/div>\s*$/, "");
+			const label = strip(m[2]).trim();
+			let body = m[3].replace(/<\/div>\s*$/, "");
 			const t = body.match(/<p><b>触发：<\/b>([\s\S]*?)<\/p>/);
 			if (t) body = body.replace(t[0], "");
 			body = body.replace(/<div><b>效果：<\/b>([\s\S]*?)<\/div>/, "$1");
-			return { name: strip(m[1]).trim(), trigger: t ? t[1] : "", detail: body };
+			return { name: strip(m[1]).trim(), label, isAction: Boolean(activationOf(label)), trigger: t ? t[1] : "", detail: body };
 		}).filter(Boolean);
 	}
 	function rankActionsZh(rank, zhRank) {
 		const acts = rank.actions || [];
 		if (!acts.length || !zhRank?.html) return;
-		const blks = blocksOf(zhRank.html);
+		const allBlks = blocksOf(zhRank.html);
+		const actBlks = allBlks.filter(k => k.isAction);
+		const blks = actBlks.length === acts.length ? actBlks : allBlks;
 		acts.forEach((a, i) => {
-			// 块数对不上时，与等级同名的动作仍可以对应到与中文等级名同名的块
+			// 块数对不上时，优先按单一动作块或与等级同名的块匹配
 			const b = blks.length === acts.length ? blks[i]
-				: (a.name === rank.name ? blks.find(k => k.name === zhRank.name) : null) || null;
+				: (a.name === rank.name ? blks.find(k => k.name === zhRank.name) : null)
+				|| (acts.length === 1 && actBlks.length === 1 ? actBlks[0] : null);
 			if (b) {
 				a.name = b.name;
 				a.detail = b.detail;
@@ -516,10 +582,36 @@ function build(packId = "ext") {
 			}
 		});
 	}
+	const TRAIT_ORDER_MATCHERS = {
+		mf_atlas: [
+			t => /大小\s*1|冲撞|擒拿/.test(`${t.name}|${t.description}`),
+			t => /猎人|受到.*伤害.*抗性/.test(`${t.name}|${t.description}`),
+			t => /伏卧|\+\s*1d6/.test(`${t.name}|${t.description}`),
+			t => /工程/.test(`${t.name}|${t.description}`),
+		],
+		mf_kidd: [
+			t => /第一.*回合|自由动作部署/.test(`${t.name}|${t.description}`),
+			t => /1d6\+1|能量导流|重路由/.test(`${t.name}|${t.description}`),
+			t => /恢复\s*1\s*充能|场景结束/.test(`${t.name}|${t.description}`),
+		],
+	};
+	function alignBuilderTraits(x, offId) {
+		const matchers = TRAIT_ORDER_MATCHERS[offId];
+		if (!matchers || !Array.isArray(x.traits) || x.traits.length !== matchers.length) return x;
+		const used = new Set();
+		const reordered = [];
+		for (const fn of matchers) {
+			const idx = x.traits.findIndex((t, i) => !used.has(i) && fn(t));
+			if (idx < 0) return x;
+			used.add(idx);
+			reordered.push(x.traits[idx]);
+		}
+		return { ...x, traits: reordered };
+	}
 	function overlay(kind, x, off) {
 		const item = clone(off.rec);
 		const where = `${x.id} → ${off.rec.id}`;
-		x = { ...x, _kind: kind };
+		x = { ...(kind === "frames" ? alignBuilderTraits(x, off.rec.id) : x), _kind: kind };
 		overlayText(item, x, where);
 		item.name = nameOf(kind, x);
 		if (kind === "frames") {
@@ -535,11 +627,16 @@ function build(packId = "ext") {
 			takeValue(item, x, "sp", "SP");
 			if (x.mount && ENUM.weaponSize.includes(x.mount)) takeValue(item, x, "mount", "挂载");
 			const op = item.profiles || [], bp = x.profiles || [];
+			const topTagIds = new Set((item.tags || []).map(t => t.id));
+			if ((item.actions || []).some(a => a.activation === "Protocol")) topTagIds.add("tg_protocol");
 			if (bp.length && bp.length === op.length) {
 				op.forEach((pf, i) => {
+					const pfTags = topTagIds.size
+						? (bp[i].tags || []).filter(t => !topTagIds.has(t.id) || (pf.tags || []).some(ot => ot.id === t.id))
+						: bp[i].tags;
 					takeList(pf, x, "damage", bp[i].damage, `数据组 ${i + 1} 伤害`, o => o.profiles?.[i]?.damage);
 					takeList(pf, x, "range", bp[i].range, `数据组 ${i + 1} 射程`, o => o.profiles?.[i]?.range);
-					takeTags(pf, x, bp[i].tags, `数据组 ${i + 1} 标签`, o => o.profiles?.[i]?.tags);
+					takeTags(pf, x, pfTags, `数据组 ${i + 1} 标签`, o => o.profiles?.[i]?.tags);
 				});
 			} else if (op.length === 1 && !bp.length) {
 				takeList(op[0], x, "damage", x.damage, "伤害", o => o.damage); takeList(op[0], x, "range", x.range, "射程", o => o.range); takeTags(op[0], x, x.tags, "tags", o => o.tags);
@@ -562,19 +659,17 @@ function build(packId = "ext") {
 			});
 			else audit.structure.push(`${where} 的天赋等级数不同（官方 ${item.ranks.length}，车卡器 ${x.ranks.length}）`);
 		}
-		if (kind === "core_bonuses" && !CJK.test(item.effect || "")) {
-			// 规则站译文把风味（斜体段落）和效果写在一起，拆回 description / effect
-			const zh = Z.cb[nk(x.name)]?.html || "";
-			const paras = zh.match(/<p>[\s\S]*?<\/p>|<ul>[\s\S]*?<\/ul>|<table[\s\S]*?<\/table>/g) || [];
-			const flavor = paras.filter(p => /^<p><i>[\s\S]*<\/i><\/p>$/.test(p));
-			const rules = paras.filter(p => !flavor.includes(p));
-			if (rules.length) { item.description = flavor.join(""); item.effect = rules.join(""); }
-		}
+		if (kind === "core_bonuses") applyCoreBonusZhHtml(item, x);
 		if (kind === "pilot_gear" && !CJK.test((item.effect || "") + (item.description || "")) && Z.gear[x.name]?.html) item.description = Z.gear[x.name].html;
 		if (kind === "skills" && Z.skills[x.name.toLowerCase()]?.html) {
 			const zh = Z.skills[x.name.toLowerCase()].html;
 			item.detail = zh;
 			item.description = strip(zh).trim();
+		}
+		if (kind === "tags") {
+			if (!String(off.rec.name || "").includes("{VAL}") && typeof item.name === "string") item.name = item.name.replace(/\{VAL\}/g, "");
+			if (!String(off.rec.description || "").includes("{VAL}") && typeof item.description === "string") item.description = item.description.replace(/\{VAL\}/g, "1");
+			if (item.id === "tg_deployable" && typeof item.description === "string") item.description = item.description.replace(/每级大小拥有回避\s*5\s*和\s*10\s*HP/, "拥有固定的5回避与每级大小10 HP");
 		}
 		if (kind !== "frames" && x.license_level !== undefined && off.rec.license_level !== undefined && x.license_level !== off.rec.license_level)
 			diff(x, "牌照等级（保留官方）", off.rec.license_level, x.license_level);
@@ -591,7 +686,7 @@ function build(packId = "ext") {
 	// ---- 主流程
 	const out = Object.fromEntries(kinds.map(k => [k, []]));
 	for (const kind of kinds) {
-		for (const x of D[kind].filter(P.select)) {
+		for (const x of (D[kind] || []).filter(P.select)) {
 			const target = isCore ? (OFF[kind].has(x.id) ? x.id : null) : MAP[x.id];
 			// 车卡器有、Foundry 的 lancer-data 没有的标签照常新增；其他类别缺失说明数据版本对不上
 			if (isCore && !target && kind !== "tags") { audit.mapErrors.push(`核心条目 ${x.id} 不在 Foundry 的 lancer-data 中`); continue; }
@@ -606,7 +701,34 @@ function build(packId = "ext") {
 			}
 		}
 	}
-	if (!isCore) for (const id of Object.keys(MAP)) if (!KINDS.some(k => D[k].some(y => y.id === id && y.ext))) audit.mapErrors.push(`映射表中的 ${id} 不在车卡器扩展数据里`);
+	if (!isCore) {
+		const emittedTargets = new Set(audit.overlaid.map(o => o.target));
+		for (const [id, target] of Object.entries(MAP)) {
+			if (KINDS.some(k => D[k].some(y => y.id === id && y.ext))) continue;
+			const offKind = kinds.find(k => OFF[k]?.has(target));
+			if (offKind && OVERRIDES[target] && !emittedTargets.has(target)) {
+				const off = OFF[offKind].get(target);
+				const item = finalize(clone(off.rec), offKind);
+				const zhName = OVERRIDES[target].name || off.rec.name;
+				out[offKind].push(item);
+				emittedTargets.add(target);
+				audit.overlaid.push({ kind: offKind, id, target, pack: off.pack, name: zhName, officialName: off.rec.name });
+				continue;
+			}
+			audit.mapErrors.push(`映射表中的 ${id} 不在车卡器扩展数据里`);
+		}
+		// 官方扩展补充书独有标签（如 ktb 的 tg_efficient）：通过补译表覆盖汉化
+		if (kinds.includes("tags") && OFF.tags) {
+			for (const [tid, off] of OFF.tags) {
+				if (emittedTargets.has(tid) || !OVERRIDES[tid]) continue;
+				const item = finalize(clone(off.rec), "tags");
+				const zhName = OVERRIDES[tid].name || off.rec.name;
+				out.tags.push(item);
+				emittedTargets.add(tid);
+				audit.overlaid.push({ kind: "tags", id: tid, target: tid, pack: off.pack, name: zhName, officialName: off.rec.name });
+			}
+		}
+	}
 	// 附带武器数据的改装（如下挂式冲击器）：Foundry 的改装不能带武器数据，也不会随改装加入内建物品。
 	// 另导出一件同牌照的「附带武器」，安装改装后拖到机甲上即可直接攻击（不占挂载点与 SP）。
 	for (const x of D.mods.filter(m => P.select(m) && m.profiles?.length && !MAP[m.id])) {

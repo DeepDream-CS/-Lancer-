@@ -157,6 +157,23 @@ checkExport("超重型", sh);
 const shMounts = sh.mechs[0].loadouts[0].mounts;
 ok(shMounts[2].slots[0].weapon?.id === "mw_cyclone_pulse_rifle" && shMounts[0].lock === true && shMounts[0].slots.every(s => !s.weapon) && shMounts[1].lock === false, "超重型武器占用的挂载点标为锁定（受身）：" + JSON.stringify(shMounts));
 
+// ---- 3b. 战术带锁定挂载点、武器舱规格过滤、曲线球榴弹充能与太空民 EVA 内建系统导出
+run(`
+	var q2 = blankPilot(); q2.ll = 3; q2.talents = { t_ext_void_native: 1 }; q2.coreBonuses = ["cb_piof_curveball"];
+	var mm2 = q2.mechs[0]; mm2.frame = "mf_standard_pattern_i_everest";
+	mm2.systems = ["ms_pl_tactical_belt", "ms_pattern_a_smoke_charges", "ms_pl_weapon_pod"];
+	mm2.beltMount = "m0"; mm2.beltSystem1 = "ms_pattern_a_smoke_charges";
+	mm2.podMode = "Main"; mm2.podWeapon1 = "mw_assault_rifle"; mm2.podWeapon2 = "mw_pistol";
+	var outExt = foundryPilotData(q2);
+`);
+const extExp = JSON.parse(run("JSON.stringify(outExt)"));
+checkExport("战术带与太空民导出", extExp);
+const extLo = extExp.mechs[0].loadouts[0];
+ok(extLo.mounts[0].lock === true && extLo.mounts[1].lock === false, "战术带占用的挂载点导出为 lock: true");
+ok(extLo.integratedSystems.some(s => s.id === "ms_spaceborn_1"), "太空民 I 级导出 ms_spaceborn_1 内建系统");
+ok(extLo.systems.find(s => s.id === "ms_pattern_a_smoke_charges")?.uses === 5, "曲线球核心奖励为榴弹系统导出 +2 受限次数");
+ok(extExp.mechs[0].notes.includes("突击步枪") && !extExp.mechs[0].notes.includes("手枪"), "武器舱主武器模式下不导出残留的第二把副武器");
+
 // ---- 4. 角色卡页面有导出按钮
 const appJs = fs.readFileSync(path.join(ROOT, "assets/js/app.js"), "utf8");
 ok(appJs.includes('data-act="exportFoundry"'), "角色卡页应有「导出到 Foundry」按钮");

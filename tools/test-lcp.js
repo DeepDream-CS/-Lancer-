@@ -210,7 +210,7 @@ function checkPack(packId) {
 	const under = out.weapons.find(w => w.id === "mw_pl_underslung_data");
 	ok(under && under.name === "下挂式冲击器（附带武器）" && under.mount === "Auxiliary" && under.type === "Launcher" && under.damage[0]?.val === 5 && under.range[0]?.val === 3, "下挂式冲击器应另导出为附带武器（副武器发射器，射程 3，5 爆炸）");
 	ok(under && under.tags.some(t => t.id === "tg_ap") && under.tags.some(t => t.id === "tg_loading") && under.no_bonus && under.no_core_bonus && under.sp === 0, "附带武器：穿甲、装填，不受其他改装与核心奖励影响，0 SP");
-	ok(under && under.license_id === "pl_ips_vanguard" && /散裂/.test(under.on_hit), "附带武器沿用改装的牌照，命中效果取自改装说明");
+	ok(under && under.license_id === "pl_ips_vanguard" && /离散|散裂/.test(under.on_hit), "附带武器沿用改装的牌照，命中效果取自改装说明");
 	// 犹大漏洞是命中后的追加动作（自由动作），不是快速科技
 	const judas = sysById("ms_ext_judas_exploit")?.actions?.[0];
 	ok(judas?.activation === "Free" && judas.frequency === "1/Scene" && /命中/.test(judas.trigger || ""), "犹大漏洞应为带触发的自由动作");
@@ -240,7 +240,7 @@ function checkPack(packId) {
 		ok(audit.added.some(a => a.id === id), `ext-deployables.json 的 ${id} 应是扩展包新增的条目`);
 		for (const d of list) {
 			ok(["Deployable", "Drone", "Mine"].includes(d.type) && CJK.test(d.name) && CJK.test(d.detail), `ext-deployables.json 的 ${id}「${d.name}」类型、名称或说明不合法`);
-			ok(d.hp !== undefined && d.evasion !== undefined, `ext-deployables.json 的 ${id}「${d.name}」应写明 HP 与回避（照原文）`);
+			ok(d.type === "Mine" || (d.hp !== undefined && d.evasion !== undefined), `ext-deployables.json 的 ${id}「${d.name}」应写明 HP 与回避（照原文）`);
 		}
 	}
 	const extActions = readJson(path.join(ROOT, "source/fvtt/ext-actions.json"));
@@ -271,7 +271,27 @@ function checkPack(packId) {
 	ok(kang && /康格多底盘/.test(kang.description), "康格多应注明需要核心奖励");
 	const plItem = out.weapons.find(w => w.id === "mw_pl_buckler");
 	ok(plItem && plItem.license_id === "pl_ips_vanguard" && /专业牌照/.test(plItem.effect + plItem.description), "专业牌照装备应注明专业牌照");
-	ok(audit.overlaid.length === 108, `扩展包应覆盖 108 个官方条目，实际 ${audit.overlaid.length}`);
+	ok(audit.overlaid.length === 110, `扩展包应覆盖 110 个官方条目（含 ms_spaceborn_1 与 tg_efficient），实际 ${audit.overlaid.length}`);
+	const chomoNote = out.frames.find(f => f.id === "mf_chomolungma")?.description || "";
+	ok(/GMS 变体骨架：牌照等级 0 起即可使用/.test(chomoNote) && !/牌照等级 2 可用/.test(chomoNote), "GMS 变体骨架（珠穆朗玛 / 萨加玛塔）不应误标牌照等级 2");
+	const atlas = out.frames.find(f => f.id === "mf_atlas");
+	ok(atlas && /猎人/.test(atlas.traits?.[1]?.name || "") && atlas.traits?.[1]?.actions?.[0]?.activation === "Reaction", "阿特拉斯蛾第 2 项特征名称应与官方「猎人回避」反应对齐");
+	const kidd = out.frames.find(f => f.id === "mf_kidd");
+	ok(kidd && /能量|导流|重路由/.test(kidd.traits?.[1]?.name || "") && kidd.traits?.[1]?.actions?.[0]?.activation === "Quick", "基德第 2 项特征名称应与官方「能量导流」快速动作对齐");
+	const icono = out.talents.find(t => t.id === "t_iconoclast");
+	ok(icono && !/哪些动作可以触发/.test(icono.ranks?.[1]?.actions?.[0]?.detail || ""), "偶像破坏者 II「内化火花」动作说明不应混入阅读说明 FAQ 块");
+	const orator = out.talents.find(t => t.id === "mf_orator");
+	ok(orator && orator.ranks?.[1]?.counters?.[0]?.min === 0, "演说家计数器下限 min 应修正为 0");
+	const qLog = out.core_bonuses.find(c => c.id === "cb_ext_quality_logistics");
+	ok(qLog && /<i>/.test(qLog.description || "") && /<ul>/.test(qLog.effect || "") && qLog.actions?.[0]?.activation === "Quick", "扩展核心奖励「高品质后勤」应保留斜体风味、HTML 列表与快速动作按钮");
+	const shockClaws = out.weapons.find(w => w.id === "mw_integrated_shock_claws");
+	ok(shockClaws && !shockClaws.effect, "官方顶层 effect 为空的装备（电震利爪等）覆盖后不应向顶层重复写入整段规则");
+	const omniPlate = out.systems.find(s => s.id === "ms_omnibus_plate");
+	ok(omniPlate && /射程2/.test(omniPlate.deployables?.[0]?.detail || ""), "万用基板等单部署物官方装备应保留完整部署物规则说明");
+	const evaSys = out.systems.find(s => s.id === "ms_spaceborn_1");
+	ok(evaSys && evaSys.name === "太空民 EVA" && evaSys.actions?.[0]?.name === "EVA 推进", "太空民内建系统 ms_spaceborn_1 应完整汉化导出");
+	const effTag = (out.tags || []).find(t => t.id === "tg_efficient");
+	ok(effTag && effTag.name === "高效" && CJK.test(effTag.description || ""), "官方扩展标签 tg_efficient 应汉化导出");
 }
 
 // ---- 核心规则书
@@ -313,6 +333,12 @@ function checkPack(packId) {
 	ok(supersonic && supersonic.name === "超音速" && CJK.test(supersonic.trigger), "王牌「超音速」反应应换成中文名称与触发");
 	const ap = out.tags.find(t => t.id === "tg_ap");
 	ok(ap && CJK.test(ap.name) && CJK.test(ap.description), "标签应为中文");
+	for (const tid of ["tg_accurate", "tg_inaccurate", "tg_overkill"]) {
+		const tg = out.tags.find(t => t.id === tid);
+		ok(tg && !String(tg.name).includes("{VAL}") && !String(tg.description).includes("{VAL}"), `无参数标签 ${tid} 的名称与说明不应残留 {VAL}：${tg?.name} / ${tg?.description}`);
+	}
+	const depTag = out.tags.find(t => t.id === "tg_deployable");
+	ok(depTag && !/每级大小拥有回避\s*5/.test(String(depTag.description)), `可展开标签 tg_deployable 回避固定为 5，不应写作按大小倍增：${depTag?.description}`);
 	ok(out.frames.every(f => CJK.test(f.name) && f.traits.every(t => CJK.test(t.name))), "核心骨架与特性名称应为中文");
 	ok(["weapons", "systems", "mods", "pilot_gear"].every(k => out[k].every(x => CJK.test(x.name))), "核心装备名称应为中文");
 	// 核心包沿用 Foundry 的 lancer-data 数值，除非车卡器有意改动
@@ -326,8 +352,9 @@ function checkPack(packId) {
 	const getPath = (o, p) => p.replace(/\[(\d+)\]/g, ".$1").split(".").reduce((x, k) => (x == null ? x : x[k]), o);
 	const tagsOf = s => (String(s).match(/<\/?[a-z]+[^>]*>/gi) || []).map(t => t.replace(/\s.*>/, ">").toLowerCase()).sort().join("");
 	const numsOf = s => String(s).replace(/<[^>]+>/g, "").match(/\d+(\.\d+)?/g) || [];
-	// 英文原文自身标签残缺（结尾 "</ul" 缺 ">"），译文补全了列表
+	// 英文原文自身标签残缺（结尾 "</ul" 缺 ">"），译文补全了列表；德川核心主动协同英文 lancer-data 笔误写 "+1 Threat"，按原书正文修正为 "+2威胁"
 	const TAG_EXEMPT = new Set(["t_juggernaut|ranks[2].synergies[0].detail"]);
+	const NUM_EXEMPT = new Set(["mf_tokugawa|core_system.active_synergies[0].detail"]);
 	// 与车卡器用法不一致的写法 → 应改为
 	const TERMS = [[/精准/, "准度"], [/重击(?!弹)/, "会心一击"], [/维修值/, "维修"], [/(?<!猎人)闪避/, "回避（阿特拉斯蛾特性「猎人闪避」除外）"], [/生命值/, "HP"],
 		[/躲藏状态/, "匿迹状态"], [/干扰状态/, "受扰状态"], [/闪烁空间/, "瞬空"], [/免费动作/, "自由动作"], [/核心加成/, "核心奖励"], [/超量护盾/, "护盾（Overshield）"]];
@@ -342,13 +369,14 @@ function checkPack(packId) {
 		const ov = readJson(f);
 		delete ov._说明;
 		for (const [id, fields] of Object.entries(ov)) for (const [p, zh] of Object.entries(fields)) {
+			if (typeof zh !== "string") continue;
 			const where = `${file} ${id} ${p}`;
 			for (const [re, to] of TERMS) ok(!re.test(zh), `${where}：「${zh.match(re)?.[0]}」应写作「${to}」`);
 			const en = base[id] && getPath(base[id], p);
 			if (typeof en !== "string") continue;
 			if (!TAG_EXEMPT.has(`${id}|${p}`)) ok(tagsOf(en) === tagsOf(zh), `${where}：HTML 标签与英文原文不一致（原文 ${tagsOf(en) || "无"}，译文 ${tagsOf(zh) || "无"}）`);
 			const zhNums = new Set(numsOf(zh));
-			const lost = numsOf(en).filter(x => !zhNums.has(x));
+			const lost = NUM_EXEMPT.has(`${id}|${p}`) ? [] : numsOf(en).filter(x => !zhNums.has(x));
 			ok(!lost.length, `${where}：译文缺少原文数字 ${lost.join("、")}`);
 		}
 	}

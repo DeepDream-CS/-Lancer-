@@ -57,11 +57,29 @@ function slotAccepts(mount, index, slots) {
   if (mount.type === 'Flex' && index === 1 && WEAPONS[slots[0]?.w]?.mount === 'Main') return [];
   return MOUNT_SLOTS[mount.type]?.[index] || [];
 }
-function canModify(w, mod, mount) {
+function mechHasTrait(m, name) {
+  return !!m && mechTraits(m).some(t => t.name === name || t.name?.startsWith(name + '（遗产：'));
+}
+function fusilierEligible(w, m) {
+  if (!w || w.no_bonus || w.no_bonuses || !mechHasTrait(m, '枪决')) return false;
+  if (w.fusilier) return true;
+  const cw = w.id?.startsWith('mw_prototype_') ? configuredWeapon(w, m) : w;
+  const raw = cw.types || [cw.type];
+  return (raw.includes('???') || raw.some(t => t && t !== 'Melee')) && !(raw.length === 1 && raw[0] === 'Rifle');
+}
+function mechWeaponTypes(w, m, base) {
+  const src = base || w;
+  const rawTypes = src.types || (src.type ? [src.type] : null) || w.types || [w.type];
+  const out = rawTypes.includes('???') ? ['CQB','Rifle','Launcher','Cannon','Nexus'] : [...rawTypes];
+  if (!src.no_bonuses && !w.no_bonus && !w.no_bonuses && mechHasTrait(m, '近威胁目标处理器') && out.includes('Launcher') && !out.includes('CQB')) out.push('CQB');
+  return out;
+}
+function canModify(w, mod, mount, m) {
+  const wtypes = mechWeaponTypes(w, m);
   return !mount.noMods && !w.no_mods &&
-    (!mod.allowed_types?.length || (w.types||[w.type]).some(t=>mod.allowed_types.includes(t))) &&
+    (!mod.allowed_types?.length || wtypes.some(t=>mod.allowed_types.includes(t))) &&
     (!mod.allowed_sizes?.length || mod.allowed_sizes.includes(w.mount)) &&
-    !(w.types||[w.type]).some(t=>(mod.restricted_types||[]).includes(t)) && !(mod.restricted_sizes || []).includes(w.mount);
+    wtypes.some(t=>!(mod.restricted_types||[]).includes(t)) && !(mod.restricted_sizes || []).includes(w.mount);
 }
 // 超重型武器可另占的挂载点。扩展核心奖励「超重挂载」的超重型挂载点：机甲有重型挂载点时，必须占用它。
 function superheavyLinkTargets(mounts, mt) {
@@ -79,26 +97,49 @@ function linkedMounts(p, m) {
   }
   return links;
 }
-function limitedTags(tags, p, m) {
-  const bonus = Math.floor(p.hase.eng / 2) + staticBonus(p, m, 'limited_bonus');
-  return (tags || []).map(t => t.id === 'tg_limited' && bonus ? { ...t, val: Number.isFinite(+t.val) ? +t.val + bonus : `${t.val}+${bonus}` } : t);
+function addLimitedVal(val, bonus) {
+  if (Number.isFinite(+val)) return +val + bonus;
+  const m = String(val).match(/^(.*\d)\+(\d+)$/);
+  return m ? `${m[1]}+${+m[2] + bonus}` : `${val}+${bonus}`;
+}
+function limitedTags(tags, p, m, item) {
+  let bonus = Math.floor(p.hase.eng / 2) + staticBonus(p, m, 'limited_bonus');
+  if (item && SYSTEMS[item.id] && hasCB(p, 'cb_piof_curveball') && systemCategories(item).includes('Grenade')) bonus += 2;
+  return (tags || []).map(t => t.id === 'tg_limited' && bonus ? { ...t, val: addLimitedVal(t.val, bonus) } : t);
 }
 function configuredWeapon(w, m, slot) {
-  if(w.select_profile) { const pf=w.profiles[int(slot?.profile,0,w.profiles.length-1)]; return {...w,...pf,effect:[w.effect,pf.effect].filter(Boolean).join(' '),id:w.id,name:w.name,profiles:w.profiles,selected_profile:pf.name}; }
-  if (!w.id.startsWith('mw_prototype_')) return w;
-  const type = ['Melee','CQB','Rifle','Cannon','Launcher','Nexus'].includes(m.prototypeType) ? m.prototypeType : 'Rifle';
-  const damage = ['Kinetic','Explosive','Energy'].includes(m.prototypeDamage) ? m.prototypeDamage : 'Kinetic';
-  return { ...w, type, range: [{type: type === 'Melee' ? 'Threat' : 'Range', val: type === 'Melee' ? 1 : 10}],
-    damage: w.damage.map(d => ({...d, type: damage})), tags: [...w.tags, ...(w.talent_rank >= 2 && m.prototypeSmart === 'yes' ? [{id:'tg_smart'}] : [])] };
+  let out = w;
+  if(w.select_profile) { const pf=w.profiles[int(slot?.profile,0,w.profiles.length-1)]; out = {...w,...pf,effect:[w.effect,pf.effect].filter(Boolean).join(' '),id:w.id,name:w.name,profiles:w.profiles,selected_profile:pf.name}; }
+  else if (w.id.startsWith('mw_prototype_')) {
+    const type = ['Melee','CQB','Rifle','Cannon','Launcher','Nexus'].includes(m.prototypeType) ? m.prototypeType : 'Rifle';
+    const damage = ['Kinetic','Explosive','Energy'].includes(m.prototypeDamage) ? m.prototypeDamage : 'Kinetic';
+    out = { ...w, type, range: [{type: type === 'Melee' ? 'Threat' : 'Range', val: type === 'Melee' ? 1 : 10}],
+      damage: w.damage.map(d => ({...d, type: damage})), tags: [...w.tags, ...(w.talent_rank >= 2 && m.prototypeSmart === 'yes' ? [{id:'tg_smart'}] : [])] };
+  }
+  if (slot?.fusilier && fusilierEligible(out, m)) {
+    const addOk = tags => (tags || []).some(t => t.id === 'tg_overkill') ? [...(tags || [])] : [...(tags || []), { id: 'tg_overkill' }];
+    out = {
+      ...out, type: 'Rifle', types: ['Rifle'], tags: addOk(out.tags),
+      ...(out.profiles ? { profiles: out.profiles.map(pf => ({ ...pf, type: 'Rifle', types: ['Rifle'], tags: addOk(pf.tags || out.tags) })) } : {}),
+      fusilier: true,
+    };
+  }
+  return out;
 }
 function effectiveProfile(w, profile, mod, p, m) {
   const base = w.select_profile ? w : (profile || w);
-  const range = (base.range || w.range || []).map(r => {
+  const wtypes = mechWeaponTypes(w, m, base);
+  let rawRange = [...(base.range || w.range || [])];
+  if (!base.no_bonuses && !w.no_bonus && !w.no_bonuses && mechHasTrait(m, '近威胁目标处理器') && wtypes.includes('Launcher')) {
+    if (rawRange.some(r => r.type === 'Threat')) rawRange = rawRange.map(r => r.type === 'Threat' ? { ...r, val: Math.max(3, +r.val || 0) } : r);
+    else rawRange.push({ type: 'Threat', val: 3 });
+  }
+  const range = rawRange.map(r => {
     let value = Number(r.val);
-    if (!Number.isFinite(value) || w.no_bonus || w.no_bonuses) return {...r};
+    if (!Number.isFinite(value) || base.no_bonuses || w.no_bonus || w.no_bonuses) return {...r};
     for (const b of buildBonuses(p, m).filter(b => b.id === 'range')) {
       if (w.no_core_bonus && b.coreBonus) continue;
-      if (b.weapon_types?.length && !(w.types||[w.type]).some(t=>b.weapon_types.includes(t))) continue;
+      if (b.weapon_types?.length && !wtypes.some(t=>b.weapon_types.includes(t))) continue;
       if (b.weapon_sizes?.length && !b.weapon_sizes.includes(w.mount)) continue;
       if (b.range_types?.length && !b.range_types.includes(r.type)) continue;
       if (b.damage_types?.length && !(base.damage || []).some(d => b.damage_types.includes(d.type))) continue;
@@ -108,26 +149,31 @@ function effectiveProfile(w, profile, mod, p, m) {
     return {...r, val: value};
   });
   const tags = [...(base.tags || w.tags || [])];
-  // stack_tags（扩展「超巨质量模组」）：同名数值标签相加，例如击退+1，而不是另列一个标签
+  // stack_tags（扩展「超巨质量模块」）：同名数值标签相加，例如击退+1，而不是另列一个标签
   for (const t of mod?.added_tags || []) {
     const same = mod.stack_tags && tags.findIndex(x => x.id === t.id && Number.isFinite(+x.val));
     if (same >= 0 && same !== false) tags[same] = {...tags[same], val: +tags[same].val + (+t.val || 0)};
+    else if (t.val == null && tags.some(x => x.id === t.id && x.val == null)) continue;
     else tags.push(t);
   }
-  if (w.type === 'Melee' && w.mount === 'Auxiliary' && p.talents.t_hunter >= 2) {
+  if (wtypes.includes('Melee') && w.mount === 'Auxiliary' && p.talents.t_hunter >= 2) {
     const t = tags.find(t => t.id === 'tg_thrown');
     if (t) tags[tags.indexOf(t)] = {...t, val: Math.max(5, +t.val || 0)};
     else tags.push({id:'tg_thrown',val:5});
   }
-  return {...base, range, tags: limitedTags(tags, p, m)};
+  return {...base, range, tags: limitedTags(tags, p, m, w)};
 }
 function buildWeaponNote(p, m, entry) {
-  const notes = [];
-  if (entry.w.selected_profile) notes.push('打印数据：' + entry.w.selected_profile);
-  if (hasCB(p, 'cb_auto_stabilizing_hardpoints') && m.stabilized === entry.mount.key) notes.push('+1准度');
-  if (hasCB(p, 'cb_overpower_caliber') && m.overpower === `${entry.mount.key}|${entry.i}`) notes.push('超功率口径：每轮一次，命中时+1d6额外伤害');
-  if (m.frame === 'mf_deaths_head' && entry.w.type !== 'Melee') notes.push('远程攻击检定+1');
-  if (entry.w.id.startsWith('mw_prototype_') && m.prototypeOptics === 'yes') notes.push('+1准度（调整光学）');
+  const notes = [], w = entry.w;
+  if (w.selected_profile) notes.push('打印数据：' + w.selected_profile);
+  if (w.fusilier) notes.push('枪决：类型改为步枪并获得杀绝');
+  if (!w.no_bonus && !w.no_bonuses && mechHasTrait(m, '近威胁目标处理器') && (w.type === '???' || (w.types || [w.type]).includes('Launcher'))) notes.push('近威胁目标处理器：同时视为 CQB 武器（威胁3）');
+  const noAtkRoll = w.no_attack || w.id === 'mw_gravity_gun' || w.id === 'mw_autopod' || w.id === 'mw_autogun';
+  if (hasCB(p, 'cb_auto_stabilizing_hardpoints') && m.stabilized === entry.mount.key && !w.no_core_bonus && !noAtkRoll) notes.push('+1准度');
+  if (hasCB(p, 'cb_overpower_caliber') && m.overpower === `${entry.mount.key}|${entry.i}` && !w.no_core_bonus && !w.no_bonus_damage) notes.push('超功率口径：每轮一次，命中时+1d6额外伤害');
+  const isRanged = mechWeaponTypes(w, m).some(t => t && t !== 'Melee');
+  if (m.frame === 'mf_deaths_head' && isRanged && !noAtkRoll) notes.push('远程攻击掷骰+1');
+  if (w.id.startsWith('mw_prototype_') && w.talent_rank >= 2 && m.prototypeOptics === 'yes') notes.push('+1准度（调整光学）');
   return notes.join('；');
 }
 function creationChecks(p) {
@@ -157,11 +203,11 @@ function loadoutChecks(p, m) {
     if (links.has(mt.key) && st.slots.some(s => s.w || s.mod)) error('超重型武器占用的挂载点必须清空');
     for (const [i,sl] of st.slots.entries()) {
       if (!sl.w) continue;
-      const w = WEAPONS[sl.w];
+      const w = WEAPONS[sl.w], cw = w && configuredWeapon(w, m, sl);
       if (!w || !slotAccepts(mt,i,st.slots).includes(w.mount)) error(`挂载点 ${mt.key} 的武器尺寸或槽位组合不合法`);
       if (w && !itemAvailable(p,w)) error(`${plain('item',w)} 未解锁或属于内建装备`);
-      if (sl.mod && (!MODS[sl.mod] || !w || !canModify(w,MODS[sl.mod],mt))) error('武器模块不适用于该武器或内建挂载点');
-      if(sl.mod2 && (w?.max_mods!==2 || !MODS[sl.mod2] || !canModify(w,MODS[sl.mod2],mt))) error('第二模组仅可安装到支持双模组的武器，且必须符合模组限制');
+      if (sl.mod && (!MODS[sl.mod] || !cw || !canModify(cw,MODS[sl.mod],mt,m))) error('武器模块不适用于该武器或内建挂载点');
+      if(sl.mod2 && (w?.max_mods!==2 || !MODS[sl.mod2] || !cw || !canModify(cw,MODS[sl.mod2],mt,m))) error('第二模组仅可安装到支持双模组的武器，且必须符合模组限制');
       if(sl.mod && sl.mod===sl.mod2) error('同一把武器不能重复安装同一模组');
     }
   }
@@ -176,7 +222,7 @@ function loadoutChecks(p, m) {
   if (hasCB(p,'cb_auto_stabilizing_hardpoints') && !mounts.some(mt=>mt.key===m.stabilized && !links.has(mt.key) && !(m.systems.includes('ms_pl_tactical_belt') && m.beltMount===mt.key) && mt.type!=='Integrated')) error('请为自稳定承力点选择一个可用的普通挂载点');
   if (hasCB(p,'cb_mount_retrofitting') && !mounts.some(mt=>mt.retro)) error('请指定挂载点改装的目标');
   if (hasCB(p,'cb_kkca_signature_move') && !(m.systems.includes(m.signature) && SYSTEMS[m.signature])) error('请为招牌动作指定一个已安装的系统');
-  if (hasCB(p,'cb_overpower_caliber') && !eq.some(e=>`${e.mount.key}|${e.i}`===m.overpower && e.mount.type!=='Integrated' && !e.w.no_core_bonus)) error('请为超功率口径指定一件可用武器');
+  if (hasCB(p,'cb_overpower_caliber') && !eq.some(e=>`${e.mount.key}|${e.i}`===m.overpower && e.mount.type!=='Integrated' && !e.w.no_core_bonus && !e.w.no_bonus_damage)) error('请为超功率口径指定一件可用武器');
   if (p.talents.t_engineer >= 2) {
     const count = [m.prototypeOptics,m.prototypeSmart,m.prototypeReactor].filter(x=>x==='yes').length;
     if (count !== 2) error('工程师原型武器须选择两项调整');
@@ -213,7 +259,7 @@ function prototypeEditor(p,m) {
   return `<div class="blk"><b>原型武器配置（全面维修时选择）</b><div class="row">${select('prototypeType',choices,m.prototypeType || 'Rifle')}${select('prototypeDamage',[['Kinetic','动能'],['Explosive','爆炸'],['Energy','能量']],m.prototypeDamage || 'Kinetic')}</div>${p.talents.t_engineer>=2 ? ['Optics','Smart','Reactor'].map((k,i)=>`<label>${['调整光学（+1准度）','调整电脑（智慧）','移除反应炉屏蔽（可选范围攻击，承受2热度）'][i]} ${select('prototype'+k,[['no','未选'],['yes','选择']],m['prototype'+k] || 'no')}</label>`).join('<br>') : ''}</div>`;
 }
 const SYSTEM_SUBMODE_TYPES = [
-  ['Grenade', /(?:[（(]|<span class="muted">|<div class="wstat">|<i>)\s*(?:<(?:b|i)>)*\s*(?:榴弹|手榴弹)\s*(?:<\/(?:b|i)>)*\s*[，,）)<]/],
+  ['Grenade', /(?:[（(]|<span class="muted">|<div class="wstat">|<i>)\s*(?:<(?:b|i)>)*\s*(?:榴弹|手榴弹|手雷)\s*(?:<\/(?:b|i)>)*\s*[，,）)<]/],
   ['Mine', /(?:[（(]|<span class="muted">|<div class="wstat">|<i>)\s*(?:<(?:b|i)>)*\s*地雷\s*(?:<\/(?:b|i)>)*\s*[，,）)<]/],
   ['Deployable', /(?:[（(]|<span class="muted">|<div class="wstat">|<i>)\s*(?:<(?:b|i)>)*\s*可展开(?:物)?\s*(?:<\/(?:b|i)>)*\s*[，,）)<]/],
 ];

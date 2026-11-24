@@ -8,7 +8,7 @@ function runtime(saved) {
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     document:{body:el(),addEventListener(){},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);},querySelectorAll(){return[];}},
     window:{scrollTo(){},addEventListener(){}},navigator:{},confirm:()=>true});
-  for(const file of ['assets/js/data.js','assets/js/wizard.js','assets/js/cardexport.js','assets/js/rules.js','assets/js/glossary.js','assets/js/ui.js','assets/js/frame-catalog.js','assets/js/battlemap.js','assets/js/app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
+  for(const file of ['assets/js/data.js','assets/js/wizard.js','assets/js/cardexport.js','assets/js/rules.js','assets/js/glossary.js','assets/js/ui.js','assets/js/frame-catalog.js','assets/js/system-library.js','assets/js/battlemap.js','assets/js/app.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
   return code=>vm.runInContext(code,ctx);
 }
 const run=runtime(); let passed=0;
@@ -46,7 +46,7 @@ test('Cancel frame switch preserves weapons and frame',()=>assert(run(`p=fixture
 test('Confirmed frame switch resets mounts and keeps systems',()=>assert(run(`m.systems=['ms_manipulators'];m.overpower='m0|0';confirm=()=>true;changeFrame(m,'mf_nelson')&&m.frame==='mf_nelson'&&Object.keys(m.loadout).length===0&&m.systems[0]==='ms_manipulators'&&m.overpower===''`)));
 test('Storage failure preserves in-memory character and shows failure',()=>assert(run(`const oldSet=localStorage.setItem;localStorage.setItem=()=>{throw Error('QuotaExceededError');};const before=JSON.stringify(db),saved=save();localStorage.setItem=oldSet;!saved&&JSON.stringify(db)===before&&document.getElementById('saveStatus').textContent.includes('保存失败')`)));
 // ---------- 扩展内容（source/expansions/all-expansions.js） ----------
-test('Expansion content merged and marked',()=>assert.equal(run("['frames','talents','backgrounds','core_bonuses','pilot_gear','weapons','systems','mods'].map(k=>D[k].filter(x=>x.ext).length).join()"),'74,21,5,21,1,117,187,9'));
+test('Expansion content merged and marked',()=>assert.equal(run("['frames','talents','backgrounds','core_bonuses','pilot_gear','weapons','systems','mods'].map(k=>D[k].filter(x=>x.ext).length).join()"),'74,21,5,21,1,117,188,9'));
 test('Variant frame follows base license II',()=>assert(run("p=fixture(2);!frameAvailable(p,FRAMES.mf_ext_empakaai)&&(p.licenses={mf_blackbeard:2},frameAvailable(p,FRAMES.mf_ext_empakaai))&&!frameAvailable(p,FRAMES.mf_ext_stortebeker)")));
 test('Everest variants free at LL0',()=>assert(run("p=fixture();frameAvailable(p,FRAMES.mf_ext_chomolungma)&&frameAvailable(p,FRAMES.mf_ext_sagarmatha)")));
 test('Variants have no license of their own',()=>assert(run("!licenseFrames().some(f=>f.variant_of)&&licenseFrames().some(f=>f.id==='mf_ext_gilgamesh')&&!('mf_ext_lycan' in normalizePilot({licenses:{mf_ext_lycan:2,mf_manticore:2}},[]).licenses)")));
@@ -92,7 +92,8 @@ test('Glossary: tags merged, ambiguous words not tagged',()=>{
   assert(run("!getGlossary().list.find(g=>g.term==='AI').def.includes('协定把控制权交给AI或收回')"));
   assert.equal(terms("超过热度上限时"),"热度上限");
   assert.equal(terms("兰开斯特是最可靠、做工最好的机甲；其独特造型；无限宽广"),"");
-  assert.equal(terms("该武器获得可靠2、不准，独特"),"可靠X,不准X,独特");
+  assert.equal(terms("该武器获得可靠2、不准，独特"),"可靠X,不准,独特");
+  assert.equal(terms("三式护盾与迅子护盾不赋予临时生命值，但获得4护盾会"),"护盾");
   assert.equal(terms("上层结构武器化；失去 1 点结构"),"结构");
   assert.equal(terms("触发其他反应；+2 触发"),"反应,触发");
   assert(terms("无形").includes("无形")&&run("getGlossary().list.find(g=>g.term==='无形').cat")==='扩展规则');
@@ -267,6 +268,74 @@ test('Suldan professional license source audit fixes apply to rules and checks',
   assert.equal(run("SYSTEMS.ms_pl_active_defense.sp"),2);
   assert.equal(run("isUnique(MODS.wm_pl_optimized)"),true);
   assert.equal(run("{p=fixture(6);addCatalogProfessional(p,'pl_ips_watchman');addCatalogProfessional(p,'pl_ha_workshop');p.licenses={mf_nelson:1,mf_barbarossa:1};m=p.mechs[0];const mt0=mountsOf(p,m).find(x=>x.type==='Main'),mt2=mountsOf(p,m).find(x=>x.type==='Heavy');m.loadout[mt0.key]={slots:[{w:'mw_pl_modular_rifle',mod:'wm_pl_optimized',profile:2}],link:''};m.loadout[mt2.key]={slots:[{w:'mw_heavy_machine_gun',mod:'wm_pl_optimized'}],link:''};m.systems=['ms_pl_sentry_drone'];m.sentryWeapon=mt2.key+'|0';const eq=equippedWeapons(p,m)[0];eq.w.effect.includes('反应发起的攻击')&&eq.w.effect.includes('两个模组')&&sentryWeapons(p,m).some(e=>e.w.id==='mw_heavy_machine_gun')&&professionalLoadoutChecks(p,m).length===0&&SYSTEMS.ms_pl_sentry_drone.effect.includes('核心奖励')&&checks(p).some(x=>x[1].includes('独特装备'))}"),true);
+});
+
+test('Core Rulebook audit fixes: pipeline, glossary, gear, frames, bonuses, talents, weapons & systems',()=>{
+  // 1. Pipeline global/local replacement guards
+  assert(!run("JSON.stringify(Z.talents['Crack Shot']).includes('稳定瞄准具校正')||JSON.stringify(Z.talents['Crack Shot']).includes('辅助瞄准具校正器')"));
+  assert(run("Z.talents['Crack Shot'].ranks[0].html.includes('稳定瞄准')&&Z.talents['Crack Shot'].desc.includes('辅助瞄准器')"));
+  assert(run("SYSTEMS.ms_h0r_os_system_upgrade_i.actions[0].detail.includes('危险地形区域')&&!SYSTEMS.ms_h0r_os_system_upgrade_i.actions[0].detail.includes('超温危域')"));
+  assert(run("FRAMES.mf_barbarossa.core_system.active_effect.includes('下方内建武器')&&!FRAMES.mf_barbarossa.core_system.active_effect.includes('武器一体化')"));
+  // 2. Glossary & core tags
+  assert(run("getGlossary().list.find(g=>g.term==='受扰').def.includes('受益于科技动作')&&!getGlossary().list.find(g=>g.term==='受扰').def.includes('从反应中受益')"));
+  assert(run("getGlossary().list.find(g=>g.term==='伏卧').def.includes('困难地形')&&getGlossary().list.find(g=>g.term==='伏卧').def.includes('不会触发守望')"));
+  assert(run("TAGS.tg_deployable.description.includes('固定5回避')&&!getGlossary().list.find(g=>g.term==='可展开').def.includes('每级大小拥有回避5')"));
+  assert(run("TAGS.tg_overkill.description.includes('掷出1')&&!TAGS.tg_overkill.description.includes('{VAL}')"));
+  assert.equal(run("tagText({id:'tg_inaccurate'})"),'不准');
+  // 3. Frames & Core Bonuses
+  assert(run("FRAMES.mf_drake.traits[1].description.includes('溅射、爆发、线形和锥形')&&!actsHtml(FRAMES.mf_drake.core_system).includes('堡垒掩体')"));
+  assert(run("FRAMES.mf_napoleon.core_system.active_effect.includes('盾牌标签')&&FRAMES.mf_napoleon.core_system.active_effect.includes('不能超限')"));
+  assert(run("FRAMES.mf_nelson.core_system.active_effect.includes('散兵')&&FRAMES.mf_nelson.traits[1].actions[0].name==='散兵'"));
+  assert(run("Z.cb['All-Theater Movement Suite'].html.includes('任何及全部移动')&&Z.cb['Briareos Frame'].html.includes('不超过1点')&&Z.cb['Briareos Frame'].html.includes('如常修复')"));
+  assert(run("Z.cb['Fomorian Frame'].html.includes('不会被体型小于你的角色')&&Z.cb['Integrated Weapon'].html.includes('其他')&&Z.cb['The Lesson of Transubstantiation'].html.includes('由你选择的')"));
+  // 4. Talents, Backgrounds & Triggers
+  assert(run("Z.talents.Infiltrator.ranks[1].html.includes('命中时')&&Z.talents['Heavy Gunner'].ranks[0].html.includes('随后此效果结束')&&Z.talents['Heavy Gunner'].ranks[2].html.includes('对你造成的伤害')"));
+  assert(run("Z.talents.Leader.ranks[1].html.includes('其他任何玩家的回合')&&Z.talents.Stormbringer.ranks[2].html.includes('直到其下一回合结束')"));
+  assert(run("Z.talents.Hacker.ranks[0].html.includes('被推动')&&Z.talents.Hacker.ranks[1].html.includes('关机')&&Z.talents['Siege Specialist'].ranks[0].html.includes('一个<b>大小1</b>部分')"));
+  assert(run("Z.talents.Engineer.ranks[1].html.includes('选择以下两项')&&!Z.talents.Engineer.ranks[1].html.includes('最多两项')&&Z.talents.Executioner.ranks[2].html.includes('重掷该次攻击')"));
+  assert.equal(run("p=fixture();p.background='pbg_far_field_team';bgSuggestedSkills(p).map(s=>s.id).join()"),'sk_survive,sk_investigate,sk_spot,sk_charm');
+  assert(run("Z.skills.charm.html.includes('安抚劝阻他人')&&Z.skills['act unseen or unheard'].html.includes('悄悄拔枪')&&Z.skills['get a hold of something'].html.includes('牌照等级限制')"));
+  // 5. Weapons, Mods, Systems & UI presentation
+  assert(run("!actsHtml(WEAPONS.mw_tachyon_lance).includes('每轮1次')&&WEAPONS.mw_annihilation_nexus.on_attack.includes('属于你的任何无人机')"));
+  assert(run("SYSTEMS.ms_caltrop_launcher.effect.includes('溅射1')&&!actsHtml(SYSTEMS.ms_caltrop_launcher).includes('大小3')&&!actsHtml(SYSTEMS.ms_javelin_rockets).includes('爆发1')"));
+  assert(run("actsHtml(SYSTEMS.ms_h0r_os_system_upgrade_ii).includes('快速科技')&&actsHtml(SYSTEMS.ms_h0r_os_system_upgrade_ii).includes('大小同目标')&&!actsHtml(SYSTEMS.ms_h0r_os_system_upgrade_ii).split('伪像')[1].includes('大小2')"));
+  assert(run("SYSTEMS.ms_armor_lock_plating.effect.includes('直到你下一回合结束')&&!SYSTEMS.ms_armor_lock_plating.effect.includes('再下一回合')"));
+  assert(run("actsHtml(SYSTEMS.ms_reinforced_cabling).includes('自由动作')&&actsHtml(SYSTEMS.ms_clamp_bombs).includes('快速动作')&&SYSTEMS.ms_turret_drones.effect.includes('每架已部署的炮塔无人机每轮可使用一次')"));
+  assert(run("!tagsPlain(MODS.wm_paracausal_mod.tags).includes('不可减免')&&modRestrictionsText(MODS.wm_thermal_charge).includes('近战')"));
+  assert(run("{STAT_CTX={};const hh=actsHtml(FRAMES.mf_hydra.core_system);!hh.includes('NaN')&&!hh.includes('None部署')&&hh.includes('快速动作召回')}"));
+  assert(run("['pg_corrective','pg_patch','pg_stims','pg_thermite_charge','pg_sleeping_bag'].every(id=>pilotGearActionText(GEAR[id]).length>0)"));
+  assert(run("systemLibraryActivations(SYSTEMS.ms_h0r_os_system_upgrade_ii).includes('Quick Tech')&&systemLibraryActivations(SYSTEMS.ms_pattern_a_jericho_deployable_cover).includes('Quick')&&systemLibraryActivations(SYSTEMS.ms_flash_charges).includes('Quick')"));
+  // 6. Weapon note & profile edge cases
+  assert(run("{p=fixture(6,'mf_deaths_head');p.coreBonuses=['cb_auto_stabilizing_hardpoints','cb_gyges_frame'];m=p.mechs[0];m.stabilized='m0';!buildWeaponNote(p,m,{w:WEAPONS.mw_gravity_gun,mount:{key:'m0',type:'Heavy'},i:0})&&!buildWeaponNote(p,m,{w:WEAPONS.mw_mimic_gun,mount:{key:'m0',type:'Heavy'},i:0}).includes('+1准度')&&effectiveProfile(WEAPONS.mw_ch_model96,WEAPONS.mw_ch_model96.profiles[0],null,p,m).range.find(r=>r.type==='Threat').val===2&&effectiveProfile(WEAPONS.mw_ch_model96,WEAPONS.mw_ch_model96.profiles[1],null,p,m).range.find(r=>r.type==='Threat').val===1}"));
+  assert.equal(run("effectiveProfile(WEAPONS.mw_combat_drill,null,MODS.wm_ext_hypermass_mod,fixture(),blankMech()).tags.filter(t=>t.id==='tg_overkill').length"),1);
+});
+
+test('Expansion audit fixes: KTB backgrounds, Viceroy, Tagetes, Curveball, Red Admiral, dual-type mods, profiles, variant mutex & Spaceborn EVA',()=>{
+  // 1. KTB backgrounds provide structured trigger suggestions in wizard
+  assert.equal(run("p=fixture();p.background='pbg_ext_noble_heir';bgSuggestedSkills(p).map(s=>s.id).join()"),'sk_lead_or_inspire,sk_pull_rank,sk_read_a_situation,sk_take_control');
+  // 2. GMS variant frames have license_level 0; non-GMS base + variant in same pilot mech list triggers mutex error
+  assert(run("FRAMES.mf_ext_chomolungma.license_level===0&&FRAMES.mf_ext_sagarmatha.license_level===0"));
+  assert(run("{p=fixture(3,'mf_minotaur');p.licenses={mf_minotaur:2};p.mechs.push(blankMech('mf_ext_calendula'));checks(p).some(c=>c[1].includes('互斥'))}"));
+  // 3. Red Admiral Main Melee +1 Threat bonus
+  assert.equal(run("{p=fixture(3,'mf_ext_red_admiral');p.licenses={mf_nelson:2};effectiveProfile(WEAPONS.mw_charged_blade,null,null,p,p.mechs[0]).range.find(r=>r.type==='Threat').val}"),2);
+  // 4. Viceroy Launcher -> also CQB + Threat 3 + CQB mods allowed
+  assert(run("{p=fixture(3,'mf_ext_viceroy');p.licenses={mf_monarch:2,mf_ext_caliban:1};m=p.mechs[0];const ep=effectiveProfile(WEAPONS.mw_rocket_propelled_grenade,null,null,p,m);canModify(WEAPONS.mw_rocket_propelled_grenade,MODS.wm_ext_hypermass_mod,{type:'Main'},m)&&ep.range.some(r=>r.type==='Threat'&&r.val===3)&&ep.range.some(r=>r.type==='Range'&&r.val===10)}"));
+  // 5. Tagetes optional Fusilier converts ranged non-Rifle weapon to Rifle + Overkill
+  assert(run("{p=fixture(3,'mf_ext_tagetes');p.licenses={mf_sherman:2};m=p.mechs[0];m.loadout.m1={slots:[{w:'mw_mortar',fusilier:true}],link:''};const cw=configuredWeapon(WEAPONS.mw_mortar,m,m.loadout.m1.slots[0]);cw.type==='Rifle'&&cw.tags.some(t=>t.id==='tg_overkill')&&buildWeaponNote(p,m,{w:cw,mount:{key:'m1',type:'Main'},i:0}).includes('枪决')}"));
+  // 6. Curveball adds +2 limited charges to Grenade systems only
+  assert(run("{p=fixture(3);p.coreBonuses=['cb_piof_curveball'];m=p.mechs[0];systemTags(SYSTEMS.ms_pattern_a_smoke_charges,p,m).find(t=>t.id==='tg_limited').val===5&&systemTags(SYSTEMS.ms_eva_module,p,m).every(t=>t.id!=='tg_limited')}"));
+  // 7. Dual-type weapons accept mods of both types and non-Melee mods (wm_pl_optimized)
+  assert(run("canModify(WEAPONS.mw_ch_model96,MODS.wm_stabilizer_mod,{type:'Main'})&&canModify(WEAPONS.mw_ch_model96,MODS.wm_pl_optimized,{type:'Main'})&&!canModify(WEAPONS.mw_charged_blade,MODS.wm_pl_optimized,{type:'Main'})"));
+  // 8. Special weapon restrictions: Slipgun (no_mods/no_core_bonus/no_attack) & Tangle Cannon (no_bonus_damage)
+  assert(run("!canModify(WEAPONS.mw_ext_ifrit_slip,MODS.wm_ext_hypermass_mod,{type:'Main'})"));
+  assert(run("{p=fixture(3,'mf_deaths_head');p.coreBonuses=['cb_overpower_caliber','cb_auto_stabilizing_hardpoints'];m=p.mechs[0];m.loadout.m0={slots:[{w:'mw_ext_ifrit_slip'}],link:''};m.loadout.m1={slots:[{w:'mw_ch_tangle_cannon'}],link:''};m.stabilized='m0';m.overpower='m1|0';!buildWeaponNote(p,m,{w:WEAPONS.mw_ext_ifrit_slip,mount:{key:'m0',type:'Main/Aux'},i:0})&&loadoutChecks(p,m).some(c=>c[1].includes('超功率口径'))}"));
+  // 9. Multi-profile 5-stance index preserved on normalizePilot; Spaceborn I grants integrated EVA; Private Tutor reflected in pageIntro
+  assert.equal(run("normalizePilot({mechs:[{frame:EVEREST,loadout:{m0:{slots:[{w:'mw_ext_terashima_blade',profile:4,fusilier:true}]}}}]},[]).mechs[0].loadout.m0.slots[0].profile"),4);
+  assert(run("{p=fixture(3);p.talents={t_ext_void_native:1,t_ace:1,t_combined_arms:1};p.coreBonuses=['cb_kkca_private_tutor'];integratedOf(FRAMES[EVEREST],p,p.mechs[0]).some(x=>x.id==='ms_spaceborn_1')&&pageIntro(p).includes('/8</b>')}"));
+  // 10. Removing Weapon Pod clears podWeapon1/2; active expansion systems & Emperor Tech systems categorized properly in System Library
+  assert(run("{m=blankMech();m.systems=['ms_pl_weapon_pod'];m.podWeapon1='mw_assault_rifle';m.podWeapon2='mw_pistol';m.systems=[];cleanMechSystemRefs(m);m.podWeapon1===''&&m.podWeapon2===''}"));
+  assert(run("['ms_ext_chimney_cold_source','ms_ext_wodeng_counterfire','ms_ext_cbnrn_sealing','ms_kkca_cricket_art_1','ms_ext_judas_exploit','ms_ch_submunitions'].every(id=>!systemLibraryActivations(SYSTEMS[id]).includes('Passive'))"));
+  assert(run("['ms_ext_wide_dominion','ms_ext_emperors_eye','ms_ext_book_of_kings','ms_ext_sovereign_gait'].every(id=>SYSTEMS[id].type==='Tech')&&!systemLibraryTypes(SYSTEMS.ms_ext_rmj_nozzles).includes('Shield')"));
 });
 
 console.log(passed+' regression checks passed.');

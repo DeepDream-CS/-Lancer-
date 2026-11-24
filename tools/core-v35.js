@@ -23,10 +23,11 @@ function walk(v,translate){
 }
 function apply(d){
   const pairs=spec.terms.map(t=>[t.from,t.to]);
+  const skipGlobal=new Set(['内建武器','百臂巨人','光学迷彩']);
   for(const row of [...spec.names,...spec.talents.map(t=>({...t,kind:'talents'}))]){
     const {x,key,map}=lookup(d,row),old=map?(typeof d.zh[map][key]==='string'?d.zh[map][key]:d.zh[map][key]?.name):x.zh_name;
-    // Short generic words (e.g. 探子/主动) must not rewrite unrelated prose.
-    if(old&&old.length>=4)pairs.push([old,row.name]);
+    // Short generic words (e.g. 探子/主动) and ambiguous phrases (e.g. 内建武器/百臂巨人) must not rewrite unrelated prose.
+    if(old&&old.length>=4&&!skipGlobal.has(old))pairs.push([old,row.name]);
   }
   d=walk(d,translator(pairs));
   for(const row of spec.names){const {x,key,map}=lookup(d,row);
@@ -35,7 +36,7 @@ function apply(d){
     else {x.zh_name=row.name;if(d.zh.gms[x.name])d.zh.gms[x.name].name=row.name;}
   }
   for(const row of spec.talents){const {x,key}=lookup(d,{...row,kind:'talents'}),t=d.zh.talents[key];
-    const local=translator(t.ranks.map((r,i)=>[r.name,row.ranks[i]]));
+    const local=translator(t.ranks.map((r,i)=>[r.name,row.ranks[i]]).filter(([old])=>!['稳定','瞄准'].includes(old)));
     d.zh.talents[key]=walk(t,local);d.zh.talents[key].name=row.name;
     row.ranks.forEach((name,i)=>{d.zh.talents[key].ranks[i].name=name;x.ranks[i].name=name;});
   }

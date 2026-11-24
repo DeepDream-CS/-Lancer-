@@ -1,7 +1,7 @@
 // Read-only equipment catalogue. Filters never alter the current loadout.
 const systemLibraryDefaults=()=>({q:'',kind:'',type:'',src:'',activation:'',sp:'',avail:false});
 const systemLibraryState=systemLibraryDefaults();
-const SYSTEM_LIBRARY_TYPES={AI:'AI',Drone:'无人机',Shield:'护盾',Deployable:'可展开物',Mine:'地雷',Grenade:'榴弹',Mod:'武器改装',Other:'其他系统'};
+const SYSTEM_LIBRARY_TYPES={AI:'AI',Drone:'无人机',Shield:'盾牌',Deployable:'可展开物',Mine:'地雷',Grenade:'榴弹',Mod:'武器改装',Other:'其他系统'};
 function systemLibraryItems(){return [...D.systems,...D.mods];}
 function systemLibraryOrigin(it){
  if(it.professional_license){const lic=(D.professional_licenses||[]).find(x=>x.id===it.professional_license);return {key:it.source,text:`${makerName(it.source)} · ${lic?.name||it.license}（专业牌照）`};}
@@ -17,13 +17,14 @@ function systemLibraryTypes(it){
  return types.length?types:['Other'];
 }
 function systemLibraryActivations(it){
- const out=new Set(),mapping={tg_quick_action:'Quick',tg_full_action:'Full',tg_protocol:'Protocol',tg_reaction:'Reaction',tg_free_action:'Free'};
+ const out=new Set(),mapping={tg_quick_action:'Quick',tg_full_action:'Full',tg_protocol:'Protocol',tg_reaction:'Reaction',tg_free_action:'Free',tg_quick_tech:'Quick Tech',tg_full_tech:'Full Tech',tg_invade:'Invade'};
  for(const tag of systemTags(it))if(mapping[tag.id])out.add(mapping[tag.id]);
- function collect(o){for(const k of ['actions','active_actions','passive_actions'])for(const a of asList(o[k]))if(a.activation&&a.activation!=='None')out.add(a.activation);for(const k of ['deployables','active_deployables'])for(const d of asList(o[k])){if(d.activation)out.add(d.activation);collect(d);}}
- collect(it);if(it.activation)out.add(it.activation);
+ if(systemCategories(it).some(t=>t==='Grenade'||t==='Mine'))out.add('Quick');
+ function collect(o){for(const k of ['actions','active_actions','passive_actions'])for(const a of asList(o[k])){const act=a.name==='钩索摆荡'&&a.activation==='None'?'Free':a.activation;if(act&&act!=='None')out.add(act);}for(const k of ['deployables','active_deployables'])for(const d of asList(o[k])){if(d.activation&&d.activation!=='None')out.add(d.activation);collect(d);}}
+ collect(it);if(it.activation&&it.activation!=='None')out.add(it.activation);
  return out.size?[...out]:['Passive'];
 }
-function systemLibraryEffect(it){return (it.effect?`<p>${it.effect}</p>`:'')+actsHtml(it)+equipmentLoreHtml(it)||'<span class="muted">—</span>';}
+function systemLibraryEffect(it){const r=modRestrictionsText(it);return (r?`<p class="muted">${esc(r)}</p>`:'')+(it.effect?`<p>${it.effect}</p>`:'')+actsHtml(it)+equipmentLoreHtml(it)||'<span class="muted">—</span>';}
 function systemLibraryMatches(it,p){
  const s=systemLibraryState,o=systemLibraryOrigin(it),mod=!!MODS[it.id];
  if(s.kind&&(s.kind==='mods')!==mod)return false;
@@ -43,7 +44,7 @@ function renderSystemLibrary(){
   select('kind','装备类别',[['','全部装备'],['systems','系统'],['mods','武器改装']])+
   select('type','类型',[['','全部类型'],...Object.entries(SYSTEM_LIBRARY_TYPES)])+
   select('src','来源',[['','全部来源'],...MAKERS.map(m=>[m,makerName(m)]),['talent','天赋'],['integrated','骨架内建'],['core','核心规则书'],['ext','扩展']])+
-  select('activation','动作',[['','全部动作'],...['Quick','Full','Protocol','Reaction','Free'].map(a=>[a,ACT[a]]),['Passive','被动／未标明动作']])+
+  select('activation','动作',[['','全部动作'],...['Quick','Full','Protocol','Reaction','Free','Quick Tech','Full Tech','Invade'].map(a=>[a,ACT[a]]),['Passive','被动／未标明动作']])+
   select('sp','基础 SP',[['','全部 SP'],...['0','1','2','3'].map(n=>[n,n+' SP']),['4+','4 SP及以上']])+
   `<label class="chk"><input type="checkbox" data-sl="avail" ${s.avail?'checked':''}>只看当前角色可用</label>`;
  const rows=items.filter(it=>systemLibraryMatches(it,p)).sort((a,b)=>systemLibraryOrigin(a).text.localeCompare(systemLibraryOrigin(b).text,'zh')||(a.license_level||0)-(b.license_level||0)||plain('item',a).localeCompare(plain('item',b),'zh'));

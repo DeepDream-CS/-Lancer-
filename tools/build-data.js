@@ -15,7 +15,7 @@ const ICONS = [
 	[/(&#8960;|⌀)/g, "动能"], [/(&#9889;|⚡)/g, "能量"], [/(&#128165;|💥)/g, "爆炸"],
 	[/(&#128293;|🔥)/g, "燃烧"], [/(&#127777;|🌡)/g, "热度"],
 	[/(&#9023;|⌿)\s*/g, "射程"], [/(&#9672;|◈)\s*/g, "爆发"], [/(&#128320;|🕀)\s*/g, "溅射"],
-	[/&#127881;\s*/g, "锥形"], [/&#8663;\s*/g, "直线"],
+	[/&#127881;\s*/g, "锥形"], [/&#8663;\s*/g, "线形"],
 	[/於/g, "于"],
 ];
 const deIcon = s => ICONS.reduce((t, [re, to]) => t.replace(re, to), String(s));
@@ -64,12 +64,12 @@ const zhW = i18nZh("weapons-2"), zhS = i18nZh("systems-2");
 const p_ = s => `<p>${s}</p>`;
 const AMMO_I = "<ul><li><b>重击弹</b>（1充能）：这攻击得到<b>击退1</b>并造成<b>爆炸</b>伤害。</li><li><b>电击弹</b>（1充能）：这攻击造成<b>能量</b>伤害。选择这次攻击的一个目标，无论命中与否，与其邻接的角色受到1点AP能量伤害。</li><li><b>磁轨弹</b>（1充能）：这攻击得到<b>抛射</b>并造成<b>动能</b>伤害。</li></ul>";
 const BLOCK_FILLS = {
-	"Prototype Weapon": { meta: "主 特殊武器 · 威胁1 或 射程10 · 1d6+2 自选伤害类型 · 受限 1d6+2、杀绝", html: p_(zhW["mw_prototype_1.effect"]) },
+	"Prototype Weapon": { meta: "主 [近战、CQB、步枪、大炮、发射器、巢房] · 威胁1（近战）或 射程10（其他） · 1d6+2 动能/爆炸/能量 · 受限 1d6+2、杀绝", html: p_(zhW["mw_prototype_1.effect"]) },
 	"Last Argument of Kings": { meta: "完整科技", html: p_("对感应范围内且在视线范围内的一个目标进行<b>科技攻击</b>。成功的话，你植入一个病毒，引发目标反应炉的小型熔解：目标立即受到等同其当前<b>热度</b>的<b>燃烧</b>。如果这动作使目标过热，它会在目标重置热度之前结算。") },
 	"Fuel Rod Gun": { meta: "主 CQB · 射程3、威胁3 · 1d3+2 能量 · 受限3、独特", html: p_("<b>攻击时：</b>冷却4热度。") },
-	"Servant-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_1.effect"]) },
-	"Student-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_2.effect"]) },
-	"Englihtenment-Class NHP": { meta: "AI、独特", html: p_(zhS["ms_technophile_3.effect"]) },
+	"Servant-Class NHP": { meta: "0 SP、AI、独特", html: p_(zhS["ms_technophile_1.effect"]) },
+	"Student-Class NHP": { meta: "0 SP、AI、独特、每轮1次", html: p_(zhS["ms_technophile_2.effect"]) },
+	"Englihtenment-Class NHP": { meta: "0 SP、AI、独特、每轮1次", html: p_(zhS["ms_technophile_3.effect"]) },
 	"Ammo Case": { meta: "0 SP、受限6、每回合1次", html: p_("每回合一次，当你以<b>主远程武器</b>攻击时，你可以消耗所列数量的<b>充能</b>，为该攻击套用以下其中一种效果：") + AMMO_I },
 };
 
@@ -215,7 +215,7 @@ function mergeExpansion(d) {
 	for (const m of X.manufacturers || []) { d.manufacturers.push(m); d.zh.makers[m.id] = m.name; }
 	for (const f of X.frames) {
 		const { zh_name, ...frame } = f;
-		const row = mark({ license_level: 2, license_id: f.variant_of || f.id, ...frame });
+		const row = mark({ license_level: f.source === "GMS" ? 0 : 2, license_id: f.variant_of || f.id, ...frame });
 		const at = f.variant_of ? d.frames.findIndex(x => x.id === f.variant_of) : -1;
 		if (f.variant_of && at < 0) throw Error("变体骨架找不到标准骨架：" + f.id);
 		// 同一标准骨架有多个变体时，按列出顺序接在前一个变体之后
@@ -226,11 +226,11 @@ function mergeExpansion(d) {
 	}
 	for (const t of X.talents) {
 		d.talents.push(mark({ id: t.id, name: t.name, terse: t.terse, ...(t.incomplete ? { incomplete: true } : {}), description: strip(t.desc),
-			ranks: t.ranks.map(r => ({ name: r.name, description: strip(r.html), ...(r.special_equipment ? { special_equipment: r.special_equipment } : {}), ...(r.bonuses ? { bonuses: r.bonuses } : {}) })) }));
+			ranks: t.ranks.map(r => ({ name: r.name, description: strip(r.html), ...(r.integrated ? { integrated: r.integrated } : {}), ...(r.special_equipment ? { special_equipment: r.special_equipment } : {}), ...(r.bonuses ? { bonuses: r.bonuses } : {}) })) }));
 		d.zh.talents[t.name] = { name: t.name, desc: t.desc, ranks: t.ranks.map(r => ({ name: r.name, html: r.html })) };
 	}
 	for (const b of X.backgrounds) {
-		d.backgrounds.push(mark({ id: b.id, name: b.name, description: strip(b.html) }));
+		d.backgrounds.push(mark({ id: b.id, name: b.name, description: strip(b.html), ...(b.skills ? { skills: b.skills } : {}) }));
 		d.zh.bg[b.name.toLowerCase()] = { name: b.name, triggers: "触发例子：" + b.triggers, html: b.html };
 	}
 	for (const c of X.core_bonuses) {

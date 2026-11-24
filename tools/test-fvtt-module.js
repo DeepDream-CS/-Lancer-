@@ -1050,7 +1050,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 	// ---- 战斗自动化（1.10.0）：自动挂异常与撤销、豁免检定与减半联动、非攻击掷伤害与模板、跨权限护甲抗性结算与预览、Flow 补完、回合结束清异常、抗性开关
 	{
 		const L = ctx.LancerCN;
-		ok(manifest.version === "1.19.4", "清单版本应为 1.19.4");
+		ok(manifest.version === "1.21.0", "清单版本应为 1.21.0");
 		for (const k of ["autoApplyStatus", "crossPermDamage", "autoDangerZone", "turnEndPrompt", "overwatchPrompt", "autoDeployableCover"]) {
 			const cfg = log.settings[`lancer-cn.${k}`];
 			ok(cfg && cfg.scope === "world" && cfg.config === true && cfg.default === true, `应注册世界设置 ${k}（默认开启）`);
@@ -3102,14 +3102,21 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 					const sparkInfo = L.analyzeCard(sparkMsg);
 					ok(sparkInfo.nonAttackDamage?.damage?.[0]?.val === "4" && sparkInfo.nonAttackDamage?.ap === true, "偶像破坏者 I「模因火花」按机甲搭载 NHP 总数（1+3=4）自动计算穿甲能量伤害");
 
-					// C8. 羁绊 I + 家族禁卫 I（2 格内友方机甲同样拥有羁绊时属性检定 +2 准度）+ 盖革斯骨架机体 +1 准度
+					// C8. 羁绊 I + 家族禁卫 I（单向扩展拥有者对盟友生效的邻接至 2 格）+ 盖革斯骨架机体 +1 准度
 					attachPilot(friendlyMech, { talents: [["t_bonded", 1]] });
 					const friendlyTok = { x: 200, y: 0, actor: friendlyMech, document: { uuid: "Scene.s.Token.fm", disposition: 1 } };
+					friendlyMech.token = friendlyTok.document;
 					ctx.canvas.tokens.placeables = [aceTok, friendlyTok];
+					const fmHullAt2 = { actor: friendlyMech, data: { path: "system.hull" } };
+					await v13Steps.get("initStatRollData")(fmHullAt2);
+					const aceHullAt2 = { actor: aceMech, data: { path: "system.hull" } };
+					await v13Steps.get("initStatRollData")(aceHullAt2);
+					// 距离 2 时：aceMech 具备家族禁卫 I，仅单向将其对盟友 friendlyMech 的同袍 I 扩展至 2 格（friendlyMech 获 +1 准度；aceMech 仅获盖革斯骨架 +1）
+					ok(fmHullAt2.data.acc_diff.base.accuracy === 1 && aceHullAt2.data.acc_diff.base.accuracy === 1, "家族禁卫 I 单向扩展：距离 2 时仅拥有家族禁卫者（aceMech）对盟友提供同袍 +1 准度，不会把无家族禁卫盟友的同袍反向扩到 2 格");
+					friendlyTok.x = 100; // 邻接 1 格：双方同袍叠加 +2，叠加盖革斯骨架 +1 = +3 准度
 					const hullStatState = { actor: aceMech, data: { path: "system.hull" } };
 					await v13Steps.get("initStatRollData")(hullStatState);
-					// 盖革斯骨架 +1 + 双方羁绊（距离 2，家族禁卫扩展邻接至 2 格）+2 = +3 准度
-					ok(hullStatState.data.acc_diff.base.accuracy === 3, "家族禁卫扩展邻接至 2 格，双方羁绊 I（+2）与盖革斯骨架（+1）叠加使机体豁免/检定预填 +3 准度");
+					ok(hullStatState.data.acc_diff.base.accuracy === 3, "邻接 1 格时双方羁绊 I（+2）与盖革斯骨架（+1）叠加使机体豁免/检定预填 +3 准度");
 
 					// C9. 巨人杀手骑乘强化（R1 软掩护与结束清理 + R2 瓦解 + R3 实际扣血后终斩）+ 机甲表「天赋与核心战术栏」渲染与操作
 					acePilot.system.active_mech.value = null; // 模拟步战下马骑乘
@@ -3168,7 +3175,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 					// D3. 百臂巨人骨架（1 结构时非热度全抗性）+ 低速循环屏蔽罩防穿甲结算预览验证：
 					// 10 点穿甲动能 → 低速屏蔽罩剥离穿甲 → 扣 2 护甲剩 8 → 百臂巨人 1 结构减半剩 4 → 刚好扣完 4 护盾，HP 损失 0！
 					const cbPrev = L.previewDamageCalc(cbTank, [{ type: "Kinetic", amount: 10 }], { ap: true });
-					ok(cbPrev.overshieldUsed === 4 && cbPrev.hpLoss === 0 && cbPrev.notes.some(n => /低速屏蔽罩/.test(n)) && cbPrev.notes.some(n => /百臂巨人/.test(n)), "低速循环屏蔽罩防穿甲 + 百臂巨人 1 结构抗性在伤害预览中协同准确结算");
+					ok(cbPrev.overshieldUsed === 4 && cbPrev.hpLoss === 0 && cbPrev.notes.some(n => /低速屏蔽罩/.test(n)) && cbPrev.notes.some(n => /布里阿柔斯|百臂巨人/.test(n)), "低速循环屏蔽罩防穿甲 + 布里阿柔斯骨架 1 结构抗性在伤害预览中协同准确结算");
 
 					// D4. 卓越之誓（非科技攻击总值 18+ 视为会心一击）+ 兵工厂特制底盘（超频自动获得软掩护）
 					const oathHr = { target: { actor: proneEnemy }, total: 18, hit: true, crit: false };
@@ -4900,7 +4907,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 		// ---- v1.17.0 全项目交叉审计回归测试
 		{
 			const L = ctx.LancerCN;
-			ok(manifest.version === "1.19.4", `模组版本号应为 1.19.4（实际 ${manifest.version}）`);
+			ok(manifest.version === "1.21.0", `模组版本号应为 1.21.0（实际 ${manifest.version}）`);
 
 			// 1) UI/聊天词典与全大写/首字母大写匹配修复
 			ok(L.translate("// 埃弗勒斯 IS STARTING THEIR TURN //") === "// 埃弗勒斯开始回合 //", "全大写回合开始横幅正常汉化");
@@ -6226,7 +6233,7 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 				items: [{ id: "i_npc_ai", name: "战术心智", type: "mech_system", isAI: () => true, system: { lid: "npcf_ai", tags: [{ lid: "tg_ai" }] } }],
 			});
 
-			ok(!L.collectCascadeableSources(compconMech).eligible && L.collectCascadeableSources(compconMech).blockedReason.includes("免疫崩溃"), "仅携带 COMP/CON 助理单元时判定无需崩溃检定");
+			ok(!L.collectCascadeableSources(compconMech).eligible && L.collectCascadeableSources(compconMech).blockedReason.includes("免疫层流"), "仅携带 COMP/CON 助理单元时判定无需层流检定");
 			ok(!L.collectCascadeableSources(tech3Mech).eligible && L.collectCascadeableSources(tech3Mech).blockedReason.includes("科技狂热者 III"), "具备科技狂热者 III 时判定全部 NHP 免疫崩溃");
 			ok(!L.collectCascadeableSources(destroyedNhpMech).eligible && L.collectCascadeableSources(destroyedNhpMech).blockedReason.includes("已损毁"), "NHP 已在系统创伤中损毁时明确提示已损毁原因");
 			ok(!L.collectCascadeableSources(aiNpc).eligible, "NPC 角色不生成崩溃检定按钮");
@@ -6302,6 +6309,993 @@ const mkActor = (img, token, lid = "mf_monarch") => {
 			ctx.fromUuidSync = prevFromUuidSync193;
 			ctx.game.actors = prevActors193;
 			ctx.ui = prevUi193;
+		}
+
+		// ---- v1.20.0 核心规则书勘误与苏丹专业牌照同步回归测试
+		{
+			const L = ctx.LancerCN;
+			const prevUi120 = ctx.ui;
+			const prevLancer120 = ctx.game.lancer;
+			const prevCombat120 = ctx.game.combat;
+			const prevCanvas120 = ctx.canvas;
+			const prevUser120 = ctx.game.user;
+			const prevFromUuidSync120 = ctx.fromUuidSync;
+			const prevChatMsg120 = ctx.ChatMessage;
+
+			const warnLogs120 = [];
+			ctx.ui = {
+				notifications: {
+					info: m => { warnLogs120.push(String(m)); },
+					warn: m => { warnLogs120.push(String(m)); },
+					error: m => { warnLogs120.push(String(m)); },
+				},
+			};
+
+			const docMap120 = {};
+			ctx.fromUuidSync = u => docMap120[u] ?? prevFromUuidSync120?.(u) ?? null;
+
+			const mkPilot120 = (id, talents = [], coreBonuses = []) => ({
+				id,
+				uuid: `Actor.${id}`,
+				type: "pilot",
+				isOwner: true,
+				items: [
+					...talents.map(([lid, rank]) => ({ type: "talent", system: { lid, curr_rank: rank } })),
+					...coreBonuses.map(lid => ({ type: "core_bonus", system: { lid } })),
+				],
+			});
+
+			const mkMech120 = (id, name, { frameLid = "mf_standard_pattern_i_everest", pilot = null, items = [], hp = 12, hpMax = 12, struct = 4, structMax = 4, armor = 0, heat = 0, heatMax = 6, sensors = 10, statuses = [] } = {}) => {
+				const flags = { "lancer-cn": {} };
+				const stSet = new Set(statuses);
+				const itemArr = [...items];
+				itemArr.get = iid => itemArr.find(x => x.id === iid);
+				const m = {
+					id,
+					uuid: `Actor.${id}`,
+					name,
+					type: "mech",
+					isOwner: true,
+					is_mech: () => true,
+					is_npc: () => false,
+					is_deployable: () => false,
+					hasHeatcap: () => heatMax > 0,
+					statuses: stSet,
+					items: itemArr,
+					getFlag: (sc, k) => flags[sc]?.[k],
+					setFlag: async (sc, k, v) => { (flags[sc] ||= {})[k] = v; },
+					unsetFlag: async (sc, k) => { if (flags[sc]) delete flags[sc][k]; },
+					toggleStatusEffect: async (sid, { active }) => { active ? stSet.add(sid) : stSet.delete(sid); },
+					update: async patch => {
+						if (patch["system.heat.value"] !== undefined) m.system.heat.value = patch["system.heat.value"];
+					},
+					system: {
+						armor,
+						sensor_range: sensors,
+						hp: { value: hp, max: hpMax },
+						overshield: { value: 0 },
+						structure: { value: struct, max: structMax },
+						stress: { value: 4, max: 4 },
+						heat: { value: heat, max: heatMax },
+						burn: 0,
+						statuses: {},
+						action_tracker: { reaction: true },
+						pilot: { value: pilot },
+						loadout: { frame: { value: { system: { lid: frameLid } } } },
+					},
+				};
+				for (const it of itemArr) {
+					it.actor = m;
+					it.parent = m;
+					if (it.uuid) docMap120[it.uuid] = it;
+				}
+				docMap120[m.uuid] = m;
+				return m;
+			};
+
+			const mkWpn120 = (id, name, lid, size, wType, { range = [{ type: "Range", val: 10 }], damage = [{ type: "Kinetic", val: "1d6" }], tags = [], profiles = null, selectedIdx = 0 } = {}) => {
+				const profList = profiles ?? [{
+					name,
+					type: wType,
+					range,
+					damage,
+					tags: tags.map(t => ({ ...t })),
+					all_tags: tags.map(t => ({ ...t })),
+				}];
+				return {
+					id,
+					uuid: `Item.${id}`,
+					name,
+					type: "mech_weapon",
+					is_mech_weapon: () => true,
+					currentProfile: function () { return this.system.profiles[this.system.selected_profile_index] ?? this.system.active_profile; },
+					getTags: function () { return this.currentProfile()?.all_tags ?? []; },
+					getFlag: () => undefined,
+					system: {
+						lid,
+						size,
+						tags: tags.map(t => ({ ...t })),
+						all_tags: tags.map(t => ({ ...t })),
+						selected_profile_index: selectedIdx,
+						active_profile: profList[selectedIdx] ?? profList[0],
+						profiles: profList,
+					},
+				};
+			};
+
+			const createdCards120 = [];
+			ctx.ChatMessage = {
+				...(prevChatMsg120 || {}),
+				getSpeaker: o => ({ actor: o?.actor?.name }),
+				create: async data => {
+					const f = JSON.parse(JSON.stringify(data.flags ?? {}));
+					const msg = {
+						id: `c120_${createdCards120.length}`,
+						isAuthor: true,
+						content: data.content ?? "",
+						flags: f,
+						getFlag: (sc, k) => f?.[sc]?.[k],
+						setFlag: async (sc, k, v) => { (f[sc] ||= {})[k] = v; },
+						updateSource: patch => {
+							for (const [pk, pv] of Object.entries(patch ?? {})) {
+								const segs = pk.split(".");
+								let cur = msg;
+								for (let si = 0; si < segs.length - 1; si++) cur = (cur[segs[si]] ||= {});
+								cur[segs[segs.length - 1]] = pv;
+							}
+						},
+					};
+					L.onPreCreateBasicCard(msg);
+					createdCards120.push(msg);
+					await L.onCreateChatMessage(msg, {}, ctx.game.user?.id);
+					return msg;
+				},
+			};
+
+			const steps120 = new Map([
+				["initActivationData", async st => { st.data ||= {}; return true; }],
+				["initAttackData", async st => {
+					st.data = {
+						...(st.data || {}),
+						attack_type: st.item?.currentProfile?.()?.type === "Melee" ? "Melee" : "Ranged",
+						acc_diff: {
+							base: { accuracy: 0, difficulty: 0 },
+							weapon: { seeking: false, engaged: false, inaccurate: false, arcing: false },
+							targets: st.targets ?? [],
+						},
+					};
+					return true;
+				}],
+				["initTechAttackData", async st => {
+					st.data = {
+						...(st.data || {}),
+						attack_type: "Tech",
+						acc_diff: {
+							base: { accuracy: 0, difficulty: 0 },
+							targets: st.targets ?? [],
+						},
+					};
+					return true;
+				}],
+				["initStatRollData", async st => {
+					st.data ||= { path: st.path ?? "system.hull", acc_diff: { base: { accuracy: 0, difficulty: 0 } } };
+					return true;
+				}],
+				["printStatRollCard", async () => true],
+				["rollAttacks", async () => true],
+				["printAttackCard", async st => {
+					const targets = (st.cardTargets ?? []).map(t => ({ id: t.uuid, uuid: t.uuid, hit: Boolean(t.hit), crit: Boolean(t.crit) }));
+					st._card = await ctx.ChatMessage.create({
+						content: `<div class="lancer-attack"></div>`,
+						flags: {
+							lancer: {
+								attackData: {
+									attackerUuid: st.actor?.uuid,
+									attackerItemUuid: st.item?.uuid ?? null,
+									targets,
+								},
+							},
+							...(st.extraCardFlags ? { "lancer-cn": st.extraCardFlags } : {}),
+						},
+					});
+					return true;
+				}],
+				["printTechAttackCard", async st => {
+					const targets = (st.cardTargets ?? []).map(t => ({ id: t.uuid, uuid: t.uuid, hit: Boolean(t.hit), crit: Boolean(t.crit) }));
+					st._card = await ctx.ChatMessage.create({
+						content: `<div class="lancer-tech-attack"></div>`,
+						flags: {
+							lancer: {
+								attackData: {
+									attackerUuid: st.actor?.uuid,
+									attackerItemUuid: st.item?.uuid ?? null,
+									invade: Boolean(st.data?.invade),
+									targets,
+								},
+							},
+						},
+					});
+					return true;
+				}],
+				["printDamageCard", async st => {
+					if (typeof st.onPrint === "function") await st.onPrint();
+					return true;
+				}],
+			]);
+			ctx.game.lancer = { ...(prevLancer120 || {}), flowSteps: steps120, flows: new Map() };
+			L.patchLancerFlows();
+
+			// 1) 伏卧起身文案：明确标注不算作移动、不触发守望
+			const standUpPlain = L.BASIC_ACTIONS.standUp.effect.replace(/<[^>]+>/g, "");
+			ok(
+				standUpPlain.includes("不算作移动") && standUpPlain.includes("不会触发守望"),
+				"基础动作「起身」明确说明不算作移动且不触发守望"
+			);
+
+			// 2) 受扰（Jammed）与黑客 II（骇./杀、抑制维生系统、干扰驾驶舱）限制与解除
+			ctx.game.user = { ...(prevUser120 || {}), id: "u120", isGM: false, targets: new Set() };
+			const jammedMech = mkMech120("m_jam", "受扰机甲", { statuses: ["jammed"] });
+			const allyJammed = mkMech120("m_jam_ally", "受扰友军", { statuses: ["jammed"] });
+			const normalMech = mkMech120("m_norm", "支援机甲");
+			ok(Boolean(L.techActionBlockReason(jammedMech)), "处于受扰（Jammed）状态的机甲被 techActionBlockReason 拦截科技动作");
+
+			const jamTechAct = { actor: jammedMech, item: { name: "入侵", system: {} }, data: { action: { activation: "Quick Tech", name: "入侵" } } };
+			ok(await steps120.get("initActivationData")(jamTechAct) === false, "非 GM 玩家在受扰状态下无法发起快速科技动作");
+
+			const allyJamTok = { actor: allyJammed, document: { uuid: allyJammed.uuid, name: allyJammed.name } };
+			ctx.game.user.targets = new Set([allyJamTok]);
+			ok(await L.beginBasicAction(normalMech, "bolster") === false, "受扰友军无法受益于「强化（Bolster）」科技动作");
+			ctx.game.user.targets = new Set();
+
+			await L.setCombatState(normalMech, { hackSlashLocked: true, disableLifeSupport: true, jamCockpit: true });
+			ok(Boolean(L.techActionBlockReason(normalMech)), "黑客 II「骇./杀」锁定期间阻止机甲进行科技动作");
+			ok(await L.beginBasicAction(normalMech, "mountDismount") === false, "黑客 II「干扰驾驶舱」生效期间阻止驾驶员上下机甲");
+			const saveRollSt = { actor: normalMech, data: { path: "system.hull", title: "机体豁免", acc_diff: { base: { accuracy: 0, difficulty: 0 } } } };
+			await steps120.get("initStatRollData")(saveRollSt);
+			ok(saveRollSt.data.acc_diff.base.difficulty === 1, "黑客 II「抑制维生系统」使所有豁免承受 +1 难度");
+
+			await steps120.get("printStatRollCard")({ actor: normalMech, data: { path: "system.sys", title: "系统检定", result: { roll: { total: 12 } } } });
+			ok(!L.getCombatState(normalMech).hackSlashLocked && !L.getCombatState(normalMech).disableLifeSupport, "成功通过系统检定（>=10）后自动解除「骇./杀」与「抑制维生系统」");
+			await steps120.get("printStatRollCard")({ actor: normalMech, data: { path: "system.eng", title: "工程检定", result: { roll: { total: 10 } } } });
+			ok(!L.getCombatState(normalMech).jamCockpit, "成功通过工程检定（>=10）后自动解除「干扰驾驶舱」");
+
+			await L.setCombatState(normalMech, { hackSlashLocked: true, disableLifeSupport: true, jamCockpit: true });
+			await L.beginBasicAction(normalMech, "shutDown");
+			ok(!L.getCombatState(normalMech).hackSlashLocked && !L.getCombatState(normalMech).disableLifeSupport && !L.getCombatState(normalMech).jamCockpit, "执行「关机」动作一并清除黑客 II 三种入侵持续效果");
+
+			// 3) 潜行者 II「埋伏（Ambush）」：未命中不触发；武器命中与科技攻击命中均触发机体豁免（缓慢+受损+禁反应，无伏卧）
+			const infPilot = mkPilot120("p_inf", [["t_infiltrator", 2]]);
+			const infRifle = mkWpn120("w_inf", "突击步枪", "mw_assault_rifle", "Main", "Rifle");
+			const infMech = mkMech120("m_inf", "潜行机甲", { pilot: infPilot, items: [infRifle], statuses: ["hidden"] });
+			const infTarget = mkMech120("m_inft", "标靶机甲");
+
+			// 3a) 武器首次攻击未命中：消耗本回合首次攻击名额，但不挂埋伏豁免
+			const infMissAtk = { actor: infMech, item: infRifle, targets: [], data: null };
+			await steps120.get("initAttackData")(infMissAtk);
+			infMissAtk.data.hit_results = [{ target: { actor: infTarget }, total: 5, hit: false, crit: false }];
+			await steps120.get("rollAttacks")(infMissAtk);
+			const infMissCardSt = { actor: infMech, item: infRifle, cardTargets: [{ uuid: infTarget.uuid, hit: false, crit: false }] };
+			await steps120.get("printAttackCard")(infMissCardSt);
+			const missCls = L.analyzeCard(infMissCardSt._card);
+			ok(L.getCombatState(infMech).usedInfiltratorAmbush === true && !(missCls?.saves ?? []).some(s => s.failStatuses?.includes("impaired")), "潜行者 II「埋伏」在首次攻击未命中时不生成机体豁免");
+
+			// 3b) 新一回合科技攻击命中：同样触发埋伏机体豁免（缓慢+受损+禁反应，且不含伏卧）
+			await L.setCombatState(infMech, { usedInfiltratorAmbush: false, startedTurnHidden: true });
+			const infTechHit = { actor: infMech, item: { uuid: "Item.t_inv", name: "入侵", system: {} }, targets: [], data: { title: "破碎讯号（快速科技）", invade: true } };
+			docMap120["Item.t_inv"] = infTechHit.item;
+			await steps120.get("initTechAttackData")(infTechHit);
+			infTechHit.data.hit_results = [{ target: { actor: infTarget }, total: 16, hit: true, crit: false }];
+			await steps120.get("rollAttacks")(infTechHit);
+			const infTechCardSt = { actor: infMech, item: infTechHit.item, data: infTechHit.data, cardTargets: [{ uuid: infTarget.uuid, hit: true, crit: false }] };
+			await steps120.get("printTechAttackCard")(infTechCardSt);
+			const techAmbushCls = L.analyzeCard(infTechCardSt._card);
+			const ambushSave = (techAmbushCls?.saves ?? []).find(s => s.key === "hull");
+			ok(
+				L.getCombatState(infMech).usedInfiltratorAmbush === true
+				&& Boolean(ambushSave)
+				&& ambushSave.failStatuses.includes("slow")
+				&& ambushSave.failStatuses.includes("impaired")
+				&& !ambushSave.failStatuses.includes("prone")
+				&& ambushSave.noReactionsUntilTurnEnd === true,
+				"潜行者 II「埋伏」支持科技攻击命中触发机体豁免（缓慢+受损+禁反应，绝不误挂伏卧）"
+			);
+
+			// 4) 重炮手 I & III「掩护火力 / 夹叉火力」：双目标按目标独立解除
+			const hgPilot = mkPilot120("p_hg", [["t_heavy_gunner", 3]]);
+			const hmg = mkWpn120("w_hmg", "重机枪", "mw_heavy_machine_gun", "Heavy", "Cannon");
+			const hgMech = mkMech120("m_hg", "重炮机甲", { pilot: hgPilot, items: [hmg] });
+			const enemyA = mkMech120("m_ea", "敌机甲A", { statuses: ["impaired"] });
+			const enemyB = mkMech120("m_eb", "敌机甲B", { statuses: ["impaired"] });
+			const enemyC = mkMech120("m_ec", "敌机甲C", { statuses: ["impaired"] });
+			await L.setCombatState(hgMech, { heavyGunnerReactionArmed: true, coveringFireTargets: [enemyA.uuid, enemyB.uuid, enemyC.uuid] });
+			ctx.game.actors = [hgMech, enemyA, enemyB, enemyC];
+			ctx.game.actors.get = id => [hgMech, enemyA, enemyB, enemyC].find(a => a.id === id) ?? null;
+
+			// 对 A 开出掩护火力反应射击 → 仅移除 A 并清 A 的受损，B 与 C 保持掩护火力与受损
+			await steps120.get("printAttackCard")({ actor: hgMech, item: hmg, cardTargets: [{ uuid: enemyA.uuid, hit: true, crit: false }] });
+			ok(
+				!enemyA.statuses.has("impaired")
+				&& enemyB.statuses.has("impaired")
+				&& L.getCombatState(hgMech).coveringFireTargets.length === 2
+				&& L.getCombatState(hgMech).coveringFireTargets.includes(enemyB.uuid),
+				"重炮手 III「夹叉火力」：对目标 A 开火仅解除 A 的掩护火力与受损，其余目标继续维持"
+			);
+
+			// B 对重炮手造成伤害 → 仅解除 B，C 仍保留！
+			const prevProtoDmgCalc = ctx.CONFIG.Actor.documentClass.prototype.damageCalc;
+			ctx.CONFIG.Actor.documentClass.prototype.damageCalc = async function (d) {
+				const loss = Number(d?.Kinetic) || 0;
+				this.system.hp.value = Math.max(0, (Number(this.system.hp.value) || 0) - loss);
+				return d;
+			};
+			L.patchTrueblackDamageCalc();
+			hgMech.system.hp.value = 12;
+			await ctx.CONFIG.Actor.documentClass.prototype.damageCalc.call(hgMech, { Kinetic: 4 }, { multiple: 1, dmgCtx: { attackerUuid: enemyB.uuid } });
+			if (prevProtoDmgCalc) ctx.CONFIG.Actor.documentClass.prototype.damageCalc = prevProtoDmgCalc;
+			ok(
+				!enemyB.statuses.has("impaired")
+				&& enemyC.statuses.has("impaired")
+				&& L.getCombatState(hgMech).coveringFireTargets.length === 1
+				&& L.getCombatState(hgMech).coveringFireTargets[0] === enemyC.uuid,
+				"重炮手 III：当目标 B 对重炮手造成伤害时，仅解除 B 的掩护火力，目标 C 依旧保留"
+			);
+
+			// 5) 领袖 II「公开频道」：仅允许在【其他友方玩家角色】回合触发下达命令反应，拦截 NPC 回合与自身回合
+			const leaderMech = mkMech120("m_ldr", "指挥机甲");
+			const allyPcMech = mkMech120("m_ally_pc", "队友机甲");
+			allyPcMech.hasPlayerOwner = true;
+			const npcTurnActor = { id: "n_turn", uuid: "Actor.n_turn", name: "敌方突击兵", type: "npc", is_npc: () => true, hasPlayerOwner: false };
+			const leaderActItem = { type: "talent", system: { lid: "t_leader" } };
+			ctx.game.combat = { started: true, active: true, round: 1, turn: 0, combatant: { id: "c_npc", actor: npcTurnActor } };
+			ok(
+				await steps120.get("initActivationData")({ actor: leaderMech, item: leaderActItem, data: { action: { activation: "Reaction", name: "公开频道" } } }) === false,
+				"领袖 II「公开频道」反应在敌方 NPC 回合被自动拦截"
+			);
+			ctx.game.combat = { started: true, active: true, round: 1, turn: 1, combatant: { id: "c_self", actor: leaderMech } };
+			ok(
+				await steps120.get("initActivationData")({ actor: leaderMech, item: leaderActItem, data: { action: { activation: "Reaction", name: "公开频道" } } }) === false,
+				"领袖 II「公开频道」反应在自身回合被自动拦截（自身回合应使用免费动作下达命令）"
+			);
+			ctx.game.combat = { started: true, active: true, round: 1, turn: 2, combatant: { id: "c_ally", actor: allyPcMech } };
+			ok(
+				await steps120.get("initActivationData")({ actor: leaderMech, item: leaderActItem, data: { action: { activation: "Reaction", name: "公开频道" } } }) === true,
+				"领袖 II「公开频道」反应在其他友方 PC 回合正常放行"
+			);
+			ctx.game.combat = prevCombat120;
+
+			// 6) 风暴使者 III「大规模攻击」豁免解析：成功时减半并伏卧，失败时晕眩并伏卧
+			const torrentSaves = L.parseSavesInText("线形区域内的所有角色必须通过机体豁免，否则受到 2d6 点爆炸伤害，伏卧，并晕眩直到其下一回合结束。成功时，目标受到一半伤害并伏卧。");
+			ok(
+				torrentSaves.length === 1
+				&& torrentSaves[0].key === "hull"
+				&& torrentSaves[0].halfOnSuccess === true
+				&& torrentSaves[0].passStatuses.includes("prone")
+				&& torrentSaves[0].failStatuses.includes("stunned")
+				&& torrentSaves[0].failStatuses.includes("prone"),
+				"风暴使者 III「大规模攻击」准确解析：失败晕眩+伏卧、成功减半伤害+伏卧"
+			);
+
+			// 7) 德川「辉光（Radiance）」与被动「界限突破」射程/威胁叠加 + 迅子长枪危险区无限次后焰
+			const tokuLaser = mkWpn120("w_toku_r", "步枪", "mw_smartgun", "Main", "Rifle", { range: [{ type: "Range", val: 10 }], damage: [{ type: "Energy", val: "4" }] });
+			const tokuBlade = mkWpn120("w_toku_m", "火炬", "mw_torch", "Main", "Melee", { range: [{ type: "Threat", val: 1 }], damage: [{ type: "Energy", val: "1d6" }] });
+			const tokuMech = mkMech120("m_toku", "德川", { frameLid: "mf_tokugawa", items: [tokuLaser, tokuBlade], statuses: ["dangerzone", "exposed"] });
+			await L.setCoreState(tokuMech, { active: true, frameLid: "mf_tokugawa" });
+			ok(
+				L.attackReach({ constructor: { name: "WeaponAttackFlow" }, state: { item: tokuLaser, actor: tokuMech } }).reach === 20
+				&& L.overwatchThreatVal(tokuBlade, tokuMech) === 4,
+				"德川开启「辉光」且处于暴露「界限突破」时：远程射程 10+5(辉光)+5(界限突破)=20，近战威胁 1+2(辉光)+1(界限突破)=4"
+			);
+
+			const tachyon = mkWpn120("w_tach", "迅子长枪", "mw_tachyon_lance", "Superheavy", "Cannon", { range: [{ type: "Range", val: 20 }], damage: [{ type: "Energy", val: "2d6" }, { type: "Burn", val: "8" }] });
+			tokuMech.items.push(tachyon);
+			tachyon.actor = tokuMech;
+			const tachRiders1 = L.collectWeaponAttackRiders(null, { targets: [{ hit: true, crit: false }] }, tachyon, tokuMech, 12);
+			const tachRiders2 = L.collectWeaponAttackRiders(null, { targets: [{ hit: false, crit: false }] }, tachyon, tokuMech, 12);
+			ok(
+				tachRiders1.some(r => r.kind === "tachyonBackblast") && tachRiders2.some(r => r.kind === "tachyonBackblast"),
+				"迅子长枪在超温危域每次攻击（无论命中与否、不限 1/轮）均生成 4 燃烧 + 2 热度后焰按钮"
+			);
+
+			// 8) 湮灭巢房（mw_annihilation_nexus）爆发中心：仅允许以自身或【己方部署的无人机】为中心，拒绝敌方或队友无人机
+			const hydraMech = mkMech120("m_hydra", "九头蛇", { sensors: 10 });
+			const hydraTok = { id: "t_hydra", center: { x: 50, y: 50 }, actor: hydraMech, document: { id: "t_hydra", uuid: "Scene.s.Token.t_hydra", name: "九头蛇", disposition: 1 } };
+			const ownDroneActor = {
+				id: "d_own", uuid: "Actor.d_own", name: "食尸鬼无人机", type: "deployable",
+				is_deployable: () => true, statuses: new Set(),
+				system: { type: "Drone", deployer: { id: hydraMech.uuid, value: hydraMech } },
+			};
+			const allyDroneActor = {
+				id: "d_ally", uuid: "Actor.d_ally", name: "队友无人机", type: "deployable",
+				is_deployable: () => true, statuses: new Set(),
+				system: { type: "Drone", deployer: { id: "Actor.m_other", value: null } },
+			};
+			const ownDroneTok = { id: "t_d_own", center: { x: 350, y: 50 }, actor: ownDroneActor, document: { id: "t_d_own", uuid: "Scene.s.Token.t_d_own", name: "食尸鬼无人机", disposition: 1 } };
+			const allyDroneTok = { id: "t_d_ally", center: { x: 250, y: 50 }, actor: allyDroneActor, document: { id: "t_d_ally", uuid: "Scene.s.Token.t_d_ally", name: "队友无人机", disposition: 1 } };
+			ctx.canvas = {
+				grid: {
+					size: 100, distance: 1, isGridless: false,
+					measurePath: ([a, b]) => ({ spaces: Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 100) }),
+				},
+				tokens: { controlled: [hydraTok], placeables: [hydraTok, ownDroneTok, allyDroneTok] },
+			};
+			const annihWpn = mkWpn120("w_annih", "湮灭巢房", "mw_annihilation_nexus", "Superheavy", "Nexus");
+			const annihSess = { actor: hydraMech, token: hydraTok, flow: { state: { item: annihWpn } } };
+			ok(L.isOwnDroneTokenOf(ownDroneTok, hydraMech) === true && L.isOwnDroneTokenOf(allyDroneTok, hydraMech) === false, "isOwnDroneTokenOf 严格校验 deployer 归属，排除队友或敌方无人机");
+			ctx.game.user.targets = new Set([allyDroneTok]);
+			ok(await L.resolveAnnihilationBurstOrigin(annihSess) === undefined, "锁定队友无人机放置湮灭巢房爆发模板时被拦截并提示需选自己的无人机");
+			ctx.game.user.targets = new Set([ownDroneTok]);
+			ok(await L.resolveAnnihilationBurstOrigin(annihSess) === ownDroneTok, "锁定感应范围内己方无人机时允许以其为中心放置爆发 2 模板");
+			ctx.game.user.targets = new Set();
+
+			// 9) 布里阿柔斯骨架（cb_briareos_frame）：1 点与 0 点结构均享全伤害抗性（除热度），且 0 HP + 0 结构不自动挂被击倒
+			const briPilot = mkPilot120("p_bri", [], ["cb_briareos_frame"]);
+			const briMech = mkMech120("m_bri", "不灭巨人", { pilot: briPilot, hp: 0, struct: 0, armor: 0 });
+			const briPrev0 = L.previewDamageCalc(briMech, [{ type: "Kinetic", amount: 6 }]);
+			ok(briPrev0.hpLoss === 3 && briPrev0.notes.some(n => /布里阿柔斯/.test(n)), "布里阿柔斯骨架在 0 点结构时同样生效非热度全伤害抗性（6 → 3）");
+			await L.onUpdateActorStatus(briMech, { system: { hp: { value: 0 }, structure: { value: 0 } } }, {}, "u1");
+			ok(!briMech.statuses.has("downandout"), "装备布里阿柔斯骨架的机甲在 0 HP + 0 结构时不会自动挂上「被击倒（Down and Out）」");
+
+			// 10) 苏丹专业牌照自动化：模块化步枪「突击」反应准度、瓦亚维亚导弹飞行/高处准度与非飞行难度、弹道臂盾展开姿态
+			const modRifle = mkWpn120("w_modr", "模块化先进战斗步枪", "mw_pl_modular_rifle", "Main", "Rifle", {
+				profiles: [
+					{ name: "进攻", type: "Rifle", range: [{ type: "Range", val: 10 }], damage: [{ type: "Kinetic", val: "1d6" }], all_tags: [] },
+					{ name: "DMR", type: "Rifle", range: [{ type: "Range", val: 12 }], damage: [{ type: "Kinetic", val: "1d6+3" }], all_tags: [] },
+					{ name: "突击", type: "Rifle", range: [{ type: "Range", val: 8 }, { type: "Threat", val: 3 }], damage: [{ type: "Kinetic", val: "1d6" }], all_tags: [] },
+				],
+				selectedIdx: 2,
+			});
+			const suldanMech = mkMech120("m_sul", "苏丹佣兵", { items: [modRifle] });
+			ok(L.isModularRifleReactionProfile(modRifle) === true, "模块化战斗步枪第 3 档案「突击」被识别为反应攻击 +1 准度档案");
+			const modOwSt = { actor: suldanMech, item: modRifle, targets: [], data: { _lancerCnReactionSnap: true } };
+			await steps120.get("initAttackData")(modOwSt);
+			ok(modOwSt.data.acc_diff.base.accuracy === 1, "模块化战斗步枪「突击」档案在守望/反应射击中自动获得 +1 准度");
+
+			const valkLauncher = mkWpn120("w_valk", "瓦亚维亚导弹", "mw_pl_valkyrie", "Main", "Launcher", { range: [{ type: "Range", val: 15 }] });
+			const flyEnemy = mkMech120("m_fly", "飞行标靶", { statuses: ["flying"] });
+			const groundEnemy = mkMech120("m_gnd", "地面标靶");
+			const sulTok = { id: "t_sul", center: { x: 50, y: 50 }, elevation: 0, actor: suldanMech, document: { uuid: "Scene.s.Token.t_sul", elevation: 0, disposition: 1 } };
+			const flyTok = { id: "t_fly", center: { x: 250, y: 50 }, elevation: 0, actor: flyEnemy, document: { uuid: "Scene.s.Token.t_fly", elevation: 0, disposition: -1 } };
+			const highGroundTok = { id: "t_gnd", center: { x: 250, y: 150 }, elevation: 2, actor: groundEnemy, document: { uuid: "Scene.s.Token.t_gnd", elevation: 2, disposition: -1 } };
+			suldanMech.token = sulTok.document;
+			ctx.canvas.tokens.controlled = [sulTok];
+			ctx.canvas.tokens.placeables = [sulTok, flyTok, highGroundTok];
+			const valkTadFly = { target: flyTok, accuracy: 0, difficulty: 0, cover: 0 };
+			const valkTadHighGnd = { target: highGroundTok, accuracy: 0, difficulty: 0, cover: 0 };
+			await steps120.get("initAttackData")({ actor: suldanMech, item: valkLauncher, targets: [valkTadFly, valkTadHighGnd], data: null });
+			ok(
+				valkTadFly.accuracy === 1 && valkTadFly.difficulty === 0
+				&& valkTadHighGnd.accuracy === 1 && valkTadHighGnd.difficulty === 1,
+				"瓦亚维亚导弹（mw_pl_valkyrie）：对飞行目标 +1 准度无难度；对高处非飞行目标同时结算高处 +1 准度与非飞行 +1 难度"
+			);
+
+			const buckler = mkWpn120("w_buck", "弹道臂盾", "mw_pl_buckler", "Main", "Melee", { range: [{ type: "Threat", val: 1 }] });
+			buckler.system.on_crit = "当弹道板伸出时，目标伏卧。";
+			buckler.system.active_profile.on_crit = "当弹道板伸出时，目标伏卧。";
+			suldanMech.items.push(buckler);
+			buckler.actor = suldanMech;
+			const buckRetractedCls = L.classifyAttackCard(buckler, null, 14, suldanMech);
+			ok(!buckRetractedCls.autoCritStatuses.includes("prone"), "弹道臂盾收起期间会心一击不会误挂伏卧");
+			await L.executeTalentSheetAction(suldanMech, "toggle-buckler-stance");
+			ok(L.getCombatState(suldanMech).bucklerExtended === true && suldanMech.statuses.has("slow"), "开启「弹道臂盾展开姿态」后自动标记缓慢");
+			const buckPrevRxn = L.previewDamageCalc(suldanMech, [{ type: "Kinetic", amount: 6 }], { reactionAttack: true });
+			const buckPrevNorm = L.previewDamageCalc(suldanMech, [{ type: "Kinetic", amount: 6 }], {});
+			const buckCritCls = L.classifyAttackCard(buckler, null, 14, suldanMech);
+			ok(
+				buckPrevRxn.hpLoss === 3 && buckPrevNorm.hpLoss === 6 && buckCritCls.autoCritStatuses.includes("prone"),
+				"弹道臂盾展开姿态期间：仅对反应攻击享受伤害抗性（6→3），且使用臂盾会心一击自动附加伏卧"
+			);
+
+			ctx.ChatMessage = prevChatMsg120;
+			ctx.fromUuidSync = prevFromUuidSync120;
+			ctx.game.user = prevUser120;
+			ctx.canvas = prevCanvas120;
+			ctx.game.combat = prevCombat120;
+			ctx.game.lancer = prevLancer120;
+			ctx.ui = prevUi120;
+		}
+
+		// ---- v1.21.0 扩展规则自动化与词典同步回归测试
+		{
+			const L = ctx.LancerCN;
+			const prevUi121 = ctx.ui;
+			const prevLancer121 = ctx.game.lancer;
+			const prevCombat121 = ctx.game.combat;
+			const prevCanvas121 = ctx.canvas;
+			const prevUser121 = ctx.game.user;
+			const prevUsers121 = ctx.game.users;
+			const prevSocket121 = ctx.game.socket;
+			const prevActors121 = ctx.game.actors;
+			const prevFromUuidSync121 = ctx.fromUuidSync;
+			const prevChatMsg121 = ctx.ChatMessage;
+			const prevRoll121 = ctx.Roll;
+
+			const warnLogs121 = [];
+			ctx.ui = {
+				notifications: {
+					info: m => { warnLogs121.push(String(m)); },
+					warn: m => { warnLogs121.push(String(m)); },
+					error: m => { warnLogs121.push(String(m)); },
+				},
+			};
+
+			const docMap121 = {};
+			ctx.fromUuidSync = u => docMap121[u] ?? prevFromUuidSync121?.(u) ?? null;
+			ctx.game.users = { activeGM: { isSelf: true } };
+			ctx.canvas = { tokens: { controlled: [], placeables: [] } };
+
+			const mkPilot121 = (id, talents = [], { grit = 0, countersByLid = {} } = {}) => ({
+				id,
+				uuid: `Actor.${id}`,
+				type: "pilot",
+				isOwner: true,
+				system: { grit },
+				items: talents.map(([lid, rank]) => ({
+					type: "talent",
+					system: {
+						lid,
+						curr_rank: rank,
+						...(countersByLid[lid] ? { counters: countersByLid[lid] } : {}),
+					},
+				})),
+			});
+
+			const mkMech121 = (id, name, { frameLid = "mf_standard_pattern_i_everest", pilot = null, items = [], hp = 12, heat = 0, heatMax = 6, evasion = 10, edef = 10, save = 12, isOwner = true, statuses = [] } = {}) => {
+				const flags = { "lancer-cn": {} };
+				const stSet = new Set(statuses);
+				const itemArr = [...items];
+				itemArr.get = iid => itemArr.find(x => x.id === iid);
+				const m = {
+					id,
+					uuid: `Actor.${id}`,
+					name,
+					type: "mech",
+					isOwner,
+					is_mech: () => true,
+					is_npc: () => false,
+					is_deployable: () => false,
+					hasHeatcap: () => heatMax > 0,
+					statuses: stSet,
+					items: itemArr,
+					getFlag: (sc, k) => flags[sc]?.[k],
+					setFlag: async (sc, k, v) => { (flags[sc] ||= {})[k] = v; },
+					unsetFlag: async (sc, k) => { if (flags[sc]) delete flags[sc][k]; },
+					toggleStatusEffect: async (sid, { active }) => { active ? stSet.add(sid) : stSet.delete(sid); },
+					update: async patch => {
+						if (patch["system.heat.value"] !== undefined) m.system.heat.value = patch["system.heat.value"];
+						if (patch["system.overshield.value"] !== undefined) m.system.overshield.value = patch["system.overshield.value"];
+						if (patch["system.burn"] !== undefined) m.system.burn = patch["system.burn"];
+						if (patch["system.action_tracker.reaction"] !== undefined) m.system.action_tracker.reaction = patch["system.action_tracker.reaction"];
+					},
+					system: {
+						grit: pilot?.system?.grit ?? 0,
+						evasion,
+						edef,
+						save,
+						hull: 0,
+						agi: 0,
+						sys: 0,
+						eng: 0,
+						hp: { value: hp, max: hp },
+						overshield: { value: 0 },
+						structure: { value: 4, max: 4 },
+						stress: { value: 4, max: 4 },
+						heat: { value: heat, max: heatMax },
+						burn: 0,
+						statuses: {},
+						action_tracker: { reaction: true },
+						pilot: pilot ? { value: pilot, id: pilot.id } : { value: null, id: null },
+						loadout: { frame: { value: { system: { lid: frameLid } } } },
+					},
+				};
+				for (const it of itemArr) {
+					it.actor = m;
+					it.parent = m;
+					if (it.uuid) docMap121[it.uuid] = it;
+				}
+				docMap121[m.uuid] = m;
+				return m;
+			};
+
+			const createdCards121 = [];
+			ctx.ChatMessage = {
+				...(prevChatMsg121 || {}),
+				getSpeaker: o => ({ actor: o?.actor?.name }),
+				create: async data => {
+					const f = JSON.parse(JSON.stringify(data.flags ?? {}));
+					const msg = {
+						id: `c121_${createdCards121.length}`,
+						isAuthor: true,
+						content: data.content ?? "",
+						flags: f,
+						getFlag: (sc, k) => f?.[sc]?.[k],
+						setFlag: async (sc, k, v) => { (f[sc] ||= {})[k] = v; },
+						updateSource: patch => {
+							for (const [pk, pv] of Object.entries(patch ?? {})) {
+								const segs = pk.split(".");
+								let cur = msg;
+								for (let si = 0; si < segs.length - 1; si++) cur = (cur[segs[si]] ||= {});
+								cur[segs[segs.length - 1]] = pv;
+							}
+						},
+					};
+					L.onPreCreateBasicCard(msg);
+					createdCards121.push(msg);
+					await L.onCreateChatMessage(msg, {}, ctx.game.user?.id);
+					return msg;
+				},
+			};
+
+			// 1) 8 组扩展 LID 别名双向对齐（骨架 + 天赋 + 系统）与碾碎机「鲁莽挥击」按钮
+			const aliasPilot = mkPilot121("p_alias", [
+				["t_ext_mind_reader", 2],
+				["t_ext_void_native", 1],
+				["t_ext_household_guard", 1],
+				["t_ext_blackthumb", 3],
+				["t_ext_crusher", 1],
+			]);
+			const aliasMech = mkMech121("m_alias", "别名测试机", {
+				frameLid: "mf_ch_wodeng",
+				pilot: aliasPilot,
+				items: [
+					{ id: "s_un", type: "mech_system", name: "不稳定 NHP", system: { lid: "ms_ext_unstable_nhp" } },
+					{ id: "s_peb", type: "mech_system", name: "人因故障", system: { lid: "ms_ext_human_error" } },
+				],
+			});
+			ok(
+				L.mechFrameLid(aliasMech) === "mf_ext_wodeng"
+				&& L.FRAME_LID_ALIASES.mf_ch_tizona === "mf_kkca_tizona"
+				&& L.FRAME_LID_ALIASES.mf_ext_retiarius === "mf_ch_retiarius"
+				&& L.talentRank(aliasMech, "t_empath") === 2
+				&& L.talentRank(aliasMech, "t_spaceborn") === 1
+				&& L.talentRank(aliasMech, "t_house_guard") === 1
+				&& L.talentRank(aliasMech, "t_black_thumb") === 3
+				&& L.hasMechSystem(aliasMech, "ms_iconoclast") === true
+				&& L.hasMechSystem(aliasMech, "ms_pebcac") === true,
+				"8 处扩展 LID 别名（提泽纳剑/沃登/网斗士/不稳定 NHP/共情者/太空民/家族禁卫/黑拇指/人因故障）全部正确归一化"
+			);
+			const crusherHtml = L.renderTalentControlHTML(aliasMech);
+			ok(crusherHtml.includes("鲁莽挥击") && !crusherHtml.includes("鲁莽摇摆"), "碾碎机 I 战术栏开关标题已同步更新为「鲁莽挥击」");
+
+			// 2) 演说家 II & III（mf_orator）：R3 初始 2 骰、激励固定 +1 准度且清除状况、反间补全后半句、挫败无受伤提前解除、1/轮限制及 0→1 涨骰
+			const oratorPilot = mkPilot121("p_ora", [["mf_orator", 3]], {
+				countersByLid: { mf_orator: [{ lid: "ctr_voice_of_reason", value: 1, default_value: 1 }] },
+			});
+			const oratorMech = mkMech121("m_ora", "演说机甲", { pilot: oratorPilot });
+			ok(L.getTalentDie(oratorMech, "orator") === 2, "演说家 III 在共用 R2 默认值 1 的计数器时自动按 R3 初始 2 枚演说家骰读取");
+			await L.setTalentDie(oratorMech, "orator", 3);
+			ctx.game.user = { ...(prevUser121 || {}), id: "u121", isGM: false, targets: new Set() };
+			ctx.game.combat = { id: "cmb_ora", started: true, round: 1, turn: 0 };
+			const oraOk1 = await L.executeTalentSheetAction(oratorMech, "oratorSpend:1:激励");
+			const oraCard1 = createdCards121.at(-1)?.content ?? "";
+			const oraOk2SameRound = await L.executeTalentSheetAction(oratorMech, "oratorSpend:1:激励");
+			ok(
+				oraOk1 === true
+				&& oraOk2SameRound === false
+				&& L.getTalentDie(oratorMech, "orator") === 2
+				&& oraCard1.includes("+1 准度")
+				&& !oraCard1.includes("+3 准度")
+				&& oraCard1.includes("状况"),
+				"演说家 II「激励」持有 3 枚消耗 1 枚时固定赋予 +1 准度（清除状况），且严格受 1/轮限制拦截同轮第二次消耗"
+			);
+			ctx.game.combat = { id: "cmb_ora", started: true, round: 2, turn: 0 };
+			await L.setTalentDie(oratorMech, "orator", 3);
+			await L.executeTalentSheetAction(oratorMech, "oratorSpend:2:反间");
+			const convinceHtml = createdCards121.at(-1)?.content ?? "";
+			ctx.game.combat = { id: "cmb_ora", started: true, round: 3, turn: 0 };
+			await L.setTalentDie(oratorMech, "orator", 3);
+			await L.executeTalentSheetAction(oratorMech, "oratorSpend:3:挫败");
+			const demorHtml = createdCards121.at(-1)?.content ?? "";
+			ok(
+				convinceHtml.includes("也不能成为盟友系统或特性的目标")
+				&& !demorHtml.includes("提前解除")
+				&& L.getTalentDie(oratorMech, "orator") === 0,
+				"演说家「反间」包含不可作为盟友目标条款，「挫败」已移除旧版受伤提前解除条款"
+			);
+			await L.setCombatState(oratorMech, { attackedOrForcedSaveThisTurn: false });
+			const oraTurnCombat = {
+				round: 3,
+				previous: { combatantId: "co1" },
+				current: { combatantId: "co2" },
+				combatants: [
+					{ id: "co1", name: "演说机甲", actor: oratorMech, token: { uuid: oratorMech.uuid } },
+					{ id: "co2", name: "木桩", actor: aliasMech, token: { uuid: aliasMech.uuid } },
+				],
+			};
+			oraTurnCombat.combatants.get = cid => oraTurnCombat.combatants.find(c => c.id === cid);
+			await L.onUpdateCombatTurnEnd(oraTurnCombat, { turn: 1 }, { direction: 1 });
+			ok(L.getTalentDie(oratorMech, "orator") === 1, "演说家骰扣至 0 枚时，未攻击回合结束正常从 0 恢复至 1 枚");
+
+			// 3) 战场分析师 I–III（t_field_analyst）：对敌锁定阻止涨骰（扫描不阻止）、保骰 ±1 vs 耗骰、多目标指定下标与 2/轮上限
+			const faPilot = mkPilot121("p_fa", [["t_field_analyst", 3]]);
+			const faMech = mkMech121("m_fa", "情报分析机", { pilot: faPilot });
+			const faEnemyA = mkMech121("m_fae1", "敌机甲甲", { evasion: 12 });
+			const faEnemyB = mkMech121("m_fae2", "敌机甲乙", { evasion: 12 });
+			ctx.game.actors = [faMech, faEnemyA, faEnemyB];
+			ctx.game.actors.get = aid => [faMech, faEnemyA, faEnemyB].find(a => a.id === aid) ?? null;
+
+			await L.setTalentDie(faMech, "analyst", 2);
+			await L.setCombatState(faMech, { attackedOrForcedSaveThisTurn: false, affectedHostileThisTurn: false });
+			const faEnemyTok = { id: "t_fae1", actor: faEnemyA, document: { uuid: faEnemyA.uuid, name: faEnemyA.name, disposition: -1 } };
+			ctx.game.user.targets = new Set([faEnemyTok]);
+			await L.beginBasicAction(faMech, "lockon");
+			ctx.game.user.targets = new Set();
+			const faCombat = {
+				round: 1,
+				previous: { combatantId: "cf1" },
+				current: { combatantId: "cf2" },
+				combatants: [
+					{ id: "cf1", name: "情报分析机", actor: faMech, token: { uuid: faMech.uuid } },
+					{ id: "cf2", name: "敌机甲甲", actor: faEnemyA, token: { uuid: faEnemyA.uuid } },
+				],
+			};
+			faCombat.combatants.get = cid => faCombat.combatants.find(c => c.id === cid);
+			await L.onUpdateCombatTurnEnd(faCombat, { turn: 1 }, { direction: 1 });
+			ok(L.getTalentDie(faMech, "analyst") === 2, "战场分析师 II：本回合对敌方执行「锁定」属于影响敌对角色行动，回合末不涨情报骰");
+
+			// 纯扫描不置位 affectedHostileThisTurn，回合末正常 +2 涨至 4
+			await L.setCombatState(faMech, { attackedOrForcedSaveThisTurn: false, affectedHostileThisTurn: false });
+			await ctx.ChatMessage.create({
+				content: `<div class="card"><div class="lancer-header">扫描</div><div class="effect-text">扫描敌方机甲获取数值信息。</div></div>`,
+				flags: { lancer: { actionData: { actor: faMech.uuid, action: { lid: "act_scan", name: "扫描" } } } },
+			});
+			await L.onUpdateCombatTurnEnd(faCombat, { turn: 1 }, { direction: 1 });
+			ok(L.getTalentDie(faMech, "analyst") === 4, "战场分析师 II：本回合仅执行「扫描」不影响涨骰，回合末正常 +2（2 → 4）");
+
+			// 多目标攻击卡：第 1 次选保骰 +1 调整目标 #1（11→12 命中，情报骰保留 4），第 2 次新回合耗骰 +4 调整目标 #0（9→13 命中，情报骰重置 1），同轮第 3 次因 2/轮上限被拦截！
+			const mkAtkCard121 = (id, targets) => {
+				const f = { lancer: { attackData: { attackerUuid: aliasMech.uuid, targets } }, "lancer-cn": {} };
+				return {
+					id,
+					isAuthor: true,
+					content: `<div class="lancer-attack"></div>`,
+					flags: f,
+					getFlag: (sc, k) => f?.[sc]?.[k],
+					setFlag: async (sc, k, v) => { (f[sc] ||= {})[k] = v; },
+				};
+			};
+			ctx.game.combat = { id: "cmb_fa", started: true, round: 2, turn: 0 };
+			const aoeMsg = mkAtkCard121("aoe_fa", [
+				{ uuid: faEnemyA.uuid, total: 9, hit: false, crit: false },
+				{ uuid: faEnemyB.uuid, total: 11, hit: false, crit: false },
+			]);
+			await L.executeFieldAnalystReaction(aoeMsg, L.analyzeCard(aoeMsg), "add:base", { targetIndex: 1 });
+			ok(
+				L.getTalentDie(faMech, "analyst") === 4
+				&& aoeMsg.flags.lancer.attackData.targets[0].total === 9
+				&& aoeMsg.flags.lancer.attackData.targets[1].total === 12
+				&& aoeMsg.flags.lancer.attackData.targets[1].hit === true,
+				"战场分析师 II/III：支持指定调整多目标攻击中的第 2 个目标，且选择「保骰 +1」时保留当前高点数情报骰（4）"
+			);
+			ctx.game.combat.turn = 1; // 同一轮的下一个角色回合（手动模拟换回合恢复反应徽章）
+			faMech.system.action_tracker.reaction = true;
+			await L.executeFieldAnalystReaction(aoeMsg, L.analyzeCard(aoeMsg), "add:die", { targetIndex: 0 });
+			ctx.game.combat.turn = 2; // 同一轮的第 3 个角色回合
+			faMech.system.action_tracker.reaction = true;
+			const thirdMsg = mkAtkCard121("single_fa3", [{ uuid: faEnemyA.uuid, total: 10, hit: false, crit: false }]);
+			const faThirdRes = await L.executeFieldAnalystReaction(thirdMsg, L.analyzeCard(thirdMsg), "sub:base");
+			ok(
+				L.getTalentDie(faMech, "analyst") === 1
+				&& aoeMsg.flags.lancer.attackData.targets[0].total === 13
+				&& faThirdRes === false,
+				"战场分析师「优越情报 / 激活干扰」严格执行每轮至多 2 次（2/轮）上限，同轮第 3 次触发被自动拦截"
+			);
+
+			// 4) 偶像破坏者（t_iconoclast）countMechNHPs 精确计数 + R1 层流检定 + 猎犬级伙伴礼宾单元拉动 3 格
+			const icono1Pilot = mkPilot121("p_ico1", [["t_iconoclast", 1], ["t_technophile", 1]]);
+			const icono1Mech = mkMech121("m_ico1", "狂信一号", {
+				pilot: icono1Pilot,
+				items: [
+					{ id: "ai_cc", type: "mech_system", name: "助理级 COMP/CON 单元", system: { lid: "ms_comp_con_class_assistant_unit", tags: [{ lid: "tg_ai" }, { lid: "tg_no_cascade" }] } },
+					{ id: "ai_hound", type: "mech_system", name: "“猎犬级”伙伴礼宾单元", system: { lid: "ms_ch_hound", tags: [{ lid: "tg_ai" }] } },
+					{ id: "ai_serv", type: "mech_system", name: "侍从级 NHP", system: { lid: "ms_technophile_1", tags: [{ lid: "tg_ai" }, { lid: "tg_no_cascade" }] } },
+					{ id: "ai_os", type: "mech_system", name: "欧西里斯级 NHP", system: { lid: "ms_osiris_class_nhp", tags: [{ lid: "tg_ai" }] } },
+					{ id: "ai_un_dest", type: "mech_system", name: "不稳定 NHP", system: { lid: "ms_iconoclast", destroyed: true } },
+				],
+			});
+			ok(
+				L.countMechNHPs(icono1Mech) === 1,
+				"countMechNHPs 排除 COMP/CON、猎犬级、侍从级等免层流 AI，且不稳定 NHP（ms_iconoclast）损毁时不再通过天赋回退重复 +1（仅计欧西里斯 = 1）"
+			);
+			const r1PurePilot = mkPilot121("p_ico_r1", [["t_iconoclast", 1]]);
+			const r1PureMech = mkMech121("m_ico_r1", "初阶偶像破坏者", { pilot: r1PurePilot });
+			const r1CascSrc = L.collectCascadeableSources(r1PureMech);
+			ok(r1CascSrc.eligible === true && r1CascSrc.talentNhps.some(t => t.key === "unstable_nhp"), "仅点 1 级偶像破坏者的机甲正常识别「不稳定 NHP」并允许进行层流检定");
+
+			const houndOnlyMech = mkMech121("m_hound", "战车御手", {
+				items: [{ id: "h1", type: "mech_system", name: "“猎犬级”伙伴礼宾单元", system: { lid: "ms_ch_hound", tags: [{ lid: "tg_ai" }] } }],
+			});
+			ctx.game.lancer = { ...(prevLancer121 || {}), flows: new Map() };
+			ctx.Roll = class { constructor() {} async evaluate() { return { total: 1 }; } };
+			await L.executeCascadeCheck(houndOnlyMech);
+			ok(
+				!houndOnlyMech.items[0].system.cascading
+				&& /拉动 3 空间/.test(createdCards121.at(-1)?.content ?? ""),
+				"猎犬级伙伴礼宾单元在层流检定掷出 1 时不进入层流状态，改为提示由 GM 选择方向拉动 3 空间"
+			);
+
+			// 5) 黑拇指 II/III（t_black_thumb）：拦截敌方目标、跨玩家 GM Socket 维修结算、复合状况二选一
+			const bt3Pilot = mkPilot121("p_bt3", [["t_black_thumb", 3]]);
+			const bt3Mech = mkMech121("m_bt3", "工程母舰", { pilot: bt3Pilot });
+			const btAllyMech = mkMech121("m_bt_ally", "队友机甲", { isOwner: false, heat: 4, statuses: ["slow", "immobilized", "impaired", "jammed"] });
+			btAllyMech.system.burn = 3;
+			const btEnemyMech = mkMech121("m_bt_enemy", "敌方重甲", { isOwner: false, statuses: ["slow"] });
+			btEnemyMech.system.burn = 5;
+			const btSelfTok = { id: "t_bt_s", x: 0, y: 0, center: { x: 50, y: 50 }, actor: bt3Mech, document: { uuid: bt3Mech.uuid, disposition: 1 } };
+			const btAllyTok = { id: "t_bt_a", x: 100, y: 0, center: { x: 150, y: 50 }, actor: btAllyMech, document: { uuid: btAllyMech.uuid, disposition: 1 } };
+			const btEnemyTok = { id: "t_bt_e", x: 100, y: 0, center: { x: 150, y: 50 }, actor: btEnemyMech, document: { uuid: btEnemyMech.uuid, disposition: -1 } };
+			bt3Mech.token = btSelfTok.document;
+			ctx.canvas = {
+				grid: { size: 100, distance: 1, isGridless: false, measurePath: ([a, b]) => ({ spaces: Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 100) }) },
+				tokens: { controlled: [btSelfTok], placeables: [btSelfTok, btAllyTok, btEnemyTok] },
+			};
+			const emitted121 = [];
+			ctx.game.users = { activeGM: { isSelf: true } };
+			ctx.game.socket = { emit: (_ch, payload) => { emitted121.push(payload); } };
+
+			// 5a) 选中敌方机甲点击战场修复 → 被拦截，敌方不加护盾也不清缓慢
+			ctx.game.user.targets = new Set([btEnemyTok]);
+			await ctx.ChatMessage.create({
+				content: `<div class="card"><div class="lancer-header">黑拇指：战场修复</div><div class="effect-text">获得 2 护盾并清除缓慢或固定。</div></div>`,
+				flags: { lancer: { actionData: { actor: bt3Mech.uuid, action: { name: "黑拇指：战场修复" } } } },
+			});
+			ok(btEnemyMech.system.overshield.value === 0 && btEnemyMech.statuses.has("slow") && emitted121.length === 0, "黑拇指 III 选中敌方目标时自动拦截，绝不误给敌机加护盾或清状况");
+
+			// 5b) 选中非本人拥有的邻接友方机甲执行扑灭 / 战场修复 / 操控排气阀 → 发出 blackThumbRepair Socket 并由 GM 端生效
+			ctx.game.user.targets = new Set([btAllyTok]);
+			for (const actN of ["黑拇指：扑灭", "黑拇指：战场修复", "黑拇指：操控排气阀"]) {
+				await ctx.ChatMessage.create({
+					content: `<div class="card"><div class="lancer-header">${actN}</div><div class="effect-text">${actN}</div></div>`,
+					flags: { lancer: { actionData: { actor: bt3Mech.uuid, action: { name: actN } } } },
+				});
+			}
+			for (const p of emitted121) await L.handleModuleSocketMessage(p);
+			ctx.game.user.targets = new Set();
+			ok(
+				btAllyMech.system.burn === 0
+				&& btAllyMech.system.overshield.value === 2
+				&& btAllyMech.system.heat.value === 2
+				&& btAllyMech.statuses.has("resistance_burn")
+				&& !bt3Mech.statuses.has("resistance_burn"),
+				"黑拇指 III 对其他玩家的邻接友方机甲执行三种维修动作时，通过 GM Socket 正常清零燃烧、赋予 2 护盾、冷却 2 热度，且燃烧抗性挂在友军而非自身"
+			);
+
+			// 6) 人因故障（ms_pebcac）：拦截受扰（Jammed）目标，且 d6=5 仅造成等于实际所清除热度数的能量伤害
+			const pebTargetJammed = mkMech121("m_peb_j", "受扰队友", { statuses: ["jammed"] });
+			const pebJamTok = { id: "t_pj", actor: pebTargetJammed, document: { uuid: pebTargetJammed.uuid, disposition: 1 } };
+			ctx.game.user.targets = new Set([pebJamTok]);
+			const prevCardCnt = createdCards121.length;
+			await ctx.ChatMessage.create({
+				content: `<div class="card"><div class="lancer-header">人因故障</div><div class="effect-text">人因故障</div></div>`,
+				flags: { lancer: { actionData: { actor: bt3Mech.uuid, action: { name: "人因故障" } } } },
+			});
+			ok(createdCards121.length === prevCardCnt + 1 && !/副作用 d6/.test(createdCards121.at(-1)?.content ?? ""), "人因故障（PEBCAC）对处于受扰（Jammed）状况的目标自动拦截");
+
+			const pebTargetHot1 = mkMech121("m_peb_h1", "微热队友", { heat: 1 });
+			const pebHotTok = { id: "t_ph1", actor: pebTargetHot1, document: { uuid: pebTargetHot1.uuid, disposition: 1 } };
+			ctx.game.user.targets = new Set([pebHotTok]);
+			let pebRolls = [5, 6]; // 第 1 骰出副作用 5，第 2 骰冷却 1d6 = 6（但目标仅有 1 点热度，实际只清 1 点并造成 1 点能量伤害！）
+			ctx.Roll = class { constructor() {} async evaluate() { return { total: pebRolls.shift() ?? 1 }; } };
+			await ctx.ChatMessage.create({
+				content: `<div class="card"><div class="lancer-header">人因故障</div><div class="effect-text">人因故障</div></div>`,
+				flags: { lancer: { actionData: { actor: bt3Mech.uuid, action: { name: "人因故障" } } } },
+			});
+			ctx.game.user.targets = new Set();
+			const pebCard5 = createdCards121.at(-1);
+			const pebInfo5 = L.analyzeCard(pebCard5);
+			ok(
+				pebTargetHot1.system.heat.value === 0
+				&& (pebCard5?.content ?? "").includes("1 点能量伤害")
+				&& pebInfo5?.nonAttackDamage?.damage?.[0]?.val === "1",
+				"人因故障 d6=5：当目标当前仅有 1 点热度而冷却掷出 6 时，实际清除 1 点热度且邻接能量伤害严格按实际清除量（1 点）计算"
+			);
+
+			// 7) 其余扩展勘误联动：白巫蛾（固化 4+毅力 & 超激活爆裂离散）、蒲公英（爆发 4）、游骑兵（受伤解除接地隐形）、帝王之眼（豁免成功仍吃 2 AP 能量）、沃登反火力套组（消耗守望并锁定）、树绳妖（仅无法离舱/无驾驶员时豁免失败晕眩）
+			const wwPilot = mkPilot121("p_ww", [], { grit: 3 });
+			const wwMech = mkMech121("m_ww", "白巫蛾", { frameLid: "mf_white_witch", pilot: wwPilot });
+			await L.beginBasicAction(wwMech, "brace");
+			ok(wwMech.system.overshield.value === 7, "白巫蛾「固化」受身护盾按 4 + 毅力（4 + 3 = 7）结算而非固定 5");
+			await L.activateCorePower(wwMech);
+			await L.executeCoreAction(wwMech, "whiteWitchBurst");
+			const wwBurstInfo = L.analyzeCard(createdCards121.at(-1));
+			ok(
+				wwBurstInfo?.nonAttackDamage?.damage?.[0]?.val === "1"
+				&& wwBurstInfo?.nonAttackDamage?.unconditionalDamage === true
+				&& wwBurstInfo?.saves?.[0]?.key === "hull"
+				&& wwBurstInfo?.saves?.[0]?.failStatuses?.includes("shredded"),
+				"白巫蛾「超激活铁磁爆裂」造成无条件 1 AP 动能伤害，并迫使机体豁免对抗伏卧+固定+离散"
+			);
+
+			ok(L.CP_PROFILES.mf_lancaster_alt_taraxacum.buttons[0].act === "placeBurst4", "蒲公英核心主动模板按钮已更正为爆发 4（placeBurst4）");
+
+			const rangerMech = mkMech121("m_rng", "游骑兵", { frameLid: "mf_swallowtail_alt_swallowtail_ranger_variant", statuses: ["cover_soft"] });
+			const rngCombat = {
+				round: 1,
+				previous: { combatantId: "crg1" },
+				current: { combatantId: "crg2" },
+				combatants: [
+					{ id: "crg1", name: "游骑兵", actor: rangerMech, token: { uuid: rangerMech.uuid } },
+					{ id: "crg2", name: "木桩", actor: aliasMech, token: { uuid: aliasMech.uuid } },
+				],
+			};
+			rngCombat.combatants.get = cid => rngCombat.combatants.find(c => c.id === cid);
+			await L.onUpdateCombatTurnEnd(rngCombat, { turn: 1 }, { direction: 1 });
+			ok(rangerMech.statuses.has("invisible") && L.getCombatState(rangerMech).groundedInvisible === true, "游骑兵在软性掩护中结束回合时触发「接地」获得隐形");
+			const prevDmgCalc121 = ctx.CONFIG.Actor.documentClass.prototype.damageCalc;
+			ctx.CONFIG.Actor.documentClass.prototype.damageCalc = async function (d) {
+				this.system.hp.value = Math.max(0, this.system.hp.value - (Number(d?.Kinetic) || 0));
+				return d;
+			};
+			L.patchTrueblackDamageCalc();
+			await ctx.CONFIG.Actor.documentClass.prototype.damageCalc.call(rangerMech, { Kinetic: 2 }, { multiple: 1 });
+			if (prevDmgCalc121) ctx.CONFIG.Actor.documentClass.prototype.damageCalc = prevDmgCalc121;
+			ok(!rangerMech.statuses.has("invisible") && !L.getCombatState(rangerMech).groundedInvisible, "游骑兵在受到实际伤害时立即解除「接地」隐形");
+
+			const impEyeItem = { id: "s_eye", uuid: "Item.s_eye", type: "mech_system", name: "帝王之眼", system: { lid: "ms_the_imperial_eye" } };
+			docMap121[impEyeItem.uuid] = impEyeItem;
+			const impEyeDmg = L.parseNonAttackDamage("被电击的角色受到2穿甲能量伤害，并必须通过工程豁免，否则被击退2格、伏卧，并陷入离散状态，直到其下一回合结束。", wwMech, impEyeItem);
+			let capturedEyeTargets = null;
+			class MockEyeDmgFlow {
+				constructor(_u, d) { capturedEyeTargets = d.hit_results; }
+				async begin() { return true; }
+			}
+			ctx.game.lancer = { ...(prevLancer121 || {}), flows: new Map([["DamageRollFlow", MockEyeDmgFlow]]) };
+			docMap121["Scene.s.Token.eye_pass"] = { uuid: "Scene.s.Token.eye_pass", object: btEnemyTok, actor: btEnemyMech };
+			const eyeCard = {
+				getFlag: (_sc, k) => (k === "saveResults" ? { "Scene.s.Token.eye_pass": { uuid: "Scene.s.Token.eye_pass", passed: true, halfOnSuccess: false, noDamageOnSuccess: false } } : null),
+			};
+			await L.rollNonAttackDamage(eyeCard, { actor: wwMech, title: "帝王之眼", nonAttackDamage: impEyeDmg });
+			ok(impEyeDmg?.unconditionalDamage === true && Array.isArray(capturedEyeTargets) && capturedEyeTargets.length === 1, "帝王之眼：即使目标工程豁免成功（免除击退/伏卧/离散），2 点穿甲能量伤害依然自动命中该目标");
+
+			const cfMech = mkMech121("m_cf", "沃登", { frameLid: "mf_ext_wodeng" });
+			emitted121.length = 0;
+			ctx.game.combat = { id: "cmb_cf", started: true, round: 1, turn: 0 };
+			ctx.game.user.targets = new Set([btEnemyTok]);
+			await ctx.ChatMessage.create({
+				content: `<div class="card"><div class="lancer-header">反火力套组</div><div class="effect-text">反火力套组</div></div>`,
+				flags: { lancer: { actionData: { actor: cfMech.uuid, action: { name: "反火力套组", activation: "Reaction" } } } },
+			});
+			for (const p of emitted121) await L.handleModuleSocketMessage(p);
+			ctx.game.user.targets = new Set();
+			const owAvailAfterCf = L.checkReactionAvailability(cfMech, { kind: "overwatch", label: "守望", roundFlag: "usedOverwatchRound" });
+			ok(
+				L.getCombatState(cfMech).usedOverwatchRound === true
+				&& btEnemyMech.statuses.has("lockon")
+				&& owAvailAfterCf.ok === false,
+				"沃登 III「反火力套组」触发后自动为锁定的攻击者施加锁定，并消耗本轮守望次数（1/轮）"
+			);
+
+			const bvMech = mkMech121("m_bv", "树绳妖", { frameLid: "mf_ext_banshee_vine", save: 14 });
+			const pilotedVictim = mkMech121("m_bv_p", "有人机甲", { pilot: wwPilot });
+			const unpilotedVictim = mkMech121("m_bv_u", "无人子机", { pilot: null });
+			const pvTok = { id: "t_bvp", name: "有人机甲", actor: pilotedVictim, document: { uuid: pilotedVictim.uuid, name: "有人机甲" } };
+			const uvTok = { id: "t_bvu", name: "无人子机", actor: unpilotedVictim, document: { uuid: unpilotedVictim.uuid, name: "无人子机" } };
+			ctx.canvas.tokens.controlled = [];
+			const bvCard = await ctx.ChatMessage.create({
+				content: `<div class="card"><div class="lancer-header">面部附着者/胸腔爆裂者</div><div class="effect-text">选择感应内一个敌方角色进行系统豁免。</div></div>`,
+				flags: { lancer: { actionData: { actor: bvMech.uuid, action: { core_active: true, name: "面部附着者/胸腔爆裂者" } } } },
+			});
+			const bvInfo = L.analyzeCard(bvCard);
+			ctx.Roll = class { constructor() {} async evaluate() { return { total: 5 }; } }; // 豁免失败 (5 < 14)
+			ctx.game.user.targets = new Set([pvTok, uvTok]);
+			await L.executeCardSave(bvCard, bvInfo.saves[0]);
+			ctx.game.user.targets = new Set();
+			ok(
+				!pilotedVictim.statuses.has("stunned")
+				&& unpilotedVictim.statuses.has("stunned"),
+				"树绳妖「面部附着者/胸腔爆裂者」系统豁免失败时：普通有人机甲仅提示下马移动而不晕眩，无驾驶员/无法离舱目标自动改为晕眩"
+			);
+
+			ctx.Roll = prevRoll121;
+			ctx.ChatMessage = prevChatMsg121;
+			ctx.fromUuidSync = prevFromUuidSync121;
+			ctx.game.actors = prevActors121;
+			ctx.game.socket = prevSocket121;
+			ctx.game.users = prevUsers121;
+			ctx.game.user = prevUser121;
+			ctx.canvas = prevCanvas121;
+			ctx.game.combat = prevCombat121;
+			ctx.game.lancer = prevLancer121;
+			ctx.ui = prevUi121;
 		}
 	}
 

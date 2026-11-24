@@ -15,15 +15,15 @@ function foundryLid(id) { return (D.fvtt_map && D.fvtt_map[id]) || id; }
 
 function foundryPilotData(p) {
 	const pilotNotes = [];
-	const limitedOf = (tags, m) => {
-		const t = (m ? limitedTags(tags, p, m) : tags || []).find(t => t.id === "tg_limited");
+	const limitedOf = (tags, m, item) => {
+		const t = (m ? limitedTags(tags, p, m, item) : tags || []).find(t => t.id === "tg_limited");
 		const n = Number(t?.val);
 		return Number.isFinite(n) ? n : 0;
 	};
 	const itemName = (kind, x) => (x ? plain(kind, x) : "");
 	const weaponState = (w, mod, m) => ({
-		id: foundryLid(w.id), loaded: true, destroyed: false, cascading: false, uses: limitedOf(w.tags, m),
-		mod: mod ? { id: foundryLid(mod.id), destroyed: false, cascading: false, uses: limitedOf(mod.tags, m) } : null,
+		id: foundryLid(w.id), loaded: true, destroyed: false, cascading: false, uses: limitedOf(w.tags, m, w),
+		mod: mod ? { id: foundryLid(mod.id), destroyed: false, cascading: false, uses: limitedOf(mod.tags, m, mod) } : null,
 	});
 
 	// 技能触发：车卡器记加值（+2 / +4 / +6），COMP/CON 记等级（1–3）
@@ -52,7 +52,7 @@ function foundryPilotData(p) {
 		const mounts = mountsOf(p, m).map(mt => {
 			const fit = FOUNDRY_FITTINGS[mt.type] || ["Integrated"];
 			const state = m.loadout[mt.key] || { slots: [] };
-			if (linked.has(mt.key)) return { mount_type: mt.type, lock: true, slots: fit.map(size => ({ size, weapon: null })), extra: [], bonus_effects: [] };
+			if (linked.has(mt.key) || (beltMountActive(p, m) && mt.key === m.beltMount)) return { mount_type: mt.type, lock: true, slots: fit.map(size => ({ size, weapon: null })), extra: [], bonus_effects: [] };
 			const slots = fit.map((size, idx) => {
 				const s = state.slots[idx];
 				const w = s && s.w && WEAPONS[s.w];
@@ -61,19 +61,20 @@ function foundryPilotData(p) {
 				if (mods.length > 1) notes.push(`${itemName("item", w)} 的第二改装：${mods.slice(1).map(x => itemName("item", x)).join("、")}`);
 				const cw = configuredWeapon(w, m, s);
 				if (cw.selected_profile) notes.push(`${itemName("item", w)} 选用数据组：${cw.selected_profile}`);
+				if (cw.fusilier) notes.push(`${itemName("item", w)} 启用枪决：类型改为步枪并获得杀绝`);
 				return { size, weapon: weaponState(w, mods[0], m) };
 			});
 			return { mount_type: mt.type, lock: false, slots, extra: [], bonus_effects: [] };
 		});
 		const integrated = integratedOf(f, p, m);
 		const integratedMounts = integrated.filter(x => x.mount).map(w => ({ weapon: weaponState(w, null, m) }));
-		const integratedSystems = integrated.filter(x => !x.mount).map(s => ({ id: foundryLid(s.id), destroyed: false, cascading: false, uses: limitedOf(s.tags, m) }));
-		const systems = m.systems.filter(id => SYSTEMS[id]).map(id => ({ id: foundryLid(id), destroyed: false, cascading: false, uses: limitedOf(SYSTEMS[id].tags, m) }));
+		const integratedSystems = integrated.filter(x => !x.mount).map(s => ({ id: foundryLid(s.id), destroyed: false, cascading: false, uses: limitedOf(s.tags, m, s) }));
+		const systems = m.systems.filter(id => SYSTEMS[id]).map(id => ({ id: foundryLid(id), destroyed: false, cascading: false, uses: limitedOf(SYSTEMS[id].tags, m, SYSTEMS[id]) }));
 
 		// 车卡器专用的配置
-		if (m.signature && SYSTEMS[m.signature]) notes.push(`招牌动作（核心奖励）指定系统：${itemName("item", SYSTEMS[m.signature])}，SP −2`);
-		if (m.overpower) { const [key, idx] = m.overpower.split("|"); const w = WEAPONS[m.loadout[key]?.slots?.[+idx]?.w]; if (w) notes.push(`超功率口径（核心奖励）指定武器：${itemName("item", w)}`); }
-		if (m.stabilized) notes.push(`自动稳定（核心奖励）挂载点：${m.stabilized}`);
+		if (hasCB(p, "cb_kkca_signature_move") && m.signature && SYSTEMS[m.signature]) notes.push(`招牌动作（核心奖励）指定系统：${itemName("item", SYSTEMS[m.signature])}，SP −2`);
+		if (hasCB(p, "cb_overpower_caliber") && m.overpower) { const [key, idx] = m.overpower.split("|"); const w = WEAPONS[m.loadout[key]?.slots?.[+idx]?.w]; if (w) notes.push(`超功率口径（核心奖励）指定武器：${itemName("item", w)}`); }
+		if (hasCB(p, "cb_auto_stabilizing_hardpoints") && m.stabilized) notes.push(`自动稳定（核心奖励）挂载点：${m.stabilized}`);
 		if (m.systems.includes("ms_pl_sentry_drone") && m.sentryWeapon) {
 			const e = sentryWeapons(p, m).find(x => x.mount.key + "|" + x.i === m.sentryWeapon);
 			if (e) notes.push(`哨兵无人机部署时使用：${itemName("item", e.w)}`);
@@ -82,7 +83,7 @@ function foundryPilotData(p) {
 			const pType = T.wtype?.[m.prototypeType] || { Melee: "近战", CQB: "CQB", Rifle: "步枪", Cannon: "大炮", Launcher: "发射器", Nexus: "巢房" }[m.prototypeType] || "步枪";
 			const pDmg = T.dmg?.[m.prototypeDamage] || { Kinetic: "动能", Explosive: "爆炸", Energy: "能量" }[m.prototypeDamage] || "动能";
 			const pPerks = p.talents.t_engineer >= 2
-				? [["prototypeOptics", "调校光学（+1准度）"], ["prototypeSmart", "调校电脑（智慧）"], ["prototypeReactor", "移除反应炉屏蔽"]].filter(([k]) => m[k] === "yes").map(([, lbl]) => lbl)
+				? [["prototypeOptics", "调整光学（+1准度）"], ["prototypeSmart", "调整电脑（智慧）"], ["prototypeReactor", "移除反应炉屏蔽"]].filter(([k]) => m[k] === "yes").map(([, lbl]) => lbl)
 				: [];
 			notes.push(`原型武器（工程师 ${p.talents.t_engineer} 级）配置：${pType} · ${pDmg}伤害${pPerks.length ? ` · 强化：${pPerks.join("、")}` : ""}`);
 		}
@@ -91,8 +92,11 @@ function foundryPilotData(p) {
 			const mt = mountsOf(p, m).find(x => x.key === m.beltMount && x.type !== "Integrated");
 			notes.push(`战术带：占用挂载点 ${mt ? `${T.mount[mt.type] || mt.type} ${mt.key}` : "未指定"}；装载系统：${belt.join("、") || "无"}（减免 ${tacticalBeltDiscount(p, m)} SP）`);
 		}
-		const pod = [m.podWeapon1, m.podWeapon2].filter(id => WEAPONS[id]).map(id => itemName("item", WEAPONS[id]));
-		if (pod.length) notes.push(`武器舱（${m.podMode === "Main" ? "主武器" : "副武器"}）：${pod.join("、")}`);
+		if (m.systems.includes("ms_pl_weapon_pod")) {
+			const podMode = m.podMode === "Auxiliary" ? "Auxiliary" : "Main";
+			const pod = [m.podWeapon1, ...(podMode === "Auxiliary" ? [m.podWeapon2] : [])].filter(id => WEAPONS[id]).map(id => itemName("item", WEAPONS[id]));
+			if (pod.length) notes.push(`武器舱（${podMode === "Main" ? "主武器" : "副武器"}）：${pod.join("、")}`);
+		}
 		const legacy = inheritedTrait(m);
 		if (legacy) notes.push(`康格多遗产特征：${legacy.name}`);
 		const noteHtml = [m.notes ? `<p>${esc(m.notes)}</p>` : "", notes.length ? `<p><b>【车卡器配置】</b></p><ul>${notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""].join("");
