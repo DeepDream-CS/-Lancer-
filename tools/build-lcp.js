@@ -33,7 +33,7 @@ const PACKS = {
 		lcp: "lancer-cn-expansions.lcp", audit: "FVTT-LCP-AUDIT.md", todo: "zh-overrides.todo.json",
 		overrides: "zh-overrides.json", baseDirs: ["official"], kinds: EXT_KINDS, select: x => x.ext,
 		manifest: {
-			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.6.4",
+			name: "枪骑兵简易车卡器：扩展内容（中文）", author: "DeepDream-CS", version: "1.6.5",
 			description: "简易车卡器收录的扩展骨架、装备、天赋与核心奖励（中文），以及官方模组与第三方书的 NPC 职业、模板与特性。官方补充书条目会覆盖 Foundry 自带的英文版；其余为新增内容。",
 		},
 	},

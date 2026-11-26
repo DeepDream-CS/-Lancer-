@@ -1,4 +1,6 @@
-# Foundry VTT 扩展内容同步与修复任务单（供 FVTT 窗口并行处理 · 2026-11-24）
+# Foundry VTT 扩展内容同步与修复任务单（已全部完成并验证 · 2026-11-24 ~ 2026-11-25）
+
+> **完成状态（2026-11-25）**：本任务单所列 **第一部分**（`zh-overrides.json` 11 项规则修正与 5 项单部署物完整说明、`zh-npc.json` 特战队员模板译名统一、覆盖 `ms_spaceborn_1` 太空民 EVA 与 `tg_efficient` 高效标签，未覆盖清单更新为 57 项战役异域条目）、**第二部分**（`build-lcp.js` 顶层重复文本修复、GMS 变体说明、阿特拉斯蛾/基德特征对齐、第三方核心奖励风味与 HTML 列表、`t_iconoclast` 单动作块匹配，以及 26 个动作标签系统、15 组二合一炸药与补充动作/部署物补全）、**第三部分**（`lancer-cn v1.21.0` 全部 7 大类扩展自动化修复、`v1.21.1` 猎人 II 副近战投掷修复与 `v1.22.0` 实桌修复）及下方 **2026-11-25 补充追记**（`mw_ext_comet_hound` 猎兔犬巢房「射程 5 且视线内」同步与 `mf_ext_comet_moth` 彗尾蛾核心主动「天眼」持续时间、相对高度、感应距离及科技/直接状态拆分）均已落地；双内容包为 `lancer-cn-core.lcp 1.1.3` 与 `lancer-cn-expansions.lcp 1.6.5`，通过 `test-lcp.js` 与 `test-fvtt-module.js`。下文保留原始交接清单作归档记录。
 
 > **双窗口并行分工约定（文件集合严格不相交，避免写入冲突）**
 > - **车卡器窗口**只修改：`source/expansions/all-expansions.js`、`source/expansions/professional-licenses.js`、`source/lore/zh.json`、`source/npc/README.md`、`tools/build-data.js`、`tools/build-official-supplements.js`、`tools/test-rules.js`、`tools/test-expansion-copy.js`、`tools/test-foundry-export.js`、`assets/js/*`（含重生成的 `assets/js/data.js` 与 `assets/js/official-supplements.js`）。
@@ -159,3 +161,18 @@
      - `ms_ch_hound` “猎犬级”伙伴礼宾单元（战车御手 III）：无受限次数，扫描与免疫层流位移均为**拉动（Pull）**而非推动；
      - `mf_ext_banshee_vine` 树绳妖：核心主动在系统豁免**失败**且无法离舱/无驾驶员时改为晕眩；
      - `t_ext_crusher` 碾碎机 I（第 16117 行）：若车卡器将 `鲁莽摇摆` 修正为 `鲁莽挥击`，同步更新快捷开关按钮标题。
+
+---
+
+## 补充追记（2026-11-25）：`mw_ext_comet_hound` 猎兔犬巢房漏译 `射程5`
+
+对照 *Field Guide to Suldan* 第 115 页英文原版（`Harrier Nexus`）：
+> *"At the end of your turn, as a free action you may deal 1 AP kinetic damage to all hostile characters **within range 5 and line of sight** that have Lock On."*
+
+车卡器已在 `source/expansions/all-expansions.js` 将 `effect` 修正为：
+- `在你的回合结束时，以一个<b>自由动作</b>，你可以对<b>射程5</b>且视线内所有带有<b>锁定</b>的敌方角色造成 <b>1 AP 动能伤害</b>。`
+
+**FVTT 窗口需同步（已于 2026-11-25 完成 · 扩展包 `1.6.5` / 模组 `1.22.0`）**：
+1. 已更新 `source/fvtt/ext-actions.json` 中 `mw_ext_comet_hound[0].detail` 为上述带 `射程5且视线内` 的修正文本（`lancer-cn.mjs` 无独立的 `mw_ext_comet_hound` 自动出伤逻辑，卡片经 `parseNonAttackDamage` 正常提供 1 AP 动能掷伤按钮）。
+2. 已同步修复 `lancer-cn.mjs` 中 `mf_ext_comet_moth` 彗尾蛾核心主动 `天眼（Sky Eye）`（`CP_PROFILES.mf_ext_comet_moth` + `cometMothAll`）：移除错误 `instant: true` 并校准名称为 `彗尾蛾 · 天眼`（持续至场景结束），按机甲感应距离与严格相对高度（`selfElev > tokElev`）筛选目标且排除中立单位，前半句盟友「强化」按科技动作校验自身与盟友受扰/骇./杀状态，后半句敌对「锁定」作为直接状态施加（彗尾蛾自身受扰时仍正常生效）。
+3. 已重新构建 `dist/fvtt/lancer-cn-expansions.lcp`（`1.6.5`）、`dist/fvtt/lancer-cn`（`1.22.0`）与 `dist/fvtt/lancer-cn-bundle.zip`，并通过 `test-lcp.js` 与 `test-fvtt-module.js` 回归验证。

@@ -30,12 +30,12 @@
 
 | 文档 | 用途与范围 |
 |---|---|
-| [Foundry 内容包](FVTT-LCP.md) | 两个中文内容包（含 NPC）、界面中文模组 lancer-cn 与其战斗工具、安装与导入顺序、常见问题、模组更新记录、从车卡器导出驾驶员与 NPC |
+| [Foundry 内容包](FVTT-LCP.md) | 两个中文内容包（含 NPC，核心 `1.1.3` / 扩展 `1.6.5`）、界面中文模组 `lancer-cn`（`1.22.0`）与其战斗工具、安装与导入顺序、常见问题、模组更新记录、从车卡器导出驾驶员、NPC 与战斗地图 |
 | [Foundry 核心包核对表](FVTT-LCP-CORE-AUDIT.md) | 自动生成：核心条目覆盖情况、仍为英文的文字 |
 | [Foundry 扩展包核对表](FVTT-LCP-AUDIT.md) | 自动生成：覆盖的官方条目、数值差异、仍为英文的文字、自动生成的动作按钮 |
 | [官方补充书未收录条目](FVTT-OFFICIAL-UNCOVERED.md) | 自动生成：Foundry 官方补充书中车卡器没有中文的条目（57 项战役异域条目已核验），待译文字导出到 `dist/fvtt/zh-official.todo.json` |
-| [Foundry 核心同步交接单](FVTT-CORE-SYNC.md) | 核心规则书全量核查中拆分出的 Foundry VTT 并行同步清单 |
-| [Foundry 扩展同步交接单](FVTT-EXPANSION-SYNC.md) | 扩展内容全量核查中拆分出的 Foundry VTT 并行同步清单 |
+| [Foundry 核心同步交接单](FVTT-CORE-SYNC.md) | 核心规则书全量核查中拆分出的 Foundry VTT 并行同步清单（已完成归档） |
+| [Foundry 扩展同步交接单](FVTT-EXPANSION-SYNC.md) | 扩展内容全量核查中拆分出的 Foundry VTT 并行同步清单（已完成归档） |
 | [Foundry 补译回填记录](FVTT-BACKFILL.md) | Foundry 官方数据字段回填中文译文的说明记录 |
 
 ## 数据维护入口

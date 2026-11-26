@@ -50,6 +50,8 @@ assert(sys('ms_ext_needle_and_thread').effect.includes('1+毅力'));
 assert(tal('t_ext_mind_reader').ranks[2].html.includes('直到该角色下一回合结束前'));
 assert(tal('t_ext_blackthumb').ranks[1].html.includes('在你的下一回合无法再次开启马术表演'));
 assert(tal('t_ext_pankrati').ranks[2].html.includes('立即以一个<b>反应</b>进行<b>推进</b>'));
+assert(wep('mw_ext_comet_hound').effect.includes('对<b>射程5</b>且视线内所有带有<b>锁定</b>的敌方角色造成 <b>1 AP 动能伤害</b>'));
+assert(frame('mf_ext_comet_moth').core_system.active_effect.includes('以一个<b>自由动作</b><b>强化</b>所有位于你<b>感应</b>且<b>视线</b>内、且你所处高度高于他们的盟友角色') && frame('mf_ext_comet_moth').core_system.active_effect.includes('敌对角色获得<b>锁定</b>'));
 assert(sys('ms_spaceborn_1') && sys('ms_spaceborn_1').tags.some(t => t.id === 'tg_indestructible'));
 assert.deepEqual(frame('mf_ext_kidd').traits.map(t => t.name), ['快速部署', '能量导流', '回收利用']);
 assert.deepEqual(frame('mf_ext_atlas').traits.map(t => t.name), ['巨人杀手', '猎人闪避', '绝杀', '外置反应堆']);

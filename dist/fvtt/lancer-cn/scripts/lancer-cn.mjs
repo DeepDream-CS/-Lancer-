@@ -86,12 +86,18 @@ async function cleanupPilotImportedMechs(actor, changes, userId) {
 			}
 		}
 		if (dupIds.length) await mech.deleteEmbeddedDocuments?.("Item", dupIds);
+		if (talentRank(mech, "t_leader") >= 1) {
+			await syncLeaderCounter(mech);
+		}
+	}
+	if (talentRank(actor, "t_leader") >= 1) {
+		await syncLeaderCounter(actor);
 	}
 }
 
 Hooks.on("updateActor", async (actor, changes, options, userId) => {
 	onSensorActorUpdate(actor);
-	if (changes?.flags?.[MODULE_ID] && "thrownWeapons" in changes.flags[MODULE_ID] && actor?.sheet?.rendered) {
+	if (changes?.flags?.[MODULE_ID] && "thrownWeapons" in changes.flags[MODULE_ID] && needsManualSheetRefresh(actor)) {
 		try { actor.sheet.render(false); } catch { /* ignore */ }
 	}
 	await updateMechFrameArt(actor, changes, userId);
@@ -4062,8 +4068,8 @@ function talentRank(actor, lid) {
 	return Math.max(0, Number(item?.system?.curr_rank) || 0);
 }
 
-// 驾驶员天赋增删或升级时，同步重算并刷新其名下机甲的衍生属性（如猎人 II「匕首戏法」赋予副近战投掷 5）
-function onTalentItemChanged(item) {
+// 驾驶员天赋增删或升级时，同步重算并刷新其名下机甲的衍生属性（如猎人 II「匕首戏法」赋予副近战投掷 5、领袖领导骰上限同步）
+function onTalentItemChanged(item, changes = null) {
 	if (!item || (item.type !== "talent" && !item.is_talent?.())) return;
 	const pilot = item.actor ?? item.parent;
 	if (!pilot) return;
@@ -4073,16 +4079,52 @@ function onTalentItemChanged(item) {
 	for (const m of allKnownMechs()) {
 		if (m.system?.pilot?.value === pilot || (pilot.id && m.system?.pilot?.id === pilot.id)) mechs.add(m);
 	}
+	// updateItem 时仅在等级/标识变化时重算衍生属性，普通计数器增减不触发整表 reset + 重复重绘（避免页面跳动）
+	if (changes && typeof changes === "object") {
+		const sysChg = changes.system;
+		const rankOrLidChanged = Boolean(sysChg && ("curr_rank" in sysChg || "lid" in sysChg))
+			|| "system.curr_rank" in changes
+			|| "system.lid" in changes;
+		if (!rankOrLidChanged) {
+			// 若用户在驾驶员表直接增减原生 ctr_leader 计数器，静默同步到机甲 talentDice.leader（不触发额外 reset）
+			if (String(item.system?.lid ?? "") === "t_leader" && Array.isArray(item.system?.counters)) {
+				const ctr = item.system.counters.find(c => c?.lid === "ctr_leader");
+				const r = Math.max(1, Number(item.system?.curr_rank) || 1);
+				if (ctr && Number.isFinite(Number(ctr.value))) {
+					const maxL = TALENT_DICE_DEFS.leader.max(r);
+					const nextV = Math.max(0, Math.min(maxL, Math.round(Number(ctr.value))));
+					for (const m of mechs) {
+						if (!m?.isOwner || leaderSyncInFlight.has(m)) continue;
+						const cur = m.getFlag?.(MODULE_ID, "talentDice") ?? m.flags?.[MODULE_ID]?.talentDice ?? {};
+						if (cur.leader !== nextV) {
+							leaderSyncInFlight.add(m);
+							Promise.resolve(m.setFlag?.(MODULE_ID, "talentDice", { ...cur, leader: nextV, leaderRank: r }))
+								.catch(() => {})
+								.finally(() => leaderSyncInFlight.delete(m));
+						}
+					}
+				}
+			}
+			return;
+		}
+	}
 	for (const m of mechs) {
 		try {
+			if (m.sheet?.rendered) captureSheetScroll(m.sheet);
 			m.reset?.();
 			if (m.sheet?.rendered) m.sheet.render(false);
+			if (String(item.system?.lid ?? "") === "t_leader") {
+				syncLeaderCounter(m).catch(() => {});
+			}
 		} catch (err) { reportError("刷新天赋衍生属性", err); }
 	}
+	if (!mechs.size && String(item.system?.lid ?? "") === "t_leader") {
+		syncLeaderCounter(pilot).catch(() => {});
+	}
 }
-Hooks.on("createItem", onTalentItemChanged);
-Hooks.on("updateItem", onTalentItemChanged);
-Hooks.on("deleteItem", onTalentItemChanged);
+Hooks.on("createItem", item => onTalentItemChanged(item));
+Hooks.on("updateItem", (item, changes) => onTalentItemChanged(item, changes));
+Hooks.on("deleteItem", item => onTalentItemChanged(item));
 
 function hasCoreBonus(actor, lid) {
 	const pilot = mechPilot(actor);
@@ -4105,14 +4147,17 @@ function hasMechSystem(actor, lid) {
 	return [...(mech?.items ?? [])].some(i => i && !i.system?.destroyed && targets.includes(String(i.system?.lid ?? "")));
 }
 
-function countMechNHPs(actor) {
+function listMechNHPs(actor) {
 	const mech = combatMechOf(actor);
-	let count = 0;
+	const names = [];
 	let hasUnstableItem = false;
 	let hasTechnophileItem = false;
 	const loadoutSys = Array.isArray(mech?.system?.loadout?.systems)
-		? mech.system.loadout.systems.filter(s => s?.value || s?.id)
+		? mech.system.loadout.systems.filter(s => typeof s === "string" || s?.value || s?.id)
 		: [];
+	const inLoadout = item => loadoutSys.some(s => (typeof s === "string"
+		? (item.id && s === item.id)
+		: (s?.value === item || (item.id && (s?.id === item.id || s?.value?.id === item.id)))));
 	for (const item of mech?.items ?? []) {
 		if (!item) continue;
 		if (item.type && item.type !== "mech_system" && !item.is_mech_system?.()) continue;
@@ -4123,18 +4168,30 @@ function countMechNHPs(actor) {
 		if (isUnstable) hasUnstableItem = true;
 		if (isTechnophile) hasTechnophileItem = true;
 		if (item.system?.destroyed || item.system?.equipped === false) continue;
-		if (loadoutSys.length > 0 && !loadoutSys.some(s => s?.value === item || (item.id && (s?.id === item.id || s?.value?.id === item.id)))) continue;
-		// 免疫层流的伙伴礼宾单元 / COMP/CON / 侍从级 NHP 不计入偶像破坏者定义的 NHP 数量
+		if (loadoutSys.length > 0 && !inLoadout(item)) continue;
+		// 免疫层流的伙伴礼宾单元 / COMP/CON / 标记 tg_no_cascade 的 AI 不计入偶像破坏者定义的 NHP 数量
 		if (isCascadeResistantItem(item)) continue;
 		let tags = [];
 		try { tags = item.getTags?.() ?? item.system?.all_tags ?? item.system?.tags ?? []; } catch { tags = item.system?.tags ?? []; }
 		const hasAiTag = Array.isArray(tags) && tags.some(t => t?.lid === "tg_ai" || t?.id === "tg_ai" || t?.is_ai);
-		if (isUnstable || isTechnophile || hasAiTag || /_nhp$/i.test(lid) || /\bNHP\b/i.test(name)) count++;
+		const isAiType = String(item.system?.type ?? "").toUpperCase() === "AI";
+		let isAiMethod = false;
+		try { isAiMethod = Boolean(typeof item.isAI === "function" && item.isAI()); } catch { isAiMethod = false; }
+		if (isUnstable || isTechnophile || hasAiTag || isAiType || isAiMethod || /_nhp$/i.test(lid) || /\bNHP\b/i.test(name)) {
+			names.push(name || lid || "NHP");
+		}
 	}
-	// 若已拥有偶像破坏者 R1+ 或科技狂热者 R2+ 但尚未将对应特殊 NHP 拖入机甲物品栏，自动计入该内置 NHP（若已在物品栏中损毁或卸下则不重复补回）
-	if (!hasUnstableItem && talentRank(actor, "t_iconoclast") >= 1) count++;
-	if (!hasTechnophileItem && talentRank(actor, "t_technophile") >= 2) count++;
-	return count;
+	// 若已拥有偶像破坏者 R1+ 或科技狂热者 R1+ 但尚未将对应特殊 NHP 拖入机甲物品栏，自动计入该内置 NHP（若已在物品栏中损毁、卸下或标记防层流则不重复补回）
+	if (!hasUnstableItem && talentRank(actor, "t_iconoclast") >= 1) names.push("不稳定 NHP");
+	const techR = talentRank(actor, "t_technophile");
+	if (!hasTechnophileItem && techR >= 1) {
+		names.push(techR >= 3 ? "开悟级 NHP" : techR === 2 ? "学生级 NHP" : "侍从级 NHP");
+	}
+	return { count: names.length, names };
+}
+
+function countMechNHPs(actor) {
+	return listMechNHPs(actor).count;
 }
 
 function weaponModOf(weapon) {
@@ -4215,6 +4272,8 @@ function hasDieQualification(actor, def) {
 	return rank >= def.minRank ? rank : 0;
 }
 
+const leaderSyncInFlight = new WeakSet();
+
 function getTalentDie(actor, key) {
 	const def = TALENT_DICE_DEFS[key];
 	if (!def) return null;
@@ -4222,12 +4281,20 @@ function getTalentDie(actor, key) {
 	if (!rank) return null;
 	const mech = combatMechOf(actor);
 	const saved = mech?.getFlag?.(MODULE_ID, "talentDice") ?? mech?.flags?.[MODULE_ID]?.talentDice ?? {};
-	if (Number.isFinite(Number(saved[key]))) return Number(saved[key]);
+	const maxVal = def.max(rank);
+	if (key in saved && Number.isFinite(Number(saved[key]))) {
+		return Math.max(def.min, Math.min(maxVal, Number(saved[key])));
+	}
 	const srcItem = def.frame ? mechFrame(mech) : talentItemOf(actor, def.talent);
 	const ctr = (srcItem?.system?.counters ?? []).find(c => c?.lid === def.ctrLid || (def.frame && /军备|armament|load_bearing/i.test(String(c?.name ?? c?.lid ?? ""))));
+	// 领袖天赋官方数据将 ctr_leader 定义为 default_value: 0, max: 6；首次未写入模组标记且计数器为 0 时按等级初始化为 3 / 5 / 6
+	if (key === "leader") {
+		if (ctr && Number(ctr.value) > 0) return Math.min(maxVal, Number(ctr.value));
+		return def.init(rank);
+	}
 	// 演说家 R3 在官方天赋数据中共用 R2 的 ctr_voice_of_reason（default_value: 1），未写入模组标记前按 R3 初始 2 枚处理
 	if (key === "orator" && rank >= 3 && ctr && Number(ctr.value) === 1) return def.init(rank);
-	if (ctr && Number.isFinite(Number(ctr.value))) return Number(ctr.value);
+	if (ctr && Number.isFinite(Number(ctr.value))) return Math.max(def.min, Math.min(maxVal, Number(ctr.value)));
 	return def.init(rank);
 }
 
@@ -4235,21 +4302,89 @@ async function setTalentDie(actor, key, val) {
 	const def = TALENT_DICE_DEFS[key];
 	if (!def) return null;
 	const rank = Math.max(def.minRank || 1, def.frame ? 1 : talentRank(actor, def.talent));
-	const clamped = Math.max(def.min, Math.min(def.max(rank), Math.round(Number(val) || 0)));
+	const maxVal = def.max(rank);
+	const clamped = Math.max(def.min, Math.min(maxVal, Math.round(Number(val) || 0)));
 	const mech = combatMechOf(actor);
+	if (mech?.sheet?.rendered) captureSheetScroll(mech.sheet);
 	if (mech?.setFlag) {
 		const cur = mech.getFlag?.(MODULE_ID, "talentDice") ?? mech.flags?.[MODULE_ID]?.talentDice ?? {};
-		await mech.setFlag(MODULE_ID, "talentDice", { ...cur, [key]: clamped });
+		const nextFlags = { ...cur, [key]: clamped };
+		if (key === "leader") nextFlags.leaderRank = rank;
+		leaderSyncInFlight.add(mech);
+		try {
+			await mech.setFlag(MODULE_ID, "talentDice", nextFlags);
+		} finally {
+			leaderSyncInFlight.delete(mech);
+		}
 	}
 	const srcItem = def.frame ? mechFrame(mech) : talentItemOf(actor, def.talent);
 	if (srcItem?.update && Array.isArray(srcItem.system?.counters)) {
 		const idx = srcItem.system.counters.findIndex(c => c?.lid === def.ctrLid || (def.frame && /军备|armament|load_bearing/i.test(String(c?.name ?? c?.lid ?? ""))));
-		if (idx >= 0 && srcItem.system.counters[idx].value !== clamped) {
-			const nextCounters = srcItem.system.counters.map((c, i) => (i === idx ? { ...c, value: clamped } : c));
-			try { await srcItem.update({ "system.counters": nextCounters }); } catch { /* ignore read-only compendium items */ }
+		if (idx >= 0) {
+			const curCtr = srcItem.system.counters[idx];
+			const wantMax = key === "leader" ? maxVal : curCtr.max;
+			if (curCtr.value !== clamped || curCtr.max !== wantMax) {
+				const nextCounters = srcItem.system.counters.map((c, i) => (i === idx ? { ...c, value: clamped, max: wantMax } : c));
+				if (srcItem.actor?.sheet?.rendered) captureSheetScroll(srcItem.actor.sheet);
+				try { await srcItem.update({ "system.counters": nextCounters }); } catch { /* ignore read-only compendium items */ }
+			}
 		}
 	}
 	return clamped;
+}
+
+async function syncLeaderCounter(actor) {
+	if (!actor) return false;
+	const mech = combatMechOf(actor);
+	const rank = talentRank(actor, "t_leader");
+	if (rank < 1) return false;
+	const guardTarget = mech ?? actor;
+	if (leaderSyncInFlight.has(guardTarget)) return false;
+	const def = TALENT_DICE_DEFS.leader;
+	const maxVal = def.max(rank);
+	const saved = mech?.getFlag?.(MODULE_ID, "talentDice") ?? mech?.flags?.[MODULE_ID]?.talentDice ?? {};
+	const srcItem = talentItemOf(actor, "t_leader");
+	const ctr = Array.isArray(srcItem?.system?.counters) ? srcItem.system.counters.find(c => c?.lid === def.ctrLid) : null;
+
+	let desired;
+	let needFlagWrite = false;
+	if (!("leader" in saved) || !Number.isFinite(Number(saved.leader))) {
+		desired = (ctr && Number(ctr.value) > 0) ? Math.min(maxVal, Number(ctr.value)) : maxVal;
+		needFlagWrite = true;
+	} else {
+		const prevVal = Math.max(0, Number(saved.leader) || 0);
+		const prevRank = Number(saved.leaderRank);
+		if (Number.isFinite(prevRank) && rank > prevRank) {
+			const gain = Math.max(0, maxVal - def.max(prevRank));
+			desired = Math.min(maxVal, prevVal + gain);
+			needFlagWrite = true;
+		} else if (prevVal > maxVal || prevRank !== rank) {
+			desired = Math.min(maxVal, prevVal);
+			needFlagWrite = true;
+		} else {
+			desired = prevVal;
+		}
+	}
+
+	const needCtrWrite = Boolean(srcItem?.update && ctr && (Number(ctr.value) !== desired || Number(ctr.max) !== maxVal) && (srcItem.isOwner || srcItem.actor?.isOwner || globalThis.game?.user?.isGM));
+	const canWriteMech = Boolean(mech?.setFlag && (mech.isOwner || globalThis.game?.user?.isGM));
+	if (!needFlagWrite && !needCtrWrite) return false;
+
+	leaderSyncInFlight.add(guardTarget);
+	try {
+		if (needFlagWrite && canWriteMech) {
+			if (mech.sheet?.rendered) captureSheetScroll(mech.sheet);
+			await mech.setFlag(MODULE_ID, "talentDice", { ...saved, leader: desired, leaderRank: rank });
+		}
+		if (needCtrWrite) {
+			if (srcItem.actor?.sheet?.rendered) captureSheetScroll(srcItem.actor.sheet);
+			const nextCounters = srcItem.system.counters.map(c => (c?.lid === def.ctrLid ? { ...c, value: desired, max: maxVal } : c));
+			try { await srcItem.update({ "system.counters": nextCounters }); } catch { /* ignore read-only */ }
+		}
+		return true;
+	} finally {
+		leaderSyncInFlight.delete(guardTarget);
+	}
 }
 
 function getCombatState(actor) {
@@ -4338,10 +4473,399 @@ function getTalentConfig(actor) {
 async function setTalentConfig(actor, patch) {
 	const mech = combatMechOf(actor);
 	if (!mech?.setFlag) return {};
+	if (mech.sheet?.rendered) captureSheetScroll(mech.sheet);
 	const next = { ...getTalentConfig(mech), ...patch };
 	await mech.setFlag(MODULE_ID, "talentConfig", next);
-	if (mech.sheet?.rendered) mech.sheet.render(false);
+	if (needsManualSheetRefresh(mech)) mech.sheet.render(false);
 	return next;
+}
+
+// ---------------------------------------------------------------------------
+// 领袖天赋（t_leader）领导骰流转：发放给队友 / 队友使用（+1 准度、R3 +1d6 伤害、R3 -1d6 减伤）/ 自由动作归还 / 休息回 1 颗
+function getReceivedLeaderDie(actor) {
+	const mech = combatMechOf(actor) ?? actor;
+	const raw = mech?.getFlag?.(MODULE_ID, "receivedLeaderDie") ?? mech?.flags?.[MODULE_ID]?.receivedLeaderDie;
+	if (!raw || typeof raw !== "object" || (!raw.fromActorUuid && !raw.fromActorId && !raw.fromName)) return null;
+	return {
+		fromActorUuid: raw.fromActorUuid ?? null,
+		fromActorId: raw.fromActorId ?? null,
+		fromName: String(raw.fromName || "领袖"),
+		leaderRank: Math.max(1, Math.min(3, Number(raw.leaderRank) || 1)),
+		order: String(raw.order || ""),
+		armedMode: raw.armedMode === "acc" || raw.armedMode === "dmg" ? raw.armedMode : null,
+		givenAt: Number(raw.givenAt) || 0,
+	};
+}
+
+async function setReceivedLeaderDieCompat(targetActorOrUuid, payload) {
+	const rawActor = typeof targetActorOrUuid === "string" ? resolveActor(targetActorOrUuid) : targetActorOrUuid;
+	const mech = combatMechOf(rawActor) ?? rawActor;
+	if (!mech) return false;
+	const cleanPayload = payload && typeof payload === "object"
+		? {
+			fromActorUuid: payload.fromActorUuid ?? null,
+			fromActorId: payload.fromActorId ?? null,
+			fromName: String(payload.fromName || "领袖"),
+			leaderRank: Math.max(1, Math.min(3, Number(payload.leaderRank) || 1)),
+			order: String(payload.order || ""),
+			armedMode: payload.armedMode === "acc" || payload.armedMode === "dmg" ? payload.armedMode : null,
+			givenAt: Number(payload.givenAt) || Date.now(),
+		}
+		: null;
+	if (mech.isOwner || globalThis.game?.user?.isGM) {
+		if (mech.sheet?.rendered) captureSheetScroll(mech.sheet);
+		if (cleanPayload) {
+			if (mech.setFlag) await mech.setFlag(MODULE_ID, "receivedLeaderDie", cleanPayload);
+			else {
+				mech.flags ||= {};
+				mech.flags[MODULE_ID] ||= {};
+				mech.flags[MODULE_ID].receivedLeaderDie = cleanPayload;
+			}
+		} else if (mech.unsetFlag) {
+			await mech.unsetFlag(MODULE_ID, "receivedLeaderDie");
+		} else if (mech.setFlag) {
+			await mech.setFlag(MODULE_ID, "receivedLeaderDie", null);
+		} else if (mech.flags?.[MODULE_ID]) {
+			delete mech.flags[MODULE_ID].receivedLeaderDie;
+		}
+		if (needsManualSheetRefresh(mech)) mech.sheet.render(false);
+		return true;
+	}
+	if (globalThis.game?.users?.activeGM) {
+		const targetUuid = typeof targetActorOrUuid === "string" ? targetActorOrUuid : (preferredTargetUuid(mech) ?? mech.uuid);
+		globalThis.game.socket?.emit(`module.${MODULE_ID}`, {
+			action: "setReceivedLeaderDie",
+			uuid: targetUuid,
+			actorId: mech.id ?? null,
+			payload: cleanPayload,
+		});
+		return true;
+	}
+	return false;
+}
+
+function canUseReceivedLeaderDie(actor) {
+	const mech = combatMechOf(actor) ?? actor;
+	const rec = getReceivedLeaderDie(mech);
+	if (!rec) return { ok: false, reason: "当前未持有来自队友的领导骰。", die: null };
+	// 规则：只要自己还有剩余的领导骰，就不能使用来自其他角色的领导骰（但仍可将其归还）
+	if (talentRank(mech, "t_leader") >= 1 && (getTalentDie(mech, "leader") ?? 0) > 0) {
+		return {
+			ok: false,
+			reason: "你自身仍有剩余领导骰，按规则在耗尽自身领导骰前不能使用来自其他角色的领导骰（仍可点击归还）。",
+			die: rec,
+		};
+	}
+	return { ok: true, reason: "", die: rec };
+}
+
+function eligibleLeaderAllies(leaderActor) {
+	const leaderMech = combatMechOf(leaderActor) ?? leaderActor;
+	const selfTok = attackerToken(leaderMech);
+	const myDisp = selfTok?.document?.disposition ?? 1;
+	const out = [];
+	const seen = new Set();
+	const pushCandidate = (a, tok = null) => {
+		const m = combatMechOf(a) ?? a;
+		if (!m || (m.type !== "mech" && !m.is_mech?.())) return;
+		if (sameActorRef(m, leaderMech) || (leaderMech?.id && m.id && m.id === leaderMech.id)) return;
+		const key = m.id || m.uuid || m.name;
+		if (seen.has(key)) return;
+		seen.add(key);
+		const rec = getReceivedLeaderDie(m);
+		out.push({
+			actor: m,
+			uuid: tok?.document?.uuid ?? preferredTargetUuid(m) ?? m.uuid,
+			name: tok?.name ?? m.name ?? "队友机甲",
+			hasDie: Boolean(rec),
+			dieFrom: rec?.fromName ?? null,
+		});
+	};
+	for (const tok of globalThis.canvas?.tokens?.placeables ?? []) {
+		if (!tok?.actor) continue;
+		if ((tok.document?.disposition ?? 1) !== myDisp) continue;
+		pushCandidate(tok.actor, tok);
+	}
+	for (const a of globalThis.game?.actors ?? []) {
+		if (!a || (a.type !== "mech" && !a.is_mech?.())) continue;
+		if (a.hasPlayerOwner === false) continue;
+		pushCandidate(a, null);
+	}
+	return out;
+}
+
+async function giveLeaderDie(leaderActor, targetActorOrUuid, { order = "", skipDeduct = false, force = false } = {}) {
+	const leaderMech = combatMechOf(leaderActor) ?? leaderActor;
+	if (!leaderMech || !(leaderMech.isOwner || globalThis.game?.user?.isGM)) {
+		globalThis.ui?.notifications?.warn?.("只有领袖角色的拥有者或 GM 可以发放领导骰。");
+		return false;
+	}
+	const rank = talentRank(leaderMech, "t_leader");
+	if (rank < 1) {
+		globalThis.ui?.notifications?.warn?.(`${leaderMech.name} 未装备「领袖」天赋。`);
+		return false;
+	}
+	const rawTarget = typeof targetActorOrUuid === "string" ? resolveActor(targetActorOrUuid) : targetActorOrUuid;
+	const targetMech = combatMechOf(rawTarget) ?? rawTarget;
+	if (!targetMech || (targetMech.type !== "mech" && !targetMech.is_mech?.())) {
+		globalThis.ui?.notifications?.warn?.("请选择一台有效的队友机甲来接收领导骰。");
+		return false;
+	}
+	if (sameActorRef(targetMech, leaderMech) || (leaderMech.id && targetMech.id && leaderMech.id === targetMech.id)) {
+		globalThis.ui?.notifications?.warn?.("按规则领导骰只能发放给队友 PC，不能发给自己。");
+		return false;
+	}
+	const existing = getReceivedLeaderDie(targetMech);
+	if (existing && !force) {
+		globalThis.ui?.notifications?.warn?.(`「${targetMech.name}」已持有一枚来自「${existing.fromName}」的领导骰（队友同一时间最多持有 1 枚，请先使用或归还）。`);
+		return false;
+	}
+	const curDice = getTalentDie(leaderMech, "leader") ?? 0;
+	if (!skipDeduct && curDice <= 0) {
+		globalThis.ui?.notifications?.warn?.(`${leaderMech.name} 当前没有剩余领导骰（0 颗）！`);
+		return false;
+	}
+	const remaining = skipDeduct ? curDice : await setTalentDie(leaderMech, "leader", curDice - 1);
+	const cleanOrder = String(order || "").trim();
+	const payload = {
+		fromActorUuid: preferredTargetUuid(leaderMech) ?? leaderMech.uuid ?? null,
+		fromActorId: leaderMech.id ?? null,
+		fromName: leaderMech.name ?? "领袖",
+		leaderRank: rank,
+		order: cleanOrder,
+		armedMode: null,
+		givenAt: Date.now(),
+	};
+	const delivered = await setReceivedLeaderDieCompat(targetActorOrUuid, payload);
+	if (!delivered) {
+		if (!skipDeduct) await setTalentDie(leaderMech, "leader", curDice);
+		globalThis.ui?.notifications?.warn?.(`无法向「${targetMech.name}」写入领导骰（请确认 GM 在线以跨权限同步）。`);
+		return false;
+	}
+	const r3Note = rank >= 3 ? "；<b>领袖 III（振奋军心）</b>：也可改为攻击命中 <b>+1d6 额外伤害</b> 或受击 <b>-1d6 减伤</b>" : "";
+	const orderHtml = cleanOrder ? `<p>指令内容：<b>${escHtml(cleanOrder)}</b></p>` : "";
+	const targetUuid = typeof targetActorOrUuid === "string" ? targetActorOrUuid : (preferredTargetUuid(targetMech) ?? targetMech.uuid);
+	await ChatMessage.create?.({
+		speaker: ChatMessage.getSpeaker?.({ actor: leaderMech }) ?? {},
+		content: `<div class="card clipped-bot" style="margin:0"><div class="lancer-header lancer-primary">// 领袖 · 发放领导骰 //</div><div class="effect-text">${orderHtml}<p><b>${escHtml(leaderMech.name)}</b> 向 <b>${escHtml(targetMech.name)}</b> 发放了 <b>1 枚领导骰</b>（${escHtml(leaderMech.name)} 剩余：<b>${remaining} / ${TALENT_DICE_DEFS.leader.max(rank)}</b>）。</p><p>队友可在机甲战术栏预激活以在服从指令的动作中获得 <b>+1 准度</b>${r3Note}，或以<b>自由动作</b>归还（持续至使用或场景结束）。</p></div></div>`,
+		flags: {
+			[MODULE_ID]: {
+				skipAutoScan: true,
+				leaderDieCard: {
+					fromActorUuid: payload.fromActorUuid,
+					fromActorId: payload.fromActorId,
+					fromName: payload.fromName,
+					targetUuid,
+					targetId: targetMech.id ?? null,
+					targetName: targetMech.name ?? "队友",
+					leaderRank: rank,
+					order: cleanOrder,
+					status: "active",
+				},
+			},
+		},
+	});
+	return { ok: true, remaining, targetName: targetMech.name, payload };
+}
+
+async function promptGiveLeaderDie(leaderActor, { order = "", message = null } = {}) {
+	const leaderMech = combatMechOf(leaderActor) ?? leaderActor;
+	if (!leaderMech || !(leaderMech.isOwner || globalThis.game?.user?.isGM)) {
+		globalThis.ui?.notifications?.warn?.("只有领袖角色的拥有者或 GM 可以发放领导骰。");
+		return false;
+	}
+	const rank = talentRank(leaderMech, "t_leader");
+	if (rank < 1) return false;
+	const curDice = getTalentDie(leaderMech, "leader") ?? 0;
+	if (curDice <= 0) {
+		globalThis.ui?.notifications?.warn?.(`${leaderMech.name} 当前没有剩余领导骰（0 颗）！`);
+		return false;
+	}
+	const allies = eligibleLeaderAllies(leaderMech);
+	if (!allies.length) {
+		globalThis.ui?.notifications?.warn?.("未找到可接收领导骰的队友机甲。");
+		return false;
+	}
+	const targetedIds = new Set(Array.from(globalThis.game?.user?.targets ?? []).map(t => t?.actor?.id).filter(Boolean));
+	const preferred = allies.find(a => targetedIds.has(a.actor.id) && !a.hasDie)
+		?? allies.find(a => !a.hasDie)
+		?? allies[0];
+	const DialogV2 = globalThis.foundry?.applications?.api?.DialogV2;
+	let chosenUuid = preferred.uuid;
+	let chosenOrder = String(order || "").trim();
+	if (DialogV2?.wait) {
+		const optionsHtml = allies.map(a => {
+			const sel = a.uuid === preferred.uuid ? " selected" : "";
+			const note = a.hasDie ? `（已持有来自 ${a.dieFrom} 的领导骰）` : "";
+			return `<option value="${escHtml(a.uuid)}"${sel}>${escHtml(a.name)}${escHtml(note)}</option>`;
+		}).join("");
+		const picked = await DialogV2.wait({
+			window: { title: `发放领导骰（剩余 ${curDice} / ${TALENT_DICE_DEFS.leader.max(rank)}）` },
+			content: `<div style="display:flex;flex-direction:column;gap:8px">`
+				+ `<label style="display:flex;flex-direction:column;gap:4px"><span>选择接收队友：</span><select name="allyUuid">${optionsHtml}</select></label>`
+				+ `<label style="display:flex;flex-direction:column;gap:4px"><span>指令内容（可选）：</span><input type="text" name="orderText" value="${escHtml(chosenOrder)}" placeholder="例如：集火重甲 / 推进占点 / 稳住阵脚"/></label>`
+				+ `</div>`,
+			buttons: [
+				{
+					action: "give",
+					label: "📢 发放 1 枚领导骰",
+					default: true,
+					callback: (_ev, btn, dlg) => {
+						const el = dlg?.element ?? btn?.form;
+						return {
+							uuid: el?.querySelector?.('[name="allyUuid"]')?.value ?? preferred.uuid,
+							order: el?.querySelector?.('[name="orderText"]')?.value ?? chosenOrder,
+						};
+					},
+				},
+				{ action: "cancel", label: "取消", callback: () => null },
+			],
+			rejectClose: false,
+		});
+		if (!picked || typeof picked !== "object") return false;
+		chosenUuid = picked.uuid;
+		chosenOrder = picked.order;
+	}
+	const chosenAlly = allies.find(a => a.uuid === chosenUuid)?.actor ?? resolveActor(chosenUuid);
+	const res = await giveLeaderDie(leaderMech, chosenAlly ?? chosenUuid, { order: chosenOrder });
+	if (res && message) {
+		const prevPrompt = getObjectFlag(message, "leaderOrderPrompt");
+		await updateMessageFlagCompat(message, "leaderOrderPrompt", { ...prevPrompt, resolved: true, givenTo: res.targetName });
+	}
+	return res;
+}
+
+async function returnLeaderDie(allyActor, { message = null } = {}) {
+	const allyMech = combatMechOf(allyActor) ?? allyActor;
+	if (!allyMech || !(allyMech.isOwner || globalThis.game?.user?.isGM)) {
+		globalThis.ui?.notifications?.warn?.("只有持有领导骰的角色拥有者或 GM 可以归还。");
+		return false;
+	}
+	const rec = getReceivedLeaderDie(allyMech);
+	if (!rec) {
+		globalThis.ui?.notifications?.warn?.(`${allyMech.name} 当前没有持有来自队友的领导骰。`);
+		return false;
+	}
+	await setReceivedLeaderDieCompat(allyMech, null);
+	let leaderActor = rec.fromActorUuid ? resolveActor(rec.fromActorUuid) : null;
+	if (!leaderActor && rec.fromActorId) leaderActor = globalThis.game?.actors?.get?.(rec.fromActorId) ?? null;
+	const leaderMech = combatMechOf(leaderActor) ?? leaderActor;
+	let refundedLocal = false;
+	if (leaderMech && (leaderMech.isOwner || globalThis.game?.user?.isGM)) {
+		const curL = getTalentDie(leaderMech, "leader") ?? 0;
+		await setTalentDie(leaderMech, "leader", curL + 1);
+		if (needsManualSheetRefresh(leaderMech)) leaderMech.sheet.render(false);
+		refundedLocal = true;
+	} else if (globalThis.game?.users?.activeGM && (rec.fromActorUuid || rec.fromActorId)) {
+		globalThis.game.socket?.emit(`module.${MODULE_ID}`, {
+			action: "returnLeaderDie",
+			leaderUuid: rec.fromActorUuid,
+			leaderId: rec.fromActorId,
+			allyName: allyMech.name ?? "队友",
+		});
+		refundedLocal = true;
+	}
+	if (message) {
+		const prevCard = getObjectFlag(message, "leaderDieCard");
+		await updateMessageFlagCompat(message, "leaderDieCard", { ...prevCard, status: "returned" });
+	}
+	await postCpEffectCard(
+		allyMech,
+		"领袖 · 归还领导骰",
+		`<p><b>${escHtml(allyMech.name)}</b> 以自由动作将 <b>1 枚领导骰</b>归还给了 <b>${escHtml(rec.fromName)}</b>${refundedLocal ? "（已自动退回领袖的领导骰池）" : "（GM 离线，请领袖手动 +1）"}。</p>`,
+	);
+	return true;
+}
+
+async function armReceivedLeaderDie(allyActor, mode) {
+	const allyMech = combatMechOf(allyActor) ?? allyActor;
+	if (!allyMech || !(allyMech.isOwner || globalThis.game?.user?.isGM)) return false;
+	const rec = getReceivedLeaderDie(allyMech);
+	if (!rec) {
+		globalThis.ui?.notifications?.warn?.("当前未持有领导骰。");
+		return false;
+	}
+	if (rec.armedMode === mode) {
+		await setReceivedLeaderDieCompat(allyMech, { ...rec, armedMode: null });
+		globalThis.ui?.notifications?.info?.("已取消预激活领导骰。");
+		return true;
+	}
+	const chk = canUseReceivedLeaderDie(allyMech);
+	if (!chk.ok) {
+		globalThis.ui?.notifications?.warn?.(chk.reason);
+		return false;
+	}
+	if (mode === "dmg" && rec.leaderRank < 3) {
+		globalThis.ui?.notifications?.warn?.("只有「领袖 III（振奋军心）」发放的领导骰才能用于 +1d6 额外伤害。");
+		return false;
+	}
+	await setReceivedLeaderDieCompat(allyMech, { ...rec, armedMode: mode });
+	globalThis.ui?.notifications?.info?.(mode === "acc"
+		? "已预激活领导骰（+1 准度）：下一次攻击、科技攻击或技能检定将自动 +1 准度并消耗此领导骰！"
+		: "已预激活领导骰（+1d6 额外伤害）：下一次伤害掷骰将自动附加 +1d6 额外伤害并消耗此领导骰！");
+	return true;
+}
+
+async function consumeReceivedLeaderDie(allyActor, reason = "") {
+	const allyMech = combatMechOf(allyActor) ?? allyActor;
+	const rec = getReceivedLeaderDie(allyMech);
+	if (!rec) return null;
+	await setReceivedLeaderDieCompat(allyMech, null);
+	if (reason) {
+		globalThis.ui?.notifications?.info?.(`已消耗来自「${rec.fromName}」的领导骰（${reason}）。`);
+	}
+	return rec;
+}
+
+async function useLeaderDieReduceDamage(allyActor, { message = null, targetUuid = null } = {}) {
+	const allyMech = combatMechOf(allyActor) ?? allyActor;
+	if (!allyMech || !(allyMech.isOwner || globalThis.game?.user?.isGM)) return null;
+	const chk = canUseReceivedLeaderDie(allyMech);
+	if (!chk.ok) {
+		globalThis.ui?.notifications?.warn?.(chk.reason);
+		return null;
+	}
+	if (chk.die.leaderRank < 3) {
+		globalThis.ui?.notifications?.warn?.("只有「领袖 III（振奋军心）」发放的领导骰才能用于 -1d6 减伤。");
+		return null;
+	}
+	const roll = await new Roll("1d6").evaluate();
+	const amount = Math.max(1, Number(roll.total) || 1);
+	await consumeReceivedLeaderDie(allyMech, `减伤 -${amount}`);
+	if (message && targetUuid) {
+		const prevMap = getObjectFlag(message, "leaderDamageReduction");
+		await updateMessageFlagCompat(message, "leaderDamageReduction", {
+			...prevMap,
+			[targetUuid]: { amount, by: allyMech.name, fromName: chk.die.fromName },
+		});
+	} else {
+		await patchCombatStateCompat(allyMech, { pendingLeaderDamageReduction: amount });
+	}
+	await postCpEffectCard(
+		allyMech,
+		`领袖 III · 领导骰减伤（-${amount}）`,
+		`<p><b>${escHtml(allyMech.name)}</b> 消耗来自 <b>${escHtml(chk.die.fromName)}</b> 的领导骰掷出 1d6 = <b>${amount}</b>：本次受到的伤害减少 <b>${amount}</b> 点！</p>`,
+	);
+	return { ok: true, amount };
+}
+
+async function restRecoverLeaderDie(leaderActor) {
+	const leaderMech = combatMechOf(leaderActor) ?? leaderActor;
+	if (!leaderMech || !(leaderMech.isOwner || globalThis.game?.user?.isGM)) return false;
+	const rank = talentRank(leaderMech, "t_leader");
+	if (rank < 1) return false;
+	const cur = getTalentDie(leaderMech, "leader") ?? 0;
+	if (cur > 0) {
+		globalThis.ui?.notifications?.info?.(`当前仍有 ${cur} 颗领导骰，按规则仅在剩余 0 颗时休息可回复 1 颗。`);
+		return false;
+	}
+	const next = await setTalentDie(leaderMech, "leader", 1);
+	await postCpEffectCard(
+		leaderMech,
+		"领袖 · 休息回复领导骰",
+		`<p><b>${escHtml(leaderMech.name)}</b> 在休息时回复了 <b>1 颗领导骰</b>（当前：<b>${next} / ${TALENT_DICE_DEFS.leader.max(rank)}</b>）。</p>`,
+	);
+	return true;
 }
 
 // 攻击所用物品的效果文字：命中 / 会心效果整段都看；一般效果说明只看与命中、豁免、目标有关的句子
@@ -5295,6 +5819,8 @@ function analyzeCard(message, root = null) {
 		|| message?.getFlag?.(MODULE_ID, "braceCard")
 		|| message?.getFlag?.(MODULE_ID, "overwatchPrompt")
 		|| message?.getFlag?.(MODULE_ID, "prepareCard")
+		|| message?.getFlag?.(MODULE_ID, "leaderDieCard")
+		|| message?.getFlag?.(MODULE_ID, "leaderOrderPrompt")
 		|| message?.getFlag?.(MODULE_ID, "skipAutoScan")) return null;
 
 	const textParts = [];
@@ -5327,9 +5853,28 @@ function analyzeCard(message, root = null) {
 		nonAttackDamage = { ...nonAttackDamage, halfAllTargets: true };
 	}
 	// 偶像破坏者 I「模因火花」：1 + NHP 数量（超然状态额外 +4）点穿甲能量伤害
-	if (/模因火花/.test(effectiveTitle) || (/^(?:ms_iconoclast|ms_ext_unstable_nhp|ms_unstable_nhp)$/.test(String(item?.system?.lid ?? "")) && /模因火花/.test(combinedText))) {
-		const nhpDmg = 1 + countMechNHPs(actor) + (getCombatState(actor).transcendActive ? 4 : 0);
-		nonAttackDamage = { damage: [{ type: "Energy", val: String(nhpDmg) }], ap: true };
+	// 覆盖三种出卡入口：不稳定 NHP 动作卡「模因火花」、系统卡「不稳定 NHP」、天赋卡「TALENT :: 偶像破坏者 1 // 僭越（海侵）」；严格排除 II 级「内化火花」与 III 级「超然」
+	const itemLidStr = String(item?.system?.lid ?? "");
+	const isTransmutingSpark = /内化火花|Transmuting\s*Spark/i.test(effectiveTitle) || /内化火花|Transmuting\s*Spark/i.test(actionName);
+	const isMemeticSparkCard = !isTransmutingSpark && (
+		/模因火花|Memetic\s*Spark/i.test(effectiveTitle)
+		|| /模因火花|Memetic\s*Spark/i.test(actionName)
+		|| (/^(?:ms_iconoclast|ms_ext_unstable_nhp|ms_unstable_nhp)$/.test(itemLidStr) && /模因火花|Memetic\s*Spark/i.test(combinedText))
+		|| ((/^(?:t_iconoclast|t_ext_iconoclast)$/.test(itemLidStr) || /偶像破坏者|Iconoclast/i.test(effectiveTitle))
+			&& /模因火花|Memetic\s*Spark/i.test(combinedText)
+			&& !/超然骰|Transcendence\s*Die/i.test(combinedText))
+	);
+	if (isMemeticSparkCard) {
+		const nhpInfo = listMechNHPs(actor);
+		const transcBonus = getCombatState(actor).transcendActive ? 4 : 0;
+		const nhpDmg = 1 + nhpInfo.count + transcBonus;
+		const breakdown = transcBonus ? `1+${nhpInfo.count} NHP+4 超然` : `1+${nhpInfo.count} NHP`;
+		nonAttackDamage = {
+			damage: [{ type: "Energy", val: String(nhpDmg) }],
+			ap: true,
+			memeticSpark: true,
+			labelOverride: `${nhpDmg} 能量 AP（${breakdown}）`,
+		};
 	}
 	// 树绳妖（mf_ext_banshee_vine）核心主动「面部附着者/胸腔爆裂者」：系统豁免失败时下回合强制下马（仅无法离舱或无驾驶员时改为晕眩）
 	if ((isCoreActivation && frameLid === "mf_ext_banshee_vine") || /面部附着者|胸腔爆裂者/.test(effectiveTitle)) {
@@ -5581,6 +6126,26 @@ function previewDamageCalc(actor, entries, { multiple = 1, ap = false, paracausa
 		}
 	}
 
+	// 领袖 III「振奋军心」领导骰减伤（-1d6）：作用于非不可减免、非回合末燃烧检定的受击伤害
+	const leaderRedAmt = Math.max(0, Number(dmgCtx?.leaderReduction ?? cs.pendingLeaderDamageReduction) || 0);
+	if (!paracausal && !dmgCtx?.isBurnTick && leaderRedAmt > 0) {
+		let rem = leaderRedAmt;
+		let reduced = 0;
+		for (const t of [...armoredTypes, "Burn"]) {
+			if (rem <= 0) break;
+			if (dmg[t] > 0) {
+				const take = Math.min(dmg[t], rem);
+				dmg[t] -= take;
+				rem -= take;
+				reduced += take;
+			}
+		}
+		if (reduced > 0) {
+			customReductionApplied = true;
+			notes.push(`领导骰 -${reduced}`);
+		}
+	}
+
 	// 伤害压至 1 类规则（拿破仑「真黑神盾 / 重型护盾 / 闪烁神盾」、老兵「钢爪」副武器上限 1 伤）
 	let trueblackApplied = false;
 	const steelJawActive = Boolean(dmgCtx?.weaponSize === "Auxiliary" && hasNpcFeature(actor, ["npcf_cn_veteran_21", "npcf_steel_jaw_veteran"], ["钢爪"]));
@@ -5763,6 +6328,9 @@ function patchTrueblackDamageCalc() {
 			if (getCombatState(this).bucklerShieldActive) {
 				await setCombatState(this, { bucklerShieldActive: false });
 			}
+			if (!effDmgCtx?.leaderReduction && (Number(getCombatState(this).pendingLeaderDamageReduction) || 0) > 0) {
+				await setCombatState(this, { pendingLeaderDamageReduction: 0 });
+			}
 			// 游骑兵（凤蝶变体）「接地」隐形：受到伤害时同样立即解除隐形
 			if (tookActualDamage && (getCombatState(this).groundedInvisible || (mechFrameLid(this) === "mf_swallowtail_alt_swallowtail_ranger_variant" && this.statuses?.has?.("invisible") && !getCombatState(this).ghostweaveCloak && !getCombatState(this).duskWingCloak))) {
 				await setActorStatus(preferredTargetUuid(this) ?? this.uuid, "invisible", false);
@@ -5904,9 +6472,19 @@ function decorateDamageCard(message, root, damageData) {
 			div.className = "lancer-cn-dmg-preview";
 			div.style.cssText = "grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;color:#555;padding:1px 4px 2px;line-height:1.35";
 			const span = doc.createElement("span");
+			const getLeaderRedForTarget = () => {
+				const lrm = getObjectFlag(message, "leaderDamageReduction");
+				if (targetUuid && lrm[targetUuid]) return lrm[targetUuid];
+				for (const [k, v] of Object.entries(lrm)) {
+					if (v && (sameActorRef(k, targetUuid) || sameActorRef(k, actor))) return v;
+				}
+				return null;
+			};
 			const update = () => {
 				const mult = sel ? (parseFloat(sel.value) || 1) : 1;
-				const p = previewDamageCalc(actor, tdr.damage, { multiple: mult, ap: Boolean(tdr.ap ?? damageData.ap), paracausal: Boolean(tdr.paracausal ?? damageData.paracausal), addBurn, dmgCtx });
+				const lre = getLeaderRedForTarget();
+				const effCtx = lre ? { ...(dmgCtx ?? {}), leaderReduction: Number(lre.amount) || 0 } : dmgCtx;
+				const p = previewDamageCalc(actor, tdr.damage, { multiple: mult, ap: Boolean(tdr.ap ?? damageData.ap), paracausal: Boolean(tdr.paracausal ?? damageData.paracausal), addBurn, dmgCtx: effCtx });
 				span.textContent = p ? p.summary : "";
 			};
 			update();
@@ -5940,6 +6518,39 @@ function decorateDamageCard(message, root, damageData) {
 					if (ok) update();
 				});
 				div.append(braceBtn);
+
+				const curLre = getLeaderRedForTarget();
+				const recLeader = getReceivedLeaderDie(actor);
+				if (curLre || (recLeader && recLeader.leaderRank >= 3)) {
+					const ldrBtn = doc.createElement("button");
+					ldrBtn.type = "button";
+					ldrBtn.className = "lancer-cn-dmg-leader";
+					ldrBtn.style.cssText = "flex:0 0 auto;width:auto;min-height:0;height:20px;line-height:18px;padding:0 6px;margin:0;font-size:11px";
+					const syncLdrBtn = () => {
+						const entry = getLeaderRedForTarget();
+						if (entry) {
+							ldrBtn.textContent = `✓ 领导骰 -${entry.amount}`;
+							ldrBtn.disabled = true;
+							ldrBtn.title = `已消耗来自「${entry.fromName || "领袖"}」的领导骰减伤 ${entry.amount} 点`;
+							return;
+						}
+						const chk = canUseReceivedLeaderDie(actor);
+						ldrBtn.textContent = "🎖️ 领导骰 -1d6";
+						ldrBtn.disabled = !chk.ok;
+						ldrBtn.title = chk.ok
+							? `消耗来自「${chk.die.fromName}」的领袖 III 领导骰，将本次伤害减少 1d6`
+							: chk.reason;
+					};
+					syncLdrBtn();
+					ldrBtn.addEventListener?.("click", async ev => {
+						ev.preventDefault?.();
+						ev.stopPropagation?.();
+						const res = await useLeaderDieReduceDamage(actor, { message, targetUuid });
+						syncLdrBtn();
+						if (res?.ok) update();
+					});
+					div.append(ldrBtn);
+				}
 			}
 			sel?.addEventListener?.("change", update);
 			card.append(div);
@@ -6039,7 +6650,7 @@ const ALLOWED_SOCKET_COMBAT_STATE_KEYS = new Set([
 	"sysopFirewall", "blackIceStacks", "usedOpenDoorSave", "attackedOrForcedSaveThisTurn", "affectedHostileThisTurn",
 	"skirmisherSoftCover", "groundedInvisible", "usedBlackWitchParry", "usedVeteranLightningReflex",
 	"reactionsUsedTurn", "usedOverwatchRound", "usedBraceRound", "usedOratorRound", "usedWodengCounterfireRound", "fieldAnalystUsedRound",
-	"disengagedThisTurn", "prospectorNoReactionTurn", "noReactionsUntilTurnEnd", "preparedAction", "cascadingTalentNhps", "roundKey", "turnKey",
+	"disengagedThisTurn", "prospectorNoReactionTurn", "noReactionsUntilTurnEnd", "preparedAction", "cascadingTalentNhps", "pendingLeaderDamageReduction", "roundKey", "turnKey",
 ]);
 
 async function patchCombatStateCompat(actorOrUuid, patch) {
@@ -7504,9 +8115,9 @@ const CP_PROFILES = {
 		buttons: [{ act: "agrippaRepairAlly", label: "🔧 消耗 1 维修 → 盟友满血+清燃烧+清状况" }],
 	},
 	mf_ext_comet_moth: {
-		label: "神圣指引",
-		instant: true,
-		buttons: [{ act: "cometMothAll", label: "🌟 全场友军强化 + 全场敌军锁定" }],
+		label: "天眼",
+		hint: "场景结束前，每回合末自由动作：感应且视线内、高度低于你的盟友获强化（科技动作），敌对直接获锁定",
+		buttons: [{ act: "cometMothAll", label: "👁️ 天眼（下方盟友强化 + 敌军锁定）" }],
 	},
 	mf_ext_grant: {
 		label: "绝对零度",
@@ -7849,6 +8460,7 @@ async function resetSceneTalentState(mech) {
 	if (Array.isArray(cs.mimicValues)) keep.mimicValues = cs.mimicValues;
 	if (Number.isFinite(Number(cs.osirisGate))) keep.osirisGate = cs.osirisGate;
 	if (mech.setFlag) await mech.setFlag(MODULE_ID, "combatState", keep);
+	if (getReceivedLeaderDie(mech)) await setReceivedLeaderDieCompat(mech, null);
 	await retrieveThrownWeapon(mech, "all", { notify: false });
 }
 
@@ -7867,6 +8479,7 @@ async function resetFullRepairTalentState(mech) {
 	}
 	if (mech.unsetFlag) await mech.unsetFlag(MODULE_ID, "combatState");
 	else await setCombatState(mech, { osirisGate: 1, cascadingTalentNhps: [] });
+	if (getReceivedLeaderDie(mech)) await setReceivedLeaderDieCompat(mech, null);
 	await retrieveThrownWeapon(mech, "all", { notify: false });
 }
 
@@ -8353,14 +8966,60 @@ async function executeCoreAction(actor, rawAction) {
 	if (act === "cometMothAll") {
 		const selfTok = attackerToken(actor);
 		const myDisp = selfTok?.document?.disposition ?? 1;
-		let allyN = 0, foeN = 0;
+		const sensorRange = Number(actor?.system?.sensor_range) || 10;
+		const selfElev = Number(selfTok?.document?.elevation ?? selfTok?.elevation ?? 0);
+		const selfTechBlocked = techActionBlockReason(actor);
+		const allyNames = [];
+		const foeNames = [];
+		const skippedJammedAllies = [];
+		let eligibleAlliesSeen = 0;
 		for (const tok of globalThis.canvas?.tokens?.placeables ?? []) {
 			if (!tok?.actor || tok === selfTok) continue;
+			if (selfTok) {
+				const dist = tokenDistance(selfTok, tok);
+				if (dist !== null && dist > sensorRange) continue;
+			}
+			const tokElev = Number(tok.document?.elevation ?? tok.elevation ?? 0);
+			if (!(selfElev > tokElev)) continue;
+			const tokDisp = tok.document?.disposition ?? tok.disposition ?? 0;
 			const u = tok.document?.uuid ?? tok.uuid;
-			if ((tok.document?.disposition ?? -1) === myDisp) { await setActorStatus(u, "bolster", true); allyN++; }
-			else { await setActorStatus(u, "lockon", true); foeN++; }
+			const tName = tok.name ?? tok.actor.name ?? "角色";
+			if (tokDisp === myDisp) {
+				eligibleAlliesSeen++;
+				if (selfTechBlocked) continue;
+				if (techActionBlockReason(tok.actor)) {
+					skippedJammedAllies.push(tName);
+					continue;
+				}
+				const r = await setActorStatus(u, "bolster", true);
+				if (r?.ok !== false) allyNames.push(tName);
+			} else if (tokDisp !== 0) {
+				// 后半句：满足感应与相对高度条件的敌对角色直接获得锁定（非科技动作，受扰亦不阻断）
+				const r = await setActorStatus(u, "lockon", true);
+				if (r?.ok !== false && !r?.blocked) foeNames.push(tName);
+			}
 		}
-		await postCpEffectCard(actor, "彗星蛾 · 神圣指引", `<p>已对 <b>${allyN}</b> 名友军施加<b>强化</b>，对 <b>${foeN}</b> 名敌军施加<b>锁定</b>！</p>`);
+		if (foeNames.length) await markHostileActionTaken(actor);
+		if (!allyNames.length && !foeNames.length) {
+			if (selfTechBlocked && eligibleAlliesSeen > 0) {
+				ui?.notifications?.warn?.(`彗尾蛾当前${selfTechBlocked}，无法执行「强化」（科技动作），且感应内下方无敌对目标。`);
+			} else if (skippedJammedAllies.length) {
+				ui?.notifications?.warn?.(`感应内下方盟友（${skippedJammedAllies.join("、")}）受扰或被封锁科技动作，无法受益于「强化」，且无敌对目标。`);
+			} else {
+				ui?.notifications?.warn?.(`未找到位于感应（${sensorRange} 格）内且高度低于彗尾蛾（当前高度 ${selfElev}）的角色，请先确认指示物高度！`);
+			}
+			return false;
+		}
+		const notes = [];
+		if (allyNames.length) notes.push(`对感应内下方盟友（${allyNames.map(escHtml).join("、")}）执行<b>强化</b>（科技动作）`);
+		else if (selfTechBlocked && eligibleAlliesSeen > 0) notes.push(`自身${escHtml(selfTechBlocked)}，已跳过盟友<b>强化</b>（科技动作）`);
+		if (skippedJammedAllies.length) notes.push(`已跳过无法受益于科技动作的盟友：${skippedJammedAllies.map(escHtml).join("、")}`);
+		if (foeNames.length) notes.push(`使感应内下方敌对角色（${foeNames.map(escHtml).join("、")}）直接获得<b>锁定</b>`);
+		await postCpEffectCard(
+			actor,
+			"彗尾蛾 · 天眼（自由动作）",
+			`<p>${notes.join("；")}。（范围：感应 ${sensorRange} 格且高度 &lt; ${selfElev}，请确认均在视线内）</p>`,
+		);
 		return true;
 	}
 	if (act === "grantSpend") {
@@ -9517,7 +10176,7 @@ async function onCreateChatMessage(message, _options, userId) {
 		}
 		// 5. 天赋与特殊科技系统非攻击动作卡自动结算（v1.13.0）
 		if (mech?.isOwner) {
-			await handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply, recordAdd);
+			await handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply, recordAdd, message);
 		}
 	}
 
@@ -9575,7 +10234,7 @@ async function applyBlackThumbTargetUpdate(targetMech, targetUuid, mode) {
 	return false;
 }
 
-async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply, recordAdd) {
+async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply, recordAdd, message = null) {
 	const actName = String(info.actionData?.action?.name || info.title || "").trim();
 	const itemLid = String(info.item?.system?.lid ?? "");
 	const userTgs = Array.from(globalThis.game?.user?.targets ?? []);
@@ -9766,10 +10425,28 @@ async function handleNonAttackTalentOrSystemCard(info, mech, mechUuid, autoApply
 		}
 		return;
 	}
-	// 领袖「下达指令 / 下达命令」：消耗 1 颗领导骰
-	if (itemLid === "t_leader" && /下达指|下达命/.test(actName)) {
-		const curL = getTalentDie(mech, "leader") ?? 0;
-		if (curL > 0) await setTalentDie(mech, "leader", curL - 1);
+	// 领袖「下达指令 / 下达命令」：若已锁定唯一一名队友机甲则直接发放 1 颗领导骰；否则在卡片上挂载「选择队友发放领导骰」按钮（避免误扣骰子）
+	if ((itemLid === "t_leader" || talentRank(mech, "t_leader") >= 1) && /下达指|下达命|Issue\s*Order|公开频道|Open\s*Channels/i.test(actName)) {
+		const selfTok = attackerToken(mech);
+		const myDisp = selfTok?.document?.disposition ?? 1;
+		const allyTargets = userTgs.filter(t => {
+			const a = combatMechOf(t?.actor) ?? t?.actor;
+			if (!a || (a.type !== "mech" && !a.is_mech?.())) return false;
+			if (sameActorRef(a, mech) || (mech?.id && a.id && a.id === mech.id)) return false;
+			const td = t?.document?.disposition ?? t?.disposition;
+			return td === undefined || td === myDisp;
+		});
+		if (allyTargets.length === 1) {
+			await giveLeaderDie(mech, allyTargets[0].actor, { order: actName });
+		} else if (message) {
+			await updateMessageFlagCompat(message, "leaderOrderPrompt", {
+				leaderUuid: preferredTargetUuid(mech) ?? mech?.uuid ?? null,
+				leaderId: mech?.id ?? null,
+				leaderName: mech?.name ?? "领袖",
+				order: actName,
+				resolved: false,
+			});
+		}
 		return;
 	}
 	// 西西弗斯级 NHP「扭曲概率」：自动掷 2d20 并记录 X / Y
@@ -10508,7 +11185,11 @@ async function rollNonAttackDamage(message, info, overrideSpec = null) {
 		}
 	}
 	let damageSpec = parsed.damage.map(d => ({ ...d }));
-	if (parsed.dynamicTargetHeatBurn) {
+	if (parsed.memeticSpark) {
+		const liveNhp = countMechNHPs(actor);
+		const liveDmg = 1 + liveNhp + (getCombatState(actor).transcendActive ? 4 : 0);
+		damageSpec = [{ type: "Energy", val: String(liveDmg) }];
+	} else if (parsed.dynamicTargetHeatBurn) {
 		const tActor = hit_results[0]?.target?.actor
 			?? (info.attack?.targets?.find(t => t.hit || t.crit)?.uuid ? resolveActor(info.attack.targets.find(t => t.hit || t.crit).uuid) : null);
 		const liveHeat = Math.max(0, Number(tActor?.system?.heat?.value) || 0);
@@ -11645,6 +12326,61 @@ function onRenderChatMessage(message, html) {
 		return;
 	}
 
+	// 5e. 领袖发放领导骰卡（附队友一键归还领导骰按钮）
+	const ldrCard = getObjectFlag(message, "leaderDieCard");
+	if (ldrCard.targetUuid || ldrCard.targetId) {
+		const tActor = (ldrCard.targetUuid ? resolveActor(ldrCard.targetUuid) : null)
+			?? (ldrCard.targetId ? globalThis.game?.actors?.get?.(ldrCard.targetId) : null);
+		const canReturn = Boolean(game.user?.isGM || tActor?.isOwner);
+		const content = root.querySelector?.(".message-content") ?? root;
+		const stillHolding = Boolean(tActor && getReceivedLeaderDie(tActor));
+		const inner = ldrCard.status === "returned"
+			? `<span style="opacity:.7">✓ 已归还给 ${escHtml(ldrCard.fromName || "领袖")}</span>`
+			: !stillHolding && tActor
+				? `<span style="opacity:.7">✓ 领导骰已使用或已归还</span>`
+				: canReturn
+					? `<button type="button" data-lancer-cn-leader-return="1" style="${BTN_INLINE_STYLE}" title="以自由动作将此领导骰归还给「${escHtml(ldrCard.fromName || "领袖")}」">↩ 自由动作归还领导骰</button>`
+					: "";
+		if (!inner) return;
+		content.insertAdjacentHTML("beforeend", `<div class="lancer-cn-status-row" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px;font-size:var(--font-size-12,12px)">${inner}</div>`);
+		content.querySelector(".lancer-cn-status-row")?.addEventListener("click", async ev => {
+			if (ev.target.closest?.("[data-lancer-cn-leader-return]")?.dataset?.lancerCnLeaderReturn && tActor) {
+				const ok = await returnLeaderDie(tActor, { message });
+				if (ok) {
+					const rowEl = content.querySelector(".lancer-cn-status-row");
+					if (rowEl) { rowEl.remove(); onRenderChatMessage(message, root); }
+				}
+			}
+		});
+		return;
+	}
+
+	// 5f. 领袖「下达指令 / 下达命令」选择队友发放卡
+	const ldrPrompt = getObjectFlag(message, "leaderOrderPrompt");
+	if (ldrPrompt.leaderUuid || ldrPrompt.leaderId) {
+		const lActor = (ldrPrompt.leaderUuid ? resolveActor(ldrPrompt.leaderUuid) : null)
+			?? (ldrPrompt.leaderId ? globalThis.game?.actors?.get?.(ldrPrompt.leaderId) : null);
+		const canGive = Boolean(game.user?.isGM || lActor?.isOwner);
+		const content = root.querySelector?.(".message-content") ?? root;
+		const inner = ldrPrompt.resolved
+			? `<span style="color:#2e7d32;font-weight:bold">✓ 已向 ${escHtml(ldrPrompt.givenTo || "队友")} 发放 1 枚领导骰</span>`
+			: canGive
+				? `<button type="button" data-lancer-cn-leader-give="1" style="${BTN_INLINE_STYLE}" title="选择一名队友机甲并向其发放 1 枚领导骰">📢 选择队友发放领导骰</button>`
+				: "";
+		if (!inner) return;
+		content.insertAdjacentHTML("beforeend", `<div class="lancer-cn-status-row" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px;font-size:var(--font-size-12,12px)">${inner}</div>`);
+		content.querySelector(".lancer-cn-status-row")?.addEventListener("click", async ev => {
+			if (ev.target.closest?.("[data-lancer-cn-leader-give]")?.dataset?.lancerCnLeaderGive && lActor) {
+				const ok = await promptGiveLeaderDie(lActor, { order: ldrPrompt.order || "", message });
+				if (ok) {
+					const rowEl = content.querySelector(".lancer-cn-status-row");
+					if (rowEl) { rowEl.remove(); onRenderChatMessage(message, root); }
+				}
+			}
+		});
+		return;
+	}
+
 	// 6. 攻击卡 / 技能系统卡 / 已挂状态结果卡 / 擒拿卡 / 核心系统激活卡
 	const info = analyzeCard(message, root);
 	const hasApplied = getArrayFlag(message, "appliedStatuses").length > 0;
@@ -11859,7 +12595,17 @@ function onCrossPermDamageClick(event) {
 		const actor = resolveActor(targetUuid);
 		const msgId = applyBtn.closest?.(".chat-message")?.dataset?.messageId;
 		const message = msgId && game.messages?.get?.(msgId);
-		const dmgCtx = message?.getFlag?.(MODULE_ID, "damageCtx") ?? message?.flags?.[MODULE_ID]?.damageCtx ?? null;
+		const rawDmgCtx = message?.getFlag?.(MODULE_ID, "damageCtx") ?? message?.flags?.[MODULE_ID]?.damageCtx ?? null;
+		const leaderRedMap = getObjectFlag(message, "leaderDamageReduction");
+		let leaderRedEntry = (targetUuid && leaderRedMap[targetUuid]) ? leaderRedMap[targetUuid] : null;
+		if (!leaderRedEntry && actor) {
+			for (const [k, v] of Object.entries(leaderRedMap)) {
+				if (v && (sameActorRef(k, targetUuid) || sameActorRef(k, actor))) { leaderRedEntry = v; break; }
+			}
+		}
+		const dmgCtx = leaderRedEntry
+			? { ...(rawDmgCtx ?? {}), leaderReduction: Number(leaderRedEntry.amount) || 0 }
+			: rawDmgCtx;
 		if (!actor || actor.isOwner) {
 			if (actor?.isOwner && dmgCtx) {
 				const actorKey = actor.uuid || actor.id || "";
@@ -12875,6 +13621,12 @@ async function injectDamageFlowBonuses(state) {
 	if (Number(mod.cometSwarmBonus) > 0) {
 		bonuses.push({ type: "Kinetic", val: String(mod.cometSwarmBonus) });
 	}
+	// 7b. 领袖 III「振奋军心」预激活领导骰（+1d6 额外伤害，于伤害卡实际出卡时消耗以保证取消安全）
+	const leaderDmgChk = canUseReceivedLeaderDie(mech);
+	if (leaderDmgChk.ok && leaderDmgChk.die?.armedMode === "dmg" && leaderDmgChk.die.leaderRank >= 3) {
+		bonuses.push({ type: baseType, val: "1d6" });
+		state.data._lancerCnUsedLeaderDmg = true;
+	}
 
 	// 8. 自走兵器库 II「地狱火」与德川「等离子鞘」（超温危域中造成能量伤害的武器攻击）：全部额外伤害转化为燃烧（热度不转化）
 	const ammo = mod.walkingArmoryAmmo || "";
@@ -13287,6 +14039,10 @@ function patchLancerFlows() {
 				ui?.notifications?.warn?.(`武器「${state.item.name}」已投出落在场上，取回前无法再次使用！（可在邻接时以自由动作拾回，或具备「匕首戏法」时在回合结束自动收回）`);
 				return false;
 			}
+			const limFormula = diceLimited(state.item);
+			if (limFormula && !(Number(state.item.getFlag?.(MODULE_ID, "limitedRoll")) > 0)) {
+				ui?.notifications?.warn?.(`「${state.item.name}」尚未掷受限次数（${limFormula}），请点击武器栏上的「掷 ${limFormula}」按钮以自动计数剩余次数！`);
+			}
 			try { applyKnifeJugglerTags(state.item, preMech); } catch (err) { reportError("猎人匕首戏法标签同步", err); }
 		}
 		const ok = await orig(state, options);
@@ -13350,6 +14106,11 @@ function patchLancerFlows() {
 
 		if (state.data.acc_diff?.base && !state.data._lancerCnCpAtkAcc) {
 			let accBonus = cpAttackAccuracyBonus(mech);
+			const leaderAccChk = canUseReceivedLeaderDie(mech);
+			if (leaderAccChk.ok && leaderAccChk.die?.armedMode === "acc") {
+				accBonus += 1;
+				state.data._lancerCnUsedLeaderAcc = true;
+			}
 			let diffBonus = 0;
 			let ignoreCover = false;
 			const aTok = attackerToken(mech);
@@ -13678,6 +14439,11 @@ function patchLancerFlows() {
 
 			if (state.data.acc_diff?.base && !state.data._lancerCnCpAtkAcc) {
 				let bonus = cpAttackAccuracyBonus(mech);
+				const leaderTechAcc = canUseReceivedLeaderDie(mech);
+				if (leaderTechAcc.ok && leaderTechAcc.die?.armedMode === "acc") {
+					bonus += 1;
+					state.data._lancerCnUsedLeaderAcc = true;
+				}
 				const upstreamAddedGoblinAcc = Boolean(
 					state.item
 					&& !options?.acc_diff
@@ -13830,7 +14596,13 @@ function patchLancerFlows() {
 			effect: String(state?.data?.effect ?? state?.data?.action?.detail ?? ""),
 			invade: Boolean(state?.data?.invade),
 		};
-		try { return await orig(state, options); }
+		try {
+			const res = await orig(state, options);
+			if (res !== false && state?.data?._lancerCnUsedLeaderAcc) {
+				await consumeReceivedLeaderDie(state.actor, "+1 准度");
+			}
+			return res;
+		}
 		finally {
 			pendingTechActionMeta = null;
 			pendingWeaponAttackFlags = null;
@@ -13853,7 +14625,13 @@ function patchLancerFlows() {
 				...(state?.data?._lancerCnOverwatchAttack ? { overwatchAttack: true } : {}),
 			};
 		}
-		try { return await orig(state, options); }
+		try {
+			const res = await orig(state, options);
+			if (res !== false && state?.data?._lancerCnUsedLeaderAcc) {
+				await consumeReceivedLeaderDie(state.actor, "+1 准度");
+			}
+			return res;
+		}
 		finally {
 			pendingWeaponAttackFlags = null;
 			pendingDisdainfulBlade = null;
@@ -13900,7 +14678,13 @@ function patchLancerFlows() {
 			...(jockeyGiantSlayerFinisher ? { jockeyGiantSlayerFinisher } : {}),
 			...(reactionAttack ? { reactionAttack: true } : {}),
 		};
-		try { return await orig(state, options); }
+		try {
+			const res = await orig(state, options);
+			if (res !== false && state?.data?._lancerCnUsedLeaderDmg) {
+				await consumeReceivedLeaderDie(state.actor, "+1d6 额外伤害");
+			}
+			return res;
+		}
 		finally { pendingDamageCardCtx = null; }
 	});
 
@@ -14893,6 +15677,11 @@ function patchLancerFlows() {
 		}
 		if (state.data.acc_diff?.base && !state.data._lancerCnCpStatAcc) {
 			let statAcc = cpStatAccuracyBonus(actor);
+			const leaderStatChk = canUseReceivedLeaderDie(actor);
+			if (leaderStatChk.ok && leaderStatChk.die?.armedMode === "acc") {
+				statAcc += 1;
+				state.data._lancerCnUsedLeaderAcc = true;
+			}
 			let statDiff = 0;
 			const p = String(state.data.path ?? "");
 			const titleStr = String(state.data.title ?? "");
@@ -15005,6 +15794,9 @@ function patchLancerFlows() {
 	});
 	wrap("printStatRollCard", async (orig, state, options) => {
 		const ok = await orig(state, options);
+		if (ok && state?.data?._lancerCnUsedLeaderAcc) {
+			await consumeReceivedLeaderDie(state.actor, "+1 准度");
+		}
 		if (ok && state?.data?._lancerCnBolstered && state.actor?.statuses?.has?.("bolster")) {
 			const uuid = preferredTargetUuid(state.actor) ?? state.actor.uuid;
 			await setActorStatus(uuid, "bolster", false);
@@ -15035,8 +15827,7 @@ const CASCADE_EXEMPT_LIDS = new Set([
 	"ms_comp_con_class_assistant_unit",
 	"ms_adjutant_class_compcon",
 	"wm_uncle_class_comp_con",
-	"ms_technophile_1",
-	"ms_servant_fragment_nhp",
+	"ms_entangled_co-consciousness_rig",
 	"ms_ext_insight_proto_mind",
 	"ms_kkca_archer_companion",
 	"ms_ch_hound",
@@ -15051,6 +15842,7 @@ function isAiCapableMechItem(item) {
 	if (lid === "ms_iconoclast" || lid === "ms_unstable_nhp" || lid === "ms_ext_unstable_nhp" || /^ms_technophile_[123]$/.test(lid) || /^ms_(?:servant_fragment|student_fragment|enlightenment_class)_nhp$/.test(lid)) {
 		return true;
 	}
+	if (String(item.system?.type ?? "").toUpperCase() === "AI") return true;
 	if (typeof item.isAI === "function") {
 		try { if (item.isAI()) return true; } catch { /* fallback to tags */ }
 	}
@@ -15063,7 +15855,7 @@ function isCascadeResistantItem(item) {
 	const lid = String(item.system?.lid ?? "");
 	if (CASCADE_EXEMPT_LIDS.has(lid)) return true;
 	const nm = String(item.name ?? "");
-	if (/侍从级\s*NHP|洞察原型心智/i.test(nm)) return true;
+	if (/洞察原型心智/i.test(nm)) return true;
 	const tags = (() => { try { return item.getTags?.() ?? item.system?.all_tags ?? item.system?.tags ?? []; } catch { return item.system?.tags ?? []; } })();
 	return Array.isArray(tags) && tags.some(t => t?.is_cascaderesistant || t?.lid === "tg_no_cascade" || t?.id === "tg_no_cascade");
 }
@@ -15087,21 +15879,23 @@ function collectCascadeableSources(actor) {
 	const exemptNames = [];
 	const destroyedNames = [];
 	const cascadingNames = [];
+	let hasPhysicalServantNhp = false;
 	let hasPhysicalStudentNhp = false;
 	let hasPhysicalUnstableNhp = false;
 	let hasHound = false;
 	const loadoutSys = Array.isArray(actor?.system?.loadout?.systems)
-		? actor.system.loadout.systems.filter(s => s?.value || s?.id)
+		? actor.system.loadout.systems.filter(s => typeof s === "string" || s?.value || s?.id)
 		: [];
 
 	for (const it of actor.items ?? []) {
 		if (!isAiCapableMechItem(it)) continue;
 		const lid = String(it.system?.lid ?? "");
 		const nm = it.name || lid || "AI 系统";
+		if (lid === "ms_technophile_1" || /servant|侍从级/i.test(lid) || /侍从级\s*NHP/i.test(nm)) hasPhysicalServantNhp = true;
 		if (lid === "ms_technophile_2" || /student|学生级/i.test(lid) || /学生级\s*NHP/i.test(nm)) hasPhysicalStudentNhp = true;
 		if (lid === "ms_iconoclast" || lid === "ms_unstable_nhp" || lid === "ms_ext_unstable_nhp" || /unstable|不稳定/i.test(lid) || /不稳定.*NHP/i.test(nm)) hasPhysicalUnstableNhp = true;
 		if (it.system?.equipped === false) continue;
-		if (loadoutSys.length > 0 && (it.type === "mech_system" || it.is_mech_system?.()) && !loadoutSys.some(s => s?.value === it || (it.id && (s?.id === it.id || s?.value?.id === it.id)))) continue;
+		if (loadoutSys.length > 0 && (it.type === "mech_system" || it.is_mech_system?.()) && !loadoutSys.some(s => (typeof s === "string" ? (it.id && s === it.id) : (s?.value === it || (it.id && (s?.id === it.id || s?.value?.id === it.id)))))) continue;
 		if (lid === "ms_ch_hound" && !it.system?.destroyed) {
 			hasHound = true;
 			continue;
@@ -15127,8 +15921,9 @@ function collectCascadeableSources(actor) {
 	if (techRank === 2 && !hasPhysicalStudentNhp) {
 		if (cascTalents.includes("student_nhp")) cascadingNames.push("学生级 NHP");
 		else talentNhps.push({ key: "student_nhp", name: "学生级 NHP" });
-	} else if (techRank === 1) {
-		exemptNames.push("侍从级 NHP");
+	} else if (techRank === 1 && !hasPhysicalServantNhp) {
+		if (cascTalents.includes("servant_nhp")) cascadingNames.push("侍从级 NHP");
+		else talentNhps.push({ key: "servant_nhp", name: "侍从级 NHP" });
 	}
 	if (talentRank(actor, "t_iconoclast") >= 1 && !hasPhysicalUnstableNhp) {
 		if (cascTalents.includes("unstable_nhp")) cascadingNames.push("不稳定 NHP");
@@ -15287,6 +16082,7 @@ const ALLOWED_SOCKET_MSG_FLAGS = new Set([
 	"grappleState", "contest", "jockeyState", "mazeState",
 	"cpDamageMod", "analystUsed", "thrownAttack", "overwatchAttack",
 	"npcRechargePrompt", "ultraJuggernautPrompt", "overwatchPrompt", "prepareCard",
+	"leaderDamageReduction", "leaderDieCard", "leaderOrderPrompt",
 ]);
 
 Hooks.on("renderChatMessageHTML", onRenderChatMessage);
@@ -15397,6 +16193,22 @@ async function handleModuleSocketMessage(msg) {
 		} else if (msg.mode === "vent") {
 			const curHeat = Number(mech.system?.heat?.value) || 0;
 			if (curHeat > 0) await mech.update?.({ "system.heat.value": Math.max(0, curHeat - 2) });
+		}
+		return;
+	}
+	if (msg.action === "setReceivedLeaderDie" && (msg.uuid || msg.actorId)) {
+		const actor = (msg.uuid ? resolveActor(msg.uuid) : null) ?? (msg.actorId ? game.actors?.get?.(msg.actorId) : null);
+		const mech = combatMechOf(actor) ?? actor;
+		if (mech) await setReceivedLeaderDieCompat(mech, msg.payload ?? null);
+		return;
+	}
+	if (msg.action === "returnLeaderDie" && (msg.leaderUuid || msg.leaderId)) {
+		const actor = (msg.leaderUuid ? resolveActor(msg.leaderUuid) : null) ?? (msg.leaderId ? game.actors?.get?.(msg.leaderId) : null);
+		const leaderMech = combatMechOf(actor) ?? actor;
+		if (leaderMech && talentRank(leaderMech, "t_leader") >= 1) {
+			const curL = getTalentDie(leaderMech, "leader") ?? 0;
+			await setTalentDie(leaderMech, "leader", curL + 1);
+			if (needsManualSheetRefresh(leaderMech)) leaderMech.sheet.render(false);
 		}
 		return;
 	}
@@ -16366,9 +17178,18 @@ function onBasicDamageClick(event) {
 //    次数存在机甲的 flags.lancer-cn.counters，全面维修后回满。
 const DICE_FORMULA = /^\s*\d*d\d+(?:\s*[+-]\s*\d+)?\s*$/i;
 const isDiceFormula = v => typeof v === "string" && DICE_FORMULA.test(v);
-const limitedTag = item => { try { return item?.getTags?.()?.find(t => t.is_limited) ?? null; } catch { return null; } };
+const limitedTag = item => {
+	try {
+		const tags = item?.getTags?.() ?? item?.system?.active_profile?.all_tags ?? item?.system?.active_profile?.tags ?? item?.system?.all_tags ?? item?.system?.tags ?? [];
+		return Array.isArray(tags) ? (tags.find(t => t?.is_limited || t?.lid === "tg_limited" || t?.id === "tg_limited") ?? null) : null;
+	} catch { return null; }
+};
 const diceLimited = item => { const t = limitedTag(item); return t && isDiceFormula(String(t.val)) ? String(t.val).replace(/\s+/g, "") : null; };
 const limitedBonus = actor => (actor?.type === "mech" ? Number(actor.system?.loadout?.limited_bonus) || 0 : 0);
+const diceLimitedMax = item => {
+	const rolled = Number(item?.getFlag?.(MODULE_ID, "limitedRoll")) || 0;
+	return rolled ? rolled + limitedBonus(item?.actor) : 0;
+};
 
 function patchLimitedMax() {
 	const proto = globalThis.CONFIG?.Item?.documentClass?.prototype;
@@ -16404,10 +17225,113 @@ async function rollLimited(item, { quiet = false } = {}) {
 	const formula = diceLimited(item);
 	if (!formula) return null;
 	const roll = await new Roll(formula).evaluate();
-	await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: item.actor }), flavor: `${item.name}：受限次数（${formula}）` }, quiet ? { rollMode: "selfroll" } : undefined);
-	const max = roll.total + limitedBonus(item.actor);
+	const bonus = limitedBonus(item.actor);
+	const max = roll.total + bonus;
+	const flavor = bonus > 0
+		? `${item.name}：受限次数（${formula} = ${roll.total} + 受限加值 ${bonus} = ${max}）`
+		: `${item.name}：受限次数（${formula} = ${max}）`;
+	await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: item.actor }), flavor }, quiet ? { rollMode: "selfroll" } : undefined);
+	if (item.actor?.sheet?.rendered) captureSheetScroll(item.actor.sheet);
+	if (item.sheet?.rendered) captureSheetScroll(item.sheet);
 	await item.update({ [`flags.${MODULE_ID}.limitedRoll`]: roll.total, "system.uses": max });
+	if (item.actor && needsManualSheetRefresh(item.actor)) {
+		try { item.actor.sheet.render(false); } catch { /* ignore */ }
+	}
 	return max;
+}
+
+async function adjustLimitedUses(item, delta) {
+	if (!item) return null;
+	const formula = diceLimited(item);
+	const max = formula ? diceLimitedMax(item) : (Number(item.system?.uses?.max) || 0);
+	if (max <= 0) {
+		if (formula) {
+			globalThis.ui?.notifications?.warn?.(`「${item.name}」尚未掷受限次数，请先点击「掷 ${formula}」！`);
+		}
+		return null;
+	}
+	const cur = Number(item.system?.uses?.value) || 0;
+	const next = Math.max(0, Math.min(max, cur + Math.round(Number(delta) || 0)));
+	if (item.actor?.sheet?.rendered) captureSheetScroll(item.actor.sheet);
+	if (item.sheet?.rendered) captureSheetScroll(item.sheet);
+	await item.update({ "system.uses": next });
+	if (item.actor && needsManualSheetRefresh(item.actor)) {
+		try { item.actor.sheet.render(false); } catch { /* ignore */ }
+	}
+	return next;
+}
+
+function buildDiceLimitedControlsHTML(item, uuid, { standalone = false } = {}) {
+	const formula = diceLimited(item);
+	if (!formula) return "";
+	const rolled = Number(item?.getFlag?.(MODULE_ID, "limitedRoll")) || 0;
+	const bonus = limitedBonus(item?.actor);
+	const max = rolled ? rolled + bonus : 0;
+	const rawVal = Number(item?.system?.uses?.value);
+	const val = max > 0 ? Math.max(0, Math.min(max, Number.isFinite(rawVal) ? rawVal : max)) : 0;
+	const bonusTip = bonus > 0 ? `（含机甲受限加值 +${bonus}）` : "";
+	const rollTitle = rolled
+		? `重掷受限次数 ${formula}${bonusTip}并回满（全面维修后会自动重掷）`
+		: `掷 ${formula} 决定本武器受限次数${bonusTip}并启用自动计数（全面维修后会自动重掷）`;
+	const safeUuid = escHtml(uuid);
+	const ctrlStyle = "flex:0 0 auto;width:auto;line-height:1.35;padding:0 .38em;margin:0;min-height:0";
+	if (!max) {
+		const btn = `<button type="button" class="lancer-button lancer-primary" data-lancer-cn-limited="${safeUuid}" title="${escHtml(rollTitle)}" style="${ctrlStyle};padding:0 .5em"><i class="fas fa-dice"></i> 掷 ${escHtml(formula)}</button>`;
+		return standalone
+			? `<div class="clipped card limited-card lancer-cn-dice-limited" style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;flex-wrap:wrap"><span style="font-size:.86em;opacity:.85">受限：<b>未掷</b></span>${btn}</div>`
+			: btn;
+	}
+	const stepControls = `<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-limited-step="-1" data-lancer-cn-limited-uuid="${safeUuid}" title="减少 1 次剩余受限次数" style="${ctrlStyle}">-</button>`
+		+ `<span data-lancer-cn-limited-count="${safeUuid}" style="font-weight:bold;font-size:.88em;padding:0 2px;white-space:nowrap">${val} / ${max}</span>`
+		+ `<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-limited-step="1" data-lancer-cn-limited-uuid="${safeUuid}" title="增加 1 次剩余受限次数" style="${ctrlStyle}">+</button>`
+		+ `<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-limited="${safeUuid}" title="${escHtml(rollTitle)}" style="${ctrlStyle};margin-left:2px"><i class="fas fa-dice"></i> ${escHtml(formula)}</button>`;
+	return standalone
+		? `<div class="clipped card limited-card lancer-cn-dice-limited" style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;flex-wrap:wrap"><span style="font-size:.86em">受限</span>${stepControls}</div>`
+		: `<span class="lancer-cn-dice-limited-inline" style="display:inline-flex;align-items:center;gap:2px;margin-left:4px">${stepControls}</span>`;
+}
+
+function enhanceDiceLimitedElements(root, actor = null) {
+	if (!root?.querySelectorAll) return;
+	const handledUuids = new Set();
+	// 1. 遍历所有物品卡片（含尚未掷骰时系统因 uses.max === 0 未渲染 .limited-card 的原型武器）
+	for (const itemEl of root.querySelectorAll(".set[data-uuid*='Item']")) {
+		const uuid = itemEl.dataset?.uuid;
+		if (!uuid || handledUuids.has(uuid)) continue;
+		const item = resolveDocSync(uuid) ?? (actor?.items ?? []).find?.(i => i?.uuid === uuid || i?.id === uuid) ?? null;
+		const formula = diceLimited(item);
+		if (!formula) continue;
+		handledUuids.add(uuid);
+		if (itemEl.querySelector("[data-lancer-cn-limited]")) continue;
+		const existingCard = itemEl.querySelector(".limited-card");
+		if (existingCard) {
+			existingCard.insertAdjacentHTML("beforeend", buildDiceLimitedControlsHTML(item, uuid, { standalone: false }));
+			continue;
+		}
+		const standaloneHtml = buildDiceLimitedControlsHTML(item, uuid, { standalone: true });
+		const usesWrap = itemEl.querySelector(".uses-wrapper");
+		if (usesWrap) {
+			usesWrap.insertAdjacentHTML("beforeend", standaloneHtml);
+			continue;
+		}
+		const bodyRow = itemEl.querySelector(".lancer-body > .flexrow, .flexrow");
+		if (bodyRow) {
+			bodyRow.insertAdjacentHTML("beforeend", `<span class="vsep"></span><div class="uses-wrapper">${standaloneHtml}</div>`);
+		} else {
+			(itemEl.querySelector(".lancer-body") ?? itemEl).insertAdjacentHTML("afterbegin", standaloneHtml);
+		}
+	}
+	// 2. 兼容仅渲染了 .limited-card 的精简结构
+	for (const card of root.querySelectorAll(".limited-card")) {
+		if (card.querySelector("[data-lancer-cn-limited]")) continue;
+		const uuid = card.closest(".set[data-uuid*='Item']")?.dataset?.uuid;
+		if (!uuid || handledUuids.has(uuid)) continue;
+		const item = resolveDocSync(uuid) ?? (actor?.items ?? []).find?.(i => i?.uuid === uuid || i?.id === uuid) ?? null;
+		const formula = diceLimited(item);
+		if (!formula || !card.querySelector(".uses-hex, span")) continue;
+		if (!/USES|次数|受限/.test(card.textContent ?? "")) continue;
+		handledUuids.add(uuid);
+		card.insertAdjacentHTML("beforeend", buildDiceLimitedControlsHTML(item, uuid, { standalone: false }));
+	}
 }
 
 // 文字里的受限：「受限3」「受限 1」；「受限1/回合」这类写法有歧义，不计（见文档）
@@ -16505,7 +17429,48 @@ async function onFullRepair(flow, success) {
 	}
 }
 
-// 机甲表「天赋与核心战术栏」：仅在驾驶员具备对应天赋骰、特殊武器/改装或战斗核心奖励时渲染
+function renderLeaderControlsFragment(actor) {
+	const mech = combatMechOf(actor) ?? actor;
+	const parts = [];
+	const leaderRank = talentRank(mech, "t_leader");
+	if (leaderRank >= 1) {
+		const val = getTalentDie(mech, "leader") ?? TALENT_DICE_DEFS.leader.init(leaderRank);
+		const maxVal = TALENT_DICE_DEFS.leader.max(leaderRank);
+		parts.push(
+			`<span class="lancer-cn-tdie" style="display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:3px;background:rgba(128,128,128,.16);font-size:.86em">`
+			+ `<b>领导骰</b>：<b data-lancer-cn-tdie-val="leader" style="min-width:1.1em;text-align:center">${val}</b><span style="opacity:.7">/${maxVal}</span>`
+			+ `<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="dieDec:leader" title="减少领导骰" style="width:auto;padding:0 .35em;line-height:1.25;margin:0">-</button>`
+			+ `<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="dieInc:leader" title="增加领导骰" style="width:auto;padding:0 .35em;line-height:1.25;margin:0">+</button>`
+			+ `</span>`,
+		);
+		parts.push(`<button type="button" class="lancer-button ${val > 0 ? "lancer-primary" : "lancer-secondary"}" data-lancer-cn-talent-act="leaderGive" title="选择队友 PC 机甲并向其发放 1 枚领导骰（每回合自由动作；领袖 II 可在其他玩家回合开始以反应不限次发放）" style="width:auto;flex:0 0 auto;padding:0 .55em;line-height:1.55;opacity:${val > 0 ? "1" : ".65"}">📢 发给队友</button>`);
+		if (val === 0) {
+			parts.push(`<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="leaderRest" title="领袖 I：剩余 0 颗领导骰时，休息可回复 1 颗" style="width:auto;flex:0 0 auto;padding:0 .55em;line-height:1.55">🌙 休息+1</button>`);
+		}
+	}
+	const rec = getReceivedLeaderDie(mech);
+	if (rec) {
+		const chk = canUseReceivedLeaderDie(mech);
+		const accOn = rec.armedMode === "acc";
+		const dmgOn = rec.armedMode === "dmg";
+		const ord = rec.order ? ` · ${rec.order}` : "";
+		const blockedTip = chk.ok ? "" : `（受限：${chk.reason}）`;
+		parts.push(
+			`<span class="lancer-cn-leader-received" style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;padding:1px 6px;border-radius:3px;background:rgba(25,118,210,.14);border:1px solid rgba(25,118,210,.35);font-size:.86em">`
+			+ `<b>🎖️ 领导骰（来自 ${escHtml(rec.fromName)}${escHtml(ord)}）</b>`
+			+ `<button type="button" class="lancer-button ${accOn ? "lancer-primary" : "lancer-secondary"}" data-lancer-cn-talent-act="leaderArm:acc" title="${escHtml(chk.ok ? "预激活：下一次攻击、科技攻击或技能检定获得 +1 准度并消耗此领导骰" : chk.reason)}" style="width:auto;padding:0 .45em;line-height:1.35;margin:0;opacity:${chk.ok ? "1" : ".55"}">+1 准度${accOn ? " ✓" : ""}</button>`
+			+ (rec.leaderRank >= 3
+				? `<button type="button" class="lancer-button ${dmgOn ? "lancer-primary" : "lancer-secondary"}" data-lancer-cn-talent-act="leaderArm:dmg" title="${escHtml(chk.ok ? "领袖 III（振奋军心）：预激活令下一次伤害掷骰附加 +1d6 额外伤害并消耗此领导骰" : chk.reason)}" style="width:auto;padding:0 .45em;line-height:1.35;margin:0;opacity:${chk.ok ? "1" : ".55"}">+1d6 伤害${dmgOn ? " ✓" : ""}</button>`
+				+ `<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="leaderReduceDmg" title="${escHtml(chk.ok ? "领袖 III（振奋军心）：消耗此领导骰掷 1d6，令下一次受击伤害减少该点数（也可直接在伤害卡上点击）" : chk.reason)}" style="width:auto;padding:0 .45em;line-height:1.35;margin:0;opacity:${chk.ok ? "1" : ".55"}">-1d6 减伤</button>`
+				: "")
+			+ `<button type="button" class="lancer-button lancer-secondary" data-lancer-cn-talent-act="leaderReturn" title="自由动作：将此领导骰归还给「${escHtml(rec.fromName)}」${escHtml(blockedTip)}" style="width:auto;padding:0 .45em;line-height:1.35;margin:0">↩ 归还</button>`
+			+ `</span>`,
+		);
+	}
+	return parts;
+}
+
+// 机甲表「天赋与核心战术栏」：仅在驾驶员具备对应天赋骰、收到领导骰、特殊武器/改装或战斗核心奖励时渲染
 function renderTalentControlHTML(actor) {
 	if (!actor || (actor.type !== "mech" && !actor.is_mech?.())) return "";
 	const parts = [];
@@ -16513,8 +17478,10 @@ function renderTalentControlHTML(actor) {
 	const cs = getCombatState(actor);
 	const fLid = mechFrameLid(actor);
 
-	// 1. 天赋骰与机甲专属骰计数器（含吉尔伽美什「军备骰」）
+	// 1. 天赋骰与机甲专属骰计数器（含吉尔伽美什「军备骰」与领袖「领导骰」发放/归还面板）
+	parts.push(...renderLeaderControlsFragment(actor));
 	for (const [key, def] of Object.entries(TALENT_DICE_DEFS)) {
+		if (key === "leader") continue;
 		if (!hasDieQualification(actor, def)) continue;
 		const val = getTalentDie(actor, key);
 		parts.push(
@@ -16527,6 +17494,17 @@ function renderTalentControlHTML(actor) {
 		if (key === "gilgamesh" && val === 1) {
 			parts.push(`<button type="button" class="lancer-button lancer-primary" data-lancer-cn-talent-act="gilgameshReroll" title="战备就绪：军备骰为 1 时重置为 6，并重掷一次攻击、检定或豁免（必须保留第二次结果）" style="width:auto;flex:0 0 auto;padding:0 .55em;line-height:1.55">🎲 军备重掷（重置→6）</button>`);
 		}
+	}
+
+	// 1b. 偶像破坏者 I「模因火花」快捷发射按钮（实时绑定机甲内未损毁 NHP 数量与超然 +4）
+	if (talentRank(actor, "t_iconoclast") >= 1 || hasMechSystem(actor, "ms_iconoclast")) {
+		const nhpInfo = listMechNHPs(actor);
+		const transcBonus = cs.transcendActive ? 4 : 0;
+		const sparkDmg = 1 + nhpInfo.count + transcBonus;
+		const sparkRange = 3 + (cs.transcendActive ? 5 : 0);
+		const nhpListText = nhpInfo.names.length ? nhpInfo.names.join("、") : "无";
+		const sparkTip = `快速动作（1/轮，射程 ${sparkRange}）：对目标造成 ${sparkDmg} 点穿甲能量伤害（基础 1 + ${nhpInfo.count} 个 NHP${transcBonus ? " + 4 超然" : ""}；已计入 NHP：${nhpListText}）`;
+		parts.push(`<button type="button" class="lancer-button lancer-primary" data-lancer-cn-talent-act="memeticSpark" title="${escHtml(sparkTip)}" style="width:auto;flex:0 0 auto;padding:0 .55em;line-height:1.55">⚡ 模因火花（${sparkDmg} AP 能量 · ${nhpInfo.count} NHP${transcBonus ? "+超然" : ""}）</button>`);
 	}
 
 	// 2. 拟态枪 3d20 序列与校准按钮
@@ -16643,9 +17621,17 @@ function renderTalentControlHTML(actor) {
 		+ `<div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 6px;align-items:center">${parts.join("")}</div></div>`;
 }
 
-async function executeTalentSheetAction(actor, act, value) {
-	if (!actor?.isOwner) return false;
-	const refresh = () => { try { if (actor.sheet?.rendered) actor.sheet.render(false); } catch { /* ignore */ } };
+async function executeTalentSheetAction(rawActor, act, value) {
+	const actor = combatMechOf(rawActor) ?? rawActor;
+	if (!actor?.isOwner && !rawActor?.isOwner && !globalThis.game?.user?.isGM) return false;
+	if (rawActor?.sheet?.rendered) captureSheetScroll(rawActor.sheet);
+	if (actor?.sheet?.rendered && actor.sheet !== rawActor?.sheet) captureSheetScroll(actor.sheet);
+	const refresh = () => {
+		try {
+			if (needsManualSheetRefresh(actor)) actor.sheet.render(false);
+			if (rawActor && rawActor !== actor && needsManualSheetRefresh(rawActor)) rawActor.sheet.render(false);
+		} catch { /* ignore */ }
+	};
 	if (act === "select" && value && typeof value === "object") {
 		await setTalentConfig(actor, { [value.field]: value.val });
 		refresh();
@@ -16658,6 +17644,44 @@ async function executeTalentSheetAction(actor, act, value) {
 		const cur = getTalentDie(actor, arg1) ?? def.min;
 		await setTalentDie(actor, arg1, cur + (kind === "dieInc" ? 1 : -1));
 		refresh();
+		return true;
+	}
+	if (kind === "leaderGive") {
+		await promptGiveLeaderDie(actor);
+		refresh();
+		return true;
+	}
+	if (kind === "leaderRest") {
+		await restRecoverLeaderDie(actor);
+		refresh();
+		return true;
+	}
+	if (kind === "leaderArm" && arg1) {
+		await armReceivedLeaderDie(actor, arg1);
+		refresh();
+		return true;
+	}
+	if (kind === "leaderReduceDmg") {
+		await useLeaderDieReduceDamage(actor);
+		refresh();
+		return true;
+	}
+	if (kind === "leaderReturn") {
+		await returnLeaderDie(actor);
+		refresh();
+		return true;
+	}
+	if (kind === "memeticSpark") {
+		const nhpInfo = listMechNHPs(actor);
+		const transcBonus = getCombatState(actor).transcendActive ? 4 : 0;
+		const dmgVal = 1 + nhpInfo.count + transcBonus;
+		await rollNonAttackDamage(null, {
+			isAttack: false,
+			actor,
+			actorUuid: preferredTargetUuid(actor) ?? actor?.uuid ?? null,
+			title: "模因火花",
+			nonAttackDamage: { damage: [{ type: "Energy", val: String(dmgVal) }], ap: true, memeticSpark: true },
+		});
 		return true;
 	}
 	if (kind === "gilgameshReroll") {
@@ -16788,22 +17812,217 @@ async function executeTalentSheetAction(actor, act, value) {
 	return false;
 }
 
-// 机甲表：基础动作卡、核心协议控制台、天赋与核心战术栏、文字受限卡、掷骰式受限按钮
+// ---------------------------------------------------------------------------
+// 角色表 / 物品表滚动位置锁定：
+// 1. 禁用 LANCER 角色表容器的 CSS Scroll Anchoring（overflow-anchor: none），防止模组在 renderActorSheet
+//    阶段于视口上方注入卡片或用户添加物品/计数器时被浏览器滚动锚定连续向下推到底部；
+// 2. 扩展保存/恢复所有实际可滚动容器（.window-content / .scroll-body / .sheet-body / .tab.active），按标签页
+//    分别记录并在模组 DOM 注入完毕后精确还原，避免机甲/NPC 表因缺少 .scroll-body 或多次重绘导致跳滚。
+const SHEET_SCROLL_SELECTORS = [".window-content", ".scroll-body", ".sheet-body", ".tab.active"];
+const sheetScrollState = new WeakMap();
+
+function getSheetWindowEl(app, root = null) {
+	const rawRoot = (typeof HTMLElement === "function" && root instanceof HTMLElement) ? root : (root?.[0] ?? root);
+	const appEl = app?.element?.[0] ?? app?.element ?? null;
+	if (rawRoot?.closest) {
+		const win = rawRoot.closest(".window-app, .application");
+		if (win) return win;
+	}
+	if (appEl?.closest) {
+		const win = appEl.closest(".window-app, .application");
+		if (win) return win;
+	}
+	return appEl || rawRoot || null;
+}
+
+function getActiveSheetTabKey(winEl, app = null) {
+	const navTab = winEl?.querySelector?.(".lancer-tabs .item.active[data-tab], nav.tabs .item.active[data-tab]")?.dataset?.tab;
+	if (navTab) return navTab;
+	const activePane = winEl?.querySelector?.(".tab.active[data-tab]")?.dataset?.tab;
+	if (activePane) return activePane;
+	const appTab = app?._tabs?.[0]?.active;
+	if (appTab) return String(appTab);
+	return "_default";
+}
+
+function getOrCreateScrollState(app) {
+	if (!app || typeof app !== "object") return null;
+	let st = sheetScrollState.get(app);
+	if (!st) {
+		st = { byTab: new Map(), lastTab: null, userSeq: 0, restoring: false, rendering: false };
+		sheetScrollState.set(app, st);
+	}
+	return st;
+}
+
+function captureSheetScroll(app, root = null) {
+	const st = getOrCreateScrollState(app);
+	const winEl = getSheetWindowEl(app, root);
+	if (!st || !winEl?.querySelector) return null;
+	const tabKey = getActiveSheetTabKey(winEl, app);
+	const saved = st.byTab.get(tabKey) ?? new Map();
+	for (const sel of SHEET_SCROLL_SELECTORS) {
+		const el = winEl.matches?.(sel) ? winEl : winEl.querySelector(sel);
+		if (!el) continue;
+		const top = Number(el.scrollTop) || 0;
+		const left = Number(el.scrollLeft) || 0;
+		saved.set(sel, { top, left });
+	}
+	st.byTab.set(tabKey, saved);
+	st.lastTab = tabKey;
+	return saved;
+}
+
+function applySavedScrollNow(winEl, saved) {
+	if (!winEl || !saved?.size) return;
+	for (const [sel, pos] of saved.entries()) {
+		const el = winEl.matches?.(sel) ? winEl : winEl.querySelector?.(sel);
+		if (!el) continue;
+		if (typeof el.scrollTop === "number") el.scrollTop = pos.top;
+		if (typeof el.scrollLeft === "number") el.scrollLeft = pos.left;
+	}
+}
+
+function restoreSheetScroll(app, root = null, { scheduleRaf = true } = {}) {
+	const st = getOrCreateScrollState(app);
+	const winEl = getSheetWindowEl(app, root);
+	if (!st || !winEl?.querySelector) return false;
+	const tabKey = getActiveSheetTabKey(winEl, app);
+	const saved = st.byTab.get(tabKey);
+	st.lastTab = tabKey;
+	if (!saved?.size) return false;
+	const snapshot = new Map(Array.from(saved.entries(), ([k, v]) => [k, { ...v }]));
+	const seqAtStart = st.userSeq;
+	st.restoring = true;
+	try { applySavedScrollNow(winEl, snapshot); }
+	finally { st.restoring = false; }
+	if (scheduleRaf && typeof globalThis.requestAnimationFrame === "function") {
+		globalThis.requestAnimationFrame(() => {
+			if (st.userSeq !== seqAtStart) return;
+			const curWin = getSheetWindowEl(app, root);
+			if (!curWin || getActiveSheetTabKey(curWin, app) !== tabKey) return;
+			st.restoring = true;
+			try { applySavedScrollNow(curWin, snapshot); }
+			finally { st.restoring = false; }
+		});
+	}
+	return true;
+}
+
+function bindSheetScrollTracker(app, root = null) {
+	const st = getOrCreateScrollState(app);
+	const winEl = getSheetWindowEl(app, root);
+	if (!st || !winEl?.querySelector) return;
+	const initTabKey = getActiveSheetTabKey(winEl, app);
+	if (!st.byTab.has(initTabKey)) captureSheetScroll(app, winEl);
+	for (const sel of SHEET_SCROLL_SELECTORS) {
+		const el = winEl.matches?.(sel) ? winEl : winEl.querySelector(sel);
+		if (!el || el._lancerCnScrollBound) continue;
+		el._lancerCnScrollBound = true;
+		el.addEventListener?.("scroll", () => {
+			if (st.restoring || st.rendering) return;
+			const tabKey = getActiveSheetTabKey(winEl, app);
+			const saved = st.byTab.get(tabKey) ?? new Map();
+			saved.set(sel, { top: Number(el.scrollTop) || 0, left: Number(el.scrollLeft) || 0 });
+			st.byTab.set(tabKey, saved);
+			st.lastTab = tabKey;
+		}, { passive: true });
+		for (const evtName of ["wheel", "touchstart", "pointerdown"]) {
+			el.addEventListener?.(evtName, () => { st.userSeq++; }, { passive: true });
+		}
+	}
+	if (!winEl._lancerCnTabScrollBound) {
+		winEl._lancerCnTabScrollBound = true;
+		winEl.addEventListener?.("click", ev => {
+			if (ev.target?.closest?.(".lancer-tabs .item[data-tab], nav.tabs .item[data-tab]")) {
+				captureSheetScroll(app, winEl);
+			}
+		}, { capture: true });
+	}
+}
+
+function patchSheetScrollPreservation() {
+	const candidates = [
+		globalThis.foundry?.appv1?.sheets?.ActorSheet?.prototype,
+		globalThis.foundry?.appv1?.sheets?.ItemSheet?.prototype,
+		globalThis.ActorSheet?.prototype,
+		globalThis.ItemSheet?.prototype,
+		globalThis.foundry?.appv1?.api?.Application?.prototype,
+		globalThis.Application?.prototype,
+	].filter(Boolean);
+	const seen = new Set();
+	for (const proto of candidates) {
+		if (seen.has(proto)) continue;
+		seen.add(proto);
+		if (typeof proto._saveScrollPositions === "function" && !proto._saveScrollPositions.lancerCnScroll) {
+			const origSave = proto._saveScrollPositions;
+			proto._saveScrollPositions = function (html, ...args) {
+				try {
+					const cls = this?.options?.classes;
+					if (!cls || cls.includes?.("lancer")) captureSheetScroll(this, html);
+				} catch { /* ignore */ }
+				return origSave.call(this, html, ...args);
+			};
+			proto._saveScrollPositions.lancerCnScroll = true;
+		}
+		if (typeof proto._restoreScrollPositions === "function" && !proto._restoreScrollPositions.lancerCnScroll) {
+			const origRestore = proto._restoreScrollPositions;
+			proto._restoreScrollPositions = function (html, ...args) {
+				const res = origRestore.call(this, html, ...args);
+				try {
+					const cls = this?.options?.classes;
+					if (!cls || cls.includes?.("lancer")) restoreSheetScroll(this, html, { scheduleRaf: false });
+				} catch { /* ignore */ }
+				return res;
+			};
+			proto._restoreScrollPositions.lancerCnScroll = true;
+		}
+		if (typeof proto._render === "function" && !proto._render.lancerCnScroll) {
+			const origRender = proto._render;
+			proto._render = async function (force = false, options = {}) {
+				const cls = this?.options?.classes;
+				const track = Boolean(this?.rendered && (!cls || cls.includes?.("lancer")));
+				const st = track ? getOrCreateScrollState(this) : null;
+				try {
+					if (track) captureSheetScroll(this);
+					if (st) st.rendering = true;
+					return await origRender.call(this, force, options);
+				} finally {
+					if (st) st.rendering = false;
+					if (track) {
+						try { restoreSheetScroll(this); } catch { /* ignore */ }
+					}
+				}
+			};
+			proto._render.lancerCnScroll = true;
+		}
+	}
+}
+
+function needsManualSheetRefresh(actor) {
+	if (!actor?.sheet?.rendered) return false;
+	const apps = actor.apps;
+	if (apps && typeof apps === "object") {
+		const id = actor.sheet.appId;
+		if ((id !== undefined && apps[id] === actor.sheet) || Object.values(apps).includes(actor.sheet)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+// 机甲表 / 驾驶员表：基础动作卡、核心协议控制台、天赋与核心战术栏、领导骰面板、文字受限卡、掷骰式受限按钮与滚动位置恢复
 const BASIC_ANCHOR = '.lancer-flow-button-grid [data-flow-type="BasicAttack"]';
 function onRenderActorSheet(app, html) {
 	const root = (typeof HTMLElement === "function" && html instanceof HTMLElement) ? html : (html?.[0] ?? html);
 	const actor = app?.actor;
 	if (!root || !actor) return;
-	// 掷骰式受限：在物品的 USES 格子旁加按钮（机甲、驾驶员、NPC 都适用）
-	for (const card of root.querySelectorAll(".limited-card")) {
-		if (card.querySelector("[data-lancer-cn-limited]")) continue;
-		const uuid = card.closest(".set[data-uuid*='Item']")?.dataset.uuid;
-		const item = uuid ? resolveDocSync(uuid) : null;
-		const formula = diceLimited(item);
-		if (!formula || !card.querySelector(".uses-hex, span")) continue;
-		if (!/USES|次数/.test(card.textContent ?? "")) continue;
-		card.insertAdjacentHTML("beforeend", `<button type="button" data-lancer-cn-limited="${uuid}" title="掷受限次数（全面维修后会自动重掷）" style="flex:0 0 auto;width:auto;line-height:1.4;padding:0 .4em;margin:0 0 0 4px"><i class="fas fa-dice"></i> ${formula}</button>`);
+	// 领袖天赋：自动初始化 3/5/6 领导骰并同步 ctr_leader 上限（未手动写入前不再默认为 0）
+	if ((actor.type === "mech" || actor.type === "pilot") && actor.isOwner && talentRank(actor, "t_leader") >= 1) {
+		syncLeaderCounter(actor).catch(() => {});
 	}
+	// 掷骰式受限：为所有含掷骰式受限标签的物品（原型武器 I/II/III 等）注入/增强掷骰按钮与 +/- 剩余计数（未掷前亦可见）
+	enhanceDiceLimitedElements(root, actor);
 	if (actor.type === "deployable" && (actor.isOwner || globalThis.game?.user?.isGM) && !root.querySelector(".lancer-cn-cover-aura-card")) {
 		const anchor = root.querySelector(BASIC_ANCHOR)?.closest(".card");
 		if (anchor) {
@@ -16832,14 +18051,29 @@ function onRenderActorSheet(app, html) {
 			}
 		}
 	}
+	// 驾驶员表「战术」页：若拥有领袖天赋或当前机甲收到队友领导骰，在计数器区旁显示领导骰发放/使用/归还面板
+	if (actor.type === "pilot" && actor.isOwner && !root.querySelector(".lancer-cn-leader-pilot-bar")) {
+		const leaderParts = renderLeaderControlsFragment(actor);
+		if (leaderParts.length) {
+			const tacticalPane = root.querySelector('.tab.tactical, .tab[data-tab="tactical"]');
+			if (tacticalPane) {
+				const barHtml = `<div class="card clipped lancer-cn-leader-pilot-bar">`
+					+ `<span class="lancer-header lancer-primary submajor">领袖 · 领导骰</span>`
+					+ `<div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 6px;align-items:center">${leaderParts.join("")}</div></div>`;
+				const firstRow = tacticalPane.querySelector(".flexrow");
+				if (firstRow) firstRow.insertAdjacentHTML("afterend", barHtml);
+				else tacticalPane.insertAdjacentHTML("afterbegin", barHtml);
+			}
+		}
+	}
 	if (actor.type === "mech" && actor.isOwner && !root.querySelector(".lancer-cn-core-bar")) {
 		const cpBar = renderCoreControlHTML(actor, { inSheet: true });
 		if (cpBar) {
 			const coreWrap = root.querySelector(".core-wrapper, .core-active-wrapper, .lancer-core-sys");
 			if (coreWrap) coreWrap.insertAdjacentHTML("beforeend", cpBar);
 			else {
-			const basicCardEl = root.querySelector(".lancer-cn-basic");
-			if (basicCardEl) basicCardEl.insertAdjacentHTML("beforebegin", `<div class="card clipped">${cpBar}</div>`);
+				const basicCardEl = root.querySelector(".lancer-cn-basic");
+				if (basicCardEl) basicCardEl.insertAdjacentHTML("beforebegin", `<div class="card clipped">${cpBar}</div>`);
 			}
 		}
 	}
@@ -16873,7 +18107,7 @@ function onRenderActorSheet(app, html) {
 		ev.stopPropagation();
 		onSheetButton(app, ev.currentTarget).catch(err => reportError("按钮", err));
 	};
-	for (const el of root.querySelectorAll("[data-lancer-cn-basic], [data-lancer-cn-resist], [data-lancer-cn-cover-aura], [data-lancer-cn-cp-act], [data-lancer-cn-talent-act], [data-lancer-cn-limited], [data-lancer-cn-counter], [data-lancer-cn-counter-roll], [data-lancer-cn-counter-reset]")) el.onclick = handler;
+	for (const el of root.querySelectorAll("[data-lancer-cn-basic], [data-lancer-cn-resist], [data-lancer-cn-cover-aura], [data-lancer-cn-cp-act], [data-lancer-cn-talent-act], [data-lancer-cn-limited], [data-lancer-cn-limited-step], [data-lancer-cn-counter], [data-lancer-cn-counter-roll], [data-lancer-cn-counter-reset]")) el.onclick = handler;
 	for (const sel of root.querySelectorAll("[data-lancer-cn-talent-sel]")) {
 		sel.onchange = ev => {
 			ev.stopPropagation();
@@ -16882,10 +18116,44 @@ function onRenderActorSheet(app, html) {
 			executeTalentSheetAction(actor, "select", { field, val }).catch(err => reportError("选择器", err));
 		};
 	}
+	// 注入全部模组卡片后立即恢复并持续追踪角色表滚动位置，彻底杜绝更新/添加内容时页面向下跳滚
+	restoreSheetScroll(app, root);
+	bindSheetScrollTracker(app, root);
+}
+
+function onRenderItemSheet(app, html) {
+	const root = (typeof HTMLElement === "function" && html instanceof HTMLElement) ? html : (html?.[0] ?? html);
+	const item = app?.item ?? app?.document;
+	if (!root) return;
+	if (item && diceLimited(item) && !root.querySelector("[data-lancer-cn-limited]")) {
+		const uuid = item.uuid || item.id || "";
+		const existingCard = root.querySelector(".limited-card");
+		if (existingCard) {
+			existingCard.insertAdjacentHTML("beforeend", buildDiceLimitedControlsHTML(item, uuid, { standalone: false }));
+		} else {
+			let statusRow = null;
+			for (const hdr of root.querySelectorAll(".card .lancer-header")) {
+				if (/STATUS|状态/i.test(hdr.textContent ?? "")) {
+					statusRow = hdr.parentElement?.querySelector?.(".flexrow") ?? hdr.parentElement;
+					break;
+				}
+			}
+			const host = statusRow ?? root.querySelector(".sheet-body") ?? root;
+			host.insertAdjacentHTML("beforeend", buildDiceLimitedControlsHTML(item, uuid, { standalone: true }));
+		}
+		const handler = ev => {
+			ev.preventDefault();
+			ev.stopPropagation();
+			onSheetButton(app, ev.currentTarget).catch(err => reportError("受限次数", err));
+		};
+		for (const el of root.querySelectorAll("[data-lancer-cn-limited], [data-lancer-cn-limited-step]")) el.onclick = handler;
+	}
+	restoreSheetScroll(app, root);
+	bindSheetScrollTracker(app, root);
 }
 
 async function onSheetButton(app, el) {
-	const a = app.actor;
+	const a = app?.actor;
 	const d = el.dataset;
 	console.info(`${MODULE_ID} | 点击`, { ...d });
 	if (d.lancerCnBasic) return beginBasicAction(a, d.lancerCnBasic);
@@ -16897,8 +18165,22 @@ async function onSheetButton(app, el) {
 	}
 	if (d.lancerCnCpAct) return executeCoreAction(a, d.lancerCnCpAct);
 	if (d.lancerCnTalentAct) return executeTalentSheetAction(a, d.lancerCnTalentAct);
+	if (d.lancerCnLimitedStep) {
+		const targetUuid = d.lancerCnLimitedUuid;
+		const item = (targetUuid ? resolveDocSync(targetUuid) : null)
+			?? (a?.items ?? []).find?.(i => i?.uuid === targetUuid || i?.id === targetUuid)
+			?? app?.item
+			?? app?.document
+			?? null;
+		if (!item) throw new Error(`找不到物品 ${targetUuid}`);
+		return adjustLimitedUses(item, Number(d.lancerCnLimitedStep) || 0);
+	}
 	if (d.lancerCnLimited) {
-		const item = resolveDocSync(d.lancerCnLimited);
+		const item = resolveDocSync(d.lancerCnLimited)
+			?? (a?.items ?? []).find?.(i => i?.uuid === d.lancerCnLimited || i?.id === d.lancerCnLimited)
+			?? app?.item
+			?? app?.document
+			?? null;
 		if (!item) throw new Error(`找不到物品 ${d.lancerCnLimited}`);
 		return rollLimited(item);
 	}
@@ -16973,13 +18255,14 @@ function linkDice(root) {
 function diceContext(el) {
 	const uuid = el.closest("[data-uuid]")?.dataset.uuid;
 	const doc = uuid ? resolveDocSync(uuid) : null;
-	if (doc?.documentName === "Item") return { actor: doc.actor, flavor: doc.name };
-	if (doc?.documentName === "Actor") return { actor: doc, flavor: "" };
+	if (doc?.documentName === "Item") return { actor: doc.actor, item: doc, flavor: doc.name };
+	if (doc?.documentName === "Actor") return { actor: doc, item: null, flavor: "" };
 	const msg = game.messages?.get(el.closest(".chat-message")?.dataset?.messageId);
-	if (msg) return { speaker: msg.speaker, flavor: "" };
+	if (msg) return { speaker: msg.speaker, item: null, flavor: "" };
 	const appId = el.closest(".window-app, .application")?.dataset?.appid;
 	const app = appId ? ui.windows?.[appId] : null;
-	return { actor: app?.actor ?? null, flavor: app?.item?.name ?? "" };
+	const item = app?.item ?? (app?.document?.documentName === "Item" ? app.document : null);
+	return { actor: app?.actor ?? item?.actor ?? null, item, flavor: item?.name ?? "" };
 }
 
 function onDiceClick(event) {
@@ -16991,6 +18274,16 @@ function onDiceClick(event) {
 	console.info(`${MODULE_ID} | 掷骰`, a.dataset.formula);
 	try {
 		const ctx = diceContext(a);
+		// 原型武器等掷骰式受限物品：点击说明文字里的受限公式（如「重新掷 1d6+2 决定这武器的受限次数」）时直接走 rollLimited 并绑定剩余次数计数
+		const itemLimFormula = ctx.item ? diceLimited(ctx.item) : null;
+		const clickedFormula = String(a.dataset.formula ?? "").replace(/\s+/g, "").toLowerCase();
+		if (itemLimFormula && clickedFormula === itemLimFormula.toLowerCase()) {
+			const nearText = String(a.closest?.(".effect-text, .desc-text, p, li")?.textContent ?? "");
+			if (/受限|Limited/i.test(nearText)) {
+				rollLimited(ctx.item).catch(err => reportError("受限次数", err));
+				return;
+			}
+		}
 		const speaker = ctx.speaker ?? ChatMessage.getSpeaker(ctx.actor ? { actor: ctx.actor } : {});
 		new Roll(a.dataset.formula).toMessage({ speaker, flavor: ctx.flavor ? `${ctx.flavor}：${a.dataset.formula}` : a.dataset.formula }).catch(err => reportError("掷骰", err));
 	} catch (err) { reportError("掷骰", err); }
@@ -17005,6 +18298,7 @@ for (const h of ["init", "setup"]) Hooks.once(h, () => {
 		patchLimitedMax();
 		patchTrueblackDamageCalc();
 		patchWeaponRangeTemplate();
+		patchSheetScrollPreservation();
 	}
 });
 Hooks.once("init", () => {
@@ -17017,10 +18311,13 @@ Hooks.once("init", () => {
 	Hooks.on("lancer.postFlow.FullRepairFlow", (flow, success) => onFullRepair(flow, success).catch(err => console.error(`${MODULE_ID} |`, err)));
 });
 Hooks.on("renderActorSheet", onRenderActorSheet);
+Hooks.on("renderItemSheet", onRenderItemSheet);
 Hooks.once("ready", () => {
 	if (game.system?.id !== "lancer") return;
 	patchWeaponRangeTemplate();
+	patchSheetScrollPreservation();
 	if (typeof document === "undefined") return;
+	injectStyle("lancer-cn-sheet-scroll-fix", SHEET_SCROLL_FIX_STYLE);
 	patchLimitedMax();
 	patchTrueblackDamageCalc();
 	refreshDiceLimited();
@@ -17039,13 +18336,14 @@ globalThis.LancerCN = {
 	setActorStatus, applyStatusTo, removeStatusFrom, onCreateChatMessage, undoAppliedStatuses, executeCardSave, rollNonAttackDamage,
 	executeFieldAnalystReaction, executeCardRider, spawnNpcDeployableFromCard, executeTurnEndBurnCheck, executeNpcRechargePrompt, executeUltraJuggernautChoice,
 	actorBaseSize, hasSyntheticMuscleNetting, effectiveGrappleSize, findActiveGrappleFor, isGrappleImmobilized, endGrapple,
-	mechPilot, findActiveMechForPilot, combatMechOf, TALENT_LID_ALIASES, SYSTEM_LID_ALIASES, talentItemOf, talentRank, hasCoreBonus, hasMechSystem, countMechNHPs, onTalentItemChanged,
+	mechPilot, findActiveMechForPilot, combatMechOf, TALENT_LID_ALIASES, SYSTEM_LID_ALIASES, talentItemOf, talentRank, hasCoreBonus, hasMechSystem, listMechNHPs, countMechNHPs, onTalentItemChanged,
 	weaponModOf, weaponLidOf, weaponModLidOf, itemBenefitsFromTalents, itemBenefitsFromCoreBonuses,
 	resolveLancerTagClass, makeThrownTag, applyKnifeJugglerTags, weaponThreatVal, weaponThrownVal, weaponTrackKey, getThrownWeapons, isWeaponThrownOut, markWeaponThrown, retrieveThrownWeapon, eligibleDisdainfulWeapons, syncWeaponThrownMode, triggerHunterDisdainful, hasWalkingArmoryCharges,
 	resetCachedTagClass: () => { cachedLancerTagClass = null; },
 	isActiveCombat, maxReactionsPerTurn, canReactWhileGrappled, hasUnlimitedOverwatchPerRound, checkReactionAvailability, syncActorReactionTracker, consumeReaction, refundReaction,
 	weaponHasOrdnanceTag, overwatchThreatVal, eligibleOverwatchWeapons, executeOverwatchAttack, triggerPreparedAction, cancelPreparedAction, onPreUpdateTokenOverwatch, onOverwatchTokenUpdate, resetOverwatchPromptDedup,
-	TALENT_DICE_DEFS, hasDieQualification, getTalentDie, setTalentDie, getCombatState, setCombatState, patchCombatStateCompat, updateAttackMessageTargetsCompat, ensureCombatTurnState, getTalentConfig, setTalentConfig,
+	TALENT_DICE_DEFS, hasDieQualification, getTalentDie, setTalentDie, syncLeaderCounter, getReceivedLeaderDie, setReceivedLeaderDieCompat, canUseReceivedLeaderDie, eligibleLeaderAllies, giveLeaderDie, promptGiveLeaderDie, returnLeaderDie, armReceivedLeaderDie, consumeReceivedLeaderDie, useLeaderDieReduceDamage, restRecoverLeaderDie,
+	getCombatState, setCombatState, patchCombatStateCompat, updateAttackMessageTargetsCompat, ensureCombatTurnState, getTalentConfig, setTalentConfig,
 	hasNpcFeature, withCanonicalNpcFlowLids, isStatusImmune, isBurnImmune, hasGruntChaff, hasGruntWeak, triggerGruntWeakDestruction,
 	checkAndTriggerVeteranFeignDeath, applyUltraArgusArmorLoss, hasUnusedUltraExtraDeadly, commanderAuraBonuses, rollNatD20,
 	rollMimicGunValues, resetSceneTalentState, resetFullRepairTalentState, resetNpcCombatState, renderTalentControlHTML, executeTalentSheetAction, maxFormulaValue,
@@ -17067,9 +18365,18 @@ globalThis.LancerCN = {
 	formatCoverAuraSummary, setTokenCoverAura, applyCoverAuraPreset, openCoverAuraDialog, onRenderTokenHUD, deployableCoverAuraCardHTML,
 	tokenNameMode, onPreCreateToken, applyTokenNames, setupNamesAndNumbers, patchScrollingText,
 	BASIC_ACTIONS, beginBasicAction, onPreCreateBasicCard, basicActionsHTML, resistancesHTML, toggleActorResistance, onBasicDamageClick, rollBasicDamage,
-	patchLimitedMax, rollLimited, diceLimited, isDiceFormula, textLimitedOf, textCounters, counterState, resetCounters, onFullRepair,
-	onRenderActorSheet, onSheetButton, refreshDiceLimited, linkDice, onDiceClick,
+	patchLimitedMax, rollLimited, adjustLimitedUses, diceLimited, diceLimitedMax, enhanceDiceLimitedElements, isDiceFormula, textLimitedOf, textCounters, counterState, resetCounters, onFullRepair,
+	SHEET_SCROLL_SELECTORS, captureSheetScroll, restoreSheetScroll, bindSheetScrollTracker, patchSheetScrollPreservation, needsManualSheetRefresh,
+	onRenderActorSheet, onRenderItemSheet, onSheetButton, refreshDiceLimited, linkDice, onDiceClick,
 };
+
+const SHEET_SCROLL_FIX_STYLE = `
+.lancer.sheet,
+.lancer.sheet .window-content,
+.lancer.sheet .sheet-body,
+.lancer.sheet .scroll-body,
+.lancer.sheet .tab,
+.lancer.sheet form { overflow-anchor: none !important; }`;
 
 // 中文界面的版面修正。系统样式都在 @layer lancer 里，这里不分层，优先级自然更高。
 // - 伤害面板：伤害类型下拉框原本固定 12ch 宽（按英文 Explosive 定），中文只需约 5em，省下的宽度给数值框（原来会被挤成「1(」）。

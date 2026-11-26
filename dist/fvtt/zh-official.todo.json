@@ -93,12 +93,6 @@
 		"effect": "1/Scene as a reaction when you are targeted by a tech attack, you may give that attack +1 Difficulty. Additionally, you gain Immunity to the MesmerTrance environmental hazard.",
 		"description": "Handed to you by the Talons, the MesmerTrance dampener supposedly stops the highly advanced and aggressive “MesmerTrance” virus from affecting your mech. As a side effect, it also provides limited protection against other, less sophisticated attacks on your mech’s systems."
 	},
-	"ms_spaceborn_1": {
-		"name": "Spaceborn EVA",
-		"effect": "All of your mechs that you build come with built-in EVA capabilities, meaning you suffer no penalties when operating underwater or in zero-g environments.",
-		"actions[0].detail": "You can shunt power into this component to fly 3 spaces and take Heat equal to your mech’s Size + 1, although you must land at the end of this movement or fall.",
-		"description": "Gained from the <i>Spaceborn: Rank I</i> pilot talent."
-	},
 	"ms_adjutant_class_compcon": {
 		"name": "ADJUTANT-Class Comp/Con",
 		"effect": "<p>Your mech gains the AI tag and Active Assist.</p><p>Additionally, you may load one talent rank you qualify for but do not have onto this system’s ontologic bridge. You gain access to that talent while piloting your mech. If this system is destroyed, neither this talent nor any systems or mech capabilities it grants can be used until it’s repaired. You may choose a different talent rank whenever you take a Full Repair.</p><p>This system isn’t a full NHP and cannot enter cascade.</p>",

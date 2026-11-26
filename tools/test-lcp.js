@@ -292,6 +292,16 @@ function checkPack(packId) {
 	ok(evaSys && evaSys.name === "太空民 EVA" && evaSys.actions?.[0]?.name === "EVA 推进", "太空民内建系统 ms_spaceborn_1 应完整汉化导出");
 	const effTag = (out.tags || []).find(t => t.id === "tg_efficient");
 	ok(effTag && effTag.name === "高效" && CJK.test(effTag.description || ""), "官方扩展标签 tg_efficient 应汉化导出");
+	const cometHound = out.weapons.find(w => w.id === "mw_ext_comet_hound");
+	ok(
+		cometHound && /射程5/.test(cometHound.effect || "") && /射程5/.test(cometHound.actions?.[0]?.detail || ""),
+		"猎兔犬巢房（mw_ext_comet_hound）正文与自由动作按钮均应包含「射程5且视线内」限定"
+	);
+	const cometMoth = out.frames.find(f => f.id === "mf_ext_comet_moth");
+	ok(
+		cometMoth && cometMoth.core_system?.active_name === "天眼" && /你所处高度高于他们的/.test(cometMoth.core_system?.active_effect || ""),
+		"彗尾蛾（mf_ext_comet_moth）核心主动「天眼」应校准为按相对高度与感应/视线判定的自由动作"
+	);
 }
 
 // ---- 核心规则书

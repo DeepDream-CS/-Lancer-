@@ -1,4 +1,6 @@
-# Foundry VTT 核心规则书与扩展同步任务单（供 FVTT 窗口并行处理）
+# Foundry VTT 核心规则书与扩展同步任务单（已全部完成并验证 · 2026-11-24）
+
+> **完成状态（2026-11-24）**：本任务单所列 **第一部分**（`zh-overrides-core.json` 5 组规则与 v3.5 术语校准、`build-lcp.js` 对象型字段与单对象 `actions` 兼容、`test-lcp.js` 无参标签 `{VAL}` 清理校验）、**第二部分**（`lancer-cn v1.20.0` 核心规则书勘误与苏丹专业牌照全部自动化同步）及 **第三部分**（双 LCP 重编为 `lancer-cn-core.lcp 1.1.2` / `lancer-cn-expansions.lcp 1.6.3`，随后经扩展同步升至 `1.1.3` / `1.6.4` 与模组 `1.21.1`）均已落地并通过 `test-lcp.js` 与 `test-fvtt-module.js` 全量检查。下文保留原始交接清单作归档记录。
 
 > **并行分工约定（避免双窗口文件冲突）**
 > - **车卡器窗口**只修改：`source/i18n/zh/*`、`source/cn/*`、`source/lancer-data/*`、`source/core-v35-overrides.json`、`source/core-v35-numeric-baseline.json`、`tools/build-data.js`、`tools/calibrate-text.js`、`tools/core-v35.js`、`tools/test-rules.js`、`tools/test-v35.js`、`tools/test-core-corrections.js`、`assets/js/*`（生成 `assets/js/data.js`）。

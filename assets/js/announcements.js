@@ -112,7 +112,7 @@
 							items: [
 								"<strong>弹道臂盾（IPS-N 先遣兵 I）：</strong>对照英文原版补回漏译限定——展开弹道板期间<strong>仅对所有作为反应发起的攻击</strong>获得抗性，会心一击击倒伏卧同样仅在展开期间生效。",
 								"<strong>其余《苏丹》专业牌照校准：</strong><span class=\"ann-chip\">瓦亚维亚导弹</span> 修正飞行（+1 准度）与非飞行目标（+1 难度）颠倒，迫降不受坠落伤害；<span class=\"ann-chip\">哨兵无人机</span> 补回<strong>大炮</strong>可挂载支持与核心奖励继承；<span class=\"ann-chip\">主动防御系统</span> 修正为 <strong>2 SP</strong> 并统一「导引」；<span class=\"ann-chip\">模块化先进战斗步枪</span> 突击模式补反应攻击 +1 准度；<span class=\"ann-chip\">最优化工程</span> 补回<strong>独特</strong>标签；<span class=\"ann-chip\">HSC 电镀</span> 与 <span class=\"ann-chip\">下挂式冲击器</span> 统一为「护盾／离散」。",
-								"<strong>C&amp;H 与苏尔丹骨架装备：</strong><span class=\"ann-chip\">落星模块</span> 修正为 <strong>2 SP</strong>；<span class=\"ann-chip\">“猎犬级”伙伴礼宾单元</span> 移除误标受限 1、两处推动更正为<strong>拉动</strong>并修正层流替代文本；沃登 <span class=\"ann-chip\">反火力套组</span> 明确在敌方攻击命中盟友时以反应消耗本轮守望次数施加锁定；校准 <span class=\"ann-chip\">康格多底盘</span>、<span class=\"ann-chip\">增强系统升级</span>、<span class=\"ann-chip\">紧急泄压板</span> 表述。",
+								"<strong>C&amp;H 与苏尔丹骨架装备：</strong>彗尾蛾核心主动 <span class=\"ann-chip\">天眼</span> 按英文原版明确「你所处高度高于目标」的高度比较，并区分自由动作强化友军（科技动作）与敌方直接获得锁定（挂状况）；彗尾蛾 III <span class=\"ann-chip\">猎兔犬巢房</span> 补回汉化漏译的<strong>射程 5 且视线内</strong>限制（修复全图视线无限距离削血）；<span class=\"ann-chip\">落星模块</span> 修正为 <strong>2 SP</strong>；<span class=\"ann-chip\">“猎犬级”伙伴礼宾单元</span> 移除误标受限 1、两处推动更正为<strong>拉动</strong>并修正层流替代文本；沃登 <span class=\"ann-chip\">反火力套组</span> 明确在敌方攻击命中盟友时以反应消耗本轮守望次数施加锁定；校准 <span class=\"ann-chip\">康格多底盘</span>、<span class=\"ann-chip\">增强系统升级</span>、<span class=\"ann-chip\">紧急泄压板</span> 表述。",
 							],
 						},
 						{

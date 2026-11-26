@@ -22,7 +22,6 @@
 | wallflower | 武器 | mw_exo_brood_siblings_molt | Brood-Sibling’s Molt | — | 3 |
 | dustgrave | 系统 | ms_cockpit_integrated_stim_pump | Cockpit-Integrated Stim Pump | — | 11 |
 | dustgrave | 系统 | ms_mesmertrance_dampener | MesmerTrance Dampener | — | 3 |
-| long-rim | 系统 | ms_spaceborn_1 | Spaceborn EVA | — | 4 |
 | osr | 系统 | ms_adjutant_class_compcon | ADJUTANT-Class Comp/Con | — | 5 |
 | osr | 系统 | ms_pattern_c_advanced_charges | Pattern-C Advanced Charges | — | 10 |
 | osr | 系统 | ms_miniaturized_linac_coherent_beam_cannon | Miniaturized LinAc Coherent Beam Cannon | — | 5 |
@@ -65,4 +64,4 @@
 | wallflower | 驾驶员装备 | ms_exo_assault_carapace_armor | Assault Carapace Hardsuit | — | 3 |
 | wallflower | 驾驶员装备 | ms_exo_heavy_carapace_armor | Heavy Carapace Hardsuit | — | 3 |
 
-共 58 条，待译字段 211 处。
+共 57 条，待译字段 207 处。

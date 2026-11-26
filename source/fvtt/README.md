@@ -10,7 +10,7 @@
 | `zh-overrides.json`、`zh-overrides-core.json` | 扩展包、核心包覆盖后仍是英文的文字的补译，手工维护 |
 | `statuses-zh.json` | 核心包的状态与状况：Foundry 状态（按 icon）→ 车卡器术语库条目名，以及中文简述 |
 | `ext-actions.json` | 扩展条目正文里的动作 → Foundry 动作按钮，`tools/draft-ext-actions.js` 生成草稿后人工核对 |
-| `ext-deployables.json` | 扩展条目说明里写了数值的部署物 → Foundry 部署物，照原文转录，原文没写的数值不补 |
+| `ext-deployables.json` | 扩展条目说明里写了数值的部署物及第三方/专业牌照二合一炸药的地雷可展开物 → Foundry 部署物（当前 24 个条目、25 个部署物/地雷），照原文转录，原文没写的数值不补 |
 | `zh-npc.json` | 官方补充书 NPC 模板与特性的中文（GPT 译、已核对），扩展包构建时套用 |
 | `module/` | 界面中文模组 lancer-cn 的源文件（语言文件译文、写死英文的词典与扫描快照、清单、脚本），见 [Foundry 内容包](../../docs/FVTT-LCP.md#界面中文模组lancer-cn) |
 
@@ -57,7 +57,7 @@
 | 维修值 | 维修（Repair） | | 躲藏状态 | 匿迹状态（Hidden；躲藏是动作） |
 | 闪烁空间 | 瞬空（Blinkspace） | | 干扰状态 | 受扰状态（Jammed） |
 
-另外：护盾（Overshield，不写「超量护盾」）、超频（Overcharge）、受身（Brace）、伙伴/礼宾（COMP/CON，v3.5 译名）。天赋动作、弹药等名称若在车卡器的天赋等级说明里已有中文，以那里为准（例如决斗者的格挡 / 偏射 / 佯攻 / 绊脚）。
+另外：护盾（Overshield，不写「超量护盾」）、超限（Overcharge，与德川核心「超频（Overclock）」区分）、层流（Cascade）、受身（Brace）、伙伴/礼宾（COMP/CON，v3.5 译名）。天赋动作、弹药等名称若在车卡器的天赋等级说明里已有中文，以那里为准（例如决斗者的格挡 / 偏射 / 佯攻 / 绊脚）。
 
 2026-11-07 第一批核心包补译（249 处）由 GPT 翻译，经核对后统一了上述术语、恢复了 26 处丢失的 HTML，并按车卡器说明改了 10 个名称。
 
