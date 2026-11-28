@@ -2,7 +2,8 @@
  const D=window.LANCER_NPCS;if(!D)return;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const button=document.createElement('button');button.textContent='NPC 库';button.setAttribute('aria-haspopup','dialog');
- document.querySelector('[data-ui="openSystemLibrary"]').after(button);
+ const gmPanel=document.getElementById?.('gmMenuPanel');
+ if(gmPanel)gmPanel.append(button);else document.querySelector('[data-ui="openSystemLibrary"]')?.after(button);
  const dlg=document.createElement('dialog');dlg.id='npcLibrary';dlg.setAttribute('aria-labelledby','npcTitle');
  dlg.innerHTML=`<header><div><h2 id="npcTitle">NPC 查看板块</h2><p>GM 资料 · 包含模组剧透</p></div><button class="npc-close" autofocus>关闭 ✕</button></header><div class="npc-toolbar"><label>搜索 NPC、武器或能力<input class="npc-query" type="search" placeholder="例如：王牌、超体、傀儡师"></label><label>来源<select class="npc-source"><option value="">全部资料</option>${D.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></label><label>类别<select class="npc-kind"><option value="">全部类别</option>${[...new Set(D.entries.map(e=>e.kind))].map(k=>`<option>${esc(k)}</option>`).join('')}</select></label><label class="npc-check"><input type="checkbox" class="npc-full">搜索全部原书正文</label></div><p class="npc-count" role="status"></p><div class="npc-layout"><nav class="npc-results" aria-label="NPC 查询结果"></nav><article class="npc-detail"></article></div>`;
  document.body.append(dlg);

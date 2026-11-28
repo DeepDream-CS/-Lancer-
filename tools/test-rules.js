@@ -8,7 +8,7 @@ function runtime(saved) {
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     document:{body:el(),addEventListener(){},getElementById(id){if(!elements.has(id))elements.set(id,el());return elements.get(id);},querySelectorAll(){return[];}},
     window:{scrollTo(){},addEventListener(){}},navigator:{},confirm:()=>true});
-  for(const file of ['assets/js/data.js','assets/js/wizard.js','assets/js/cardexport.js','assets/js/rules.js','assets/js/glossary.js','assets/js/ui.js','assets/js/frame-catalog.js','assets/js/system-library.js','assets/js/battlemap.js','assets/js/app.js','assets/js/announcements.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
+  for(const file of ['assets/js/data.js','assets/js/wizard.js','assets/js/cardexport.js','assets/js/rules.js','assets/js/glossary.js','assets/js/ui.js','assets/js/frame-catalog.js','assets/js/system-library.js','assets/js/battlemap.js','assets/js/lore-codex.js','assets/js/ux-upgrades.js','assets/js/app.js','assets/js/announcements.js']) vm.runInContext(fs.readFileSync(require('path').join(root,file),'utf8'),ctx,{filename:file});
   return code=>vm.runInContext(code,ctx);
 }
 const run=runtime(); let passed=0;
@@ -362,6 +362,72 @@ test('Announcement bulletin: two-column data model, unique IDs, keyword filter a
   assert.equal(dotEl.hidden,true,'Unread dot clears after viewing announcement');
   assert(dialogEl._map['.ann-list'].innerHTML.includes('ANN-20261125-01')&&dialogEl._map['.ann-list'].innerHTML.includes('aria-current="true"'),'Left column renders active announcement ID');
   assert(dialogEl._map['.ann-scroll'].innerHTML.includes('核心规则书 v3.5 与全扩展英文原文大面积修订')&&dialogEl._map['.ann-scroll'].innerHTML.includes('弹道臂盾'),'Right column renders full revision content');
+});
+
+test('UI/UX upgrades: stat breakdown, license/CB filters, equipment picker, check jump targets, play sheet & combat tracker',()=>{
+  const html = fs.readFileSync(require('path').join(root,'index.html'),'utf8');
+  assert(html.includes('id="pilotSwitcher"') && html.includes('id="refMenu"') && html.includes('id="gmMenuPanel"') && html.includes('id="checkPopover"') && html.includes('assets/js/ux-upgrades.js') && html.includes('assets/css/ux-upgrades.css'), 'index.html UX wiring');
+  // 1. Stat breakdown matches mechStats & pilotStats with source labels
+  assert(run(`(()=>{
+    p=fixture(6); p.hase={hull:3,agi:2,sys:2,eng:4}; p.coreBonuses=['cb_reinforced_frame','cb_superior_by_design','cb_piof_curveball'];
+    p.gear.armor='pg_assault_hardsuit'; m=p.mechs[0]; m.systems=['ms_personalizations'];
+    const st=mechStats(p,m), bd=mechStatBreakdown(p,m), pbd=pilotStatBreakdown(p);
+    return bd.hp.value===st.hp && bd.hp.rows.some(r=>r[0].includes('强化骨架')&&r[1]==='+5') && bd.hp.rows.some(r=>r[0].includes('个人化')&&r[1]==='+2') &&
+      bd.heatcap.value===st.heatcap && bd.heatcap.rows.some(r=>r[0].includes('优越始于设计')) &&
+      bd.limited.note.includes('曲线球') && pbd.hp.value===pilotStats(p).hp && pbd.armor.value===1;
+  })()`), 'stat breakdown check');
+  // 2. License reverse equipment search & Core Bonus eligibility filter
+  assert(run(`(()=>{
+    p=fixture(3); p.licenses={mf_black_witch:3};
+    uxState.lic={q:'冰遁',maker:'',selected:false};
+    const hitBw=licenseFrames().filter(f=>licenseMatches(f,p)).map(f=>f.id);
+    uxState.lic={q:'',maker:'SSC',selected:true};
+    const selOnly=licenseFrames().filter(f=>licenseMatches(f,p)).map(f=>f.id);
+    uxState.lic={q:'',maker:'',selected:false};
+    uxState.cb={q:'',maker:'SSC',mode:'eligible'};
+    const sscEligible=D.core_bonuses.filter(c=>cbMatches(c,p));
+    uxState.cb={q:'',maker:'',mode:''};
+    return hitBw.includes('mf_black_witch') && selOnly.join()==='mf_black_witch' && sscEligible.length>0 && sscEligible.every(c=>c.source==='SSC');
+  })()`), 'license and CB filter check');
+  // 3. Visual equipment picker candidates & installation for weapons, mods, systems
+  assert(run(`(()=>{
+    p=fixture(3); p.licenses={mf_black_witch:3}; m=p.mechs[0];
+    const wList=equipPickerCandidates({mode:'weapon',mountKey:'m0',slotIdx:0,q:'',size:'',type:'',src:'',avail:true,fitSp:false},p,m);
+    const hasAr=wList.some(w=>w.id==='mw_assault_rifle') && wList.every(w=>['Main','Auxiliary'].includes(w.mount));
+    applyEquipPick({mode:'weapon',mountKey:'m0',slotIdx:0},'mw_assault_rifle');
+    const modList=equipPickerCandidates({mode:'mod',mountKey:'m0',slotIdx:0,q:'',src:'',avail:true,fitSp:false},p,m);
+    const sysList=equipPickerCandidates({mode:'system',q:'冰遁',type:'',activation:'',sp:'',src:'',avail:true,fitSp:false},p,m);
+    const okSys=sysList.some(s=>s.id==='ms_iceout_drone');
+    applyEquipPick({mode:'system'},'ms_iceout_drone');
+    const added=m.systems.includes('ms_iceout_drone');
+    removeSystemFromPicker('ms_iceout_drone');
+    return hasAr && m.loadout.m0.slots[0].w==='mw_assault_rifle' && modList.every(md=>canModify(WEAPONS.mw_assault_rifle,md,mountsOf(p,m)[0],m)) && okSys && added && !m.systems.includes('ms_iceout_drone');
+  })()`), 'equipment picker check');
+  // 4. Precise check target resolver maps pilot, progress, mech mount & system errors
+  assert(run(`(()=>{
+    p=fixture(0); m=p.mechs[0]; m.name='铁砧';
+    const t1=resolveCheckTarget('触发重复',p);
+    const t2=resolveCheckTarget('牌照等级合计 1，应为 0',p);
+    const t3=resolveCheckTarget('机甲「铁砧」：挂载点 m2 的武器尺寸或槽位组合不合法',p);
+    const t4=resolveCheckTarget('机甲「铁砧」 SP 超出：10/6',p);
+    return t1.tab==='pilot'&&t1.anchor==='#card-triggers' && t2.tab==='progress'&&t2.anchor==='#card-licenses' &&
+      t3.tab==='mech'&&t3.mechIdx===0&&t3.anchor==='#mount-m2' && t4.tab==='mech'&&t4.anchor==='#card-mech-systems';
+  })()`), 'check target resolver');
+  // 5. Play Sheet action buckets + non-destructive combat state tracker + global Quick Lookup
+  assert(run(`(()=>{
+    p=fixture(3); p.licenses={mf_black_witch:3}; p.talents={t_ace:2,t_heavy_gunner:1,t_leader:1};
+    m=p.mechs[0]; m.loadout.m0={slots:[{w:'mw_assault_rifle',mod:''}],link:''}; m.systems=['ms_iceout_drone','ms_turret_drones'];
+    const bk=collectActionSheet(p,m);
+    const htmlPlay=renderPlaySheet(p);
+    const lims=collectLimitedTrackers(p,m);
+    updatePlayState(p,m,(ps)=>{ps.hp=3;ps.heat=4;ps.cp=0;ps.overcharge=2;ps.conditions=['lockon'];});
+    const savedPlay=getPlayState(p,m,mechStats(p,m));
+    const qlHit=quickLookupSearch('突击步枪','weapon');
+    const progressHtml=renderProgress(p), mechHtml=renderMech(p);
+    return bk.quick.length>0 && bk.reaction.length>0 && bk.passive.length>0 && htmlPlay.includes('本地战局状态计数器') &&
+      lims.some(x=>x.name.includes('炮塔无人机')) && savedPlay.hp===3 && savedPlay.heat===4 && savedPlay.overcharge===2 &&
+      !('hp' in m) && qlHit.some(x=>x.id==='mw_assault_rifle') && progressHtml.includes('ux-subnav') && mechHtml.includes('mech-sticky-bar') && mechHtml.includes('复制此机甲');
+  })()`), 'play sheet and quick lookup check');
 });
 
 console.log(passed+' regression checks passed.');

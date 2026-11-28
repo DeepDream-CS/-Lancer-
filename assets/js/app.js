@@ -5,6 +5,10 @@ const D = window.LANCER_DATA;
 const Z = D.zh;
 const nk = s => String(s || "").replace(/’/g, "'");
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// 允许单独加载 app.js（如精简离线测试脚本）时，未载入 ux-upgrades.js 也能安全降级
+const _uxState = () => (typeof uxState === "object" && uxState ? uxState : { sheetMode: "export", compactFrameRules: false });
+const _statTile = (k, v, n, bd, hl) => (typeof statTileHtml === "function" ? statTileHtml(k, v, n, bd, hl) : `<div class="stat ${hl ? "hl" : ""}"><b>${v}</b><span>${n}</span></div>`);
+const _uxCall = (fn, fallback, ...args) => (typeof fn === "function" ? fn(...args) : fallback);
 const by = (arr, key = "id") => Object.fromEntries(arr.map(x => [x[key], x]));
 
 const FRAMES = by(D.frames), WEAPONS = by(D.weapons), SYSTEMS = by(D.systems), MODS = by(D.mods);
@@ -351,25 +355,26 @@ function pilotParts(p) {
 		if (z && z.html) return `<div class="wstat">${esc(meta)}</div><div class="desc">${z.html}</div>`;
 		return `<div class="wstat">${esc(meta)}</div>` + (own ? `<div class="desc">${own}</div>` : "") + det("gear-" + id + slot, "说明", g.description ? `<p>${g.description}</p>` : "");
 	};
+	const pbd = pilotStatBreakdown(p);
 	return {
-	basic: `<div class="card">
+	basic: `<div class="card" id="card-basic">
 		<h3>基本资料</h3>
 		<div class="row"><label>名字</label><input type="text" data-k="name" value="${esc(p.name)}"></div>
 		<div class="row"><label>呼号</label><input type="text" data-k="callsign" value="${esc(p.callsign)}"></div>
 		<div class="row"><label>玩家</label><input type="text" data-k="player" value="${esc(p.player)}"></div>
 		<div class="row"><label>头像</label><input type="file" accept="image/*" data-act="portrait" style="max-width:220px">${p.portrait ? `<img src="${p.portrait}" class="portrait-thumb" alt="头像"><button data-act="delPortrait" class="danger">移除</button>` : `<span class="muted">导出角色卡图片时放在右上角</span>`}</div>
 		<div class="row"><label>牌照等级</label>${stepper("ll", "", p.ll, 0, 12, v => "LL" + v)} <span class="muted">毅力 Grit +${L.grit}</span></div>
-		<h4>驾驶员数值</h4>
+		<h4>驾驶员数值 <span class="muted">悬停或点击查看构成</span></h4>
 		<div class="stats">
-			<div class="stat"><b>${ps.hp}</b><span>HP</span></div>
-			<div class="stat"><b>${ps.armor}</b><span>装甲</span></div>
-			<div class="stat"><b>${ps.evasion}</b><span>回避</span></div>
-			<div class="stat"><b>${ps.edef}</b><span>电子防御</span></div>
-			<div class="stat"><b>${ps.speed}</b><span>速度</span></div>
-			<div class="stat"><b>½</b><span>大小</span></div>
+			${_statTile("pilot_hp", ps.hp, "HP", pbd.hp, 1)}
+			${_statTile("pilot_armor", ps.armor, "装甲", pbd.armor)}
+			${_statTile("pilot_evasion", ps.evasion, "回避", pbd.evasion)}
+			${_statTile("pilot_edef", ps.edef, "电子防御", pbd.edef)}
+			${_statTile("pilot_speed", ps.speed, "速度", pbd.speed)}
+			${_statTile("pilot_size", "½", "大小", pbd.size)}
 		</div>
 	</div>`,
-	bg: `<div class="card">
+	bg: `<div class="card" id="card-bg">
 		<h3>背景</h3>
 		<div class="row"><select data-k="background"><option value="">— 自创背景 —</option>${D.backgrounds.filter(b => !b.ext).map(b => opt(b.id, plain("bg", b), b.id === p.background)).join("")}${D.backgrounds.some(b => b.ext) ? `<optgroup label="扩展背景">${D.backgrounds.filter(b => b.ext).map(b => opt(b.id, plain("bg", b), b.id === p.background)).join("")}</optgroup>` : ""}</select>
 		<button data-act="rollBg" title="掷 1d20">🎲 随机</button></div>
@@ -379,7 +384,7 @@ function pilotParts(p) {
 		<h4>外貌 / 经历</h4>
 		<textarea data-k="bio" placeholder="简单写写这个驾驶员的故事">${esc(p.bio)}</textarea>
 	</div>`,
-	triggers: `<div class="card wide">
+	triggers: `<div class="card wide" id="card-triggers">
 		<h3>触发 Triggers ${counter(trigSum, L.triggers)}</h3>
 		<p class="muted">LL0 有四个 +2 触发；每升一级可让一个触发 +2 或新增一个 +2 触发（单项最高 +6）。可从范例中选，也可自定义。</p>
 		${p.triggers.map((t, i) => {
@@ -395,7 +400,7 @@ function pilotParts(p) {
 		}).join("")}
 		<button data-act="addTrig">+ 新增触发</button>
 	</div>`,
-	gear: `<div class="card wide">
+	gear: `<div class="card wide" id="card-pilot-gear">
 		<h3>驾驶员装备 <span class="muted">一套装甲、最多两件武器、三件其他装备</span></h3>
 		${[
 			["装甲", "防护服或其他个人装甲，会改变驾驶员数值", [["装甲", gearSel("gear.armor", "Armor", p.gear.armor), gearInfo(p.gear.armor, "a")]]],
@@ -459,8 +464,8 @@ function undoBuildReset(p) {
 	return true;
 }
 function buildResetPanel(p) {
-	return `<div class="card wide"><h3>重配构筑</h3><p class="muted">规则允许每次提升 LL 时，重分配一个天赋的全部等级、一个牌照的全部等级，或替换一个核心奖励。下方批量清空方便重做构筑；超出升级重分配范围时，请与 GM 商定。</p>
-	<div class="row">${Object.entries(BUILD_RESET_GROUPS).map(([id,g])=>`<button data-act="resetBuild" data-arg="${id}" class="${id==='all'?'danger':''}">清空${g.name}</button>`).join('')}<button data-act="undoBuildReset" ${buildResetUndo?.pilotId===p.id?'':'disabled'}>撤销上次重置</button></div><p class="muted">专业牌照与额外奖励额度保留。撤销仅在当前页面会话中有效；重配前也可先导出角色备份。</p></div>`;
+	return `<div class="card wide" id="card-reset"><details class="progress-reset-compact" data-open-id="build-reset" ${openSet.has("build-reset") || buildResetUndo?.pilotId === p.id ? "open" : ""}><summary><span>重配构筑（批量清空与撤销）</span><span class="muted">${buildResetUndo?.pilotId === p.id ? "可撤销上次重置" : "点击展开"}</span></summary><p class="muted" style="margin-top:10px">规则允许每次提升 LL 时，重分配一个天赋的全部等级、一个牌照的全部等级，或替换一个核心奖励。下方批量清空方便重做构筑；超出升级重分配范围时，请与 GM 商定。</p>
+	<div class="row">${Object.entries(BUILD_RESET_GROUPS).map(([id,g])=>`<button data-act="resetBuild" data-arg="${id}" class="${id==='all'?'danger':''}">清空${g.name}</button>`).join('')}<button data-act="undoBuildReset" ${buildResetUndo?.pilotId===p.id?'':'disabled'}>撤销上次重置</button></div><p class="muted">专业牌照与额外奖励额度保留。撤销仅在当前页面会话中有效；重配前也可先导出角色备份。</p></details></div>`;
 }
 function progressParts(p) {
 	const L = LV(p.ll);
@@ -473,32 +478,34 @@ function progressParts(p) {
 	}).join("")}</table>`;
 	const haseDesc = { hull: "每点 +2 HP；每两点 +1 维修上限", agi: "每点 +1 回避；每两点 +1 速度", sys: "每点 +1 电子防御与科技攻击；每两点 +1 SP", eng: "每点 +1 热度上限；每两点 +1 受限装备使用次数" };
 	return {
-	hase: `<div class="card">
+	hase: `<div class="card" id="card-hase">
 		<h3>机甲技能 HASE ${counter(hs, L.skills)}</h3>
 		${Object.keys(T.hase).map(k => `<div class="row" style="justify-content:space-between"><span><b>${T.hase[k]}</b><br><span class="muted">${haseDesc[k]}</span></span>${stepper("hase", k, p.hase[k], 0, 6, v => "+" + v)}</div>`).join("")}
 	</div>`,
-	levels: `<div class="card"><h3>等级表 <span class="muted">当前 LL${p.ll}</span></h3>${levelTable}
+	levels: `<div class="card" id="card-levels"><h3>等级表 <span class="muted">当前 LL${p.ll}</span></h3>${levelTable}
 		<p class="muted">每次升级可选择一项重分配：一个天赋的全部等级、一个牌照的全部等级，或换一个核心奖励。重分配牌照导致核心奖励失去资格时，须同时替换该核心奖励。</p></div>`,
-	licenses: `<div class="card wide">
+	licenses: `<div class="card wide" id="card-licenses">
 		<h3>牌照 Licenses ${counter(lr + (p.professionalLicenses || []).reduce((n,x)=>n+x.rank-x.rewardRanks,0), L.licenses + (p.extraLicenseRanks || 0))}</h3>
 		<p class="muted">每级 LL 得 1 牌照等级。牌照分一至三级，须依次取得；二级解锁该骨架。GMS（埃弗勒斯及 GMS 装备）永远可用。</p>
-		${MAKERS.slice(1).map(mk => `<div class="mfr" style="border-color:${MAKER_COLOR[mk]}">${esc(makerName(mk))} <span class="muted">合计 ${makerLicenseTotal(p, mk)} 级</span></div>
-			<div class="lic-grid">${licenseFrames().filter(f => f.source === mk).map(f => `<div class="lic ${p.licenses[f.id] ? "has" : ""}"><div class="lic-head"><span>${label("frame", f)}${extBadge(f)}</span>${stepper("lic", f.id, p.licenses[f.id] || 0, 0, 3, v => ["—", "I", "II", "III"][v])}</div>${det("lic-" + f.id, "牌照内容", licenseContents(p, f))}</div>`).join("")}</div>`).join("")}
+		${typeof licenseToolbar === "function" ? licenseToolbar() : ""}
+		${MAKERS.slice(1).map(mk => `<div class="mfr" data-lic-mfr="${esc(mk)}" style="border-color:${MAKER_COLOR[mk]}">${esc(makerName(mk))} <span class="muted">合计 ${makerLicenseTotal(p, mk)} 级</span></div>
+			<div class="lic-grid" data-lic-grid="${esc(mk)}">${licenseFrames().filter(f => f.source === mk).map(f => `<div class="lic ${p.licenses[f.id] ? "has" : ""}" data-lic-id="${esc(f.id)}"><div class="lic-head"><span>${label("frame", f)}${extBadge(f)}</span>${stepper("lic", f.id, p.licenses[f.id] || 0, 0, 3, v => ["—", "I", "II", "III"][v])}</div>${det("lic-" + f.id, "牌照内容", licenseContents(p, f))}</div>`).join("")}</div>`).join("")}
 	</div>`,
 	professionals: professionalPanel(p),
-	cbs: `<div class="card wide">
+	cbs: `<div class="card wide" id="card-cbs">
 		<h3>核心奖励 Core Bonuses ${counter(p.coreBonuses.length, L.cbs)}</h3>
 		<p class="muted">每 3 级 LL 得一个。GMS 加成随时可选；其他厂商每个加成需要该厂商合计 3 级牌照（第二个需要 6 级，以此类推）。</p>
-		${MAKERS.map(mk => `<div class="mfr" style="border-color:${MAKER_COLOR[mk]}">${esc(makerName(mk))}</div>${D.core_bonuses.filter(c => c.source === mk).map(c => {
+		${typeof cbToolbar === "function" ? cbToolbar() : ""}
+		${MAKERS.map(mk => `<div class="mfr" data-cb-mfr="${esc(mk)}" style="border-color:${MAKER_COLOR[mk]}">${esc(makerName(mk))}</div>${D.core_bonuses.filter(c => c.source === mk).map(c => {
 			const have = hasCB(p, c.id);
 			const ok = have || cbEligible(p, c, 1);
 			const z = Z.cb[nk(c.name)];
-			return `<div class="list-item ${have ? "active" : ok ? "" : "locked"}"><div class="li-head"><span class="li-title">${label("cb", c)}${extBadge(c)}</span>
+			return `<div class="list-item ${have ? "active" : ok ? "" : "locked"}" data-cb-id="${esc(c.id)}" data-cb-maker="${esc(mk)}"><div class="li-head"><span class="li-title">${label("cb", c)}${extBadge(c)}</span>
 				<button data-act="cb" data-arg="${c.id}" ${!have && !ok ? "disabled" : ""}>${have ? "移除" : "选择"}</button></div>
 				<div class="desc">${z ? z.html : esc(c.effect)}</div>${officialSupplementHtml(c)}</div>`;
 		}).join("")}`).join("")}
 	</div>`,
-	talents: `<div class="card wide">
+	talents: `<div class="card wide" id="card-talents">
 		<h3>天赋 Talents ${counter(tr, talentBudget(p))}</h3>
 		<p class="muted">LL0 有三个一级天赋；每升一级可让一个天赋升一级，或取得一个新的一级天赋。</p>
 		${talentToolbar()}
@@ -514,7 +521,7 @@ function progressParts(p) {
 }
 function renderProgress(p) {
 	const x = progressParts(p);
-	return `<div class="grid">${buildResetPanel(p)}${x.hase}${x.levels}${x.licenses}${x.professionals}${x.cbs}${x.talents}</div>`;
+	return `${typeof renderProgressSubnav === "function" ? renderProgressSubnav(p) : ""}<div class="grid">${x.hase}${x.levels}${x.licenses}${x.professionals}${x.cbs}${x.talents}${buildResetPanel(p)}</div>`;
 }
 
 // ---------- 页面：机甲 ----------
@@ -631,8 +638,15 @@ function equipmentLoreHtml(it, title='风味文本') {
 	const lore=window.LANCER_LORE?.items?.[it.id] || (it.description ? {text:it.description,lang:/[\u4e00-\u9fff]/.test(it.description)?'zh':'en'} : null);
 	if(!lore?.text) return officialSupplementHtml(it);
 	const text=lore.text.replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'');
-	const attribution=lore.source ? `<p class="muted">来源：${esc(lore.source)}${lore.pages?.length?' · PDF 第 '+lore.pages.join('、')+' 页':''}</p>` : '';
-	return det('lore-'+it.id, title+(lore.lang==='en'?'（英文原文，待译）':''),`<div class="desc equipment-lore">${text.split(/\n+/).filter(Boolean).map(s=>`<p>${esc(s)}</p>`).join('')}${attribution}</div>`) + officialSupplementHtml(it);
+	const gms=typeof gmsSeriesMeta==='function' ? gmsSeriesMeta(it,text) : null;
+	const sumTitle=title + (lore.lang==='en'?'（英文原文，待译）':'') + (gms ? `<span class="lore-shared-pill">${esc(gms.label)}</span>` : '');
+	const bodyText=gms ? gms.body : text;
+	const preambleHtml=gms?.preamble ? `<div class="lore-shared-preamble">${esc(gms.preamble)}</div>` : '';
+	const attribution=lore.source ? `来源：${esc(lore.source)}${lore.pages?.length?' · PDF 第 '+lore.pages.join('、')+' 页':''}` : '';
+	const openId=gms ? gms.id : (it.id || '');
+	const codexBtn=openId && typeof openLoreCodex==='function' ? `<button type="button" class="lore-open-btn" data-ui="openLoreCodex" data-lore-id="${esc(openId)}">${gms?'在风味典藏查看系列与成员 ↗':'在风味典藏中阅读 ↗'}</button>` : '';
+	const footHtml=(attribution || codexBtn) ? `<div class="lore-inline-foot"><span>${attribution}</span>${codexBtn}</div>` : '';
+	return det('lore-'+it.id, sumTitle,`<div class="desc equipment-lore equipment-lore-box">${preambleHtml}${bodyText.split(/\n+/).filter(Boolean).map(s=>`<p>${esc(s)}</p>`).join('')}${footHtml}</div>`) + officialSupplementHtml(it);
 }
 function weaponInfo(w, mod, p = P(), m = M()) {
 	const prof = effectiveProfile(w, w.profiles ? w.profiles[0] : w, mod, p, m);
@@ -667,16 +681,16 @@ function mechParts(p) {
 	const st = mechStats(p, m);
 	STAT_CTX = st ? { ...st, grit: LV(p.ll).grit, drone_hp: staticBonus(p,m,"drone_hp"), deployable_hp: staticBonus(p,m,"deployable_hp") } : {};
 	const mechTabs = `<div class="mech-tabs">${p.mechs.map((x, i) => `<button data-act="pickMech" data-arg="${i}" class="${i === p.activeMech ? "on" : ""}">${esc(x.name || "机甲" + (i + 1))}</button>`).join("")}
-		<button data-act="addMech">+ 新机甲</button>${p.mechs.length > 1 ? `<button data-act="delMech" class="danger">删除此机甲</button>` : ""}</div>`;
+		<button data-act="addMech">+ 新机甲</button><button data-act="dupMech" title="完整克隆当前机甲的骨架、武器、改装与系统，方便对比配装">复制此机甲</button>${p.mechs.length > 1 ? `<button data-act="delMech" class="danger">删除此机甲</button>` : ""}</div>`;
 	const frameSel = `<select data-k="mech.frame">${frameOptions(p, m)}</select>`;
 	if (!f) return { only: mechTabs + `<div class="card">${frameSel}${frameToolbar()}</div>` };
 
-	const stat = (v, n, hl) => `<div class="stat ${hl ? "hl" : ""}"><b>${v}</b><span>${n}</span></div>`;
+	const bd = mechStatBreakdown(p, m);
 	const statsHtml = `<div class="stats">
-		${stat(st.hp, "HP", 1)}${stat(st.armor, "装甲")}${stat(st.structure, "结构")}${stat(st.stress, "压力")}
-		${stat(st.evasion, "回避", 1)}${stat(st.edef, "电子防御", 1)}${stat(st.speed, "速度")}${stat(st.size === 0.5 ? "½" : st.size, "大小")}
-		${stat(st.heatcap, "热度上限")}${stat(st.repcap, "维修上限")}${stat(st.sensor, "感应")}${stat(st.save, "豁免目标")}
-		${stat((st.tech >= 0 ? "+" : "") + st.tech, "科技攻击")}${stat("+" + st.attack, "攻击加值")}${stat("+" + st.limited, "受限加成")}${stat(st.sp, "SP")}
+		${_statTile("hp", st.hp, "HP", bd.hp, 1)}${_statTile("armor", st.armor, "装甲", bd.armor)}${_statTile("structure", st.structure, "结构", bd.structure)}${_statTile("stress", st.stress, "压力", bd.stress)}
+		${_statTile("evasion", st.evasion, "回避", bd.evasion, 1)}${_statTile("edef", st.edef, "电子防御", bd.edef, 1)}${_statTile("speed", st.speed, "速度", bd.speed)}${_statTile("size", st.size === 0.5 ? "½" : st.size, "大小", bd.size)}
+		${_statTile("heatcap", st.heatcap, "热度上限", bd.heatcap)}${_statTile("repcap", st.repcap, "维修上限", bd.repcap)}${_statTile("sensor", st.sensor, "感应", bd.sensor)}${_statTile("save", st.save, "豁免目标", bd.save)}
+		${_statTile("tech", (st.tech >= 0 ? "+" : "") + st.tech, "科技攻击", bd.tech)}${_statTile("attack", "+" + st.attack, "攻击加值", bd.attack)}${_statTile("limited", "+" + st.limited, "受限加成", bd.limited)}${_statTile("sp", st.sp, "SP", bd.sp)}
 	</div>`;
 
 
@@ -689,8 +703,8 @@ function mechParts(p) {
 		const hasWeapon = sst.slots.some(sl => sl && sl.w);
 		const beltNotice = hasBelt && hasWeapon ? "（战术带占用，请清空武器）" : "";
 		const title = `${beltNotice}${T.mount[mt.type] || mt.type}挂载点${mt.retro ? "（挂载点改装）" : ""}${mt.note ? "（" + mt.note + "）" : ""}`;
-		if (linkedBy[mt.key]) return `<div class="mount"><div class="mount-h">${title}</div><div class="muted">被超重型武器占用${hasBelt ? "（与战术带冲突，请调整挂载点）" : ""}</div></div>`;
-		if (hasBelt && !hasWeapon) return `<div class="mount"><div class="mount-h"><span>${title}</span></div><div class="muted">被战术带占用</div></div>`;
+		if (linkedBy[mt.key]) return `<div class="mount" id="mount-${esc(mt.key)}"><div class="mount-h">${title}</div><div class="muted">被超重型武器占用${hasBelt ? "（与战术带冲突，请调整挂载点）" : ""}</div></div>`;
+		if (hasBelt && !hasWeapon) return `<div class="mount" id="mount-${esc(mt.key)}"><div class="mount-h"><span>${title}</span></div><div class="muted">被战术带占用</div></div>`;
 		const stab = mt.type !== "Integrated" && !hasBelt && hasCB(p, "cb_auto_stabilizing_hardpoints") ? `<label class="chk"><input type="radio" name="stab" data-act="stab" data-arg="${mt.key}" ${m.stabilized === mt.key ? "checked" : ""}> 自动稳定（+1准度）</label>` : "";
 		const slots = MOUNT_SLOTS[mt.type].map((acc, i) => {
 			const s = sst.slots[i] || {};
@@ -698,9 +712,9 @@ function mechParts(p) {
 			if (!slotAccepts(mt, i, sst.slots).length) return "";
 			const w = WEAPONS[s.w] && configuredWeapon(WEAPONS[s.w],m,s);
 			const mods = w && !mt.noMods && !w.no_mods ? D.mods.filter(md => canModify(w, md, mt, m)) : [];
-			let html = `<div class="slot"><select data-act="slotW" data-arg="${mt.key}|${i}"><option value="">— 空 —</option>${itemOptions(p, D.weapons, s.w, x => acc.includes(x.mount))}</select>
-				${mods.length ? `<select data-act="slotMod" data-arg="${mt.key}|${i}"><option value="">— 无模块 —</option>${itemOptions(p, mods, s.mod, () => true, m)}</select>` : "<span></span>"}</div>`;
-			if(w?.max_mods===2) html += '<div class="row"><span>第二模组（各模组 -1 SP，最低 1 SP）</span><select data-act="slotMod2" data-arg="'+mt.key+'|'+i+'"><option value="">— 无第二模组 —</option>'+itemOptions(p,mods,s.mod2,()=>true,m)+'</select></div>';
+			let html = `<div class="slot-bar"><div class="slot-cell"><select data-act="slotW" data-arg="${mt.key}|${i}"><option value="">— 空 —</option>${itemOptions(p, D.weapons, s.w, x => acc.includes(x.mount))}</select><button type="button" class="slot-pick-btn" data-ux-pick="weapon" data-arg="${mt.key}|${i}" title="打开武器选装器（可按类型、标签、SP 筛选并预览完整效果）">选装</button></div>
+				${mods.length ? `<div class="slot-cell"><select data-act="slotMod" data-arg="${mt.key}|${i}"><option value="">— 无模块 —</option>${itemOptions(p, mods, s.mod, () => true, m)}</select><button type="button" class="slot-pick-btn" data-ux-pick="mod" data-arg="${mt.key}|${i}" title="打开武器模块选装器">模块</button></div>` : "<span></span>"}</div>`;
+			if(w?.max_mods===2) html += `<div class="row"><span>第二模组（各模组 -1 SP，最低 1 SP）</span><div class="slot-cell" style="flex:1"><select data-act="slotMod2" data-arg="${mt.key}|${i}"><option value="">— 无第二模组 —</option>${itemOptions(p,mods,s.mod2,()=>true,m)}</select><button type="button" class="slot-pick-btn" data-ux-pick="mod2" data-arg="${mt.key}|${i}" title="打开第二模组选装器">模块</button></div></div>`;
             if(w?.select_profile) html += '<label>打印数据 <select data-act="slotProfile" data-arg="'+mt.key+'|'+i+'">'+w.profiles.map((pf,n)=>opt(n,esc(pf.name),n===(s.profile||0))).join('')+'</select></label>';
             if(w && fusilierEligible(w, m)) html += '<label class="chk"><input type="checkbox" data-act="slotFusilier" data-arg="'+mt.key+'|'+i+'" '+(w.fusilier?'checked':'')+'> 枪决：改为步枪（获得杀绝）</label>';
             if (w) html += weaponInfo(w, combinedWeaponMod(w,s), p, m) + `<p class="muted">${esc(buildWeaponNote(p, m, {w, mount:mt, i}))}</p>`;
@@ -710,7 +724,7 @@ function mechParts(p) {
 			}
 			return html;
 		}).join("");
-		return `<div class="mount"><div class="mount-h"><span>${title}</span>${stab}</div>${slots}</div>`;
+		return `<div class="mount" id="mount-${esc(mt.key)}"><div class="mount-h"><span>${title}</span>${stab}</div>${slots}</div>`;
 	}).join("");
 	const integ = integratedOf(f, p, m).map(w => `<div class="mount"><div class="mount-h">内建：${esc(plain("item", w))}</div>${w.mount ? weaponInfo(w,null,p,m) : integratedSystemInfo(w,p,m)}</div>`).join("");
 	const retro = hasCB(p, "cb_mount_retrofitting") ? `<div class="row"><span class="muted">挂载点改装（核心奖励）：把哪个挂载点换成主/副？</span><select data-act="retro"><option value="-1">—</option>${f.mounts.map((t, i) => opt(i, `${i + 1}. ${T.mount[t]}挂载点`, m.retrofit === i)).join("")}</select></div>` : "";
@@ -726,38 +740,40 @@ function mechParts(p) {
 			<div class="wstat">${s.type&&s.type!=='Drone'&&!(s.type==='Shield'&&systemTags(s, p, m).some(t=>t.id==='tg_shield')) ? (T.stype[s.type]||s.type)+' ' : ''}${tagsHtml(systemTags(s, p, m))}</div>${professionalSystemSetup(p,m,s)}${det("s" + id + i, "系统效果", (s.effect ? `<p>${s.effect}</p>` : "") + actsHtml(s) || (z && z.html) || "")}${equipmentLoreHtml(s)}</div>`;
 	}).join("");
 	const spPct = Math.min(100, (st.spUsed / st.sp) * 100);
+	const compactSummary = `<div class="fc-compact-summary"><b>骨架特征：</b>${mechTraits(m).map(t => esc(t.name)).join("、") || "—"}<br><b>核心系统：</b>${esc(f.core_system.name)}${f.core_system.efficient ? "（高效）" : ""}</div>`;
 
 	return {
 	tabs: mechTabs,
-	info: `<div class="card mech-frame-card">
-        <div class="fc-current-heading"><div><p class="fc-kicker">当前骨架</p>${frameIdentity(f)}</div><button data-ui="browseFrames">浏览 / 更换骨架</button></div>
+	sticky: typeof renderMechStickyBar === "function" ? renderMechStickyBar(p, m, st) : "",
+	info: `<div class="card mech-frame-card ${_uxState().compactFrameRules ? "frame-rules-compact" : ""}" id="card-mech-frame">
+        <div class="fc-current-heading"><div><p class="fc-kicker">当前骨架</p>${frameIdentity(f)}</div><div class="fc-head-actions"><button type="button" data-ui="toggleFrameRules">${_uxState().compactFrameRules ? "展开详述" : "收起详述"}</button><button data-ui="browseFrames">浏览 / 更换骨架</button></div></div>
         <div class="row"><label>机甲名称</label><input type="text" data-k="mech.name" value="${esc(m.name)}"></div>
         <p class="fc-access">${esc(frameAccess(p,f))}</p>
         <div class="fc-mounts">${f.mounts.map(x=>`<span>${T.mount[x]}挂载点</span>`).join('')}</div>
         ${f.ext ? `<p class="muted">${extBadge(f)} ${f.required_core_bonus?'核心奖励提供的备用骨架，不占用独立牌照。':f.variant_of ? esc(frameVariantDescription(f)) : "授权骨架：牌照 I–III 解锁其骨架与装备。"}${f.maker_note ? esc("（" + f.maker_note + "）") : ""}</p>` : ""}
-        ${kanggeduoSetup(p,m)}<div class="desc">${frameRulesHtml(f,'current',m)}</div>
+        ${kanggeduoSetup(p,m)}${compactSummary}<div class="desc">${frameRulesHtml(f,'current',m)}</div>
     </div>`,
-	stats: `<div class="card">
-		<h3>数值 <span class="muted">已计入常驻数值加成；条件效果见规则说明</span></h3>
+	stats: `<div class="card" id="card-mech-stats">
+		<h3>数值 <span class="muted">悬停或点击格子查看数值构成明细</span></h3>
 		${statsHtml}
 		<h4>SP ${st.spUsed} / ${st.sp}</h4>
 		<div class="spbar ${st.spUsed > st.sp ? "over" : ""}"><div style="width:${spPct}%"></div></div>
 	</div>`,
-	weapons: `<div class="card">
-		<h3>武器</h3>${prototypeEditor(p, m)}${retro}${mountHtml}${integ}${overpower}
+	weapons: `<div class="card" id="card-mech-weapons">
+		<h3>武器 <span class="muted">可点各槽位「选装 / 模块」预览完整效果</span></h3>${prototypeEditor(p, m)}${retro}${mountHtml}${integ}${overpower}
 	</div>`,
-	systems: `<div class="card">
+	systems: `<div class="card" id="card-mech-systems">
 		<h3>系统 <span class="muted">剩余 ${st.sp - st.spUsed} SP</span></h3>
 		${hasCB(p, "cb_kkca_signature_move") ? `<div class="row"><span class="muted">招牌动作（核心奖励）指定系统，SP −2：</span><select data-k="mech.signature"><option value="">—</option>${[...new Set(m.systems)].filter(id => SYSTEMS[id]).map(id => opt(id, `${esc(plain("item", SYSTEMS[id]))} [${SYSTEMS[id].sp || 0}SP]`, m.signature === id)).join("")}</select></div>` : ""}
 		${sysHtml || '<p class="muted">尚未安装系统</p>'}
-		<div class="system-picker"><label class="search-field"><span>添加系统</span><input type="search" data-ui="systemSearch" value="${esc(uiState.systemQuery)}" placeholder="搜索系统名称、标签或效果"></label><p class="muted" id="systemSearchCount" role="status"></p><div class="row"><select id="sysAdd" aria-label="选择要安装的系统" style="flex:1"><option value="">— 选择系统 —</option>${itemOptions(p, D.systems, "", s => !(isUnique(s) && m.systems.includes(s.id)))}</select><button data-act="addSys" class="primary" disabled>安装</button></div></div>
+		<div class="system-picker"><div class="sys-picker-top"><span class="muted">可视化选装可按动作、类型、SP 筛选并连续安装</span><button type="button" class="primary" data-ux-pick="system">打开系统可视化选装器</button></div><label class="search-field"><span>快速搜索添加系统</span><input type="search" data-ui="systemSearch" value="${esc(uiState.systemQuery)}" placeholder="搜索系统名称、标签或效果"></label><p class="muted" id="systemSearchCount" role="status"></p><div class="row"><select id="sysAdd" aria-label="选择要安装的系统" style="flex:1"><option value="">— 选择系统 —</option>${itemOptions(p, D.systems, "", s => !(isUnique(s) && m.systems.includes(s.id)))}</select><button data-act="addSys" class="primary" disabled>安装</button></div></div>
 		<h4>备注</h4><textarea data-k="mech.notes">${esc(m.notes)}</textarea>
 	</div>`,
 	};
 }
 function renderMech(p) {
 	const x = mechParts(p);
-	return x.only || x.tabs + (frameBrowse.open ? frameCatalog(p,true) : "") + `<div class="grid mech-overview">${x.info}<div class="mech-side">${x.stats}${x.weapons}${x.systems}</div></div>`;
+	return x.only || x.tabs + (x.sticky || "") + (frameBrowse.open ? frameCatalog(p,true) : "") + `<div class="grid mech-overview">${x.info}<div class="mech-side">${x.stats}${x.weapons}${x.systems}</div></div>`;
 }
 
 // ---------- 页面：角色卡 ----------
@@ -826,10 +842,19 @@ function sheetText(p) {
 }
 function renderSheet(p) {
 	const cs = checks(p);
-	return `<div class="grid">
+	const playMode = _uxState().sheetMode === "play" && typeof renderPlaySheet === "function";
+	const modeBar = typeof renderPlaySheet === "function" ? `<div class="sheet-mode-bar noprint">
+		<div class="sheet-mode-tabs" role="tablist" aria-label="角色卡视图模式">
+			<button type="button" role="tab" aria-selected="${!playMode}" class="${!playMode ? "on" : ""}" data-ui="sheetModeExport">导出、图片与文字卡</button>
+			<button type="button" role="tab" aria-selected="${playMode}" class="${playMode ? "on" : ""}" data-ui="sheetModePlay">⚔ 上桌实战速查卡</button>
+		</div>
+		<span class="muted">${playMode ? "按动作经济自动汇总所有能力，并附独立战局状态计数器" : "生成 PNG 角色卡、JSON 备份、Foundry 导入档与文字规则卡"}</span>
+	</div>` : "";
+	if (playMode) return modeBar + renderPlaySheet(p);
+	return modeBar + `<div class="grid">
 	<div class="card wide noprint">
 		<h3>规则检查</h3>
-		${cs.length ? `<ul class="warn-list">${cs.map(([lv, t]) => `<li class="${lv}">${esc(t)}</li>`).join("")}</ul>` : `<p class="oklist">✓ 已通过 LL${p.ll} 的车卡基础检查</p>`}
+		${cs.length ? `<ul class="warn-list">${cs.map(([lv, t], i) => { const tg = typeof resolveCheckTarget === "function" ? resolveCheckTarget(t, p) : null; return `<li class="${lv}"><span>${esc(t)}</span>${tg ? `<button type="button" class="warn-jump-btn" data-ux-jump="${i}">${esc(tg.label)} →</button>` : ""}</li>`; }).join("")}</ul>` : `<p class="oklist">✓ 已通过 LL${p.ll} 的车卡基础检查</p>`}
 		${cs.length ? '<div class="row correction-links"><span>继续完善：</span><button data-tab="pilot">驾驶员资料 →</button><button data-tab="progress">点数与牌照 →</button><button data-tab="mech">机甲配置 →</button></div>' : ''}
 	</div>
 	<div class="card export-card noprint"><h3>分享与上桌</h3><p class="muted">发给 GM 或队友，或打印一份带到游戏桌。</p><div class="row"><button data-card="all" class="primary">下载全部图片</button><button data-act="copySheet">复制文字角色卡</button><button data-act="print">打印</button></div><details><summary>单独下载一张卡</summary><div class="row"><button data-card="pilot">驾驶员卡 PNG</button><button data-card="mech">当前机甲卡 PNG</button></div></details></div>
@@ -861,7 +886,7 @@ function render() {
 	document.getElementById("app").innerHTML = inWiz ? renderWizard(p) : (tab === "battle" ? "" : pageIntro(p)) +
 		(tab === "battle" ? BattleMap.render() : tab === "pilot" ? renderPilot(p) : tab === "progress" ? renderProgress(p) : tab === "mech" ? renderMech(p) : renderSheet(p));
 	window.scrollTo(0, y);
-	if (!inWiz && tab === "sheet") renderCardPreviews(p);
+	if (!inWiz && tab === "sheet" && _uxState().sheetMode !== "play") renderCardPreviews(p);
 	save();
 	enhanceUI();
 	if(focusKey?.some(([,v])=>v!==undefined)) {
@@ -935,8 +960,7 @@ document.addEventListener("toggle", e => {
 }, true);
 document.addEventListener("click", e => {
 	const tb = e.target.closest("[data-tab]");
-	if (tb) { tab = tb.dataset.tab; window.scrollTo(0, 0); return render(); }
-	if (e.target.id === "checkBadge") { tab = "sheet"; window.scrollTo(0,0); return render(); }
+	if (tb) { tab = tb.dataset.tab; if (typeof closeTopMenus === "function") closeTopMenus(); if (typeof closeCheckPopover === "function") closeCheckPopover(); window.scrollTo(0, 0); return render(); }
 	const el = e.target.closest("button[data-act]");
 	if (!el) return;
 	const p = P(), m = M();
@@ -981,6 +1005,13 @@ document.addEventListener("click", e => {
 		case "addMech": {
 			const best = D.frames.find(f => f.id !== EVEREST && (p.licenses[f.id] || 0) >= 2);
 			p.mechs.push(blankMech(best ? best.id : EVEREST)); p.activeMech = p.mechs.length - 1; break;
+		}
+		case "dupMech": {
+			const copy = JSON.parse(JSON.stringify(m));
+			copy.name = (copy.name || "机甲") + "（副本）";
+			p.mechs.push(copy);
+			p.activeMech = p.mechs.length - 1;
+			break;
 		}
 		case "delMech": if (!confirm(`删除机甲「${m.name}」？`)) return; p.mechs.splice(p.activeMech, 1); p.activeMech = 0; break;
 		case "addSys": { const v = document.getElementById("sysAdd").value; if (v) m.systems.push(v); break; }
@@ -1197,7 +1228,7 @@ function professionalPanel(p) {
   <div class="row"><label>其中额外奖励等级 <select data-k="${k}rewardRanks">${Array.from({length:x.rank+1},(_,n)=>opt(n,n,x.rewardRanks===n)).join('')}</select></label><label>专业牌照前置 <select data-k="${k}prerequisite"><option value="">无／使用同厂商普通牌照</option>${pre.map(y=>opt(y.id,esc(y.source+' '+y.name+' '+y.rank+'级'),x.prerequisite===y.id)).join('')}</select></label></div>
   <label>装备与奖励说明 <textarea data-k="${k}notes">${esc(x.notes)}</textarea></label>${def?det('owned-'+x.id,'牌照装备',professionalGearHtml(def,p)):''}</div>`;
  }).join('');
- return `<div class="card wide"><h3>专业牌照 <span class="tag ext">扩展</span></h3>
+ return `<div class="card wide" id="card-professionals"><h3>专业牌照 <span class="tag ext">扩展</span></h3>
  <p>专业牌照不绑定特定骨架，具有厂商和等级。一级无前置；二级需要同厂商至少一级普通牌照，三级需要同厂商至少二级普通牌照。指定专业牌照也可作为前置；专业牌照本身不解锁普通牌照。</p>
  <p class="muted">GM 可将专业牌照加入升级选择，或作为额外奖励。额外奖励不会提高 LL、毅力、天赋或核心奖励数量；专业牌照等级计入该厂商核心奖励的资格合计。</p>
  <label>其他额外牌照奖励等级（普通牌照等，不提高 LL） <input type="number" min="0" max="36" data-k="extraLicenseRanks" value="${p.extraLicenseRanks||0}"></label>

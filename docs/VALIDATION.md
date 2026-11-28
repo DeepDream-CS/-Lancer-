@@ -2,7 +2,7 @@
 
 [文档目录](README.md) · [项目说明](../README.md)
 
-维护更新：2026-11-25。文中原核对日期及当时结果保留；源码路径和命令均相对于项目根目录。
+维护更新：2026-11-27。文中原核对日期及当时结果保留；源码路径和命令均相对于项目根目录。
 
 初次核验日期：2026-10-21。以下初次记录适用范围：当时项目内的核心规则数据，29 个骨架、LL0–LL12。结果：已修正下列问题，28 项代码回归检查通过，并完成本地浏览器车卡、保存刷新、JSON 导出导入、PNG 下载检查。
 
@@ -119,5 +119,5 @@ node tools/test-rules.js
   - `node tools/test-core-corrections.js`（7 项）、`node tools/test-mod-display.js`（8 项）、`node tools/test-expansion-copy.js`：全部通过。
   - `node tools/test-official-supplements.js`：87 个扩展条目、268 个官方补充说明字段检查通过。
   - `node tools/test-foundry-export.js`：4401 项检查（覆盖全部 103 个骨架、战斗地图与专业牌照导出）通过。
-  - `node tools/test-lcp.js`（32617 项检查，核心包 `1.1.3` / 扩展包 `1.6.5`）与 `node tools/test-fvtt-module.js`（13963 项检查，模组 `lancer-cn 1.22.0`）：全部通过。
+  - `node tools/test-lcp.js`（32617 项检查，核心包 `1.1.3` / 扩展包 `1.6.5`）与 `node tools/test-fvtt-module.js`（14043 项检查，模组 `lancer-cn 1.27.1`）：全部通过。
   - `node tools/test-faq.js`（184 条问答）、`node tools/test-equipment-lore.js`、`node tools/test-npc-builder.js`（56728 项检查）：全部通过。

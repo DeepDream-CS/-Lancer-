@@ -17,4 +17,22 @@ const c={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/js
 const data={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/js/data.js'),'utf8'),data);
 const all=data.window.LANCER_DATA;const ids=new Set(['weapons','systems','mods'].flatMap(k=>all[k].map(x=>x.id)));
 for(const [id,v] of Object.entries(c.window.LANCER_LORE.items)){assert(ids.has(id),id);assert(v.text.trim(),id);assert(['zh','en'].includes(v.lang),id);}
-console.log('PASS lore on equipped systems, weapons and weapon table; source references, escaping and item identity');
+// Verify GMS T-2 thermal weapons have the complete T-2 paragraph and Lore Codex deduplicates GMS series cleanly
+for(const id of ['mw_thermal_lance','mw_thermal_pistol','mw_thermal_rifle']) {
+  assert(c.window.LANCER_LORE.items[id].text.includes('GMS T-2能量武器'), `${id} should include full T-2 energy weapon lore`);
+}
+assert.match(run("equipmentLoreHtml(WEAPONS.mw_assault_rifle)"), /GMS 一型（T-1）系列共用/);
+assert.match(run("equipmentLoreHtml(WEAPONS.mw_thermal_rifle)"), /GMS 二型（T-2）系列共用/);
+assert.match(run("equipmentLoreHtml(WEAPONS.mw_anti_materiel_rifle)"), /GMS 三型（T-3）系列共用/);
+assert(run(`(()=>{
+  const cat=buildLoreCatalog();
+  const merged=visibleLoreEntries({cat:'weapon',q:'',maker:'GMS',src:'',ownedOnly:false,mergeShared:true},lp);
+  const expanded=visibleLoreEntries({cat:'weapon',q:'',maker:'GMS',src:'',ownedOnly:false,mergeShared:false},lp);
+  const t2=merged.find(e=>e.id==='gms_series_t2');
+  const dossiers=visibleLoreEntries({cat:'dossier',q:'黑巫蛾',maker:'',src:'',ownedOnly:false,mergeShared:true},lp);
+  const hitByMember=visibleLoreEntries({cat:'weapon',q:'反器材步枪',maker:'',src:'',ownedOnly:false,mergeShared:true},lp);
+  return merged.length===5 && expanded.length===23 && t2 && t2.members.length===5 &&
+    dossiers.some(e=>e.id==='dossier:mf_black_witch'&&e.dossierSections.length>=4) &&
+    hitByMember.some(e=>e.id==='gms_series_t3') && cat.byId.has('dossier:gms_core');
+})()`), 'Lore Codex GMS deduplication, license dossiers and member search');
+console.log('PASS lore on equipped systems, weapons, Lore Codex GMS deduplication and license dossiers');

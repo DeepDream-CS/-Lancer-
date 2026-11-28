@@ -30,7 +30,7 @@ function frameRulesHtml(f, prefix='frame', m=null) {
     <h4>核心系统 <small>${cs.efficient?'高效 · 场景结束时返还 1 CP':'每任务通常可启动一次'}</small></h4><article class="fc-core"><h5>${esc(cs.name)}</h5>
     ${hasPassive?`<div class="fc-core-part"><span class="fc-kicker">被动</span>${cs.passive_name?`<b>${esc(cs.passive_name)}</b>`:''}${cs.passive_effect?`<p>${cs.passive_effect}</p>`:''}${passiveActs}</div>`:''}
     <div class="fc-core-part"><span class="fc-kicker">${esc(ACT[cs.activation]||cs.activation||'主动')} · 1 CP${esc(deact)}</span><b>${esc(cs.active_name||cs.name)}</b><p>${cs.active_effect||''}</p>${activeActs}</div>${integHtml}</article>
-    ${extRulesNote(f)}${officialSupplementHtml(f)}${det(prefix+'-lore-'+f.id,'设定与骨架介绍',`<div class="fc-lore">${f.description||'暂无介绍。'}</div>`)}</section>`;
+    ${extRulesNote(f)}${officialSupplementHtml(f)}${det(prefix+'-lore-'+f.id,'设定与骨架介绍',`<div class="fc-lore">${f.description||'暂无介绍。'}${f.description&&typeof openLoreCodex==='function'?`<div class="lore-inline-foot"><span>${esc(f.pack||'核心规则书')} · 骨架设定档案</span><button type="button" class="lore-open-btn" data-ui="openLoreCodex" data-lore-id="${esc([f.id,f.variant_of].includes(EVEREST)?'dossier:gms_core':(!f.no_license||f.variant_of)?'dossier:'+(f.variant_of||f.id):'frame:'+f.id)}">在风味典藏连读本牌照全部设定 ↗</button></div>`:''}</div>`)}</section>`;
 }
 function frameCatalogList(p) {
   const m=M(), list=D.frames.filter(f=>frameMatches(f,p));

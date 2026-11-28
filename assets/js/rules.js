@@ -53,6 +53,145 @@ function staticBonus(p, m, id) {
   return buildBonuses(p, m).filter(b => b.id === id && !b.weapon_types && !b.weapon_sizes && !b.damage_types && !b.range_types)
     .reduce((n, b) => n + (Number(b.val) || 0), 0);
 }
+function staticBonusEntries(p, m, id) {
+  const entries = [];
+  const collect = (label, list) => {
+    for (const b of list || []) {
+      if (b.id !== id || b.weapon_types || b.weapon_sizes || b.damage_types || b.range_types) continue;
+      const val = Number(b.val) || 0;
+      if (val) entries.push({ label, val });
+    }
+  };
+  for (const cbId of new Set(p.coreBonuses || [])) {
+    const c = CBS[cbId];
+    if (c) collect(`核心奖励「${plain('cb', c)}」`, c.bonuses);
+  }
+  for (const sysId of new Set(m.systems || [])) {
+    const s = SYSTEMS[sysId];
+    if (s) collect(`系统「${plain('item', s)}」`, s.bonuses);
+  }
+  for (const t of mechTraits(m)) collect(`骨架特征「${t.name}」`, t.bonuses);
+  for (const [tid, rank] of Object.entries(p.talents || {})) {
+    const t = TALENTS[tid];
+    if (!t) continue;
+    (t.ranks || []).slice(0, rank).forEach((rk, i) => collect(`天赋「${plain('talent', t)} ${['I', 'II', 'III'][i] || i + 1}」`, rk.bonuses));
+  }
+  return entries;
+}
+function mechAiSummary(p, m) {
+  const eq = equippedWeapons(p, m);
+  const all = [...eq.map(e => e.w), ...eq.flatMap(e => e.mods || (e.mod ? [e.mod] : [])), ...m.systems.map(id => SYSTEMS[id]).filter(Boolean)];
+  const used = all.filter(x => (x.tags || []).some(t => t.id === 'tg_ai')).length;
+  const cap = 1 + staticBonus(p, m, 'ai_cap');
+  return { used, cap };
+}
+function mechStatBreakdown(p, m) {
+  const f = FRAMES[m.frame];
+  if (!f) return null;
+  const st = mechStats(p, m), s = f.stats, h = p.hase, L = LV(p.ll);
+  const fmtSigned = n => (n >= 0 ? `+${n}` : `${n}`);
+  const fmtSize = v => (v === 0.5 ? '½' : String(v));
+  const addBonusRows = (rows, id) => {
+    for (const e of staticBonusEntries(p, m, id)) rows.push([e.label, fmtSigned(e.val)]);
+  };
+  const noGritHp = !!(f.no_grit_hp || (inheritedTrait(m)?.inherited_from === 'mf_ext_emperor' && FRAMES[m.legacyFrame]?.traits[Number(m.legacyTrait)]?.name === '风暴盾'));
+  const make = (label, value, base, rows, note = '') => ({
+    label,
+    value,
+    base,
+    delta: typeof value === 'number' && typeof base === 'number' ? value - base : 0,
+    rows,
+    note,
+  });
+
+  const hpRows = [['骨架基础', String(s.hp)]];
+  if (noGritHp) hpRows.push(['风暴盾特征', '不计毅力']);
+  else if (L.grit) hpRows.push([`毅力 (LL${p.ll})`, fmtSigned(L.grit)]);
+  if (h.hull) hpRows.push([`机体 (+${h.hull}) × 2`, fmtSigned(h.hull * 2)]);
+  addBonusRows(hpRows, 'hp');
+
+  const armorRows = [['骨架基础', String(s.armor)]];
+  addBonusRows(armorRows, 'armor');
+  const rawArmor = s.armor + staticBonus(p, m, 'armor');
+
+  const evaRows = [['骨架基础', String(s.evasion)]];
+  if (h.agi) evaRows.push(['敏捷 AGI', fmtSigned(h.agi)]);
+  addBonusRows(evaRows, 'evasion');
+
+  const edefRows = [['骨架基础', String(s.edef)]];
+  if (h.sys) edefRows.push(['系统 SYS', fmtSigned(h.sys)]);
+  addBonusRows(edefRows, 'edef');
+
+  const spdRows = [['骨架基础', String(s.speed)]];
+  if (Math.floor(h.agi / 2)) spdRows.push([`敏捷 (+${h.agi}) ÷ 2`, fmtSigned(Math.floor(h.agi / 2))]);
+  addBonusRows(spdRows, 'speed');
+
+  const sizeRows = [['骨架基础', fmtSize(s.size)]];
+  addBonusRows(sizeRows, 'size');
+
+  const heatRows = [['骨架基础', String(s.heatcap)]];
+  if (h.eng) heatRows.push(['工程 ENG', fmtSigned(h.eng)]);
+  addBonusRows(heatRows, 'heatcap');
+
+  const repRows = [['骨架基础', String(s.repcap)]];
+  if (Math.floor(h.hull / 2)) repRows.push([`机体 (+${h.hull}) ÷ 2`, fmtSigned(Math.floor(h.hull / 2))]);
+  addBonusRows(repRows, 'repcap');
+
+  const sensorRows = [['骨架基础', String(s.sensor_range)]];
+  addBonusRows(sensorRows, 'sensor');
+
+  const saveRows = [['骨架基础', String(s.save)]];
+  if (L.grit) saveRows.push([`毅力 (LL${p.ll})`, fmtSigned(L.grit)]);
+  addBonusRows(saveRows, 'save');
+
+  const techRows = [['骨架基础', fmtSigned(s.tech_attack)]];
+  if (h.sys) techRows.push(['系统 SYS', fmtSigned(h.sys)]);
+  addBonusRows(techRows, 'tech_attack');
+
+  const limRows = [[`工程 (+${h.eng}) ÷ 2`, fmtSigned(Math.floor(h.eng / 2))]];
+  addBonusRows(limRows, 'limited_bonus');
+
+  const spRows = [['骨架基础', String(s.sp)]];
+  if (L.grit) spRows.push([`毅力 (LL${p.ll})`, fmtSigned(L.grit)]);
+  if (Math.floor(h.sys / 2)) spRows.push([`系统 (+${h.sys}) ÷ 2`, fmtSigned(Math.floor(h.sys / 2))]);
+  addBonusRows(spRows, 'sp');
+
+  return {
+    hp: make('HP', st.hp, s.hp, hpRows),
+    armor: make('装甲', st.armor, s.armor, armorRows, rawArmor > 4 ? '规则上限为 4 点装甲' : ''),
+    structure: make('结构', st.structure, s.structure, [['骨架基础', String(s.structure)]]),
+    stress: make('压力', st.stress, s.stress, [['骨架基础', String(s.stress)]]),
+    evasion: make('回避', st.evasion, s.evasion, evaRows),
+    edef: make('电子防御', st.edef, s.edef, edefRows),
+    speed: make('速度', st.speed, s.speed, spdRows),
+    size: make('大小', fmtSize(st.size), fmtSize(s.size), sizeRows, st.size !== s.size ? `基础 ${fmtSize(s.size)} → 最终 ${fmtSize(st.size)}（上限 3）` : ''),
+    heatcap: make('热度上限', st.heatcap, s.heatcap, heatRows),
+    repcap: make('维修上限', st.repcap, s.repcap, repRows),
+    sensor: make('感应', st.sensor, s.sensor_range, sensorRows),
+    save: make('豁免目标', st.save, s.save, saveRows),
+    tech: make('科技攻击', fmtSigned(st.tech), fmtSigned(s.tech_attack), techRows),
+    attack: make('攻击加值', fmtSigned(st.attack), '+0', [[`毅力 (LL${p.ll})`, fmtSigned(L.grit)]]),
+    limited: make('受限加成', fmtSigned(st.limited), '+0', limRows, hasCB(p, 'cb_piof_curveball') ? '另含「曲线球」：榴弹类系统额外 +2 受限次数' : ''),
+    sp: make('系统点数 SP', st.sp, s.sp, spRows, `当前已用 ${st.spUsed} SP，剩余 ${st.sp - st.spUsed} SP`),
+  };
+}
+function pilotStatBreakdown(p) {
+  const L = LV(p.ll), ps = pilotStats(p), a = GEAR[p.gear.armor];
+  const armorName = a ? `装甲「${plain('gear', a)}」` : '';
+  const baseMap = { hp: 6, armor: 0, evasion: 10, edef: 10, speed: 4 };
+  const labelMap = { hp: 'HP', armor: '装甲', evasion: '回避', edef: '电子防御', speed: '速度' };
+  const out = {};
+  for (const k of ['hp', 'armor', 'evasion', 'edef', 'speed']) {
+    const rows = [['驾驶员基础', String(baseMap[k])]];
+    if (k === 'hp' && L.grit) rows.push([`毅力 (LL${p.ll})`, `+${L.grit}`]);
+    for (const b of (a?.bonuses || [])) {
+      if (b.id === 'pilot_' + k) rows.push([armorName, b.replace ? `设为 ${b.val}` : `+${b.val}`]);
+    }
+    out[k] = { label: labelMap[k], value: ps[k], base: baseMap[k], delta: ps[k] - baseMap[k], rows, note: '' };
+  }
+  out.size = { label: '大小', value: '½', base: '½', delta: 0, rows: [['驾驶员基础', '½']], note: '' };
+  return out;
+}
 function slotAccepts(mount, index, slots) {
   if (mount.type === 'Flex' && index === 1 && WEAPONS[slots[0]?.w]?.mount === 'Main') return [];
   return MOUNT_SLOTS[mount.type]?.[index] || [];

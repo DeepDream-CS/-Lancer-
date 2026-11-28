@@ -278,8 +278,9 @@
   button.textContent = "NPC 构筑";
   button.title = "按职业、层级和模板组合 NPC，可导出到 Foundry";
   button.setAttribute("aria-haspopup", "dialog");
+  const gmPanel = document.getElementById?.("gmMenuPanel");
   const anchor = [...document.querySelectorAll(".top-ctl button")].find(b => b.textContent === "NPC 库") || document.querySelector('[data-ui="openSystemLibrary"]');
-  if (anchor) anchor.after(button); else document.body.prepend(button);
+  if (gmPanel) gmPanel.append(button); else if (anchor) anchor.after(button); else document.body.prepend(button);
 
   const dlg = document.createElement("dialog");
   dlg.id = "npcBuilder";

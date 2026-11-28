@@ -112,6 +112,7 @@ function enhanceUI() {
   app.querySelectorAll('[data-act="delSys"]').forEach(el=>el.setAttribute('aria-label','移除系统 '+el.closest('.list-item').querySelector('.li-title').textContent));
   app.querySelectorAll('[data-act="delTrig"]').forEach(el=>el.setAttribute('aria-label',`移除触发 ${+el.dataset.arg+1}`));
   filterTalents(); filterSystems(); filterFrames();
+  if (typeof uxEnhanceUI === 'function') uxEnhanceUI();
   highlightTerms(app);
 }
 document.addEventListener('input',e=>{
@@ -196,7 +197,7 @@ function getGlossary() {
   return (glossaryCache = { list, re: new RegExp(patterns.map(p => `(${p.src})`).join('|'), 'g'), byIdx: patterns.map(p => p.i), cats: [...new Set(list.map(g => g.cat))] });
 }
 // 不在这些位置标记术语：表单控件、按钮、标题、名称等
-const TERM_SKIP = 'select,option,textarea,input,button,script,style,summary,h1,h2,h3,h4,h5,a,label,.term,.tag,.stepper,.li-title,.blk-h,.mount-h,.rank-h,.lic-head,.lic-rank-h,.mfr,.gear-label,.pick b,.eyebrow,.glossary,.wt-name';
+const TERM_SKIP = 'select,option,textarea,input,button,script,style,summary,h1,h2,h3,h4,h5,a,label,.term,.tag,.stepper,.li-title,.blk-h,.mount-h,.rank-h,.lic-head,.lic-rank-h,.mfr,.gear-label,.pick b,.eyebrow,.glossary,.wt-name,.stat,.mech-sticky-bar,.play-tracker,.play-src,.ep-card-title,.ep-origin,.ux-subnav';
 // 动作、可展开物标题里的说明部分（「快速动作」「可展开 · 大小1 · 10 HP」）仍要标记，名称不标
 const termSkipped = el => { const sk = el?.closest(TERM_SKIP); return !!sk && !(sk.matches('.blk-h') && el.closest('.blk-h > .muted') && !sk.parentElement?.closest(TERM_SKIP)); };
 function highlightTerms(root) {
